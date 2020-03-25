@@ -179,9 +179,10 @@ class ReplClient(object):
         logging.debug({'event': 'thread/exit', 'thread': 'eval_loop'})
 
     def read_loop(self):
-        """Read lines of EDN values from a socket connection, parse them, and
+        '''
+        Read lines of EDN values from a socket connection, parse them, and
         put them into a queue. If the stop event is set, exit.
-        """
+        '''
         try:
             while not self.stop_event.wait(0):
                 bytes = []
