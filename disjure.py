@@ -165,7 +165,7 @@ class ReplClient(object):
 
             self.connection.sendall(str.encode(item))
 
-        logging.debug({'event': 'thread/exit', 'thread': 'eval__loop'})
+        logging.debug({'event': 'thread/exit', 'thread': 'eval_loop'})
 
     def read_loop(self):
         """Read lines of EDN values from a socket connection, parse them, and
