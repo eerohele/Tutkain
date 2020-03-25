@@ -10,10 +10,9 @@ A bare-bones [Clojure] [socket REPL] client for [Sublime Text].
 
 ## Install
 
-Via [Package Control]:
-
-1. Install [paredit].
-2. Install [Tutkain].
+1. Via [Package Control], install [paredit].
+1. Clone this repository into your Sublime Text `Packages` directory.
+   (Installation via Package Control coming up.)
 
 I wanted to steal parts of the [paredit] plugin into Tutkain, but
 [it has no license](https://github.com/odyssomay/paredit/issues/29), so I
