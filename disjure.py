@@ -150,9 +150,9 @@ class ReplClient(object):
 
     def disconnect(self):
         if self.connection is not None:
-            logging.debug({'event': 'socket/disconnect'})
             self.connection.shutdown(socket.SHUT_RDWR)
             self.connection.close()
+            logging.debug({'event': 'socket/disconnect'})
 
     def __init__(self, host, port):
         self.connect(host, port)
