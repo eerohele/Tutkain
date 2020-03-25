@@ -60,11 +60,14 @@ class DisjureEvaluateFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         global repl_client
 
-        region = get_eval_region(self.view)
-        characters = self.view.substr(region)
-        append_to_output_panel(self.view.window(), '=> ' + characters)
-        logging.debug({'event': 'send', 'scope': 'form', 'data': characters})
-        repl_client.input.put(characters)
+        if repl_client is None:
+            self.view.window().status_message('ERR: Not connected to a REPL.')
+        else:
+            region = get_eval_region(self.view)
+            characters = self.view.substr(region)
+            append_to_output_panel(self.view.window(), '=> ' + characters)
+            logging.debug({'event': 'send', 'scope': 'form', 'data': characters})
+            repl_client.input.put(characters)
 
 
 class DisjureEvaluateViewCommand(sublime_plugin.TextCommand):
