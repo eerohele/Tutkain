@@ -13,7 +13,7 @@ from edn_format import Keyword
 Tutkain = sys.modules["Tutkain.tutkain"]
 
 
-class TestTutkainEvaluateFormCommand(TestCase):
+class TestReplClient(TestCase):
     def test_repl_client(self):
         # You have to start a socket REPL on localhost:12345 to run this test.
         with Tutkain.ReplClient('localhost', 12345) as repl_client:
