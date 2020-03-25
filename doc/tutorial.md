@@ -4,7 +4,7 @@
 
 * [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools) (the `clojure` command)
 
-You can [use Disjure with Leiningen](https://stackoverflow.com/a/34932745/825783), too. This tutorial presumes you can run `clojure`.
+You can [use Tutkain with Leiningen](https://stackoverflow.com/a/34932745/825783), too. This tutorial presumes you can run `clojure`.
 
 ## Steps
 
@@ -23,16 +23,16 @@ You can [use Disjure with Leiningen](https://stackoverflow.com/a/34932745/825783
 
 2. In Sublime Text, open the command palette.
 
-3. Run the **Disjure: Connect to Socket REPL** command.
+3. Run the **Tutkain: Connect to Socket REPL** command.
 
    If you opened Sublime Text in the same folder where you started Propel,
-   Disjure attempts to auto-detect the port to connect to. Otherwise, enter
+   Tutkain attempts to auto-detect the port to connect to. Otherwise, enter
    the host and port when prompted. Propel prints the port it uses on startup.
 
-3. Use the **Disjure: Evaluate …** commands to send forms to the socket REPL
+3. Use the **Tutkain: Evaluate …** commands to send forms to the socket REPL
   server for evaluation.
 
-If you accidentally close the Disjure output panel, use the **Disjure: Toggle
+If you accidentally close the Tutkain output panel, use the **Tutkain: Toggle
 Output Panel** command to bring it up.
 
 [Propel]: https://github.com/Olical/propel

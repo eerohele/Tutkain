@@ -58,7 +58,7 @@ def append_to_output_panel(window, characters):
     panel.run_command('move_to', {'to': 'eof'})
 
 
-class DisjureEvaluateFormCommand(sublime_plugin.TextCommand):
+class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         global repl_client
 
@@ -72,7 +72,7 @@ class DisjureEvaluateFormCommand(sublime_plugin.TextCommand):
             repl_client.input.put(chars)
 
 
-class DisjureEvaluateViewCommand(sublime_plugin.TextCommand):
+class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         global repl_client
 
@@ -127,7 +127,7 @@ class PortInputHandler(sublime_plugin.TextInputHandler):
             return None
 
 
-class DisjureToggleOutputPanelCommand(sublime_plugin.WindowCommand):
+class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
     def run(self):
         active_panel = self.window.active_panel()
         panel = 'output.panel'
@@ -224,7 +224,7 @@ class ReplClient(object):
         self.halt()
 
 
-class DisjureEvaluateInputCommand(sublime_plugin.WindowCommand):
+class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
     def eval(self, input):
         global repl_client
 
@@ -248,7 +248,7 @@ class DisjureEvaluateInputCommand(sublime_plugin.WindowCommand):
         )
 
 
-class DisjureConnectToSocketReplCommand(sublime_plugin.WindowCommand):
+class TutkainConnectToSocketReplCommand(sublime_plugin.WindowCommand):
     def configure_output_panel(self):
         panel = self.window.find_output_panel('panel')
         if panel is None:
@@ -305,7 +305,7 @@ class DisjureConnectToSocketReplCommand(sublime_plugin.WindowCommand):
         return HostInputHandler(self.window)
 
 
-class DisjureDisconnectFromSocketReplCommand(sublime_plugin.WindowCommand):
+class TutkainDisconnectFromSocketReplCommand(sublime_plugin.WindowCommand):
     def run(self):
         global repl_client
 

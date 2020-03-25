@@ -1,4 +1,4 @@
-# Disjure
+# Tutkain
 
 A bare-bones [Clojure] [socket REPL] client for [Sublime Text].
 
@@ -13,11 +13,11 @@ A bare-bones [Clojure] [socket REPL] client for [Sublime Text].
 Via [Package Control]:
 
 1. Install [paredit].
-2. Install [Disjure].
+2. Install [Tutkain].
 
-I wanted to steal parts of the [paredit] plugin into Disjure, but
+I wanted to steal parts of the [paredit] plugin into Tutkain, but
 [it has no license](https://github.com/odyssomay/paredit/issues/29), so I
-couldn't. Therefore, Disjure currently has a hard dependency on paredit.
+couldn't. Therefore, Tutkain currently has a hard dependency on paredit.
 
 You almost definitely also want to install [sublime-lispindent] if you haven't
 already.
@@ -53,10 +53,10 @@ I'm a happy [Cursive] user, but Intellij IDEA has a rather frustrating tendency
 of grinding to a halt every now and then. That triggered this attempt at
 turning Sublime Text into a somewhat viable Clojure editor.
 
-Disjure is very limited in scope. Its sole aim is the ability to interact
+Tutkain is very limited in scope. Its sole aim is the ability to interact
 with a Clojure socket REPL. It is not, and never will be, a full-fledged Clojure
 IDE. If you're looking for an IDE-like experience, consider complementing
-Disjure with these Sublime Text plugins:
+Tutkain with these Sublime Text plugins:
 
 - [paredit]
 - [sublime-lispindent]
@@ -64,7 +64,7 @@ Disjure with these Sublime Text plugins:
 
 [clojure]: https://www.clojure.org
 [Cursive]: https://cursive-ide.com
-[Disjure]: https://github.com/eerohele/disjure
+[Tutkain]: https://github.com/eerohele/tutkain
 [Package Control]: https://www.packagecontrol.io
 [paredit]: https://github.com/odyssomay/paredit
 [socket REPL]: https://clojure.org/reference/repl_and_main

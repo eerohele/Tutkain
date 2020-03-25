@@ -1,26 +1,26 @@
 [
     {
-        "caption": "Disjure: Connect to Socket REPL",
-        "command": "disjure_connect_to_socket_repl"
+        "caption": "Tutkain: Connect to Socket REPL",
+        "command": "tutkain_connect_to_socket_repl"
     },
     {
-        "caption": "Disjure: Show Output Panel",
-        "command": "disjure_toggle_output_panel"
+        "caption": "Tutkain: Show Output Panel",
+        "command": "tutkain_toggle_output_panel"
     },
     {
-        "caption": "Disjure: Disconnect from Socket REPL",
-        "command": "disjure_disconnect_from_socket_repl"
+        "caption": "Tutkain: Disconnect from Socket REPL",
+        "command": "tutkain_disconnect_from_socket_repl"
     },
     {
-        "caption": "Disjure: Evaluate Form",
-        "command": "disjure_evaluate_form"
+        "caption": "Tutkain: Evaluate Form",
+        "command": "tutkain_evaluate_form"
     },
     {
-        "caption": "Disjure: Evaluate View",
-        "command": "disjure_evaluate_view"
+        "caption": "Tutkain: Evaluate View",
+        "command": "tutkain_evaluate_view"
     },
     {
-        "caption": "Disjure: Evaluate Input",
-        "command": "disjure_evaluate_input"
+        "caption": "Tutkain: Evaluate Input",
+        "command": "tutkain_evaluate_input"
     }
 ]

@@ -1,26 +1,26 @@
 [
   {
       "keys": ["super+r", "super+c"],
-      "command": "disjure_connect_to_socket_repl"
+      "command": "tutkain_connect_to_socket_repl"
   },
   {
       "keys": ["super+r", "super+d"],
-      "command": "disjure_disconnect_from_socket_repl"
+      "command": "tutkain_disconnect_from_socket_repl"
   },
   {
       "keys": ["super+r", "super+o"],
-      "command": "disjure_toggle_output_panel"
+      "command": "tutkain_toggle_output_panel"
   },
   {
     "keys": ["super+r", "super+v"],
-    "command": "disjure_evaluate_view"
+    "command": "tutkain_evaluate_view"
   },
   {
     "keys": ["super+r", "super+f"],
-    "command": "disjure_evaluate_form"
+    "command": "tutkain_evaluate_form"
   },
   {
     "keys": ["super+r", "super+i"],
-    "command": "disjure_evaluate_input"
+    "command": "tutkain_evaluate_input"
   }
 ]
