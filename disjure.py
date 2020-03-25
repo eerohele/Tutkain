@@ -66,10 +66,10 @@ class DisjureEvaluateFormCommand(sublime_plugin.TextCommand):
             self.view.window().status_message('ERR: Not connected to a REPL.')
         else:
             region = get_eval_region(self.view)
-            characters = self.view.substr(region)
-            append_to_output_panel(self.view.window(), '=> ' + characters)
-            logging.debug({'event': 'send', 'scope': 'form', 'data': characters})
-            repl_client.input.put(characters)
+            chars = self.view.substr(region)
+            append_to_output_panel(self.view.window(), '=> ' + chars)
+            logging.debug({'event': 'send', 'scope': 'form', 'data': chars})
+            repl_client.input.put(chars)
 
 
 class DisjureEvaluateViewCommand(sublime_plugin.TextCommand):
@@ -77,8 +77,8 @@ class DisjureEvaluateViewCommand(sublime_plugin.TextCommand):
         global repl_client
 
         region = sublime.Region(0, self.view.size())
-        characters = self.view.substr(region)
-        repl_client.input.put(characters)
+        chars = self.view.substr(region)
+        repl_client.input.put(chars)
 
 
 class HostInputHandler(sublime_plugin.TextInputHandler):
@@ -191,9 +191,9 @@ class ReplClient(object):
                 for data in iter(partial(self.connection.recv, 1), b'\n'):
                     bytes.append(data)
 
-                characters = ''.join(map(lambda b: b.decode('utf-8'), bytes))
-                logging.debug({'event': 'recv', 'data': characters})
-                self.output.put(edn_format.loads(characters))
+                chars = ''.join(map(lambda b: b.decode('utf-8'), bytes))
+                logging.debug({'event': 'recv', 'data': chars})
+                self.output.put(edn_format.loads(chars))
         except OSError as e:
             logging.debug({'event': 'error', 'exception': e})
         finally:
