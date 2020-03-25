@@ -61,6 +61,10 @@ Tutkain with these Sublime Text plugins:
 - [sublime-lispindent]
 - [Sublime LSP](https://github.com/sublimelsp/LSP/blob/master/docs/index.md#clojurea-nameclojure)
 
+Alternatively, use [Cursive], [Calva], [CIDER], or some other actual IDE.
+
+[Calva]: https://github.com/BetterThanTomorrow/calva
+[CIDER]: https://github.com/clojure-emacs/cider
 [clojure]: https://www.clojure.org
 [Cursive]: https://cursive-ide.com
 [Tutkain]: https://github.com/eerohele/tutkain
