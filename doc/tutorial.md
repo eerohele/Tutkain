@@ -1,0 +1,38 @@
+# Tutorial
+
+## Prerequisites
+
+* [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools) (the `clojure` command)
+
+You can [use Disjure with Leiningen](https://stackoverflow.com/a/34932745/825783), too. This tutorial presumes you can run `clojure`.
+
+## Steps
+
+1. On the command line, start a Clojure socket REPL server.
+
+   I recommend [Propel]. If you've added a [`deps.edn` alias for Propel](https://clojure.org/reference/deps_and_cli#_aliases),
+   to launch a socket server, run:
+
+   ```bash
+   clojure -A:propel --write-port-file
+   ```
+
+   If you don't want to use Propel, follow the instructions in
+   "[Launching a socket server](https://clojure.org/reference/repl_and_main#_launching_a_socket_server)"
+   on the Clojure web site to launch a socket server.
+
+2. In Sublime Text, open the command palette.
+
+3. Run the **Disjure: Connect to Socket REPL** command.
+
+   If you opened Sublime Text in the same folder where you started Propel,
+   Disjure attempts to auto-detect the port to connect to. Otherwise, enter
+   the host and port when prompted. Propel prints the port it uses on startup.
+
+3. Use the **Disjure: Evaluate …** commands to send forms to the socket REPL
+  server for evaluation.
+
+If you accidentally close the Disjure output panel, use the **Disjure: Toggle
+Output Panel** command to bring it up.
+
+[Propel]: https://github.com/Olical/propel

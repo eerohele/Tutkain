@@ -22,6 +22,10 @@ couldn't. Therefore, Disjure currently has a hard dependency on paredit.
 You almost definitely also want to install [sublime-lispindent] if you haven't
 already.
 
+## Help
+
+* [Tutorial](doc/tutorial.md)
+
 ## Default key bindings
 
 ### macOS
