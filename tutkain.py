@@ -17,6 +17,9 @@ import edn_format
 from edn_format import Keyword
 
 
+repl_client = None
+
+
 def prev_char_type(view, caret_point):
     prev_char = parens.get_previous_character(view, caret_point)[1]
     return parens.char_type(prev_char)
