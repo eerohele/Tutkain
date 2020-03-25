@@ -48,10 +48,12 @@ def get_eval_region(view):
 def append_to_output_panel(window, characters):
     panel = window.find_output_panel('panel')
 
+    panel.set_read_only(False)
     panel.run_command('append', {
         'characters': characters.strip() + '\n',
         'scroll_to_end': True
     })
+    panel.set_read_only(True)
 
     panel.run_command('move_to', {'to': 'eof'})
 
@@ -221,6 +223,7 @@ class DisjureConnectToSocketReplCommand(sublime_plugin.WindowCommand):
         panel.settings().set('gutter', False)
         panel.settings().set('is_widget', True)
         panel.settings().set('scroll_past_end', False)
+        panel.set_read_only(True)
         panel.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
 
     def print_loop(self, repl_client):
