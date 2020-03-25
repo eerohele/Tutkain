@@ -18,5 +18,9 @@
     {
         "caption": "Disjure: Evaluate View",
         "command": "disjure_evaluate_view"
+    },
+    {
+        "caption": "Disjure: Evaluate Input",
+        "command": "disjure_evaluate_input"
     }
 ]

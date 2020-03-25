@@ -212,6 +212,30 @@ class ReplClient(object):
         self.halt()
 
 
+class DisjureEvaluateInputCommand(sublime_plugin.WindowCommand):
+    def eval(self, input):
+        global repl_client
+
+        if repl_client is None:
+            self.window.status_message('ERR: Not connected to a REPL.')
+        else:
+            self.window.run_command('show_panel', {'panel': 'output.panel'})
+            append_to_output_panel(self.window, '=> ' + input)
+            repl_client.input.put(input)
+
+    def noop(*args):
+        pass
+
+    def run(self):
+        self.window.show_input_panel(
+            'Input: ',
+            '',
+            self.eval,
+            self.noop,
+            self.noop
+        )
+
+
 class DisjureConnectToSocketReplCommand(sublime_plugin.WindowCommand):
     def configure_output_panel(self):
         panel = self.window.find_output_panel('panel')
