@@ -5,7 +5,7 @@
     },
     {
         "caption": "Disjure: Show Output Panel",
-        "command": "disjure_show_output_panel"
+        "command": "disjure_toggle_output_panel"
     },
     {
         "caption": "Disjure: Disconnect from Socket REPL",

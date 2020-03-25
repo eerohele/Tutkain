@@ -131,9 +131,15 @@ class PortInputHandler(sublime_plugin.TextInputHandler):
             return None
 
 
-class DisjureShowOutputPanelCommand(sublime_plugin.WindowCommand):
+class DisjureToggleOutputPanelCommand(sublime_plugin.WindowCommand):
     def run(self):
-        self.window.run_command('show_panel', {'panel': 'output.panel'})
+        active_panel = self.window.active_panel()
+        panel = 'output.panel'
+
+        if active_panel == panel:
+            self.window.run_command('hide_panel', {'panel': panel})
+        else:
+            self.window.run_command('show_panel', {'panel': panel})
 
 
 class ReplClient(object):

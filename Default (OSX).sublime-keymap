@@ -9,7 +9,7 @@
   },
   {
       "keys": ["super+r", "super+o"],
-      "command": "disjure_show_output_panel"
+      "command": "disjure_toggle_output_panel"
   },
   {
     "keys": ["super+r", "super+v"],
