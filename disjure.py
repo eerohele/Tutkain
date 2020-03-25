@@ -243,16 +243,19 @@ class DisjureConnectToSocketReplCommand(sublime_plugin.WindowCommand):
             repl_client = ReplClient(host, int(port))
             repl_client.go()
 
-            Thread(daemon=True, target=self.print_loop,args=(repl_client,)).start()
+            Thread(
+                daemon=True,
+                target=self.print_loop,
+                args=(repl_client,)
+            ).start()
 
             # Create an output panel for printing evaluation results and show
             # it.
             self.configure_output_panel()
             self.window.run_command('show_panel', {'panel': 'output.panel'})
 
-            append_to_output_panel(self.window,
-                'Connected to {}:{}.'.format(host, port)
-            )
+            message = 'Connected to {}:{}.'.format(host, port)
+            append_to_output_panel(self.window, message)
         except ConnectionRefusedError:
             connection = None
 
@@ -262,7 +265,6 @@ class DisjureConnectToSocketReplCommand(sublime_plugin.WindowCommand):
 
     def input(self, args):
         return HostInputHandler(self.window)
-
 
 
 class DisjureDisconnectFromSocketReplCommand(sublime_plugin.WindowCommand):
