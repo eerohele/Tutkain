@@ -82,8 +82,6 @@ class DisjureEvaluateViewCommand(sublime_plugin.TextCommand):
 
 
 class HostInputHandler(sublime_plugin.TextInputHandler):
-    window = None
-
     def __init__(self, window):
         self.window = window
 
@@ -101,8 +99,6 @@ class HostInputHandler(sublime_plugin.TextInputHandler):
 
 
 class PortInputHandler(sublime_plugin.TextInputHandler):
-    window = None
-
     def __init__(self, window):
         self.window = window
 
