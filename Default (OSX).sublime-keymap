@@ -1,0 +1,22 @@
+[
+  {
+      "keys": ["super+r", "super+c"],
+      "command": "disjure_connect_to_socket_repl"
+  },
+  {
+      "keys": ["super+r", "super+d"],
+      "command": "disjure_disconnect_from_socket_repl"
+  },
+  {
+      "keys": ["super+r", "super+o"],
+      "command": "disjure_show_output_panel"
+  },
+  {
+    "keys": ["super+r", "super+v"],
+    "command": "disjure_evaluate_view"
+  },
+  {
+    "keys": ["super+r", "super+f"],
+    "command": "disjure_evaluate_form"
+  }
+]
