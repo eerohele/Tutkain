@@ -143,6 +143,19 @@ class DisjureToggleOutputPanelCommand(sublime_plugin.WindowCommand):
 
 
 class ReplClient(object):
+    '''
+    Here's how ReplClient works:
+
+    1. Open a socket connection to the given host and port.
+    2. Start a worker that gets items from a queue and sends them over the
+       socket for evaluation.
+    3. Start a worker that reads EDN strings from the socket,
+       parses them, and puts them into a queue.
+
+    Calling `halt()` on a ReplClient will stop the background threads and close
+    the socket connection. ReplClient is a context manager, so you can use it
+    with the `with` statement.
+    '''
     def connect(self, host, port):
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection.connect((host, port))
@@ -179,10 +192,6 @@ class ReplClient(object):
         logging.debug({'event': 'thread/exit', 'thread': 'eval_loop'})
 
     def read_loop(self):
-        '''
-        Read lines of EDN values from a socket connection, parse them, and
-        put them into a queue. If the stop event is set, exit.
-        '''
         try:
             while not self.stop_event.wait(0):
                 bytes = []
@@ -274,6 +283,8 @@ class DisjureConnectToSocketReplCommand(sublime_plugin.WindowCommand):
             repl_client = ReplClient(host, int(port))
             repl_client.go()
 
+            # Start a worker that reads values from a ReplClient output queue
+            # and prints them into an output panel.
             Thread(
                 daemon=True,
                 target=self.print_loop,
