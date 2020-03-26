@@ -31,6 +31,15 @@ class TestReplClient(TestCase):
 
         self.assertEquals(pos, 11)
 
+        pos = brackets.find_rbracket(
+            lambda *args: False,
+            brackets.LPAREN, brackets.RPAREN,
+            '((()))',
+            1
+        )
+
+        self.assertEquals(pos, 4)
+
     def test_find_rbracket_unbalanced(self):
         pos = brackets.find_rbracket(
             lambda p: p >= 5 and p < 11,
@@ -50,6 +59,15 @@ class TestReplClient(TestCase):
         )
 
         self.assertEquals(pos, 0)
+
+        pos = brackets.find_lbracket(
+            lambda *args: False,
+            brackets.LPAREN, brackets.RPAREN,
+            '((()))"',
+            4
+        )
+
+        self.assertEquals(pos, 1)
 
     def test_find_lbracket_unbalanced(self):
         pos = brackets.find_lbracket(
