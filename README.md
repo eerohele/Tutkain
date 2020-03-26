@@ -31,18 +31,14 @@ already.
 
 ### macOS
 
-<dl>
-  <dt>Connect to Socket REPL<dt>
-  <dd><kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>C</kbd></dd>
-  <dt>Evaluate Form<dt>
-  <dd><kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>F</kbd></dd>
-  <dt>Evaluate View<dt>
-  <dd><kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>V</kbd></dd>
-  <dt>Disconnect from Socket REPL<dt>
-  <dd><kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>D</kbd></dd>
-  <dt>Show Output Panel<dt>
-  <dd><kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>O</kbd></dd>
-</dl>
+| Command  | Binding |
+| ------------- | ------------- |
+| Connect to Socket REPL | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>C</kbd> |
+| Evaluate Form  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>F</kbd> |
+| Evaluate View  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>V</kbd> |
+| Evaluate Input  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>I</kbd> |
+| Disconnect from Socket REPL | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>D</kbd> |
+| Show Output Panel  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>O</kbd> |
 
 ### Windows & Linux
 
