@@ -189,7 +189,7 @@ class ReplClient(object):
             if item is None:
                 break
 
-            self.connection.sendall(str.encode(item))
+            self.connection.sendall(str.encode(item + '\n'))
 
         logging.debug({'event': 'thread/exit', 'thread': 'eval_loop'})
 
