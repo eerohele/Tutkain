@@ -315,7 +315,8 @@ class TutkainDisconnectFromSocketReplCommand(sublime_plugin.WindowCommand):
     def run(self):
         global repl_client
 
-        repl_client.halt()
-        repl_client = None
+        if repl_client is not None:
+            repl_client.halt()
+            repl_client = None
 
-        append_to_output_panel(self.window, 'Disconnected.')
+            append_to_output_panel(self.window, 'Disconnected.')
