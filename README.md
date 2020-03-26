@@ -8,7 +8,7 @@ A bare-bones [Clojure] [socket REPL] client for [Sublime Text].
 
 **Currently unreleased**.
 
-**Alpha**. Expect breaking changes.
+**Alpha**. Expect breaking changes and a cavalcade of bugs.
 
 ## Install
 
