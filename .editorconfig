@@ -1,0 +1,16 @@
+# https://editorconfig.org/
+root = true
+
+[*]
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
+charset = utf-8
+
+[*.py]
+max_line_length = 119
+indent_size = 4
+
+[*.clj, *.cljs]
+indent_size = 2
