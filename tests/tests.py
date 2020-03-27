@@ -10,8 +10,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'dependencies'))
 import edn_format
 from edn_format import Keyword
 
-tutkain = sys.modules["Tutkain.tutkain"]
-brackets = sys.modules["Tutkain.brackets"]
+import Tutkain.tutkain as tutkain
+import Tutkain.brackets as brackets
 
 
 class TestReplClient(TestCase):
