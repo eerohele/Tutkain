@@ -20,7 +20,7 @@ you haven't already.
 
 ## Help
 
-* [Tutorial](doc/tutorial.md)
+* [Tutorial](doc/TUTORIAL.md)
 
 ## Default key bindings
 

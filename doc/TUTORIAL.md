@@ -30,7 +30,13 @@ You can [use Tutkain with Leiningen](https://stackoverflow.com/a/34932745/825783
    the host and port when prompted. Propel prints the port it uses on startup.
 
 3. Use the **Tutkain: Evaluate …** commands to send forms to the socket REPL
-  server for evaluation.
+   server for evaluation.
+
+   The **Tutkain: Evaluate Form** command works something like this:
+
+   - If your cursor is at a left bracket, send the form it starts.
+   - If your cursor is at a right bracket, send the form it closes.
+   - Otherwise, send the form your cursor is inside.
 
 If you accidentally close the Tutkain output panel, use the **Tutkain: Toggle
 Output Panel** command to bring it up.
