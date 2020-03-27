@@ -6,10 +6,10 @@ from threading import Thread, Event
 import logging
 
 from functools import partial
-from paredit import shared as parens
 
 import sys
 import os
+import Tutkain.brackets as brackets
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'dependencies'))
 
@@ -20,30 +20,11 @@ from edn_format import Keyword
 repl_client = None
 
 
-def prev_char_type(view, caret_point):
-    prev_char = parens.get_previous_character(view, caret_point)[1]
-    return parens.char_type(prev_char)
-
-
-def next_char_type(view, caret_point):
-    next_char = parens.get_next_character(view, caret_point)[1]
-    return parens.char_type(next_char)
-
-
 def get_eval_region(view):
     region = view.sel()[0]
 
-    if region.begin() == region.end():
-        caret_point = view.sel()[0].begin()
-        expr = parens.get_expression(view, caret_point)
-
-        if not parens.is_inside_string(view, caret_point):
-            if (prev_char_type(view, caret_point) == 'rbracket'):
-                expr = parens.get_previous_expression(view, caret_point)
-            elif (next_char_type(view, caret_point) == 'lbracket'):
-                expr = parens.get_next_expression(view, caret_point)
-
-        return sublime.Region(*expr)
+    if region.empty():
+        return brackets.current_form_region(view, region.begin())
     else:
         return region
 
@@ -69,10 +50,11 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
             self.view.window().status_message('ERR: Not connected to a REPL.')
         else:
             region = get_eval_region(self.view)
-            chars = self.view.substr(region)
-            append_to_output_panel(self.view.window(), '=> ' + chars)
-            logging.debug({'event': 'send', 'scope': 'form', 'data': chars})
-            repl_client.input.put(chars)
+            if region is not None:
+                chars = self.view.substr(region)
+                append_to_output_panel(self.view.window(), '=> ' + chars)
+                logging.debug({'event': 'send', 'scope': 'form', 'data': chars})
+                repl_client.input.put(chars)
 
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
