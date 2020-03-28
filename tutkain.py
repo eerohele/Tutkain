@@ -70,9 +70,12 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         global repl_client
 
-        region = sublime.Region(0, self.view.size())
-        chars = self.view.substr(region)
-        repl_client.input.put(chars)
+        if repl_client is None:
+            self.view.window().status_message('ERR: Not connected to a REPL.')
+        else:
+            region = sublime.Region(0, self.view.size())
+            chars = self.view.substr(region)
+            repl_client.input.put(chars)
 
 
 class HostInputHandler(sublime_plugin.TextInputHandler):
