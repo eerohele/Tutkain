@@ -27,7 +27,7 @@ def prev_char(view, pos):
 
 def find_lbracket(view, start_pos):
     def scan(stack, pos):
-        if ignore(view, pos):
+        if ignore(view, pos - 1):
             return scan(stack, pos - 1)
         else:
             char = prev_char(view, pos)
