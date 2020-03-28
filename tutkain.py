@@ -194,7 +194,7 @@ class ReplClient(object):
                 for data in iter(partial(self.connection.recv, 1), b'\n'):
                     bytes.append(data)
 
-                chars = ''.join(map(lambda b: b.decode('utf-8'), bytes))
+                chars = ''.join(map(lambda b: b.decode(encoding='utf-8', errors='ignore'), bytes))
                 logging.debug({'event': 'recv', 'data': chars})
                 self.output.put(edn_format.loads(chars))
         except OSError as e:
