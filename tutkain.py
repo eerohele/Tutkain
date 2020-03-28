@@ -282,11 +282,11 @@ class TutkainConnectToSocketReplCommand(sublime_plugin.WindowCommand):
             # val. Pretty-printing can fail e.g. because of this issue:
             #
             # https://github.com/swaroopch/edn_format/issues/72
-            try:
-                output = edn_format.dumps(edn_format.loads(val), indent=2)
-                append_to_output_panel(self.window, output)
-            except edn_format.exceptions.EDNDecodeError:
-                append_to_output_panel(self.window, val)
+            #try:
+            #    output = edn_format.dumps(edn_format.loads(val), indent=2)
+            #    append_to_output_panel(self.window, output)
+            #except edn_format.exceptions.EDNDecodeError:
+            append_to_output_panel(self.window, val)
 
         logging.debug({'event': 'thread/exit', 'thread': 'print_loop'})
 
