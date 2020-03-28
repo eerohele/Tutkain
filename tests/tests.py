@@ -73,8 +73,17 @@ class TestReplClient(TestCase):
         self.assertEquals(self.form(14), '(dec 2)')
         self.assertEquals(self.form(16), form)
 
-    def test_string_next_to_bracket(self):
     def test_string_next_to_lbracket(self):
         form = '(merge {"A" :B})'
+        self.set_view_content(form)
+        self.assertEquals(self.form(len(form)), form)
+
+    def test_ignore_string_1(self):
+        form = '(a "()" b)'
+        self.set_view_content(form)
+        self.assertEquals(self.form(len(form)), form)
+
+    def test_ignore_string_2(self):
+        form = '(a "\"()\"" b)'
         self.set_view_content(form)
         self.assertEquals(self.form(len(form)), form)
