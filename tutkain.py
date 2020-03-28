@@ -17,6 +17,13 @@ import edn_format
 from edn_format import Keyword
 
 
+def debug_mode():
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format=' %(asctime)s - %(levelname)s - %(message)s'
+        )
+
+
 repl_client = None
 
 
