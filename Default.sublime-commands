@@ -22,5 +22,9 @@
     {
         "caption": "Tutkain: Evaluate Input",
         "command": "tutkain_evaluate_input"
+    },
+    {
+        "caption": "Tutkain: Clear Output Panel",
+        "command": "tutkain_clear_output_panel"
     }
 ]

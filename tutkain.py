@@ -42,6 +42,15 @@ def append_to_output_panel(window, characters):
     panel.run_command('move_to', {'to': 'eof'})
 
 
+class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        panel = self.window.find_output_panel('panel')
+        panel.set_read_only(False)
+        panel.run_command('select_all')
+        panel.run_command('right_delete')
+        panel.set_read_only(True)
+
+
 class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         global repl_client

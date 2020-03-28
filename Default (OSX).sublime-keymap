@@ -22,5 +22,9 @@
   {
     "keys": ["super+r", "super+i"],
     "command": "tutkain_evaluate_input"
+  },
+  {
+    "keys": ["super+r", "super+x"],
+    "command": "tutkain_clear_output_panel"
   }
 ]
