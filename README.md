@@ -1,6 +1,6 @@
 # Tutkain
 
-A bare-bones [Clojure] [socket REPL] client for [Sublime Text].
+A bare-bones [Clojure] prepl client for [Sublime Text].
 
 ![image](https://user-images.githubusercontent.com/31859/77619123-353cf980-6f40-11ea-9bc8-4667a509489f.png)
 
@@ -28,11 +28,11 @@ you haven't already.
 
 | Command  | Binding |
 | ------------- | ------------- |
-| Connect to Socket REPL | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>C</kbd> |
+| Connect | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>C</kbd> |
 | Evaluate Form  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>F</kbd> |
 | Evaluate View  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>V</kbd> |
 | Evaluate Input  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>I</kbd> |
-| Disconnect from Socket REPL | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>D</kbd> |
+| Disconnect | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>D</kbd> |
 | Show Output Panel  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>O</kbd> |
 
 ### Windows & Linux
@@ -46,7 +46,7 @@ of grinding to a halt every now and then. That triggered this attempt at
 turning Sublime Text into a somewhat viable Clojure editor.
 
 Tutkain is very limited in scope. Its sole aim is the ability to interact
-with a Clojure socket REPL. It is not, and never will be, a full-fledged Clojure
+with a Clojure prepl server. It is not, and never will be, a full-fledged Clojure
 IDE. If you're looking for an IDE-like experience, consider complementing
 Tutkain with these Sublime Text plugins:
 
@@ -56,9 +56,9 @@ Tutkain with these Sublime Text plugins:
 
 Alternatively, use [Cursive], [Calva], [CIDER], or some other actual IDE.
 
-## Prior art
+## See also
 
-- [Socket] — I didn't know about Socket until after I was finished with the first version of Tutkain.
+- [Socket]
 
 [Calva]: https://github.com/BetterThanTomorrow/calva
 [CIDER]: https://github.com/clojure-emacs/cider
@@ -68,6 +68,5 @@ Alternatively, use [Cursive], [Calva], [CIDER], or some other actual IDE.
 [Package Control]: https://www.packagecontrol.io
 [paredit]: https://github.com/odyssomay/paredit
 [Socket]: https://github.com/nasser/Socket
-[socket REPL]: https://clojure.org/reference/repl_and_main
 [sublime-lispindent]: https://github.com/odyssomay/sublime-lispindent
 [Sublime Text]: https://www.sublimetext.com
