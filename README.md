@@ -29,11 +29,12 @@ you haven't already.
 | Command  | Binding |
 | ------------- | ------------- |
 | Connect | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>C</kbd> |
-| Evaluate Form  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>F</kbd> |
-| Evaluate View  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>V</kbd> |
-| Evaluate Input  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>I</kbd> |
+| Evaluate Form | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>F</kbd> |
+| Evaluate View | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>V</kbd> |
+| Evaluate Input | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>I</kbd> |
 | Disconnect | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>D</kbd> |
-| Show Output Panel  | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>O</kbd> |
+| Show Output Panel | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>O</kbd> |
+| Clear Output Panel | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>X</kbd> |
 
 ### Windows & Linux
 
