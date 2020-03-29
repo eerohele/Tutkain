@@ -1,15 +1,15 @@
 [
     {
-        "caption": "Tutkain: Connect to Socket REPL",
-        "command": "tutkain_connect_to_socket_repl"
+        "caption": "Tutkain: Connect",
+        "command": "tutkain_connect"
     },
     {
         "caption": "Tutkain: Show Output Panel",
         "command": "tutkain_toggle_output_panel"
     },
     {
-        "caption": "Tutkain: Disconnect from Socket REPL",
-        "command": "tutkain_disconnect_from_socket_repl"
+        "caption": "Tutkain: Disconnect",
+        "command": "tutkain_disconnect"
     },
     {
         "caption": "Tutkain: Evaluate Form",

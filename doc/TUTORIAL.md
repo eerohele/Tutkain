@@ -8,29 +8,25 @@ You can [use Tutkain with Leiningen](https://stackoverflow.com/a/34932745/825783
 
 ## Steps
 
-1. On the command line, start a Clojure socket REPL server.
+1. On the command line, start a Clojure prepl server.
 
    I recommend [Propel]. If you've added a [`deps.edn` alias for Propel](https://clojure.org/reference/deps_and_cli#_aliases),
-   to launch a socket server, run:
+   to launch a prepl server, run:
 
    ```bash
    clojure -A:propel --write-port-file
    ```
 
-   If you don't want to use Propel, follow the instructions in
-   "[Launching a socket server](https://clojure.org/reference/repl_and_main#_launching_a_socket_server)"
-   on the Clojure web site to launch a socket server.
-
 2. In Sublime Text, open the command palette.
 
-3. Run the **Tutkain: Connect to Socket REPL** command.
+3. Run the **Tutkain: Connect** command.
 
    If you opened Sublime Text in the same folder where you started Propel,
    Tutkain attempts to auto-detect the port to connect to. Otherwise, enter
    the host and port when prompted. Propel prints the port it uses on startup.
 
-3. Use the **Tutkain: Evaluate …** commands to send forms to the socket REPL
-   server for evaluation.
+3. Use the **Tutkain: Evaluate …** commands to send forms to the prepl server
+   for evaluation.
 
    The **Tutkain: Evaluate Form** command works something like this:
 

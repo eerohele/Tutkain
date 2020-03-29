@@ -1,11 +1,11 @@
 [
   {
       "keys": ["super+r", "super+c"],
-      "command": "tutkain_connect_to_socket_repl"
+      "command": "tutkain_connect"
   },
   {
       "keys": ["super+r", "super+d"],
-      "command": "tutkain_disconnect_from_socket_repl"
+      "command": "tutkain_disconnect"
   },
   {
       "keys": ["super+r", "super+o"],

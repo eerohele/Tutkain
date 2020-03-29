@@ -30,7 +30,7 @@ class TestReplClient(TestCase):
         self.view.run_command('append', {'characters': chars})
 
     def test_repl_client(self):
-        # You have to start a socket REPL on localhost:12345 to run this test.
+        # You have to start a prepl server on localhost:12345 to run this test.
         with tutkain.ReplClient('localhost', 12345) as repl_client:
             repl_client.input.put('(+ 1 2 3)')
             self.assertEquals(repl_client.output.get().get(Keyword('val')), '6')

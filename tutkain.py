@@ -255,7 +255,7 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
         )
 
 
-class TutkainConnectToSocketReplCommand(sublime_plugin.WindowCommand):
+class TutkainConnectCommand(sublime_plugin.WindowCommand):
     def configure_output_panel(self):
         panel = self.window.find_output_panel('panel')
         if panel is None:
@@ -316,14 +316,14 @@ class TutkainConnectToSocketReplCommand(sublime_plugin.WindowCommand):
             connection = None
 
             self.window.status_message(
-                'ERR: socket to {}:{} refused.'.format(host, port)
+                'ERR: connection to {}:{} refused.'.format(host, port)
             )
 
     def input(self, args):
         return HostInputHandler(self.window)
 
 
-class TutkainDisconnectFromSocketReplCommand(sublime_plugin.WindowCommand):
+class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
     def run(self):
         global repl_client
 
