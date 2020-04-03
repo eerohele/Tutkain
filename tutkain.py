@@ -9,7 +9,7 @@ from functools import partial
 
 import sys
 import os
-import Tutkain.brackets as brackets
+import tutkain.brackets as brackets
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'dependencies'))
 
