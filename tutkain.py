@@ -291,7 +291,6 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
                     'nREPL {}'.format(nrepl_version)
                 )
 
-
             append_to_output_panel(self.window, item.get('out'))
             append_to_output_panel(self.window, item.get('value'))
             append_to_output_panel(self.window, item.get('err'))
