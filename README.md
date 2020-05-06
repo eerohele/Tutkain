@@ -54,10 +54,6 @@ complementing Tutkain with these Sublime Text plugins:
 
 Alternatively, use [Cursive], [Calva], [CIDER], or some other actual IDE.
 
-## See also
-
-- [Socket]
-
 [Calva]: https://github.com/BetterThanTomorrow/calva
 [CIDER]: https://github.com/clojure-emacs/cider
 [clojure]: https://www.clojure.org
@@ -65,6 +61,5 @@ Alternatively, use [Cursive], [Calva], [CIDER], or some other actual IDE.
 [Tutkain]: https://github.com/eerohele/tutkain
 [Package Control]: https://www.packagecontrol.io
 [paredit]: https://github.com/odyssomay/paredit
-[Socket]: https://github.com/nasser/Socket
 [sublime-lispindent]: https://github.com/odyssomay/sublime-lispindent
 [Sublime Text]: https://www.sublimetext.com
