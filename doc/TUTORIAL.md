@@ -2,30 +2,33 @@
 
 ## Prerequisites
 
-* [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools) (the `clojure` command)
+One of:
 
-You can [use Tutkain with Leiningen](https://stackoverflow.com/a/34932745/825783), too. This tutorial presumes you can run `clojure`.
+* [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools) (the `clojure` command)
+* [Leiningen](https://www.leiningen.org)
 
 ## Steps
 
-1. On the command line, start a Clojure prepl server.
-
-   I recommend [Propel]. If you've added a [`deps.edn` alias for Propel](https://clojure.org/reference/deps_and_cli#_aliases),
-   to launch a prepl server, run:
+1. On the command line, start a Clojure [nREPL] server.
 
    ```bash
-   clojure -A:propel --write-port-file
+   # With tools.deps (the `clojure` command):
+   $ clojure -Sdeps '{:deps {nrepl {:mvn/version "0.7.0"}}}' --main nrepl.cmdline --port 1234
+
+   # With Leiningen:
+   $ lein repl :headless :port 1234
    ```
+
+   See the [nREPL documentation](https://nrepl.org/nrepl/0.7.0/usage/server.html)
+   for more information on starting an nREPL server.
 
 2. In Sublime Text, open the command palette.
 
 3. Run the **Tutkain: Connect** command.
 
-   If you opened Sublime Text in the same folder where you started Propel,
-   Tutkain attempts to auto-detect the port to connect to. Otherwise, enter
-   the host and port when prompted. Propel prints the port it uses on startup.
+   Enter the host (`localhost`) and port (`1234`) when prompted.
 
-3. Use the **Tutkain: Evaluate …** commands to send forms to the prepl server
+3. Use the **Tutkain: Evaluate …** commands to send forms to the nREPL server
    for evaluation.
 
    The **Tutkain: Evaluate Form** command works something like this:
@@ -37,4 +40,4 @@ You can [use Tutkain with Leiningen](https://stackoverflow.com/a/34932745/825783
 If you accidentally close the Tutkain output panel, use the **Tutkain: Toggle
 Output Panel** command to bring it up.
 
-[Propel]: https://github.com/Olical/propel
+[nREPL]: https://nrepl.org

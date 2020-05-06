@@ -1,6 +1,6 @@
 # Tutkain
 
-A bare-bones [Clojure] prepl client for [Sublime Text].
+A bare-bones [Clojure] nREPL client for [Sublime Text].
 
 ![image](https://user-images.githubusercontent.com/31859/77619123-353cf980-6f40-11ea-9bc8-4667a509489f.png)
 
@@ -14,9 +14,6 @@ A bare-bones [Clojure] prepl client for [Sublime Text].
 
 1. Clone this repository into your Sublime Text `Packages` directory.
    (Installation via Package Control coming up.)
-
-You almost definitely also want to install [paredit] and [sublime-lispindent] if
-you haven't already.
 
 ## Help
 
@@ -47,9 +44,9 @@ of grinding to a halt every now and then. That triggered this attempt at
 turning Sublime Text into a somewhat viable Clojure editor.
 
 Tutkain is very limited in scope. Its sole aim is the ability to interact
-with a Clojure prepl server. It is not, and never will be, a full-fledged Clojure
-IDE. If you're looking for an IDE-like experience, consider complementing
-Tutkain with these Sublime Text plugins:
+with a Clojure nREPL server. It is not, and never will be, a full-fledged
+Clojure IDE. If you're looking for an IDE-like experience, consider
+complementing Tutkain with these Sublime Text plugins:
 
 - [paredit]
 - [sublime-lispindent]
