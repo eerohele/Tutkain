@@ -275,6 +275,23 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
                 break
             logging.debug({'event': 'printer/recv', 'data': item})
 
+            versions = item.get('versions')
+
+            if versions:
+                clojure_version = versions.get('clojure').get('version-string')
+                nrepl_version = versions.get('nrepl').get('version-string')
+
+                append_to_output_panel(
+                    self.window,
+                    'Clojure {}'.format(clojure_version)
+                )
+
+                append_to_output_panel(
+                    self.window,
+                    'nREPL {}'.format(nrepl_version)
+                )
+
+
             append_to_output_panel(self.window, item.get('out'))
             append_to_output_panel(self.window, item.get('value'))
             append_to_output_panel(self.window, item.get('err'))
