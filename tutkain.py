@@ -4,10 +4,10 @@ import socket
 import queue
 from threading import Thread, Event
 import logging
-import uuid
 
 import tutkain.brackets as brackets
 import tutkain.bencode as bencode
+import tutkain.op as op
 
 
 def debug_mode():
@@ -71,12 +71,12 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                     'data': chars
                 })
 
-                repl_client.input.put({
-                    'op': 'eval',
-                    'id': str(uuid.uuid4()),
-                    'session': repl_client.user_session,
-                    'code': chars
-                })
+                repl_client.input.put(
+                    op.eval({
+                        'session': repl_client.user_session,
+                        'code': chars
+                    })
+                )
 
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
@@ -88,12 +88,12 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
         else:
             region = sublime.Region(0, self.view.size())
 
-            repl_client.input.put({
-                'op': 'eval',
-                'id': str(uuid.uuid4()),
-                'session': repl_client.user_session,
-                'code': self.view.substr(region)
-            })
+            repl_client.input.put(
+                op.eval({
+                    'session': repl_client.user_session,
+                    'code': self.view.substr(region)
+                })
+            )
 
 
 class HostInputHandler(sublime_plugin.TextInputHandler):
@@ -187,7 +187,7 @@ class ReplClient(object):
         self.user_session = user_session
         logging.debug({'event': 'new-session/user', 'id': user_session})
 
-        self.input.put({'op': 'describe', 'session': self.plugin_session})
+        self.input.put({'op': 'describe', 'session': plugin_session})
 
     def __enter__(self):
         self.go()
@@ -247,10 +247,10 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
             append_to_output_panel(self.window, '=> ' + input)
 
             repl_client.input.put({
-                'op': 'eval',
-                'id': str(uuid.uuid4()),
-                'session': repl_client.user_session,
-                'code': input
+                op.eval({
+                    'session': repl_client.user_session,
+                    'code': input
+                })
             })
 
     def noop(*args):
