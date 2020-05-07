@@ -30,7 +30,7 @@ def get_eval_region(view):
 
 
 def append_to_output_panel(window, characters):
-    if characters is not None:
+    if characters:
         panel = window.find_output_panel('panel')
 
         panel.set_read_only(False)
