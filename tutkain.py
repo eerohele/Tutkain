@@ -4,6 +4,7 @@ import socket
 import queue
 from threading import Thread, Event
 import logging
+import uuid
 
 import tutkain.brackets as brackets
 import tutkain.bencode as bencode
@@ -72,6 +73,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 
                 repl_client.input.put({
                     'op': 'eval',
+                    'id': str(uuid.uuid4()),
                     'session': repl_client.session,
                     'code': chars
                 })
@@ -88,6 +90,7 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
 
             repl_client.input.put({
                 'op': 'eval',
+                'id': str(uuid.uuid4()),
                 'session': repl_client.session,
                 'code': self.view.substr(region)
             })
@@ -236,6 +239,7 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
 
             repl_client.input.put({
                 'op': 'eval',
+                'id': str(uuid.uuid4()),
                 'session': repl_client.session,
                 'code': input
             })
