@@ -250,12 +250,12 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
             self.window.run_command('show_panel', {'panel': 'output.panel'})
             append_to_output_panel(self.window, '=> ' + input)
 
-            repl_client.input.put({
+            repl_client.input.put(
                 op.eval({
                     'session': repl_client.user_session,
                     'code': input
                 })
-            })
+            )
 
     def noop(*args):
         pass
