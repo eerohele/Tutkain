@@ -29,15 +29,32 @@ def get_eval_region(view):
         return region
 
 
-def append_to_output_panel(window, characters):
-    if characters:
-        panel = window.find_output_panel('panel')
-
-        panel.set_read_only(False)
+def print_characters(panel, characters):
+    if characters is not None:
         panel.run_command('append', {
             'characters': characters.strip() + '\n',
             'scroll_to_end': True
         })
+
+
+def append_to_output_panel(window, message):
+    if message:
+        panel = window.find_output_panel('panel')
+
+        panel.set_read_only(False)
+
+        if 'value' in message:
+            print_characters(panel, message.get('value'))
+        if 'nrepl.middleware.caught/throwable' in message:
+            print_characters(panel, message.get('nrepl.middleware.caught/throwable'))
+        if 'out' in message:
+            out = '\n'.join(
+                map(lambda line: ';; {}'.format(line),
+                    message['out'].splitlines())
+            )
+
+            print_characters(panel, out)
+
         panel.set_read_only(True)
 
         panel.run_command('move_to', {'to': 'eof'})
@@ -67,7 +84,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                 )
 
                 chars = self.view.substr(region)
-                append_to_output_panel(self.view.window(), '=> ' + chars)
+                append_to_output_panel(self.view.window(), {'in': chars})
 
                 logging.debug({
                     'event': 'send',
@@ -248,7 +265,7 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
             self.window.status_message('ERR: Not connected to a REPL.')
         else:
             self.window.run_command('show_panel', {'panel': 'output.panel'})
-            append_to_output_panel(self.window, '=> ' + input)
+            append_to_output_panel(self.window, {'in': input})
 
             repl_client.input.put(
                 op.eval({
@@ -300,17 +317,15 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
                 append_to_output_panel(
                     self.window,
-                    'Clojure {}'.format(clojure_version)
+                    {'out': 'Clojure {}'.format(clojure_version)}
                 )
 
                 append_to_output_panel(
                     self.window,
-                    'nREPL {}'.format(nrepl_version)
+                    {'out': 'nREPL {}'.format(nrepl_version)}
                 )
 
-            append_to_output_panel(self.window, item.get('out'))
-            append_to_output_panel(self.window, item.get('value'))
-            append_to_output_panel(self.window, item.get('err'))
+            append_to_output_panel(self.window, item)
 
         logging.debug({'event': 'thread/exit', 'thread': 'print_loop'})
 
@@ -335,7 +350,7 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
             self.window.run_command('show_panel', {'panel': 'output.panel'})
 
             message = 'Connected to {}:{}.'.format(host, port)
-            append_to_output_panel(self.window, message)
+            append_to_output_panel(self.window, {'out': message})
         except ConnectionRefusedError:
             self.window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)
@@ -353,4 +368,4 @@ class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
             repl_client.halt()
             repl_client = None
 
-            append_to_output_panel(self.window, 'Disconnected.')
+            append_to_output_panel(self.window, {'out': 'Disconnected.'})
