@@ -74,7 +74,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                 repl_client.input.put({
                     'op': 'eval',
                     'id': str(uuid.uuid4()),
-                    'session': repl_client.session,
+                    'session': repl_client.user_session,
                     'code': chars
                 })
 
@@ -91,7 +91,7 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
             repl_client.input.put({
                 'op': 'eval',
                 'id': str(uuid.uuid4()),
-                'session': repl_client.session,
+                'session': repl_client.user_session,
                 'code': self.view.substr(region)
             })
 
@@ -149,7 +149,8 @@ class ReplClient(object):
     the socket connection. ReplClient is a context manager, so you can use it
     with the `with` statement.
     '''
-    session = None
+    user_session = None
+    plugin_session = None
 
     def connect(self, host, port):
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -177,9 +178,16 @@ class ReplClient(object):
 
         # https://nrepl.org/nrepl/building_clients.html#_basics
         self.input.put({'op': 'clone'})
-        session = self.output.get().get('new-session')
-        self.session = session
-        self.input.put({'op': 'describe', 'session': session})
+        plugin_session = self.output.get().get('new-session')
+        self.plugin_session = plugin_session
+        logging.debug({'event': 'new-session/plugin', 'id': plugin_session})
+
+        self.input.put({'op': 'clone'})
+        user_session = self.output.get().get('new-session')
+        self.user_session = user_session
+        logging.debug({'event': 'new-session/user', 'id': user_session})
+
+        self.input.put({'op': 'describe', 'session': self.plugin_session})
 
     def __enter__(self):
         self.go()
@@ -220,7 +228,8 @@ class ReplClient(object):
         if self.stop_event is not None:
             self.stop_event.set()
 
-        self.session = None
+        self.user_session = None
+        self.plugin_session = None
         self.disconnect()
 
     def __exit__(self, type, value, traceback):
@@ -240,7 +249,7 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
             repl_client.input.put({
                 'op': 'eval',
                 'id': str(uuid.uuid4()),
-                'session': repl_client.session,
+                'session': repl_client.user_session,
                 'code': input
             })
 
