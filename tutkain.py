@@ -32,7 +32,6 @@ def get_eval_region(view):
 def append_to_output_panel(window, characters):
     if characters is not None:
         panel = window.find_output_panel('panel')
-        window.run_command('show_panel', {'panel': 'output.panel'})
 
         panel.set_read_only(False)
         panel.run_command('append', {
@@ -62,6 +61,11 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
         else:
             region = get_eval_region(self.view)
             if region is not None:
+                self.view.window().run_command(
+                    'show_panel',
+                    {'panel': 'output.panel'}
+                )
+
                 chars = self.view.substr(region)
                 append_to_output_panel(self.view.window(), '=> ' + chars)
 
