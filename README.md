@@ -23,7 +23,7 @@ A bare-bones [Clojure] nREPL client for [Sublime Text].
 
 ### macOS
 
-| Command  | Binding |
+| Command | Binding |
 | ------------- | ------------- |
 | Connect | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>C</kbd> |
 | Evaluate Form | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>F</kbd> |
@@ -37,29 +37,23 @@ A bare-bones [Clojure] nREPL client for [Sublime Text].
 
 None yet. Contributions welcome.
 
-## Background
+## Design
 
-I'm a happy [Cursive] user, but Intellij IDEA has a rather frustrating tendency
-of grinding to a halt every now and then. That triggered this attempt at
-turning Sublime Text into a somewhat viable Clojure editor.
+Tutkain is very simple by design. It is narrowly focused on interacting with
+[nREPL] servers.
 
-Tutkain is very limited in scope. Its sole aim is the ability to interact
-with a Clojure nREPL server. It is not, and never will be, a full-fledged
-Clojure IDE. If you're looking for an IDE-like experience, consider
-complementing Tutkain with these Sublime Text plugins:
+For a fuller Clojure editing experience on Sublime Text, consider complementing
+Tutkain with these Sublime Text plugins:
 
 - [paredit]
 - [sublime-lispindent]
-- [Sublime LSP](https://github.com/sublimelsp/LSP/blob/master/docs/index.md#clojurea-nameclojure)
+- [Sublime LSP](https://github.com/sublimelsp/LSP/blob/master/docs/index.md#clojurea-nameclojure) with [clojure-lsp]
 
-Alternatively, use [Cursive], [Calva], [CIDER], or some other actual IDE.
-
-[Calva]: https://github.com/BetterThanTomorrow/calva
-[CIDER]: https://github.com/clojure-emacs/cider
 [clojure]: https://www.clojure.org
-[Cursive]: https://cursive-ide.com
-[Tutkain]: https://github.com/eerohele/tutkain
+[clojure-lsp]: https://github.com/snoe/clojure-lsp
+[nREPL]: https://nrepl.org
 [Package Control]: https://www.packagecontrol.io
 [paredit]: https://github.com/odyssomay/paredit
 [sublime-lispindent]: https://github.com/odyssomay/sublime-lispindent
+[Sublime LSP]: https://github.com/sublimelsp/LSP/blob/master/docs/index.md#clojurea-nameclojure
 [Sublime Text]: https://www.sublimetext.com
