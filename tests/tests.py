@@ -86,7 +86,7 @@ class TestReplClient(TestCase):
         with tutkain.ReplClient('localhost', 1234) as repl_client:
             repl_client.input.put({
                 'op': 'eval',
-                'session': repl_client.session,
+                'session': repl_client.user_session,
                 'code': '(+ 1 2 3)'
             })
 
