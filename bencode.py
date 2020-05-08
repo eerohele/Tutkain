@@ -2,6 +2,9 @@ from functools import partial
 
 
 def read_until(socket, terminator):
+    """Read bytes from a socket until the given terminator byte.
+
+    Return the bytes, excluding the terminator byte."""
     bs = bytearray()
 
     for byte in iter(partial(socket.recv, 1), terminator):
@@ -11,6 +14,7 @@ def read_until(socket, terminator):
 
 
 def read_list(socket):
+    """Read a bencoded list into a Python list."""
     def aux(socket, acc):
         item = read(socket)
 
@@ -24,18 +28,24 @@ def read_list(socket):
 
 
 def into_dict(l):
+    """Convert a list into a dict."""
     return {l[i]: l[i + 1] for i in range(0, len(l), 2)}
 
 
 def read_dict(socket):
+    """Read a bencoded dictionary into a Python dict."""
     return into_dict(read_list(socket))
 
 
 def read_int(socket):
+    """Read a bencoded integer into a Python integer."""
     return int(read_until(socket, b'e'))
 
 
 def read(socket):
+    """Given a socket connection, read bencode values into Python values.
+
+    Assumes that the socket receives well-formed bencode values only."""
     first_byte = socket.recv(1)
 
     if first_byte == b'e':
@@ -52,14 +62,17 @@ def read(socket):
 
 
 def write_int(i):
+    """Encode a Python integer as bencode."""
     return 'i{}e'.format(i)
 
 
 def write_str(s):
+    """Encode a Python string as a bencode byte string."""
     return '{}:{}'.format(len(s), s)
 
 
 def write_list(l):
+    """Encode a Python list as bencode."""
     s = 'l'
 
     for x in l:
@@ -69,6 +82,7 @@ def write_list(l):
 
 
 def write_dict(d):
+    """Encode a Python dict as bencode."""
     s = 'd'
     ks = list(d.keys())
     ks.sort()
@@ -94,4 +108,5 @@ def as_str(x):
 
 
 def write(x):
+    """Encode a Python value as bencode."""
     return as_str(x).encode('utf-8')
