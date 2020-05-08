@@ -44,7 +44,8 @@ def append_to_output_panel(window, message):
         if 'value' in message:
             print_characters(panel, message.get('value'))
         if 'nrepl.middleware.caught/throwable' in message:
-            print_characters(panel, message.get('nrepl.middleware.caught/throwable'))
+            throwable = message.get('nrepl.middleware.caught/throwable')
+            print_characters(panel, throwable)
         if 'out' in message:
             out = '\n'.join(
                 map(lambda line: ';; {}'.format(line),
