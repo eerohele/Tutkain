@@ -33,6 +33,10 @@ class TestBencode(TestCase):
         self.client.sendall(b'4:spam')
         self.assertEquals(bencode.read(self.client), 'spam')
 
+    def test_read_non_ascii_byte_string(self):
+        self.client.sendall(b'4:\xc3\xa4\xc3\xb6')
+        self.assertEquals(bencode.read(self.client), 'äö')
+
     def test_read_list(self):
         self.client.sendall(b'l4:spami42ee')
         self.assertEquals(bencode.read(self.client), ['spam', 42])
