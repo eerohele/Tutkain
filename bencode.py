@@ -1,3 +1,31 @@
+# -*- coding: utf-8 -*-
+"""
+Read bencoded bytes from a socket and turn them into Python values or turn
+Python values into bencoded bytes.
+
+Example:
+
+    import tutkain.bencode as bencode
+
+    socket = socket.sockets(socket.AF_INET, socket.SOCK_STREAM)
+    socket.connect(('localhost', 1234))
+
+    # Wait for someone to put a bencoded value onto the socket.
+    #
+    # For example, given:
+    #
+    #     b'd3:bar4:spam3:fooi42ee'
+
+    print(bencode.read(socket))
+    # => {'foo': 42, 'bar': 'spam'}
+
+    print(bencode.write({'foo': 42, 'bar': 'spam'}))
+    # => b'd3:bar4:spam3:fooi42ee'
+
+Has complete faith in the sending end. That is, does not try to recover from
+any errors.
+"""
+
 from functools import partial
 
 
