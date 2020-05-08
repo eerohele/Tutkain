@@ -309,6 +309,7 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
             if item is None:
                 break
+
             logging.debug({'event': 'printer/recv', 'data': item})
 
             versions = item.get('versions')
