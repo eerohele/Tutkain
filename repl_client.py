@@ -71,7 +71,6 @@ class ReplClient(object):
             if item is None:
                 break
 
-            print(bencode.write(item))
             self.connection.sendall(bencode.write(item))
 
         logging.debug({'event': 'thread/exit', 'thread': 'eval_loop'})
