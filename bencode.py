@@ -91,4 +91,4 @@ def as_str(x):
 
 
 def write(x):
-    return str.encode(as_str(x), encoding='utf-8')
+    return as_str(x).encode('utf-8')
