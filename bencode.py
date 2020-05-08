@@ -10,22 +10,25 @@ def read_until(socket, terminator):
     return bs
 
 
-def read_list(socket, acc):
-    datum = read(socket)
+def read_list(socket):
+    def aux(socket, acc):
+        datum = read(socket)
 
-    if datum is None:
-        return acc
-    else:
-        acc.append(datum)
-        return read_list(socket, acc)
+        if datum is None:
+            return acc
+        else:
+            acc.append(datum)
+            return aux(socket, acc)
+
+    return aux(socket, [])
 
 
 def into_dict(l):
     return {l[i]: l[i + 1] for i in range(0, len(l), 2)}
 
 
-def read_dict(socket, acc):
-    return into_dict(read_list(socket, acc))
+def read_dict(socket):
+    return into_dict(read_list(socket))
 
 
 def read_int(socket):
@@ -38,9 +41,9 @@ def read(socket):
     if first_byte == b'e':
         return None
     elif first_byte == b'd':
-        return read_dict(socket, [])
+        return read_dict(socket)
     elif first_byte == b'l':
-        return read_list(socket, [])
+        return read_list(socket)
     elif first_byte == b'i':
         return read_int(socket)
     else:
