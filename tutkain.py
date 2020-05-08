@@ -35,7 +35,7 @@ def print_characters(panel, characters):
         })
 
 
-def print_out(panel, out):
+def print_comment(panel, out):
     print_characters(
         panel,
         '\n'.join(
@@ -57,9 +57,11 @@ def append_to_output_panel(window, message):
             throwable = message.get('nrepl.middleware.caught/throwable')
             print_characters(panel, throwable)
         if 'out' in message:
-            print_out(panel, message['out'])
+            print_comment(panel, message['out'])
         if 'err' in message:
-            print_out(panel, message['err'])
+            print_comment(panel, message['err'])
+        if 'in' in message:
+            print_comment(panel, '=> {}'.format(message['in']))
 
         panel.set_read_only(True)
 
