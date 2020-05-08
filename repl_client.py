@@ -26,7 +26,6 @@ class ReplClient(object):
 
     def connect(self, host, port):
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connection.settimeout(15)
         self.connection.connect((host, port))
         logging.debug({'event': 'socket/connect', 'host': host, 'port': port})
 
