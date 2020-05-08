@@ -2,7 +2,7 @@
 
 A bare-bones [Clojure] nREPL client for [Sublime Text].
 
-![image](https://user-images.githubusercontent.com/31859/77619123-353cf980-6f40-11ea-9bc8-4667a509489f.png)
+![image](https://user-images.githubusercontent.com/31859/81437665-3898e700-9174-11ea-8fca-668f1a256a92.png)
 
 ## Status
 
