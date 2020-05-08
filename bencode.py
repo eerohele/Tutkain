@@ -12,12 +12,12 @@ def read_until(socket, terminator):
 
 def read_list(socket):
     def aux(socket, acc):
-        datum = read(socket)
+        item = read(socket)
 
-        if datum is None:
+        if item is None:
             return acc
         else:
-            acc.append(datum)
+            acc.append(item)
             return aux(socket, acc)
 
     return aux(socket, [])
