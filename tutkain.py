@@ -170,6 +170,7 @@ class ReplClient(object):
     the socket connection. ReplClient is a context manager, so you can use it
     with the `with` statement.
     '''
+    connection = None
     user_session = None
     plugin_session = None
 
@@ -249,6 +250,7 @@ class ReplClient(object):
         if self.stop_event is not None:
             self.stop_event.set()
 
+        self.connection = None
         self.user_session = None
         self.plugin_session = None
         self.disconnect()
