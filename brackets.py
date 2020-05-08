@@ -68,8 +68,8 @@ def find_rbracket(view, lbracket, start_pos):
             else:
                 return scan(stack, pos + 1)
 
-    # Must start at after the first lbracket (pos + 1) so that the it doesn't
-    # increment the stack counter.
+    # Must start after the first lbracket so that it doesn't increment the
+    # stack counter.
     return scan(0, start_pos + 1)
 
 
