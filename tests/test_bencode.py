@@ -15,6 +15,7 @@ class TestBencode(TestCase):
     def setUp(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect(('localhost', 4321))
+        self.client.settimeout(0.5)
 
     def tearDown(self):
         if self.client is not None:
@@ -47,6 +48,10 @@ class TestBencode(TestCase):
             bencode.read(self.client),
             {'foo': 42, 'bar': 'spam'}
         )
+
+    def test_read_invalid_byte_string(self):
+        self.client.sendall(b'4spam')
+        self.assertRaises(socket.timeout, bencode.read, self.client)
 
     def test_write_str(self):
         self.assertEquals(
