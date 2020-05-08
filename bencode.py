@@ -45,7 +45,7 @@ def read(socket):
         return read_int(socket)
     else:
         n = int(first_byte + read_until(socket, b':'))
-        return socket.recv(n).decode('ascii')
+        return socket.recv(n).decode('utf-8')
 
 
 def write_int(i):
@@ -91,4 +91,4 @@ def as_str(x):
 
 
 def write(x):
-    return str.encode(as_str(x), encoding='ascii')
+    return str.encode(as_str(x), encoding='utf-8')
