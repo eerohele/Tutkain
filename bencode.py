@@ -29,6 +29,9 @@ any errors.
 from functools import partial
 
 
+ENCODING = 'utf-8'
+
+
 def read_until(socket, terminator):
     """Read bytes from a socket until the given terminator byte.
 
@@ -86,7 +89,7 @@ def read(socket):
         return read_int(socket)
     else:
         n = int(first_byte + read_until(socket, b':'))
-        return socket.recv(n).decode('utf-8')
+        return socket.recv(n).decode(ENCODING)
 
 
 def write_int(i):
@@ -96,7 +99,7 @@ def write_int(i):
 
 def write_str(s):
     """Encode a Python string as a bencode byte string."""
-    return '{}:{}'.format(len(s), s)
+    return '{}:{}'.format(len(s.encode(ENCODING)), s)
 
 
 def write_list(l):
@@ -137,4 +140,4 @@ def as_str(x):
 
 def write(x):
     """Encode a Python value as bencode."""
-    return as_str(x).encode('utf-8')
+    return as_str(x).encode(ENCODING)

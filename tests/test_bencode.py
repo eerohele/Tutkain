@@ -50,6 +50,12 @@ class TestBencode(TestCase):
             b'13:Hello, world!'
         )
 
+    def test_write_non_ascii_str(self):
+        self.assertEquals(
+            bencode.write('äö'),
+            b'4:\xc3\xa4\xc3\xb6'
+        )
+
     def test_write_int(self):
         self.assertEquals(
             bencode.write(42),
