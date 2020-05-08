@@ -6,8 +6,8 @@ from tutkain.repl_client import ReplClient
 # NOTE: Before you run these tests, you must start an nREPL server at
 # localhost:1234:
 #
-#        $ cd tests/fixtures
-#        $ clojure -m nrepl.cmdline --port 1234
+#     $ cd tests/fixtures
+#     $ clojure -m nrepl.cmdline --port 1234
 class TestReplClient(TestCase):
     def test_repl_client(self):
         with ReplClient('localhost', 1234) as repl_client:

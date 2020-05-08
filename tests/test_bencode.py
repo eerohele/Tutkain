@@ -7,7 +7,7 @@ import tutkain.bencode as bencode
 # NOTE: Before you run these tests, you must start a TCP echo server at
 # localhost:4321:
 #
-#        $ ncat -l 4321 --keep-open --exec "/bin/cat"
+#     $ ncat -l 4321 --keep-open --sh-exec cat
 class TestBencode(TestCase):
     server = None
     client = None
