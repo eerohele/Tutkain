@@ -35,6 +35,16 @@ def print_characters(panel, characters):
         })
 
 
+def print_out(panel, out):
+    print_characters(
+        panel,
+        '\n'.join(
+            map(lambda line: ';; {}'.format(line),
+                out.splitlines())
+            )
+        )
+
+
 def append_to_output_panel(window, message):
     if message:
         panel = window.find_output_panel('panel')
@@ -47,12 +57,9 @@ def append_to_output_panel(window, message):
             throwable = message.get('nrepl.middleware.caught/throwable')
             print_characters(panel, throwable)
         if 'out' in message:
-            out = '\n'.join(
-                map(lambda line: ';; {}'.format(line),
-                    message['out'].splitlines())
-            )
-
-            print_characters(panel, out)
+            print_out(panel, message['out'])
+        if 'err' in message:
+            print_out(panel, message['err'])
 
         panel.set_read_only(True)
 
