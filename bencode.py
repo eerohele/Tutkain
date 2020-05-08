@@ -26,8 +26,6 @@ Has complete faith in the sending end. That is, does not try to recover from
 any errors.
 """
 
-from functools import partial
-
 
 ENCODING = 'utf-8'
 
@@ -38,7 +36,7 @@ def read_until(socket, terminator):
     Return the bytes, excluding the terminator byte."""
     bs = bytearray()
 
-    for byte in iter(partial(socket.recv, 1), terminator):
+    for byte in iter(lambda: socket.recv(1), terminator):
         bs.extend(byte)
 
     return bs
