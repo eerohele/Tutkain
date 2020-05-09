@@ -72,6 +72,18 @@ class TestBencode(TestCase):
             {'foo': 42, 'bar': 'spam'}
         )
 
+        self.client.sendall(b'l6:cheesei42ed3:ham4:eggsee')
+        self.assertEquals(
+            bencode.read(self.client),
+            ['cheese', 42, {'ham': 'eggs'}]
+        )
+
+        self.client.sendall(b'd6:cheesei42e3:haml4:eggsee')
+        self.assertEquals(
+            bencode.read(self.client),
+            {'cheese': 42, 'ham': ['eggs']}
+        )
+
     def test_read_invalid_byte_string(self):
         self.client.sendall(b'4spam')
         self.assertRaises(socket.timeout, bencode.read, self.client)
@@ -104,4 +116,14 @@ class TestBencode(TestCase):
         self.assertEquals(
             bencode.write({'foo': 42, 'bar': 'spam'}),
             b'd3:bar4:spam3:fooi42ee'
+        )
+
+        self.assertEquals(
+            bencode.write(['cheese', 42, {'ham': 'eggs'}]),
+            b'l6:cheesei42ed3:ham4:eggsee'
+        )
+
+        self.assertEquals(
+            bencode.write({'cheese': 42, 'ham': ['eggs']}),
+            b'd6:cheesei42e3:haml4:eggsee'
         )
