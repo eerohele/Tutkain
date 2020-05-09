@@ -1,26 +1,49 @@
 import socket
+from threading import Event, Thread
 
 from unittest import TestCase
 import tutkain.bencode as bencode
 
 
-# NOTE: Before you run these tests, you must start a TCP echo server at
-# localhost:4321:
-#
-#     $ ncat -l 4321 --keep-open --sh-exec cat
+def serve_loop(server, stop_event):
+    conn, _ = server.accept()
+
+    while not stop_event.wait(0):
+        data = conn.recv(1024)
+        conn.sendall(data)
+
+
+def start_server(stop_event):
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(('localhost', 0))
+    server.listen(1)
+    Thread(daemon=True, target=serve_loop, args=(server, stop_event,)).start()
+    return server
+
+
 class TestBencode(TestCase):
     server = None
     client = None
+    stop_event = None
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
+        self.stop_event = Event()
+        self.server = start_server(self.stop_event)
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(('localhost', 4321))
+        self.client.connect(self.server.getsockname())
         self.client.settimeout(0.5)
 
-    def tearDown(self):
-        if self.client is not None:
-            self.client.shutdown(socket.SHUT_RDWR)
+    @classmethod
+    def tearDownClass(self):
+        if self.client:
             self.client.close()
+            self.client = None
+
+        if self.server:
+            self.stop_event.set()
+            self.stop_event = None
+            self.server = None
 
     def test_read_int(self):
         self.client.sendall(b'i42e')
