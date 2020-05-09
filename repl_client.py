@@ -3,7 +3,7 @@ import queue
 import socket
 from threading import Thread, Event
 
-import tutkain.bencode as bencode
+from . import bencode
 
 
 class ReplClient(object):

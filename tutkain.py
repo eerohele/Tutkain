@@ -3,9 +3,9 @@ import sublime_plugin
 import logging
 from threading import Thread
 
-import tutkain.brackets as brackets
-import tutkain.op as op
-from tutkain.repl_client import ReplClient
+from . import brackets
+from . import op
+from .repl_client import ReplClient
 
 
 def debug_mode():

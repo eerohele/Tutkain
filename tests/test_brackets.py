@@ -1,7 +1,7 @@
 import sublime
 from unittest import TestCase
 
-import tutkain.brackets as brackets
+from tutkain import brackets
 
 
 class TestBrackets(TestCase):

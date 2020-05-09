@@ -2,7 +2,7 @@ import socket
 from threading import Event, Thread
 
 from unittest import TestCase
-import tutkain.bencode as bencode
+from tutkain import bencode
 
 
 def serve_loop(server, stop_event):
