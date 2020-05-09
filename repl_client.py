@@ -1,9 +1,31 @@
 import logging
 import queue
 import socket
-from threading import Thread, Event
+from threading import Thread, Event, Lock
 
 from . import bencode
+
+
+class Session():
+    def __init__(self, id):
+        self.id = id
+        self.op_count = 0
+        self.lock = Lock()
+
+    def op_id(self):
+        with self.lock:
+            self.op_count += 1
+
+        return self.op_count
+
+    def eval_op(self, opts):
+        return {
+            'op': 'eval',
+            'id': self.op_id(),
+            'nrepl.middleware.caught/print?': 'true',
+            'session': self.id,
+            'code': opts.get('code')
+        }
 
 
 class ReplClient(object):
@@ -50,16 +72,16 @@ class ReplClient(object):
 
         # https://nrepl.org/nrepl/building_clients.html#_basics
         self.input.put({'op': 'clone'})
-        plugin_session = self.output.get().get('new-session')
+        plugin_session = Session(self.output.get().get('new-session'))
         self.plugin_session = plugin_session
-        logging.debug({'event': 'new-session/plugin', 'id': plugin_session})
+        logging.debug({'event': 'new-session/plugin', 'id': plugin_session.id})
 
         self.input.put({'op': 'clone'})
-        user_session = self.output.get().get('new-session')
+        user_session = Session(self.output.get().get('new-session'))
         self.user_session = user_session
-        logging.debug({'event': 'new-session/user', 'id': user_session})
+        logging.debug({'event': 'new-session/user', 'id': user_session.id})
 
-        self.input.put({'op': 'describe', 'session': plugin_session})
+        self.input.put({'op': 'describe', 'session': plugin_session.id})
 
     def __enter__(self):
         self.go()

@@ -4,7 +4,6 @@ import logging
 from threading import Thread
 
 from . import brackets
-from . import op
 from .repl_client import ReplClient
 
 
@@ -101,8 +100,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                 })
 
                 repl_client.input.put(
-                    op.eval({
-                        'session': repl_client.user_session,
+                    repl_client.user_session.eval_op({
                         'code': chars
                     })
                 )
@@ -118,8 +116,7 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
             region = sublime.Region(0, self.view.size())
 
             repl_client.input.put(
-                op.eval({
-                    'session': repl_client.user_session,
+                repl_client.user_session.eval_op({
                     'code': self.view.substr(region)
                 })
             )
@@ -175,8 +172,7 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
             append_to_output_panel(self.window, {'in': input})
 
             repl_client.input.put(
-                op.eval({
-                    'session': repl_client.user_session,
+                repl_client.user_session.eval_op({
                     'code': input
                 })
             )

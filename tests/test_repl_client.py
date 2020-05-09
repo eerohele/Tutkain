@@ -18,10 +18,10 @@ class TestReplClient(TestCase):
             self.assertEquals(nrepl_version, '0.7.0')
             self.assertEquals(clojure_version, '1.10.1')
 
-            repl_client.input.put({
-                'op': 'eval',
-                'session': repl_client.user_session,
-                'code': '(+ 1 2 3)'
-            })
+            repl_client.input.put(
+                repl_client.user_session.eval_op({
+                    'code': '(+ 1 2 3)'
+                })
+            )
 
             self.assertEquals(repl_client.output.get().get('value'), '6')
