@@ -26,7 +26,10 @@ class TestBrackets(TestCase):
         self.view.run_command('append', {'characters': chars})
 
     def form(self, pos):
-        return self.view.substr(brackets.current_form_region(self.view, pos))
+        region = brackets.current_form_region(self.view, pos)
+
+        if region:
+            return self.view.substr(region)
 
     def test_current_form_region_simple(self):
         form = '(+ 1 2)'
@@ -77,3 +80,8 @@ class TestBrackets(TestCase):
         form = '(a "\"()\"" b)'
         self.append_to_view(form)
         self.assertEquals(self.form(len(form)), form)
+
+    def test_none_when_outside_sexp(self):
+        form = '"#{"'
+        self.append_to_view(form)
+        self.assertEquals(self.form(1), None)

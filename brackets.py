@@ -74,6 +74,9 @@ def find_rbracket(view, lbracket, start_pos):
 
 
 def current_form_region(view, pos):
+    if ignore(view, pos):
+        return None
+
     next_two_chars = view.substr(sublime.Region(pos, pos + 2))
 
     if next_two_chars == '#{':
