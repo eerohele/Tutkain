@@ -57,6 +57,18 @@ class TestBrackets(TestCase):
         for n in range(len(form)):
             self.assertEquals(self.form(n), form)
 
+    def test_current_form_region_deref_sexp(self):
+        form = '@(atom 1)'
+        self.append_to_view(form)
+        for n in range(len(form)):
+            self.assertEquals(self.form(n), form)
+
+    def test_current_form_region_lambda(self):
+        form = '#(+ 1 2 3)'
+        self.append_to_view(form)
+        for n in range(len(form)):
+            self.assertEquals(self.form(n), form)
+
     def test_current_form_region_discard(self):
         form = '(inc #_(dec 2) 4)'
         self.append_to_view(form)

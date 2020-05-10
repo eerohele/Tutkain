@@ -17,12 +17,8 @@ def ignore(view, pos):
     return in_string or in_comment
 
 
-def next_char(view, pos):
-    return view.substr(sublime.Region(pos, pos + 1))
-
-
-def prev_char(view, pos):
-    return view.substr(sublime.Region(pos - 1, pos))
+def char_range(view, start, end):
+    return view.substr(sublime.Region(start, end))
 
 
 def find_lbracket(view, start_pos):
@@ -30,7 +26,7 @@ def find_lbracket(view, start_pos):
         if ignore(view, pos - 1):
             return scan(stack, pos - 1)
         else:
-            char = prev_char(view, pos)
+            char = char_range(view, pos, pos - 1)
 
             if pos <= 0:
                 return None, None
@@ -55,7 +51,7 @@ def find_rbracket(view, lbracket, start_pos):
         if ignore(view, pos):
             return scan(stack, pos + 1)
         else:
-            char = next_char(view, pos)
+            char = char_range(view, pos, pos + 1)
 
             if lbracket is None:
                 return None, None
@@ -77,13 +73,21 @@ def current_form_region(view, pos):
     if ignore(view, pos):
         return None
 
-    next_two_chars = view.substr(sublime.Region(pos, pos + 2))
+    next_char = char_range(view, pos, pos + 1)
 
-    if next_two_chars == '#{':
-        pos += 2
-    elif next_two_chars[0:1] in LBRACKETS:
+    if next_char == '#':
+        nnext_char = char_range(view, pos + 1, pos + 2)
+
+        if nnext_char == '(' or nnext_char == '{':
+            pos += 2
+    if next_char == '@':
+        nnext_char = char_range(view, pos + 1, pos + 2)
+
+        if nnext_char == '(':
+            pos += 2
+    elif next_char in LBRACKETS:
         pos += 1
-    elif prev_char(view, pos) in RBRACKETS:
+    elif char_range(view, pos, pos - 1) in RBRACKETS:
         pos -= 1
 
     lbracket, lpos = find_lbracket(view, pos)
@@ -91,7 +95,9 @@ def current_form_region(view, pos):
     if lbracket is not None:
         _, rpos = find_rbracket(view, lbracket, lpos)
 
-        if prev_char(view, lpos) == '#':
+        prev_char = char_range(view, lpos, lpos - 1)
+
+        if prev_char == '#' or prev_char == '@':
             lpos -= 1
 
         return sublime.Region(lpos, rpos)
