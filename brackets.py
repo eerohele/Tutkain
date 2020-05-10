@@ -81,7 +81,7 @@ def current_form_region(view, pos):
 
     if next_two_chars == '#{':
         pos += 2
-    elif len(next_two_chars) >= 1 and next_two_chars[0] in LBRACKETS:
+    elif next_two_chars[0:1] in LBRACKETS:
         pos += 1
     elif prev_char(view, pos) in RBRACKETS:
         pos -= 1
