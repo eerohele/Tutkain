@@ -17,15 +17,6 @@ def debug_mode():
 repl_client = None
 
 
-def get_eval_region(view):
-    region = view.sel()[0]
-
-    if region.empty():
-        return brackets.current_form_region(view, region.begin())
-    else:
-        return region
-
-
 def print_characters(panel, characters):
     if characters is not None:
         panel.run_command('append', {
@@ -83,27 +74,35 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
         if repl_client is None:
             self.view.window().status_message('ERR: Not connected to a REPL.')
         else:
-            region = get_eval_region(self.view)
-            if region is not None:
-                self.view.window().run_command(
-                    'show_panel',
-                    {'panel': 'output.panel'}
-                )
+            for region in self.view.sel():
+                eval_region = region
 
-                chars = self.view.substr(region)
-                append_to_output_panel(self.view.window(), {'in': chars})
+                if eval_region.empty():
+                    eval_region = brackets.current_form_region(
+                        self.view,
+                        region.begin()
+                    )
 
-                logging.debug({
-                    'event': 'send',
-                    'scope': 'form',
-                    'data': chars
-                })
+                if eval_region is not None:
+                    self.view.window().run_command(
+                        'show_panel',
+                        {'panel': 'output.panel'}
+                    )
 
-                repl_client.input.put(
-                    repl_client.user_session.eval_op({
-                        'code': chars
+                    chars = self.view.substr(eval_region)
+                    append_to_output_panel(self.view.window(), {'in': chars})
+
+                    logging.debug({
+                        'event': 'send',
+                        'scope': 'form',
+                        'data': chars
                     })
-                )
+
+                    repl_client.input.put(
+                        repl_client.user_session.eval_op({
+                            'code': chars
+                        })
+                    )
 
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
