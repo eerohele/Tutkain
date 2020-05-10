@@ -70,9 +70,6 @@ def find_rbracket(view, lbracket, start_pos):
 
 
 def current_form_region(view, pos):
-    if ignore(view, pos):
-        return None
-
     next_char = char_range(view, pos, pos + 1)
 
     # next char is a left bracket
