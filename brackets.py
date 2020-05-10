@@ -12,8 +12,8 @@ RBRACKETS = {RPAREN: LPAREN, RBRACE: LBRACE, RBRACKET: LBRACKET}
 
 
 def ignore(view, pos):
-    in_string = view.score_selector(pos, "string") > 0
-    in_comment = view.score_selector(pos, "comment") > 0
+    in_string = view.score_selector(pos, 'string') > 0
+    in_comment = view.score_selector(pos, 'comment') > 0
     return in_string or in_comment
 
 
