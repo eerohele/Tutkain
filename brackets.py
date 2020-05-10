@@ -75,20 +75,27 @@ def current_form_region(view, pos):
 
     next_char = char_range(view, pos, pos + 1)
 
-    if next_char == '#':
+    # next char is a left bracket
+    if next_char in LBRACKETS:
+        pos += 1
+
+    # previous char is a right bracket
+    elif char_range(view, pos, pos - 1) in RBRACKETS:
+        pos -= 1
+
+    # next char is the hash mark of a set or anon fn
+    elif next_char == '#':
         nnext_char = char_range(view, pos + 1, pos + 2)
 
         if nnext_char == '(' or nnext_char == '{':
             pos += 2
-    if next_char == '@':
+
+    # next char is an at sign preceding a left paren
+    elif next_char == '@':
         nnext_char = char_range(view, pos + 1, pos + 2)
 
         if nnext_char == '(':
             pos += 2
-    elif next_char in LBRACKETS:
-        pos += 1
-    elif char_range(view, pos, pos - 1) in RBRACKETS:
-        pos -= 1
 
     lbracket, lpos = find_lbracket(view, pos)
 
