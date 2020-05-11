@@ -46,6 +46,10 @@ def append_to_output_panel(window, message):
 
         panel.set_read_only(False)
 
+        # TODO: This seems stupid. Go through https://nrepl.org/nrepl/ops.html,
+        # write a litany of test cases with the responses, and write a function
+        # that picks the relevant bits out of each kind of message and creates
+        # a printable string out of them.
         if 'value' in message:
             print_characters(panel, message.get('value'))
         if 'nrepl.middleware.caught/throwable' in message:
