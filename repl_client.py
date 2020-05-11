@@ -29,6 +29,12 @@ def deregister(id):
     return repl_clients
 
 
+def deregister_all():
+    global repl_clients
+    repl_clients = {}
+    return repl_clients
+
+
 def get_all():
     global repl_clients
     return repl_clients

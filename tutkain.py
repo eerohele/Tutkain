@@ -14,6 +14,14 @@ def debug_mode():
         )
 
 
+def plugin_unloaded():
+    for id in repl_client.get_all():
+        logging.debug({'event': 'repl/halt', 'id': 'id'})
+        repl_client.get(id).halt()
+
+    repl_client.deregister_all()
+
+
 def print_characters(panel, characters):
     if characters is not None:
         panel.run_command('append', {
