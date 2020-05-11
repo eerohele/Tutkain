@@ -8,7 +8,7 @@ A bare-bones [Clojure] nREPL client for [Sublime Text].
 
 **Currently unreleased**.
 
-**Alpha**. Expect breaking changes and a cavalcade of bugs.
+**Alpha**. Expect breaking changes and a veritable cavalcade of bugs.
 
 ## Install
 
@@ -19,12 +19,28 @@ A bare-bones [Clojure] nREPL client for [Sublime Text].
 
 * [Tutorial](doc/TUTORIAL.md)
 
+## Goals
+
+- Simple
+- Fast
+- Easy to hack on
+- Few code dependencies (currently zero)
+
+## Non-goals
+
+- Full IDE experience (can leverage [Sublime LSP] and [clojure-lsp] for static
+  analysis, though — maybe write a tutorial?)
+
+## Maybe-goals
+
+- Reimplement [paredit] with better Clojure support
+
 ## Default key bindings
 
 ### macOS
 
 | Command | Binding |
-| ------------- | ------------- |
+| ------- | ------- |
 | Connect | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>C</kbd> |
 | Evaluate Form | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>F</kbd> |
 | Evaluate View | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>V</kbd> |
