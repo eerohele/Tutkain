@@ -6,6 +6,34 @@ from threading import Thread, Event, Lock
 from . import bencode
 
 
+repl_clients = {}
+
+
+def get(id):
+    global repl_clients
+    repl = repl_clients.get(id)
+
+    if repl and repl.user_session:
+        return repl
+
+
+def register(id, repl_client):
+    global repl_clients
+    repl_clients[id] = repl_client
+    return repl_clients
+
+
+def deregister(id):
+    global repl_clients
+    repl_clients.pop(id, None)
+    return repl_clients
+
+
+def get_all():
+    global repl_clients
+    return repl_clients
+
+
 class Session():
     def __init__(self, id):
         self.id = id

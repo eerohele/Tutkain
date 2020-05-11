@@ -4,7 +4,7 @@ import logging
 from threading import Thread
 
 from . import brackets
-from .repl_client import ReplClient
+from . import repl_client
 
 
 def debug_mode():
@@ -12,9 +12,6 @@ def debug_mode():
         level=logging.DEBUG,
         format=' %(asctime)s - %(levelname)s - %(message)s'
         )
-
-
-repl_client = None
 
 
 def print_characters(panel, characters):
@@ -69,9 +66,9 @@ class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
 
 class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        global repl_client
+        repl = repl_client.get(self.view.window().id())
 
-        if repl_client is None:
+        if repl is None:
             self.view.window().status_message('ERR: Not connected to a REPL.')
         else:
             for region in self.view.sel():
@@ -98,8 +95,8 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                         'data': chars
                     })
 
-                    repl_client.input.put(
-                        repl_client.user_session.eval_op({
+                    repl.input.put(
+                        repl.user_session.eval_op({
                             'code': chars
                         })
                     )
@@ -107,15 +104,15 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        global repl_client
+        repl = repl_client.get(self.view.window().id())
 
-        if repl_client is None:
+        if repl is None:
             self.view.window().status_message('ERR: Not connected to a REPL.')
         else:
             region = sublime.Region(0, self.view.size())
 
-            repl_client.input.put(
-                repl_client.user_session.eval_op({
+            repl.input.put(
+                repl.user_session.eval_op({
                     'code': self.view.substr(region)
                 })
             )
@@ -162,16 +159,16 @@ class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
 
 class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
     def eval(self, input):
-        global repl_client
+        repl = repl_client.get(self.window.id())
 
-        if repl_client is None:
+        if repl is None:
             self.window.status_message('ERR: Not connected to a REPL.')
         else:
             self.window.run_command('show_panel', {'panel': 'output.panel'})
             append_to_output_panel(self.window, {'in': input})
 
-            repl_client.input.put(
-                repl_client.user_session.eval_op({
+            repl.input.put(
+                repl.user_session.eval_op({
                     'code': input
                 })
             )
@@ -203,9 +200,9 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
         panel.set_read_only(True)
         panel.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
 
-    def print_loop(self, repl_client):
+    def print_loop(self, repl):
         while True:
-            item = repl_client.output.get()
+            item = repl.output.get()
 
             if item is None:
                 break
@@ -233,18 +230,17 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
         logging.debug({'event': 'thread/exit', 'thread': 'print_loop'})
 
     def run(self, host, port):
-        global repl_client
-
         try:
-            repl_client = ReplClient(host, int(port))
-            repl_client.go()
+            repl = repl_client.ReplClient(host, int(port))
+            repl_client.register(self.window.id(), repl)
+            repl.go()
 
             # Start a worker that reads values from a ReplClient output queue
             # and prints them into an output panel.
             Thread(
                 daemon=True,
                 target=self.print_loop,
-                args=(repl_client,)
+                args=(repl,)
             ).start()
 
             # Create an output panel for printing evaluation results and show
@@ -265,11 +261,12 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
 class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
     def run(self):
-        global repl_client
+        repl = repl_client.get(self.window.id())
 
-        if repl_client is not None:
-            repl_client.halt()
-            repl_client = None
+        if repl is not None:
+            repl.halt()
+            repl = None
+            repl_client.deregister(self.window.id())
 
             append_to_output_panel(self.window, {'out': 'Disconnected.'})
 
