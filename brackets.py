@@ -22,24 +22,34 @@ def char_range(view, start, end):
 
 
 def find_lbracket(view, start_pos):
-    def scan(stack, pos):
+    pos = start_pos
+    stack = 0
+    lbracket = None, None
+
+    while pos > 0:
+        char = char_range(view, pos, pos - 1)
+
         if ignore(view, pos - 1):
-            return scan(stack, pos - 1)
+            pos -= 1
+            continue
+        elif pos <= 0:
+            break
+        elif char in RBRACKETS:
+            stack += 1
+            pos -= 1
+            continue
+        elif stack > 0 and char in LBRACKETS:
+            stack -= 1
+            pos -= 1
+            continue
+        elif stack == 0 and char in LBRACKETS:
+            lbracket = char, pos - 1
+            break
         else:
-            char = char_range(view, pos, pos - 1)
+            pos -= 1
+            continue
 
-            if pos <= 0:
-                return None, None
-            elif char in RBRACKETS:
-                return scan(stack + 1, pos - 1)
-            elif stack > 0 and char in LBRACKETS:
-                return scan(stack - 1, pos - 1)
-            elif stack == 0 and char in LBRACKETS:
-                return char, pos - 1
-            else:
-                return scan(stack, pos - 1)
-
-    return scan(0, start_pos)
+    return lbracket
 
 
 def is_rbracket_of_kind(lbracket, char):
@@ -47,26 +57,36 @@ def is_rbracket_of_kind(lbracket, char):
 
 
 def find_rbracket(view, lbracket, start_pos):
-    def scan(stack, pos):
+    pos = start_pos + 1
+    stack = 0
+    rbracket = None, None
+    max_pos = view.size()
+
+    if lbracket is None:
+        return rbracket
+
+    while pos < max_pos:
+        char = char_range(view, pos, pos + 1)
+
         if ignore(view, pos):
-            return scan(stack, pos + 1)
+            pos += 1
+            continue
+        elif char == lbracket:
+            stack += 1
+            pos += 1
+            continue
+        elif stack > 0 and is_rbracket_of_kind(lbracket, char):
+            stack -= 1
+            pos += 1
+            continue
+        elif stack == 0 and is_rbracket_of_kind(lbracket, char):
+            rbracket = char, pos + 1
+            break
         else:
-            char = char_range(view, pos, pos + 1)
+            pos += 1
+            continue
 
-            if lbracket is None:
-                return None, None
-            elif char == lbracket:
-                return scan(stack + 1, pos + 1)
-            elif stack > 0 and is_rbracket_of_kind(lbracket, char):
-                return scan(stack - 1, pos + 1)
-            elif stack == 0 and is_rbracket_of_kind(lbracket, char):
-                return char, pos + 1
-            else:
-                return scan(stack, pos + 1)
-
-    # Must start after the first lbracket so that it doesn't increment the
-    # stack counter.
-    return scan(0, start_pos + 1)
+    return rbracket
 
 
 def current_form_region(view, pos):
