@@ -4,6 +4,7 @@ import logging
 from threading import Thread
 
 from . import brackets
+from . import formatter
 from . import repl_client
 
 
@@ -30,38 +31,12 @@ def print_characters(panel, characters):
         })
 
 
-def print_comment(panel, out):
-    print_characters(
-        panel,
-        '\n'.join(
-            map(lambda line: ';; {}'.format(line),
-                out.splitlines())
-            )
-        )
-
-
 def append_to_output_panel(window, message):
     if message:
         panel = window.find_output_panel('panel')
 
         panel.set_read_only(False)
-
-        # TODO: This seems stupid. Go through https://nrepl.org/nrepl/ops.html,
-        # write a litany of test cases with the responses, and write a function
-        # that picks the relevant bits out of each kind of message and creates
-        # a printable string out of them.
-        if 'value' in message:
-            print_characters(panel, message.get('value'))
-        if 'nrepl.middleware.caught/throwable' in message:
-            throwable = message.get('nrepl.middleware.caught/throwable')
-            print_characters(panel, throwable)
-        if 'out' in message:
-            print_comment(panel, message['out'])
-        if 'err' in message:
-            print_comment(panel, message['err'])
-        if 'in' in message:
-            print_comment(panel, '=> {}'.format(message['in']))
-
+        print_characters(panel, formatter.format(message))
         panel.set_read_only(True)
 
         panel.run_command('move_to', {'to': 'eof'})
