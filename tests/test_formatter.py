@@ -25,9 +25,12 @@ class TestFormatter(TestCase):
         self.assertEquals(
             format({
                 'id': 1,
-                'err': '''Execution error (ExceptionInfo) at user/eval96107 (REPL:1).\nBoom!\n'''
+                'err':
+                '''Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
+Boom!'''
             }),
-            ';; Execution error (ExceptionInfo) at user/eval96107 (REPL:1).\n;; Boom!'
+            ''';; Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
+;; Boom!'''
         )
 
         self.assertEquals(
