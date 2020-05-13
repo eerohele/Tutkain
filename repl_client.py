@@ -1,9 +1,9 @@
-import logging
 import queue
 import socket
 from threading import Thread, Event, Lock
 
 from . import bencode
+from .log import log
 
 
 repl_clients = {}
@@ -81,16 +81,16 @@ class ReplClient(object):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
         self.buffer = self.socket.makefile(mode='rwb')
-        logging.debug({'event': 'socket/connect', 'host': host, 'port': port})
+        log.debug({'event': 'socket/connect', 'host': host, 'port': port})
 
     def disconnect(self):
         if self.socket is not None:
             try:
                 self.socket.shutdown(socket.SHUT_RDWR)
                 self.socket.close()
-                logging.debug({'event': 'socket/disconnect'})
+                log.debug({'event': 'socket/disconnect'})
             except OSError as e:
-                logging.debug({'event': 'error', 'exception': e})
+                log.debug({'event': 'error', 'exception': e})
 
     def __init__(self, host, port):
         self.connect(host, port)
@@ -99,19 +99,24 @@ class ReplClient(object):
         self.stop_event = Event()
 
     def go(self):
-        Thread(daemon=True, target=self.eval_loop).start()
-        Thread(daemon=True, target=self.read_loop).start()
+        eval_loop = Thread(daemon=True, target=self.eval_loop)
+        eval_loop.name = 'tutkain.eval_loop'
+        eval_loop.start()
+
+        read_loop = Thread(daemon=True, target=self.read_loop)
+        read_loop.name = 'tutkain.read_loop'
+        read_loop.start()
 
         # https://nrepl.org/nrepl/building_clients.html#_basics
         self.input.put({'op': 'clone'})
         plugin_session = Session(self.output.get().get('new-session'))
         self.plugin_session = plugin_session
-        logging.debug({'event': 'new-session/plugin', 'id': plugin_session.id})
+        log.debug({'event': 'new-session/plugin', 'id': plugin_session.id})
 
         self.input.put({'op': 'clone'})
         user_session = Session(self.output.get().get('new-session'))
         self.user_session = user_session
-        logging.debug({'event': 'new-session/user', 'id': user_session.id})
+        log.debug({'event': 'new-session/user', 'id': user_session.id})
 
         self.input.put({'op': 'describe', 'session': plugin_session.id})
 
@@ -127,22 +132,24 @@ class ReplClient(object):
 
             bencode.write(self.buffer, item)
 
-        logging.debug({'event': 'thread/exit', 'thread': 'eval_loop'})
+        log.debug({'event': 'thread/exit'})
 
     def read_loop(self):
         try:
             while not self.stop_event.wait(0):
                 item = bencode.read(self.buffer)
-                logging.debug({'event': 'read', 'item': item})
-
+                log.debug({'event': 'socket/read', 'item': item})
                 self.output.put(item)
         except OSError as e:
-            logging.debug({'event': 'error', 'exception': e})
+            log.error({
+                'event': 'error',
+                'exception': e
+            })
         finally:
             # If we receive a stop event, put a None into the queue to tell
             # consumers to stop reading it.
             self.output.put_nowait(None)
-            logging.debug({'event': 'thread/exit', 'thread': 'read_loop'})
+            log.debug({'event': 'thread/exit'})
 
     def halt(self):
         # Feed poison pill to input queue.

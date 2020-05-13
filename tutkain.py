@@ -1,23 +1,16 @@
 import sublime
 import sublime_plugin
-import logging
 from threading import Thread
 
 from . import brackets
 from . import formatter
+from .log import log
 from . import repl_client
-
-
-def debug_mode():
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format=' %(asctime)s - %(levelname)s - %(message)s'
-        )
 
 
 def plugin_unloaded():
     for id in repl_client.get_all():
-        logging.debug({'event': 'repl/halt', 'id': 'id'})
+        log.debug({'event': 'repl/halt', 'id': 'id'})
         repl_client.get(id).halt()
 
     repl_client.deregister_all()
@@ -76,7 +69,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                     chars = self.view.substr(eval_region)
                     append_to_output_panel(self.view.window(), {'in': chars})
 
-                    logging.debug({
+                    log.debug({
                         'event': 'send',
                         'scope': 'form',
                         'data': chars
@@ -194,7 +187,7 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
             if item is None:
                 break
 
-            logging.debug({'event': 'printer/recv', 'data': item})
+            log.debug({'event': 'printer/recv', 'data': item})
 
             versions = item.get('versions')
 
@@ -214,7 +207,7 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
             append_to_output_panel(self.window, item)
 
-        logging.debug({'event': 'thread/exit', 'thread': 'print_loop'})
+        log.debug({'event': 'thread/exit'})
 
     def run(self, host, port):
         try:
@@ -224,11 +217,13 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
             # Start a worker that reads values from a ReplClient output queue
             # and prints them into an output panel.
-            Thread(
+            print_loop = Thread(
                 daemon=True,
                 target=self.print_loop,
                 args=(repl,)
-            ).start()
+            )
+            print_loop.name = 'tutkain.print_loop'
+            print_loop.start()
 
             # Create an output panel for printing evaluation results and show
             # it.

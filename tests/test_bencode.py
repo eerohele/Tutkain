@@ -5,7 +5,7 @@ from unittest import TestCase
 from tutkain import bencode
 
 
-def serve_loop(server, stop_event):
+def echo_loop(server, stop_event):
     conn, _ = server.accept()
 
     while not stop_event.wait(0):
@@ -17,7 +17,15 @@ def start_server(stop_event):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(('localhost', 0))
     server.listen(1)
-    Thread(daemon=True, target=serve_loop, args=(server, stop_event,)).start()
+
+    serve_loop = Thread(
+        daemon=True,
+        target=echo_loop,
+        args=(server, stop_event,)
+    )
+
+    serve_loop = 'tutkain.test.serve_loop'
+    serve_loop.start()
     return server
 
 
