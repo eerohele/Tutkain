@@ -8,7 +8,7 @@ from tutkain import bencode
 def echo_loop(server, stop_event):
     conn, _ = server.accept()
 
-    while not stop_event.wait(0):
+    while not stop_event.is_set():
         data = conn.recv(1024)
         conn.sendall(data)
 
