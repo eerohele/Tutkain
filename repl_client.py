@@ -136,7 +136,7 @@ class ReplClient(object):
 
     def read_loop(self):
         try:
-            while not self.stop_event.wait(0):
+            while not self.stop_event.is_set():
                 item = bencode.read(self.buffer)
                 log.debug({'event': 'socket/read', 'item': item})
                 self.output.put(item)
