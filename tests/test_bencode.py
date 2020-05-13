@@ -24,7 +24,7 @@ def start_server(stop_event):
         args=(server, stop_event,)
     )
 
-    serve_loop = 'tutkain.test.serve_loop'
+    serve_loop.name = 'tutkain.test.serve_loop'
     serve_loop.start()
     return server
 
