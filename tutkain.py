@@ -256,4 +256,5 @@ class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
 class TutkainListenerCommand(sublime_plugin.EventListener):
     def on_query_context(self, view, key, operator, operand, match_all):
         if key == 'tutkain.should':
-            return 'Clojure' in view.settings().get('syntax')
+            syntax = view.settings().get('syntax')
+            return 'Clojure' in syntax or 'Markdown' in syntax
