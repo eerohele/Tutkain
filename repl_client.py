@@ -151,17 +151,17 @@ class ReplClient(object):
             self.output.put_nowait(None)
             log.debug({'event': 'thread/exit'})
 
+            # We've exited the loop that reads from the socket, so we can
+            # close the connection to the socket.
+            self.disconnect()
+
     def halt(self):
         # Feed poison pill to input queue.
-        if self.input is not None:
-            self.input.put(None)
+        self.input.put(None)
 
         # Trigger the kill switch to tell background threads to stop reading
         # from the socket.
-        if self.stop_event is not None:
-            self.stop_event.set()
-
-        self.disconnect()
+        self.stop_event.set()
 
     def __exit__(self, type, value, traceback):
         self.halt()
