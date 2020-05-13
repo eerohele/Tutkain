@@ -67,4 +67,4 @@ class TestBencode(TestCase):
     def test_invalid_byte_string(self):
         self.client.sendall(b'4spam')
         # TODO: What would be a sensible failure mode?
-        self.assertRaises(OSError, bencode.read, self.buffer)
+        self.assertRaises(socket.timeout, bencode.read, self.buffer)
