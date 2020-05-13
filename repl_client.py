@@ -100,11 +100,11 @@ class ReplClient(object):
 
     def go(self):
         eval_loop = Thread(daemon=True, target=self.eval_loop)
-        eval_loop.name = 'tutkain.eval_loop'
+        eval_loop.name = 'tutkain.repl_client.eval_loop'
         eval_loop.start()
 
         read_loop = Thread(daemon=True, target=self.read_loop)
-        read_loop.name = 'tutkain.read_loop'
+        read_loop.name = 'tutkain.repl_client.read_loop'
         read_loop.start()
 
         # https://nrepl.org/nrepl/building_clients.html#_basics
