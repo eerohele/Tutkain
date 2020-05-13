@@ -76,20 +76,18 @@ class ReplClient(object):
     the socket connection. ReplClient is a context manager, so you can use it
     with the `with` statement.
     '''
-    connection = None
-    user_session = None
-    plugin_session = None
 
     def connect(self, host, port):
-        self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connection.connect((host, port))
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((host, port))
+        self.buffer = self.socket.makefile(mode='rwb')
         logging.debug({'event': 'socket/connect', 'host': host, 'port': port})
 
     def disconnect(self):
-        if self.connection is not None:
+        if self.socket is not None:
             try:
-                self.connection.shutdown(socket.SHUT_RDWR)
-                self.connection.close()
+                self.socket.shutdown(socket.SHUT_RDWR)
+                self.socket.close()
                 logging.debug({'event': 'socket/disconnect'})
             except OSError as e:
                 logging.debug({'event': 'error', 'exception': e})
@@ -127,14 +125,14 @@ class ReplClient(object):
             if item is None:
                 break
 
-            self.connection.sendall(bencode.write(item))
+            bencode.write(self.buffer, item)
 
         logging.debug({'event': 'thread/exit', 'thread': 'eval_loop'})
 
     def read_loop(self):
         try:
             while not self.stop_event.wait(0):
-                item = bencode.read(self.connection)
+                item = bencode.read(self.buffer)
                 logging.debug({'event': 'read', 'item': item})
 
                 self.output.put(item)
@@ -156,9 +154,6 @@ class ReplClient(object):
         if self.stop_event is not None:
             self.stop_event.set()
 
-        self.connection = None
-        self.user_session = None
-        self.plugin_session = None
         self.disconnect()
 
     def __exit__(self, type, value, traceback):
