@@ -35,23 +35,11 @@ A bare-bones [Clojure] nREPL client for [Sublime Text].
 
 - Reimplement [paredit] with better Clojure support
 
-## Default key bindings
+## Key bindings
 
-### macOS
-
-| Command | Binding |
-| ------- | ------- |
-| Connect | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>C</kbd> |
-| Evaluate Form | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>F</kbd> |
-| Evaluate View | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>V</kbd> |
-| Evaluate Input | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>I</kbd> |
-| Disconnect | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>D</kbd> |
-| Show Output Panel | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>O</kbd> |
-| Clear Output Panel | <kbd>⌘</kbd> + <kbd>R</kbd>, <kbd>⌘</kbd> + <kbd>X</kbd> |
-
-### Windows & Linux
-
-None yet. Contributions welcome.
+None, because any default key binding set I introduce would cause conflicts
+anyway. I'll supply sample key binding sets instead and try to make it as easy
+as possible to take them into use. TBA.
 
 ## Design
 
