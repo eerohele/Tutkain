@@ -105,8 +105,12 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
             repl.eval(
                 region_content(self.view),
                 session_key='plugin',
-                callback=lambda _: append_to_output_panel(
-                    window, {'append': 'loaded.\n'}
+                handler=lambda item: (
+                    item.get('status') == ['done'] and
+                    append_to_output_panel(
+                        self.view.window(),
+                        {'append': 'loaded.\n'}
+                    )
                 )
             )
 
@@ -122,11 +126,14 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
             repl.eval(
                 region_content(self.view),
                 session_key='plugin',
-                callback=lambda _: repl.eval(
-                    '''
-                    ((requiring-resolve 'clojure.test/run-tests))
-                    ''',
-                    session_key='plugin'
+                handler=lambda item: (
+                    item.get('status') == ['done'] and
+                    repl.eval(
+                        '''
+                        ((requiring-resolve 'clojure.test/run-tests))
+                        ''',
+                        session_key='plugin'
+                    )
                 )
             )
 

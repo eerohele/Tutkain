@@ -128,13 +128,13 @@ class ReplClient(object):
             'session':  self.sessions['plugin'].id
         })
 
-    callbacks = dict()
+    handlers = dict()
 
-    def eval(self, code, session_key='user', callback=None):
+    def eval(self, code, session_key='user', handler=None):
         op = self.sessions[session_key].eval_op({'code': code})
 
-        if callback:
-            self.callbacks[op['id']] = callback
+        if handler:
+            self.handlers[(op['session'], op['id'])] = handler
 
         self.input.put(op)
 
@@ -153,14 +153,14 @@ class ReplClient(object):
         log.debug({'event': 'thread/exit'})
 
     def handle(self, item):
-        if 'id' in item and item['id'] in self.callbacks:
+        key = (item.get('session'), (item.get('id')))
+        handler = self.handlers.get(key) or self.output.put
+
+        try:
+            handler.__call__(item)
+        finally:
             if item.get('status') == ['done']:
-                try:
-                    self.callbacks[item['id']].__call__(item)
-                finally:
-                    del self.callbacks[item['id']]
-        else:
-            self.output.put(item)
+                self.handlers.pop(key, None)
 
     def read_loop(self):
         try:
