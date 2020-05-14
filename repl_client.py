@@ -152,15 +152,15 @@ class ReplClient(object):
 
         log.debug({'event': 'thread/exit'})
 
-    def handle(self, op):
-        if 'id' in op and op['id'] in self.callbacks:
-            if op.get('status') == ['done']:
+    def handle(self, item):
+        if 'id' in item and item['id'] in self.callbacks:
+            if item.get('status') == ['done']:
                 try:
-                    self.callbacks[op['id']].__call__(op)
+                    self.callbacks[item['id']].__call__(item)
                 finally:
-                    del self.callbacks[op['id']]
+                    del self.callbacks[item['id']]
         else:
-            self.output.put(op)
+            self.output.put(item)
 
     def read_loop(self):
         try:
