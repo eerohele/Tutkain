@@ -104,7 +104,6 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
 
             repl.eval(
                 region_content(self.view),
-                session_key='plugin',
                 handler=lambda item: (
                     item.get('status') == ['done'] and
                     append_to_output_panel(
