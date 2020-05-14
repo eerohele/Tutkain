@@ -26,20 +26,27 @@ def plugin_unloaded():
 def print_characters(panel, characters):
     if characters is not None:
         panel.run_command('append', {
-            'characters': characters.strip() + '\n',
+            'characters': characters,
             'scroll_to_end': True
         })
 
 
-def append_to_output_panel(window, message):
+def append_to_output_panel(window, message, ensure=False):
     if message:
         panel = window.find_output_panel('panel')
+
+        if ensure:
+            window.run_command('show_panel', {'panel': 'output.panel'})
 
         panel.set_read_only(False)
         print_characters(panel, formatter.format(message))
         panel.set_read_only(True)
 
         panel.run_command('move_to', {'to': 'eof'})
+
+
+def region_content(view):
+    return view.substr(sublime.Region(0, view.size()))
 
 
 class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
@@ -53,10 +60,11 @@ class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
 
 class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        repl = repl_client.get(self.view.window().id())
+        window = self.view.window()
+        repl = repl_client.get(window.id())
 
         if repl is None:
-            self.view.window().status_message('ERR: Not connected to a REPL.')
+            window.status_message('ERR: Not connected to a REPL.')
         else:
             for region in self.view.sel():
                 eval_region = region
@@ -67,46 +75,57 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                         region.begin()
                     )
 
-                if eval_region is not None:
-                    self.view.window().run_command(
-                        'show_panel',
-                        {'panel': 'output.panel'}
-                    )
-
-                    chars = self.view.substr(eval_region)
-                    append_to_output_panel(self.view.window(), {'in': chars})
+                if eval_region:
+                    code = self.view.substr(eval_region)
+                    append_to_output_panel(window, {'in': code}, ensure=True)
 
                     log.debug({
                         'event': 'send',
                         'scope': 'form',
-                        'data': chars
+                        'code': code
                     })
 
-                    repl.input.put(
-                        repl.user_session.eval_op({
-                            'code': chars
-                        })
-                    )
+                    repl.eval(code)
 
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        repl = repl_client.get(self.view.window().id())
+        window = self.view.window()
+        repl = repl_client.get(window.id())
 
         if repl is None:
-            self.view.window().status_message('ERR: Not connected to a REPL.')
+            window.status_message('ERR: Not connected to a REPL.')
         else:
-            self.view.window().run_command(
-                'show_panel',
-                {'panel': 'output.panel'}
+            append_to_output_panel(
+                window,
+                {'append': ';; Loading view...'},
+                ensure=True
             )
 
-            region = sublime.Region(0, self.view.size())
+            repl.eval(
+                region_content(self.view),
+                session_key='plugin',
+                callback=lambda _: repl.output.put({'append': 'loaded.\n'})
+            )
 
-            repl.input.put(
-                repl.user_session.eval_op({
-                    'code': self.view.substr(region)
-                })
+
+class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        window = self.view.window()
+        repl = repl_client.get(window.id())
+
+        if repl is None:
+            window.status_message('ERR: Not connected to a REPL.')
+        else:
+            repl.eval(
+                region_content(self.view),
+                session_key='plugin',
+                callback=lambda _: repl.eval(
+                    '''
+                    ((requiring-resolve 'clojure.test/run-tests))
+                    ''',
+                    session_key='plugin'
+                )
             )
 
 
@@ -150,20 +169,15 @@ class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
 
 
 class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
-    def eval(self, input):
+    def eval(self, code):
         repl = repl_client.get(self.window.id())
 
         if repl is None:
             self.window.status_message('ERR: Not connected to a REPL.')
         else:
-            self.window.run_command('show_panel', {'panel': 'output.panel'})
-            append_to_output_panel(self.window, {'in': input})
+            append_to_output_panel(self.window, {'in': code}, ensure=True)
 
-            repl.input.put(
-                repl.user_session.eval_op({
-                    'code': input
-                })
-            )
+            repl.eval(code)
 
     def noop(*args):
         pass
@@ -240,10 +254,9 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
             # Create an output panel for printing evaluation results and show
             # it.
             self.configure_output_panel()
-            self.window.run_command('show_panel', {'panel': 'output.panel'})
 
             message = 'Connected to {}:{}.'.format(host, port)
-            append_to_output_panel(self.window, {'out': message})
+            append_to_output_panel(self.window, {'out': message}, ensure=True)
         except ConnectionRefusedError:
             self.window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)

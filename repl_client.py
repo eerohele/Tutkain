@@ -12,9 +12,7 @@ repl_clients = {}
 def get(id):
     global repl_clients
     repl = repl_clients.get(id)
-
-    if repl and repl.user_session:
-        return repl
+    return repl
 
 
 def register(id, repl_client):
@@ -77,6 +75,8 @@ class ReplClient(object):
     with the `with` statement.
     '''
 
+    sessions = dict()
+
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
@@ -107,18 +107,36 @@ class ReplClient(object):
         read_loop.name = 'tutkain.repl_client.read_loop'
         read_loop.start()
 
-        # https://nrepl.org/nrepl/building_clients.html#_basics
         self.input.put({'op': 'clone'})
-        plugin_session = Session(self.output.get().get('new-session'))
-        self.plugin_session = plugin_session
-        log.debug({'event': 'new-session/plugin', 'id': plugin_session.id})
+        self.sessions['plugin'] = Session(self.output.get().get('new-session'))
+
+        log.debug({
+            'event': 'new-session/plugin',
+            'id': self.sessions['plugin'].id
+        })
 
         self.input.put({'op': 'clone'})
-        user_session = Session(self.output.get().get('new-session'))
-        self.user_session = user_session
-        log.debug({'event': 'new-session/user', 'id': user_session.id})
+        self.sessions['user'] = Session(self.output.get().get('new-session'))
 
-        self.input.put({'op': 'describe', 'session': plugin_session.id})
+        log.debug({
+            'event': 'new-session/user',
+            'id': self.sessions['user'].id
+        })
+
+        self.input.put({
+            'op': 'describe',
+            'session':  self.sessions['plugin'].id
+        })
+
+    callbacks = dict()
+
+    def eval(self, code, session_key='user', callback=None):
+        op = self.sessions[session_key].eval_op({'code': code})
+
+        if callback:
+            self.callbacks[op['id']] = callback
+
+        self.input.put(op)
 
     def __enter__(self):
         self.go()
@@ -134,12 +152,22 @@ class ReplClient(object):
 
         log.debug({'event': 'thread/exit'})
 
+    def handle(self, op):
+        if 'id' in op and op['id'] in self.callbacks:
+            if op.get('status') == ['done']:
+                try:
+                    self.callbacks[op['id']].__call__(op)
+                finally:
+                    del self.callbacks[op['id']]
+        else:
+            self.output.put(op)
+
     def read_loop(self):
         try:
             while not self.stop_event.is_set():
                 item = bencode.read(self.buffer)
                 log.debug({'event': 'socket/read', 'item': item})
-                self.output.put(item)
+                self.handle(item)
         except OSError as e:
             log.error({
                 'event': 'error',

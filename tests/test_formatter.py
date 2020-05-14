@@ -9,17 +9,22 @@ class TestFormatter(TestCase):
 
         self.assertEquals(
             format({'id': 1, 'value': '2', 'ns': 'user'}),
-            '2'
+            '2\n'
         )
 
         self.assertEquals(
             format({'id': 1, 'out': 'Hello, world!\n'}),
-            ';; Hello, world!'
+            ';; Hello, world!\n'
         )
 
         self.assertEquals(
             format({'in': '(+ 1 1)'}),
-            ';; => (+ 1 1)'
+            ';; => (+ 1 1)\n'
+        )
+
+        self.assertEquals(
+            format({'append': 'Hello, world!'}),
+            'Hello, world!'
         )
 
         self.assertEquals(
@@ -30,7 +35,7 @@ class TestFormatter(TestCase):
 Boom!'''
             }),
             ''';; Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
-;; Boom!'''
+;; Boom!\n'''
         )
 
         self.assertEquals(
@@ -42,5 +47,5 @@ Boom!'''
                 'nrepl.middleware.caught/throwable':
                 '#error {\n :cause "Boom!"\n :data {:a 1}\n}'
             }),
-            '#error {\n :cause "Boom!"\n :data {:a 1}\n}'
+            '#error {\n :cause "Boom!"\n :data {:a 1}\n}\n'
         )

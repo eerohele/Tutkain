@@ -18,5 +18,8 @@
     // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_input","context": [{"key": "tutkain.should"}]},
 
     // Clear output panel
-    // {"keys": ["UNBOUND"], "command": "tutkain_clear_output_panel","context": [{"key": "tutkain.should"}]}
+    // {"keys": ["UNBOUND"], "command": "tutkain_clear_output_panel","context": [{"key": "tutkain.should"}]},
+
+    // Run tests in current namespace
+    // {"keys": ["UNBOUND"], "command": "tutkain_run_tests_in_current_namespace","context": [{"key": "tutkain.should"}]},
 ]
