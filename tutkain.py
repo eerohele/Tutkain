@@ -4,8 +4,15 @@ from threading import Thread
 
 from . import brackets
 from . import formatter
-from .log import log
+from .log import enable_debug, log
 from . import repl_client
+
+
+def plugin_loaded():
+    settings = sublime.load_settings('{}.sublime-settings'.format('tutkain'))
+
+    if settings.get('debug', False):
+        enable_debug()
 
 
 def plugin_unloaded():

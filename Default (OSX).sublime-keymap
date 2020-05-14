@@ -1,0 +1,22 @@
+[
+    // Connect to nREPL server
+    // {"keys": ["UNBOUND"], "command": "tutkain_connect","context": [{"key": "tutkain.should"}]},
+
+    // Disconnect from nREPL server
+    // {"keys": ["UNBOUND"], "command": "tutkain_disconnect","context": [{"key": "tutkain.should"}]},
+
+    // Toggle output panel
+    // {"keys": ["UNBOUND"], "command": "tutkain_toggle_output_panel","context": [{"key": "tutkain.should"}]},
+
+    // Evaluate current view
+    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_view","context": [{"key": "tutkain.should"}]},
+
+    // Evaluate selected or current form
+    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_form","context": [{"key": "tutkain.should"}]},
+
+    // Prompt for input and evaluate it
+    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_input","context": [{"key": "tutkain.should"}]},
+
+    // Clear output panel
+    // {"keys": ["UNBOUND"], "command": "tutkain_clear_output_panel","context": [{"key": "tutkain.should"}]}
+]
