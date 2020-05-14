@@ -11,10 +11,26 @@ LBRACKETS = {LPAREN: RPAREN, LBRACE: RBRACE, LBRACKET: RBRACKET}
 RBRACKETS = {RPAREN: LPAREN, RBRACE: LBRACE, RBRACKET: LBRACKET}
 
 
+def point_inside_regions(pos, regions):
+    for region in regions:
+        if pos > region.begin() and pos < region.end():
+            return region
+
+
+def inside_string(view, pos):
+    return (
+        view.match_selector(pos, 'string') and
+        point_inside_regions(pos, view.find_by_selector('string'))
+    )
+
+
+def inside_comment(view, pos):
+    # FIXME
+    return view.match_selector(pos, 'comment')
+
+
 def ignore(view, pos):
-    in_string = view.score_selector(pos, 'string') > 0
-    in_comment = view.score_selector(pos, 'comment') > 0
-    return in_string or in_comment
+    return inside_string(view, pos) or inside_comment(view, pos)
 
 
 def char_range(view, start, end):
@@ -127,3 +143,14 @@ def current_form_region(view, pos):
         return sublime.Region(lpos, rpos)
     else:
         return None
+
+
+def is_next_to_expand_anchor(view, pos):
+    return (
+        char_range(view, pos, pos + 1) in LBRACKETS or
+        char_range(view, pos, pos + 1) in RBRACKETS or
+        char_range(view, pos, pos + 2) == '#{' or
+        char_range(view, pos, pos + 2) == '#(' or
+        char_range(view, pos, pos + 2) == '@(' or
+        char_range(view, pos, pos - 1) in RBRACKETS
+    )

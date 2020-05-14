@@ -265,3 +265,29 @@ class TutkainListenerCommand(sublime_plugin.EventListener):
         if key == 'tutkain.should':
             syntax = view.settings().get('syntax')
             return 'Clojure' in syntax or 'Markdown' in syntax
+
+
+class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        selection = view.sel()
+
+        # TODO: Add proper support for multiple cursors.
+        for region in selection:
+            pos = region.begin()
+
+            if not region.empty():
+                view.run_command('expand_selection', {'to': 'scope'})
+            else:
+                # If we're next to a character that delimits a Clojure form
+                if brackets.is_next_to_expand_anchor(view, pos):
+                    selection.add(brackets.current_form_region(view, pos))
+                # If the next character is a double quote
+                elif brackets.char_range(view, pos, pos + 1) == '"':
+                    # Move cursor to within string
+                    selection.add(sublime.Region(pos + 1))
+
+                    # Then expand
+                    view.run_command('expand_selection', {'to': 'scope'})
+                else:
+                    view.run_command('expand_selection', {'to': 'scope'})

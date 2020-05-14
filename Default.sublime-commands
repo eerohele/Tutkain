@@ -26,5 +26,9 @@
     {
         "caption": "Tutkain: Clear Output Panel",
         "command": "tutkain_clear_output_panel"
+    },
+    {
+        "caption": "Tutkain: Expand Selection",
+        "command": "tutkain_expand_selection"
     }
 ]
