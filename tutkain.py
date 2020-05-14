@@ -286,6 +286,15 @@ class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
             append_to_output_panel(self.window, {'out': 'Disconnected.'})
 
 
+class TutkainNewScratchView(sublime_plugin.WindowCommand):
+    def run(self):
+        view = self.window.new_file()
+        view.set_name('*scratch*')
+        view.set_scratch(True)
+        view.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
+        self.window.focus_view(view)
+
+
 class TutkainListenerCommand(sublime_plugin.EventListener):
     def on_query_context(self, view, key, operator, operand, match_all):
         if key == 'tutkain.should':

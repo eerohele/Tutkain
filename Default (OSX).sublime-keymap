@@ -22,4 +22,7 @@
 
     // Run tests in current namespace
     // {"keys": ["UNBOUND"], "command": "tutkain_run_tests_in_current_namespace","context": [{"key": "tutkain.should"}]},
+
+    // Open a new scratch view
+    // {"keys": ["UNBOUND"], "command": "tutkain_new_scratch_view","context": [{"key": "tutkain.should"}]},
 ]
