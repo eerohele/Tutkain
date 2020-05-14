@@ -9,17 +9,17 @@ from tutkain import repl_client
 #     $ cd tests/fixtures
 #     $ clojure -m nrepl.cmdline --port 1234
 class TestReplClient(TestCase):
+    @classmethod
+    def setUpClass(self):
+        repl_client.deregister_all()
+
+    @classmethod
+    def tearDownClass(self):
+        repl_client.deregister_all()
+
     def test_repl_client(self):
         with repl_client.ReplClient('localhost', 1234) as repl:
-            versions = repl.output.get().get('versions')
-            nrepl_version = versions.get('nrepl').get('version-string')
-            clojure_version = versions.get('clojure').get('version-string')
-
-            self.assertEquals(nrepl_version, '0.7.0')
-            self.assertEquals(clojure_version, '1.10.1')
-
             repl.eval('(+ 1 2 3)')
-
             self.assertEquals(repl.output.get().get('value'), '6')
 
     def test_repl_client_register_deregister(self):

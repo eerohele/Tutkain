@@ -98,15 +98,7 @@ class ReplClient(object):
         self.output = queue.Queue()
         self.stop_event = Event()
 
-    def go(self):
-        eval_loop = Thread(daemon=True, target=self.eval_loop)
-        eval_loop.name = 'tutkain.repl_client.eval_loop'
-        eval_loop.start()
-
-        read_loop = Thread(daemon=True, target=self.read_loop)
-        read_loop.name = 'tutkain.repl_client.read_loop'
-        read_loop.start()
-
+    def clone_sessions(self):
         self.input.put({'op': 'clone'})
         self.sessions['plugin'] = Session(self.output.get().get('new-session'))
 
@@ -123,10 +115,22 @@ class ReplClient(object):
             'id': self.sessions['user'].id
         })
 
+    def describe(self):
         self.input.put({
             'op': 'describe',
-            'session':  self.sessions['plugin'].id
+            'session': self.sessions['plugin'].id
         })
+
+    def go(self):
+        eval_loop = Thread(daemon=True, target=self.eval_loop)
+        eval_loop.name = 'tutkain.repl_client.eval_loop'
+        eval_loop.start()
+
+        read_loop = Thread(daemon=True, target=self.read_loop)
+        read_loop.name = 'tutkain.repl_client.read_loop'
+        read_loop.start()
+
+        self.clone_sessions()
 
     handlers = dict()
 

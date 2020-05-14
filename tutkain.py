@@ -248,7 +248,9 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
         try:
             repl = repl_client.ReplClient(host, int(port))
             repl_client.register(self.window.id(), repl)
+
             repl.go()
+            repl.describe()
 
             # Start a worker that reads values from a ReplClient output queue
             # and prints them into an output panel.
