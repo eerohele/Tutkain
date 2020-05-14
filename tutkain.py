@@ -96,6 +96,11 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
         if repl is None:
             self.view.window().status_message('ERR: Not connected to a REPL.')
         else:
+            self.view.window().run_command(
+                'show_panel',
+                {'panel': 'output.panel'}
+            )
+
             region = sublime.Region(0, self.view.size())
 
             repl.input.put(
