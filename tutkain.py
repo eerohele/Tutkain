@@ -105,7 +105,9 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
             repl.eval(
                 region_content(self.view),
                 session_key='plugin',
-                callback=lambda _: repl.output.put({'append': 'loaded.\n'})
+                callback=lambda _: append_to_output_panel(
+                    window, {'append': 'loaded.\n'}
+                )
             )
 
 
