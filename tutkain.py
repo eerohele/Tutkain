@@ -67,25 +67,23 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
             window.status_message('ERR: Not connected to a REPL.')
         else:
             for region in self.view.sel():
-                eval_region = region
-
-                if eval_region.empty():
-                    eval_region = brackets.current_form_region(
+                eval_region = region if not region.empty() else (
+                    brackets.current_form_region(
                         self.view,
                         region.begin()
                     )
+                )
 
-                if eval_region:
-                    code = self.view.substr(eval_region)
-                    append_to_output_panel(window, {'in': code}, ensure=True)
+                code = self.view.substr(eval_region)
+                append_to_output_panel(window, {'in': code}, ensure=True)
 
-                    log.debug({
-                        'event': 'send',
-                        'scope': 'form',
-                        'code': code
-                    })
+                log.debug({
+                    'event': 'send',
+                    'scope': 'form',
+                    'code': code
+                })
 
-                    repl.eval(code)
+                repl.eval(code)
 
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
