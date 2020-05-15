@@ -11,58 +11,58 @@ LBRACKETS = {LPAREN: RPAREN, LBRACE: RBRACE, LBRACKET: RBRACKET}
 RBRACKETS = {RPAREN: LPAREN, RBRACE: LBRACE, RBRACKET: LBRACKET}
 
 
-def point_inside_regions(pos, regions):
+def point_inside_regions(point, regions):
     for region in regions:
-        if pos > region.begin() and pos < region.end():
+        if point > region.begin() and point < region.end():
             return region
 
 
-def inside_string(view, pos):
+def inside_string(view, point):
     return (
-        view.match_selector(pos, 'string') and
-        point_inside_regions(pos, view.find_by_selector('string'))
+        view.match_selector(point, 'string') and
+        point_inside_regions(point, view.find_by_selector('string'))
     )
 
 
-def inside_comment(view, pos):
+def inside_comment(view, point):
     # FIXME
-    return view.match_selector(pos, 'comment')
+    return view.match_selector(point, 'comment')
 
 
-def ignore(view, pos):
-    return inside_string(view, pos) or inside_comment(view, pos)
+def ignore(view, point):
+    return inside_string(view, point) or inside_comment(view, point)
 
 
 def char_range(view, start, end):
     return view.substr(sublime.Region(start, end))
 
 
-def find_lbracket(view, start_pos):
-    pos = start_pos
+def find_lbracket(view, start_point):
+    point = start_point
     stack = 0
     lbracket = None, None
 
-    while pos > 0:
-        char = char_range(view, pos, pos - 1)
+    while point > 0:
+        char = char_range(view, point, point - 1)
 
-        if ignore(view, pos - 1):
-            pos -= 1
+        if ignore(view, point - 1):
+            point -= 1
             continue
-        elif pos <= 0:
+        elif point <= 0:
             break
         elif char in RBRACKETS:
             stack += 1
-            pos -= 1
+            point -= 1
             continue
         elif stack > 0 and char in LBRACKETS:
             stack -= 1
-            pos -= 1
+            point -= 1
             continue
         elif stack == 0 and char in LBRACKETS:
-            lbracket = char, pos - 1
+            lbracket = char, point - 1
             break
         else:
-            pos -= 1
+            point -= 1
             continue
 
     return lbracket
@@ -72,85 +72,85 @@ def is_rbracket_of_kind(lbracket, char):
     return char in RBRACKETS and RBRACKETS[char] == lbracket
 
 
-def find_rbracket(view, lbracket, start_pos):
-    pos = start_pos + 1
+def find_rbracket(view, lbracket, start_point):
+    point = start_point + 1
     stack = 0
     rbracket = None, None
-    max_pos = view.size()
+    max_point = view.size()
 
     if lbracket is None:
         return rbracket
 
-    while pos < max_pos:
-        char = char_range(view, pos, pos + 1)
+    while point < max_point:
+        char = char_range(view, point, point + 1)
 
-        if ignore(view, pos):
-            pos += 1
+        if ignore(view, point):
+            point += 1
             continue
         elif char == lbracket:
             stack += 1
-            pos += 1
+            point += 1
             continue
         elif stack > 0 and is_rbracket_of_kind(lbracket, char):
             stack -= 1
-            pos += 1
+            point += 1
             continue
         elif stack == 0 and is_rbracket_of_kind(lbracket, char):
-            rbracket = char, pos + 1
+            rbracket = char, point + 1
             break
         else:
-            pos += 1
+            point += 1
             continue
 
     return rbracket
 
 
-def current_form_region(view, pos):
-    next_char = char_range(view, pos, pos + 1)
+def current_form_region(view, point):
+    next_char = char_range(view, point, point + 1)
 
     # next char is a left bracket
     if next_char in LBRACKETS:
-        pos += 1
+        point += 1
 
     # previous char is a right bracket
-    elif char_range(view, pos, pos - 1) in RBRACKETS:
-        pos -= 1
+    elif char_range(view, point, point - 1) in RBRACKETS:
+        point -= 1
 
     # next char is the hash mark of a set or anon fn
     elif next_char == '#':
-        nnext_char = char_range(view, pos + 1, pos + 2)
+        nnext_char = char_range(view, point + 1, point + 2)
 
         if nnext_char == '(' or nnext_char == '{':
-            pos += 2
+            point += 2
 
     # next char is an at sign preceding a left paren
     elif next_char == '@':
-        nnext_char = char_range(view, pos + 1, pos + 2)
+        nnext_char = char_range(view, point + 1, point + 2)
 
         if nnext_char == '(':
-            pos += 2
+            point += 2
 
-    lbracket, lpos = find_lbracket(view, pos)
+    lbracket, lpoint = find_lbracket(view, point)
 
     if lbracket is not None:
-        _, rpos = find_rbracket(view, lbracket, lpos)
+        _, rpoint = find_rbracket(view, lbracket, lpoint)
 
-        prev_char = char_range(view, lpos, lpos - 1)
+        prev_char = char_range(view, lpoint, lpoint - 1)
 
         if prev_char == '#' or prev_char == '@':
-            lpos -= 1
+            lpoint -= 1
 
-        return sublime.Region(lpos, rpos)
+        return sublime.Region(lpoint, rpoint)
     else:
         return None
 
 
-def is_next_to_expand_anchor(view, pos):
+def is_next_to_expand_anchor(view, point):
     return (
-        char_range(view, pos, pos + 1) in LBRACKETS or
-        char_range(view, pos, pos + 1) in RBRACKETS or
-        char_range(view, pos, pos + 2) == '#{' or
-        char_range(view, pos, pos + 2) == '#(' or
-        char_range(view, pos, pos + 2) == '@(' or
-        char_range(view, pos, pos - 1) in RBRACKETS
+        char_range(view, point, point + 1) in LBRACKETS or
+        char_range(view, point, point + 1) in RBRACKETS or
+        char_range(view, point, point + 2) == '#{' or
+        char_range(view, point, point + 2) == '#(' or
+        char_range(view, point, point + 2) == '@(' or
+        char_range(view, point, point - 1) in RBRACKETS
     )
