@@ -7,7 +7,7 @@ from tutkain import repl_client
 # localhost:1234:
 #
 #     $ cd tests/fixtures
-#     $ clojure -m nrepl.cmdline --port 1234
+#     $ clojure -A:nrepl/server
 class TestReplClient(TestCase):
     @classmethod
     def setUpClass(self):

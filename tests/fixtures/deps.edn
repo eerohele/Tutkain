@@ -1,1 +1,2 @@
-{:deps {nrepl {:mvn/version "0.7.0"}}}
+{:aliases {:nrepl/server {:extra-deps {nrepl {:mvn/version "0.7.0"}}
+                          :main-opts ["--main" "nrepl.cmdline" "--port" "1234"]}}}
