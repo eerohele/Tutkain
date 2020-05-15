@@ -46,6 +46,12 @@ class TestBrackets(TestCase):
         self.expand()
         self.assertEquals(self.selection(0), 'foo')
 
+    def test_before_rparen(self):
+        self.append_to_view('(foo)')
+        self.move_cursor(4)
+        self.expand()
+        self.assertEquals(self.selection(0), '(foo)')
+
     def test_after_rparen(self):
         self.append_to_view('(foo)')
         self.move_cursor(6)
@@ -123,3 +129,15 @@ class TestBrackets(TestCase):
         self.move_cursor(6)
         self.expand()
         self.assertEquals(self.selection(0), '@(foo)')
+
+    def test_before_quoted_list(self):
+        self.append_to_view('\'(foo)')
+        self.move_cursor(0)
+        self.expand()
+        self.assertEquals(self.selection(0), '\'(foo)')
+
+    def test_after_quoted_list(self):
+        self.append_to_view('\'(foo)')
+        self.move_cursor(6)
+        self.expand()
+        self.assertEquals(self.selection(0), '\'(foo)')

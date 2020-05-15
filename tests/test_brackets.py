@@ -105,3 +105,20 @@ class TestBrackets(TestCase):
         form = '"#{"'
         self.append_to_view(form)
         self.assertEquals(self.form(1), None)
+
+    def test_adjacent_parens(self):
+        form = '((resolving-require \'clojure.test/run-tests))'
+        self.append_to_view(form)
+        self.assertEquals(self.form(1), form[1:-1])
+
+    def test_quote(self):
+        form = '\'(1 2 3)'
+        self.append_to_view(form)
+        for n in range(len(form)):
+            self.assertEquals(self.form(n), form)
+
+    def test_quote(self):
+        form = '\'(1 2 3)'
+        self.append_to_view(form)
+        for n in range(len(form)):
+            self.assertEquals(self.form(n), form)
