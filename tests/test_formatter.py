@@ -9,17 +9,12 @@ class TestFormatter(TestCase):
 
         self.assertEquals(
             format({'id': 1, 'value': '2', 'ns': 'user'}),
-            '2\n'
+            '2'
         )
 
         self.assertEquals(
             format({'id': 1, 'out': 'Hello, world!\n'}),
             ';; Hello, world!\n'
-        )
-
-        self.assertEquals(
-            format({'in': '(+ 1 1)'}),
-            ';; => (+ 1 1)\n'
         )
 
         self.assertEquals(

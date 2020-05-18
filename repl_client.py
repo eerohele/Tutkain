@@ -39,6 +39,8 @@ def get_all():
 
 
 class Session():
+    handlers = dict()
+
     def __init__(self, id):
         self.id = id
         self.op_count = 0
@@ -50,14 +52,12 @@ class Session():
 
         return self.op_count
 
-    def eval_op(self, opts):
-        return {
-            'op': 'eval',
-            'id': self.op_id(),
-            'nrepl.middleware.caught/print?': 'true',
-            'session': self.id,
-            'code': opts.get('code')
-        }
+    def mkop(self, op):
+        op['session'] = self.id
+        op['id'] = self.op_id()
+        op['nrepl.middleware.caught/print?'] = 'true'
+        op['nrepl.middleware.print/stream?'] = 'true'
+        return op
 
 
 class ReplClient(object):
@@ -75,7 +75,8 @@ class ReplClient(object):
     with the `with` statement.
     '''
 
-    sessions = dict()
+    sessions_by_owner = dict()
+    sessions_by_id = dict()
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -98,27 +99,23 @@ class ReplClient(object):
         self.output = queue.Queue()
         self.stop_event = Event()
 
-    def clone_sessions(self):
+    def clone_session(self, owner):
         self.input.put({'op': 'clone'})
-        self.sessions['plugin'] = Session(self.output.get().get('new-session'))
+        session = Session(self.output.get().get('new-session'))
+        self.sessions_by_id[session.id] = session
+        self.sessions_by_owner[owner] = session
 
         log.debug({
             'event': 'new-session/plugin',
-            'id': self.sessions['plugin'].id
+            'id': session.id
         })
 
-        self.input.put({'op': 'clone'})
-        self.sessions['user'] = Session(self.output.get().get('new-session'))
-
-        log.debug({
-            'event': 'new-session/user',
-            'id': self.sessions['user'].id
-        })
+        return session
 
     def describe(self):
         self.input.put({
             'op': 'describe',
-            'session': self.sessions['plugin'].id
+            'session': self.sessions_by_owner['plugin'].id
         })
 
     def go(self):
@@ -130,15 +127,17 @@ class ReplClient(object):
         read_loop.name = 'tutkain.repl_client.read_loop'
         read_loop.start()
 
-        self.clone_sessions()
+        self.clone_session('plugin')
+        self.clone_session('user')
 
-    handlers = dict()
+    def eval(self, code, owner='user', handler=None):
+        session = self.sessions_by_owner[owner]
+        op = session.mkop({'op': 'eval', 'code': code})
 
-    def eval(self, code, session_key='user', handler=None):
-        op = self.sessions[session_key].eval_op({'code': code})
+        if not handler:
+            handler = self.output.put
 
-        if handler:
-            self.handlers[(op['session'], op['id'])] = handler
+        session.handlers[op['id']] = handler
 
         self.input.put(op)
 
@@ -156,15 +155,21 @@ class ReplClient(object):
 
         log.debug({'event': 'thread/exit'})
 
-    def handle(self, item):
-        key = (item.get('session'), (item.get('id')))
-        handler = self.handlers.get(key) or self.output.put
+    def handle(self, response):
+        session_id = response.get('session')
+        item_id = response.get('id')
+        session = self.sessions_by_id.get(session_id)
+
+        if session:
+            handler = session.handlers.get(item_id, self.output.put)
+        else:
+            handler = self.output.put
 
         try:
-            handler.__call__(item)
+            handler.__call__(response)
         finally:
-            if item.get('status') == ['done']:
-                self.handlers.pop(key, None)
+            if session and response.get('status') == ['done']:
+                session.handlers.pop(item_id, None)
 
     def read_loop(self):
         try:
