@@ -6,36 +6,32 @@ from . import bencode
 from .log import log
 
 
-repl_clients = {}
+class ClientRegistry():
+    clients = {}
 
+    @staticmethod
+    def get(id):
+        client = ClientRegistry.clients.get(id)
+        return client
 
-def get(id):
-    global repl_clients
-    repl = repl_clients.get(id)
-    return repl
+    @staticmethod
+    def register(id, client):
+        ClientRegistry.clients[id] = client
+        return ClientRegistry.clients
 
+    @staticmethod
+    def deregister(id):
+        ClientRegistry.clients.pop(id, None)
+        return ClientRegistry.clients
 
-def register(id, repl_client):
-    global repl_clients
-    repl_clients[id] = repl_client
-    return repl_clients
+    @staticmethod
+    def deregister_all():
+        ClientRegistry.clients = {}
+        return ClientRegistry.clients
 
-
-def deregister(id):
-    global repl_clients
-    repl_clients.pop(id, None)
-    return repl_clients
-
-
-def deregister_all():
-    global repl_clients
-    repl_clients = {}
-    return repl_clients
-
-
-def get_all():
-    global repl_clients
-    return repl_clients
+    @staticmethod
+    def get_all():
+        return ClientRegistry.clients
 
 
 class Session():
@@ -60,9 +56,9 @@ class Session():
         return op
 
 
-class ReplClient(object):
+class Client(object):
     '''
-    Here's how ReplClient works:
+    Here's how Client works:
 
     1. Open a socket connection to the given host and port.
     2. Start a worker that gets items from a queue and sends them over the
@@ -70,8 +66,8 @@ class ReplClient(object):
     3. Start a worker that reads bencode strings from the socket,
        parses them, and puts them into a queue.
 
-    Calling `halt()` on a ReplClient will stop the background threads and close
-    the socket connection. ReplClient is a context manager, so you can use it
+    Calling `halt()` on a Client will stop the background threads and close
+    the socket connection. Client is a context manager, so you can use it
     with the `with` statement.
     '''
 
@@ -120,11 +116,11 @@ class ReplClient(object):
 
     def go(self):
         eval_loop = Thread(daemon=True, target=self.eval_loop)
-        eval_loop.name = 'tutkain.repl_client.eval_loop'
+        eval_loop.name = 'tutkain.client.eval_loop'
         eval_loop.start()
 
         read_loop = Thread(daemon=True, target=self.read_loop)
-        read_loop.name = 'tutkain.repl_client.read_loop'
+        read_loop.name = 'tutkain.client.read_loop'
         read_loop.start()
 
         self.clone_session('plugin')

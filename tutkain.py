@@ -5,7 +5,7 @@ from threading import Thread
 from . import brackets
 from . import formatter
 from .log import enable_debug, log
-from . import repl_client
+from .repl import ClientRegistry, Client
 
 
 def plugin_loaded():
@@ -16,11 +16,11 @@ def plugin_loaded():
 
 
 def plugin_unloaded():
-    for id in repl_client.get_all():
-        log.debug({'event': 'repl/halt', 'id': 'id'})
-        repl_client.get(id).halt()
+    for id in ClientRegistry.get_all():
+        log.debug({'event': 'client/halt', 'id': 'id'})
+        ClientRegistry.get(id).halt()
 
-    repl_client.deregister_all()
+    ClientRegistry.deregister_all()
 
 
 def print_characters(panel, characters):
@@ -60,9 +60,9 @@ class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
 class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         window = self.view.window()
-        repl = repl_client.get(window.id())
+        client = ClientRegistry.get(window.id())
 
-        if repl is None:
+        if client is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
             for region in self.view.sel():
@@ -75,7 +75,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 
                 code = self.view.substr(eval_region)
 
-                repl.output.put({'out': '=> {}'.format(code)})
+                client.output.put({'out': '=> {}'.format(code)})
 
                 log.debug({
                     'event': 'send',
@@ -83,12 +83,12 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                     'code': code
                 })
 
-                repl.eval(
+                client.eval(
                     code,
                     handler=lambda response: (
-                        repl.output.put({'append': '\n'})
+                        client.output.put({'append': '\n'})
                         if response.get('status') == ['done']
-                        else repl.output.put(response)
+                        else client.output.put(response)
                     )
                 )
 
@@ -96,18 +96,18 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         window = self.view.window()
-        repl = repl_client.get(window.id())
+        client = ClientRegistry.get(window.id())
 
-        if repl is None:
+        if client is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            repl.output.put({'append': ';; Loading view...'})
+            client.output.put({'append': ';; Loading view...'})
 
-            repl.eval(
+            client.eval(
                 region_content(self.view),
                 handler=lambda response: (
                     response.get('status') == ['done'] and
-                    repl.output.put({'append': 'loaded.\n'})
+                    client.output.put({'append': 'loaded.\n'})
                 )
             )
 
@@ -115,17 +115,17 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
 class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         window = self.view.window()
-        repl = repl_client.get(window.id())
+        client = ClientRegistry.get(window.id())
 
-        if repl is None:
+        if client is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            repl.eval(
+            client.eval(
                 region_content(self.view),
                 owner='plugin',
                 handler=lambda response: (
                     response.get('status') == ['done'] and
-                    repl.eval(
+                    client.eval(
                         '''
                         ((requiring-resolve 'clojure.test/run-tests))
                         ''',
@@ -176,19 +176,19 @@ class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
 
 class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
     def eval(self, code):
-        repl = repl_client.get(self.window.id())
+        client = ClientRegistry.get(self.window.id())
 
-        if repl is None:
+        if client is None:
             self.window.status_message('ERR: Not connected to a REPL.')
         else:
-            repl.output.put({'out': '=> {}'.format(code)})
+            client.output.put({'out': '=> {}'.format(code)})
 
-            repl.eval(
+            client.eval(
                 code,
                 handler=lambda response: (
-                    repl.output.put({'append': '\n'})
+                    client.output.put({'append': '\n'})
                     if response.get('status') == ['done']
-                    else repl.output.put(response)
+                    else client.output.put(response)
                 )
             )
 
@@ -219,9 +219,9 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
         panel.set_read_only(True)
         panel.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
 
-    def print_loop(self, repl):
+    def print_loop(self, client):
         while True:
-            item = repl.output.get()
+            item = client.output.get()
 
             if item is None:
                 break
@@ -234,18 +234,18 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
     def run(self, host, port):
         try:
-            repl = repl_client.ReplClient(host, int(port))
-            repl_client.register(self.window.id(), repl)
+            client = Client(host, int(port))
+            ClientRegistry.register(self.window.id(), client)
 
-            repl.go()
-            repl.describe()
+            client.go()
+            client.describe()
 
-            # Start a worker that reads values from a ReplClient output queue
+            # Start a worker that reads values from a Client output queue
             # and prints them into an output panel.
             print_loop = Thread(
                 daemon=True,
                 target=self.print_loop,
-                args=(repl,)
+                args=(client,)
             )
             print_loop.name = 'tutkain.print_loop'
             print_loop.start()
@@ -264,13 +264,13 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
 class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
     def run(self):
-        repl = repl_client.get(self.window.id())
+        client = ClientRegistry.get(self.window.id())
 
-        if repl is not None:
-            repl.output.put({'out': 'Disconnecting...'})
-            repl.halt()
-            repl = None
-            repl_client.deregister(self.window.id())
+        if client is not None:
+            client.output.put({'out': 'Disconnecting...'})
+            client.halt()
+            client = None
+            ClientRegistry.deregister(self.window.id())
             self.window.status_message('REPL disconnected.')
 
 
@@ -318,11 +318,11 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
 
 class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
     def run(self):
-        repl = repl_client.get(self.window.id())
+        client = ClientRegistry.get(self.window.id())
 
-        if repl is None:
+        if client is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            session_id = repl.sessions_by_owner['user'].id
+            session_id = client.sessions_by_owner['user'].id
             log.debug({'event': 'eval/interrupt', 'id': session_id})
-            repl.input.put({'op': 'interrupt', 'session': session_id})
+            client.input.put({'op': 'interrupt', 'session': session_id})
