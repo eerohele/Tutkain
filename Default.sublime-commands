@@ -39,4 +39,8 @@
         "caption": "Tutkain: New Scratch View",
         "command": "tutkain_new_scratch_view"
     },
+    {
+        "caption": "Tutkain: Interrupt Evaluation",
+        "command": "tutkain_interrupt_evaluation"
+    },
 ]

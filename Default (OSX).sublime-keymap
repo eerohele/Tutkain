@@ -17,6 +17,9 @@
     // Prompt for input and evaluate it
     // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_input","context": [{"key": "tutkain.should"}]},
 
+    // Interrupt evaluation
+    // {"keys": ["UNBOUND"], "command": "tutkain_interrupt_evaluation","context": [{"key": "tutkain.should"}]},
+
     // Clear output panel
     // {"keys": ["UNBOUND"], "command": "tutkain_clear_output_panel","context": [{"key": "tutkain.should"}]},
 

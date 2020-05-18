@@ -314,3 +314,15 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
                     view.run_command('expand_selection', {'to': 'scope'})
                 else:
                     view.run_command('expand_selection', {'to': 'scope'})
+
+
+class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        repl = repl_client.get(self.window.id())
+
+        if repl is None:
+            window.status_message('ERR: Not connected to a REPL.')
+        else:
+            session_id = repl.sessions_by_owner['user'].id
+            log.debug({'event': 'eval/interrupt', 'id': session_id})
+            repl.input.put({'op': 'interrupt', 'session': session_id})

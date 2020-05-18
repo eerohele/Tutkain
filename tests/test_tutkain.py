@@ -96,6 +96,19 @@ class TestEvaluateViewCommand(TestCase):
 
     # TODO: Figure out how to test EvaluateInputCommand
 
+    def test_interrupt_evaluation(self):
+        content = '''(do (Thread/sleep 1000) (println "Boom!"))'''
+        append_to_view(self.view, content)
+        move_cursor(self.view, 0)
+        self.view.run_command('tutkain_evaluate_form')
+        self.view.window().run_command('tutkain_interrupt_evaluation')
+        time.sleep(self.delay)
+
+        self.assertRegex(
+            tutkain.region_content(self.output_panel),
+            r'.*Execution error .*InterruptedException\).*'
+        )
+
 
 class TestBrackets(TestCase):
     @classmethod
