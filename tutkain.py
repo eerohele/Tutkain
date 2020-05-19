@@ -322,6 +322,11 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
             ClientRegistry.register(self.window.id(), client)
 
             client.go()
+
+            client.output.put(
+                {'out': 'Connected to {}:{}.\n'.format(host, port)}
+            )
+
             client.describe()
 
             # Start a worker that reads values from a Client output queue
