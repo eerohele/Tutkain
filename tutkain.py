@@ -6,7 +6,7 @@ from threading import Thread
 from . import brackets
 from . import formatter
 from .log import enable_debug, log
-from .repl import ClientRegistry, Client
+from .repl import Client, SessionRegistry
 
 
 def plugin_loaded():
@@ -17,11 +17,7 @@ def plugin_loaded():
 
 
 def plugin_unloaded():
-    for id in ClientRegistry.get_all():
-        log.debug({'event': 'client/halt', 'id': 'id'})
-        ClientRegistry.get(id).halt()
-
-    ClientRegistry.deregister_all()
+    SessionRegistry.wipe()
 
 
 def print_characters(panel, characters):
@@ -61,9 +57,9 @@ class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
 class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         window = self.view.window()
-        client = ClientRegistry.get(window.id())
+        session = SessionRegistry.get_by_owner(window.id(), 'user')
 
-        if client is None:
+        if session is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
             for region in self.view.sel():
@@ -76,7 +72,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 
                 code = self.view.substr(eval_region)
 
-                client.output.put({'out': '=> {}\n'.format(code)})
+                session.output({'out': '=> {}\n'.format(code)})
 
                 log.debug({
                     'event': 'send',
@@ -84,82 +80,81 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                     'code': code
                 })
 
-                client.eval(
-                    code,
+                session.send(
+                    {'op': 'eval', 'code': code},
                     handler=lambda response: (
-                        client.output.put({'append': '\n'})
+                        session.output({'append': '\n'})
                         if response.get('status') == ['done']
-                        else client.output.put(response)
+                        else session.output(response)
                     )
                 )
 
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
-    def handler(self, client, response):
-        if response.get('status') == ['done']:
-            client.output.put({'append': '\n'})
-        elif response.get('value'):
+    def handler(self, session, response):
+        if response.get('value'):
             pass
         else:
-            client.output.put(response)
+            session.output(response)
 
     def run(self, edit):
         window = self.view.window()
-        client = ClientRegistry.get(window.id())
+        session = SessionRegistry.get_by_owner(window.id(), 'user')
 
-        if client is None:
+        if session is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            client.output.put({'out': 'Loading view...'})
+            session.output({'out': 'Loading view...\n'})
 
-            client.eval(
-                region_content(self.view),
-                handler=lambda response: self.handler(client, response)
+            session.send(
+                {'op': 'eval', 'code': region_content(self.view)},
+                handler=lambda response: self.handler(session, response)
             )
 
 
 class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
-    def evaluate_view(self, client, response):
+    def evaluate_view(self, session, response):
         if response.get('status') == ['done']:
-            client.eval(
-                region_content(self.view),
-                owner='plugin',
-                handler=lambda response: self.run_tests(client, response)
+            session.send(
+                {'op': 'eval', 'code': region_content(self.view)},
+                handler=lambda response: self.run_tests(session, response)
             )
 
-    def run_tests(self, client, response):
-        session = client.sessions_by_id[response['session']]
-
+    def run_tests(self, session, response):
         if response.get('status') == ['eval-error']:
             session.denounce(response)
         elif response.get('status') == ['done']:
-            client.output.put({'append': '\n'})
-
             if not session.is_denounced(response):
-                client.eval(
-                    '''
-                    ((requiring-resolve 'clojure.test/run-tests))
-                    ''',
-                    owner='plugin'
+                session.send(
+                    {'op': 'eval',
+                     'code': '((requiring-resolve \'clojure.test/run-tests))'},
+                    handler=lambda response: (
+                        session.output({'append': '\n'})
+                        if response.get('status') == ['done']
+                        else session.output(response)
+                    )
                 )
+
+            session.output({'append': '\n'})
         elif response.get('value'):
             pass
         else:
-            client.output.put(response)
+            session.output(response)
 
     def run(self, edit):
         window = self.view.window()
-        client = ClientRegistry.get(window.id())
+        session = SessionRegistry.get_by_owner(window.id(), 'plugin')
 
-        if client is None:
+        if session is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            client.eval(
-                '''
-                (run! (fn [[sym _]] (ns-unmap *ns* sym)) (ns-publics *ns*))
-                ''',
-                owner='plugin',
-                handler=lambda response: self.evaluate_view(client, response)
+            session.send(
+                {'op': 'eval',
+                 'code': '''
+                         (run! (fn [[sym _]] (ns-unmap *ns* sym))
+                               (ns-publics *ns*))
+                         '''},
+                handler=lambda response: self.evaluate_view(session, response)
             )
 
 
@@ -260,19 +255,19 @@ class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
 
 class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
     def eval(self, code):
-        client = ClientRegistry.get(self.window.id())
+        session = SessionRegistry.get_by_owner(self.window.id(), 'user')
 
-        if client is None:
+        if session is None:
             self.window.status_message('ERR: Not connected to a REPL.')
         else:
-            client.output.put({'out': '=> {}\n'.format(code)})
+            session.output({'out': '=> {}\n'.format(code)})
 
-            client.eval(
-                code,
+            session.send(
+                {'op': 'eval', 'code': code},
                 handler=lambda response: (
-                    client.output.put({'append': '\n'})
+                    session.output({'append': '\n'})
                     if response.get('status') == ['done']
-                    else client.output.put(response)
+                    else session.output(response)
                 )
             )
 
@@ -318,16 +313,27 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
     def run(self, host, port):
         try:
-            client = Client(host, int(port))
-            ClientRegistry.register(self.window.id(), client)
+            client = Client(host, int(port)).go()
 
-            client.go()
+            plugin_session = client.clone_session()
+            SessionRegistry.register(
+                self.window.id(),
+                'plugin',
+                plugin_session
+            )
 
-            client.output.put(
+            user_session = client.clone_session()
+            SessionRegistry.register(
+                self.window.id(),
+                'user',
+                user_session
+            )
+
+            plugin_session.output(
                 {'out': 'Connected to {}:{}.\n'.format(host, port)}
             )
 
-            client.describe()
+            plugin_session.client.input.put({'op': 'describe'})
 
             # Start a worker that reads values from a Client output queue
             # and prints them into an output panel.
@@ -353,14 +359,16 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
 class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
     def run(self):
-        client = ClientRegistry.get(self.window.id())
+        window = self.window
+        session = SessionRegistry.get_by_owner(window.id(), 'plugin')
 
-        if client is not None:
-            client.output.put({'out': 'Disconnecting...\n'})
-            client.halt()
-            client = None
-            ClientRegistry.deregister(self.window.id())
-            self.window.status_message('REPL disconnected.')
+        if session is not None:
+            session.output({'out': 'Disconnecting...\n'})
+            session.terminate()
+            user_session = SessionRegistry.get_by_owner(window.id(), 'user')
+            user_session.terminate()
+            SessionRegistry.deregister(window.id())
+            window.status_message('REPL disconnected.')
 
 
 class TutkainNewScratchView(sublime_plugin.WindowCommand):
@@ -407,11 +415,10 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
 
 class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
     def run(self):
-        client = ClientRegistry.get(self.window.id())
+        session = SessionRegistry.get_by_owner(self.window.id(), 'user')
 
-        if client is None:
-            window.status_message('ERR: Not connected to a REPL.')
+        if session is None:
+            self.window.status_message('ERR: Not connected to a REPL.')
         else:
-            session_id = client.sessions_by_owner['user'].id
-            log.debug({'event': 'eval/interrupt', 'id': session_id})
-            client.input.put({'op': 'interrupt', 'session': session_id})
+            log.debug({'event': 'eval/interrupt', 'id': session.id})
+            session.send({'op': 'interrupt'})

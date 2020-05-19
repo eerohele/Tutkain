@@ -14,7 +14,7 @@ def move_cursor(view, pos):
     view.sel().add(sublime.Region(pos))
 
 
-class TestEvaluateViewCommand(TestCase):
+class TestCommands(TestCase):
     delay = 0.15
 
     @classmethod

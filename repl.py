@@ -1,3 +1,4 @@
+import collections
 import queue
 import socket
 from threading import Thread, Event, Lock
@@ -6,40 +7,49 @@ from . import bencode
 from .log import log
 
 
-class ClientRegistry():
-    clients = {}
+class SessionRegistry():
+    by_owner = collections.defaultdict(dict)
+    by_id = collections.defaultdict(dict)
 
     @staticmethod
-    def get(id):
-        client = ClientRegistry.clients.get(id)
-        return client
+    def get_by_id(id):
+        return SessionRegistry.by_id.get(id)
 
     @staticmethod
-    def register(id, client):
-        ClientRegistry.clients[id] = client
-        return ClientRegistry.clients
+    def get_by_owner(window_id, owner):
+        by_window = SessionRegistry.by_owner.get(window_id)
+
+        if by_window:
+            return by_window.get(owner)
 
     @staticmethod
-    def deregister(id):
-        ClientRegistry.clients.pop(id, None)
-        return ClientRegistry.clients
+    def register(window_id, owner, session):
+        SessionRegistry.by_id[session.id] = session
+        SessionRegistry.by_owner[window_id][owner] = session
 
     @staticmethod
-    def deregister_all():
-        ClientRegistry.clients = {}
-        return ClientRegistry.clients
+    def deregister(window_id):
+        for k, session in SessionRegistry.by_owner.get(window_id).items():
+            SessionRegistry.by_id.pop(session.id, None)
+
+        SessionRegistry.by_owner.pop(window_id, None)
 
     @staticmethod
-    def get_all():
-        return ClientRegistry.clients
+    def wipe():
+        for id, session in SessionRegistry.by_id.items():
+            session.terminate()
+
+        SessionRegistry.by_owner.clear()
+        SessionRegistry.by_id.clear()
 
 
 class Session():
     handlers = dict()
     errors = dict()
 
-    def __init__(self, id):
+    def __init__(self, id, client):
         self.id = id
+        self.client = client
         self.op_count = 0
         self.lock = Lock()
 
@@ -49,12 +59,24 @@ class Session():
 
         return self.op_count
 
-    def mkop(self, op):
-        op['session'] = self.id
-        op['id'] = self.op_id()
-        op['nrepl.middleware.caught/print?'] = 'true'
-        op['nrepl.middleware.print/stream?'] = 'true'
-        return op
+    def op(self, d):
+        d['session'] = self.id
+        d['id'] = self.op_id()
+        d['nrepl.middleware.caught/print?'] = 'true'
+        d['nrepl.middleware.print/stream?'] = 'true'
+        return d
+
+    def output(self, x):
+        self.client.output.put(x)
+
+    def send(self, op, handler=None):
+        op = self.op(op)
+
+        if not handler:
+            handler = self.client.output.put
+
+        self.handlers[op['id']] = handler
+        self.client.input.put(op)
 
     def denounce(self, response):
         id = response.get('id')
@@ -64,6 +86,9 @@ class Session():
 
     def is_denounced(self, response):
         return response.get('id') in self.errors
+
+    def terminate(self):
+        self.client.halt()
 
 
 class Client(object):
@@ -81,14 +106,18 @@ class Client(object):
     with the `with` statement.
     '''
 
-    sessions_by_owner = dict()
-    sessions_by_id = dict()
-
-    def connect(self, host, port):
+    def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((host, port))
+        self.socket.connect((self.host, self.port))
         self.buffer = self.socket.makefile(mode='rwb')
-        log.debug({'event': 'socket/connect', 'host': host, 'port': port})
+
+        log.debug({
+            'event': 'socket/connect',
+            'host': self.host,
+            'port': self.port
+        })
+
+        return self
 
     def disconnect(self):
         if self.socket is not None:
@@ -100,62 +129,42 @@ class Client(object):
                 log.debug({'event': 'error', 'exception': e})
 
     def __init__(self, host, port):
-        self.connect(host, port)
+        self.host = host
+        self.port = port
         self.input = queue.Queue()
         self.output = queue.Queue()
         self.stop_event = Event()
 
-    def clone_session(self, owner):
+    def clone_session(self):
         self.input.put({'op': 'clone'})
-        session = Session(self.output.get().get('new-session'))
-        self.sessions_by_id[session.id] = session
-        self.sessions_by_owner[owner] = session
-
-        log.debug({
-            'event': 'new-session/plugin',
-            'id': session.id
-        })
-
-        return session
-
-    def describe(self):
-        self.input.put({
-            'op': 'describe',
-            'session': self.sessions_by_owner['plugin'].id
-        })
+        id = self.output.get().get('new-session')
+        return Session(id, self)
 
     def go(self):
-        eval_loop = Thread(daemon=True, target=self.eval_loop)
-        eval_loop.name = 'tutkain.client.eval_loop'
-        eval_loop.start()
+        self.connect()
 
-        read_loop = Thread(daemon=True, target=self.read_loop)
-        read_loop.name = 'tutkain.client.read_loop'
-        read_loop.start()
+        send_loop = Thread(daemon=True, target=self.send_loop)
+        send_loop.name = 'tutkain.client.send_loop'
+        send_loop.start()
 
-        self.clone_session('plugin')
-        self.clone_session('user')
+        recv_loop = Thread(daemon=True, target=self.recv_loop)
+        recv_loop.name = 'tutkain.client.recv_loop'
+        recv_loop.start()
 
-    def eval(self, code, owner='user', handler=None):
-        session = self.sessions_by_owner[owner]
-        op = session.mkop({'op': 'eval', 'code': code})
-
-        if not handler:
-            handler = self.output.put
-
-        session.handlers[op['id']] = handler
-
-        self.input.put(op)
+        return self
 
     def __enter__(self):
         self.go()
         return self
 
-    def eval_loop(self):
+    def send_loop(self):
         while True:
             item = self.input.get()
+
             if item is None:
                 break
+
+            log.debug({'event': 'socket/send', 'item': item})
 
             bencode.write(self.buffer, item)
 
@@ -164,7 +173,7 @@ class Client(object):
     def handle(self, response):
         session_id = response.get('session')
         item_id = response.get('id')
-        session = self.sessions_by_id.get(session_id)
+        session = SessionRegistry.get_by_id(session_id)
 
         if session:
             handler = session.handlers.get(item_id, self.output.put)
@@ -178,11 +187,11 @@ class Client(object):
                 session.handlers.pop(item_id, None)
                 session.errors.pop(item_id, None)
 
-    def read_loop(self):
+    def recv_loop(self):
         try:
             while not self.stop_event.is_set():
                 item = bencode.read(self.buffer)
-                log.debug({'event': 'socket/read', 'item': item})
+                log.debug({'event': 'socket/recv', 'item': item})
                 self.handle(item)
         except OSError as e:
             log.error({
@@ -199,6 +208,7 @@ class Client(object):
             # close the connection to the socket.
             self.disconnect()
 
+    # FIXME: Still doesn't seem to stop all threads.
     def halt(self):
         # Feed poison pill to input queue.
         self.input.put(None)
