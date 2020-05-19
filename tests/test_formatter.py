@@ -30,7 +30,7 @@ class TestFormatter(TestCase):
 Boom!'''
             }),
             ''';; Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
-;; Boom!\n'''
+;; Boom!'''
         )
 
         self.assertEquals(
@@ -42,5 +42,5 @@ Boom!'''
                 'nrepl.middleware.caught/throwable':
                 '#error {\n :cause "Boom!"\n :data {:a 1}\n}'
             }),
-            '#error {\n :cause "Boom!"\n :data {:a 1}\n}\n'
+            '#error {\n :cause "Boom!"\n :data {:a 1}\n}'
         )

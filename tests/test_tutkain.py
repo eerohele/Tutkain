@@ -64,7 +64,7 @@ class TestEvaluateViewCommand(TestCase):
 
         self.assertEquals(
             tutkain.region_content(self.output_panel),
-            ''';; Loading view...loaded.\n'''
+            ''';; Loading view...\n'''
         )
 
         append_to_view(self.view, ' (square 2)')
@@ -74,7 +74,7 @@ class TestEvaluateViewCommand(TestCase):
 
         self.assertEquals(
             tutkain.region_content(self.output_panel),
-            ''';; Loading view...loaded.
+            ''';; Loading view...
 ;; => (square 2)
 4
 ''')

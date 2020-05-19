@@ -75,7 +75,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 
                 code = self.view.substr(eval_region)
 
-                client.output.put({'out': '=> {}'.format(code)})
+                client.output.put({'out': '=> {}\n'.format(code)})
 
                 log.debug({
                     'event': 'send',
@@ -94,6 +94,14 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
+    def handler(self, client, response):
+        if response.get('status') == ['done']:
+            client.output.put({'append': '\n'})
+        elif response.get('value'):
+            pass
+        else:
+            client.output.put(response)
+
     def run(self, edit):
         window = self.view.window()
         client = ClientRegistry.get(window.id())
@@ -101,14 +109,11 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
         if client is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            client.output.put({'append': ';; Loading view...'})
+            client.output.put({'out': 'Loading view...'})
 
             client.eval(
                 region_content(self.view),
-                handler=lambda response: (
-                    response.get('status') == ['done'] and
-                    client.output.put({'append': 'loaded.\n'})
-                )
+                handler=lambda response: self.handler(client, response)
             )
 
 
@@ -181,7 +186,7 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
         if client is None:
             self.window.status_message('ERR: Not connected to a REPL.')
         else:
-            client.output.put({'out': '=> {}'.format(code)})
+            client.output.put({'out': '=> {}\n'.format(code)})
 
             client.eval(
                 code,

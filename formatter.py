@@ -1,18 +1,23 @@
 def format_out(out):
-    return '\n'.join(map(lambda line: ';; {}'.format(line), out.splitlines()))
+    # TODO: Why do I need to do this?
+    maybe_newline = '\n' if out.endswith('\n') else ''
+
+    return '\n'.join(
+        map(lambda line: ';; {}'.format(line), out.splitlines())
+    ) + maybe_newline
 
 
 def format(message):
     if 'value' in message:
         return message['value']
     if 'nrepl.middleware.caught/throwable' in message:
-        return message.get('nrepl.middleware.caught/throwable') + '\n'
+        return message.get('nrepl.middleware.caught/throwable')
     if 'out' in message:
-        return format_out(message['out']) + '\n'
+        return format_out(message['out'])
     if 'append' in message:
         return message['append']
     if 'err' in message:
-        return format_out(message.get('err')) + '\n'
+        return format_out(message.get('err'))
     if 'versions' in message:
         versions = message.get('versions')
 
