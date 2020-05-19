@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is]]))
 
 (deftest ok
-  (is (= 3 (+ 1 1))))
+  (is (= 2 (+ 1 1))))
 
 (deftest nok
   (is (= 3 (+ 1 1))))

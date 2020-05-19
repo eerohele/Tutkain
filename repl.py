@@ -36,6 +36,7 @@ class ClientRegistry():
 
 class Session():
     handlers = dict()
+    errors = dict()
 
     def __init__(self, id):
         self.id = id
@@ -55,6 +56,14 @@ class Session():
         op['nrepl.middleware.print/stream?'] = 'true'
         return op
 
+    def denounce(self, response):
+        id = response.get('id')
+
+        if id:
+            self.errors[id] = response
+
+    def is_denounced(self, response):
+        return response.get('id') in self.errors
 
 class Client(object):
     '''
@@ -166,6 +175,7 @@ class Client(object):
         finally:
             if session and response.get('status') == ['done']:
                 session.handlers.pop(item_id, None)
+                session.errors.pop(item_id, None)
 
     def read_loop(self):
         try:

@@ -79,6 +79,17 @@ class TestEvaluateViewCommand(TestCase):
 4
 ''')
 
+    def test_evaluate_view_with_error(self):
+        content = '''(ns app.core) (inc "a")'''
+        append_to_view(self.view, content)
+        self.view.run_command('tutkain_evaluate_view')
+        time.sleep(self.delay)
+
+        self.assertRegex(
+            tutkain.region_content(self.output_panel),
+            r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
+        )
+
     def test_run_test_in_current_namespace(self):
         content = '''(ns app.core-test
         (:require [clojure.test :refer [deftest is]]))
@@ -92,7 +103,23 @@ class TestEvaluateViewCommand(TestCase):
 
         self.assertEquals(
             tutkain.region_content(self.output_panel).splitlines()[-1],
-            '''{:test 2, :pass 1, :fail 1, :error 0, :type :summary}''')
+            '''{:test 2, :pass 1, :fail 1, :error 0, :type :summary}'''
+        )
+
+    def test_run_test_in_current_namespace_with_error(self):
+        content = '''(ns error.core-test
+        (:require [clojure.test :refer [deftest is]]))
+
+        (deftest test-with-error (is (= "JavaScript" (+ 1 "a"))))
+        '''
+        append_to_view(self.view, content)
+        self.view.run_command('tutkain_run_tests_in_current_namespace')
+        time.sleep(self.delay)
+
+        self.assertRegex(
+            tutkain.region_content(self.output_panel),
+            r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
+        )
 
     # TODO: Figure out how to test EvaluateInputCommand
 

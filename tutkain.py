@@ -118,6 +118,26 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
 
 
 class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
+    def run_tests(self, client, response):
+        session = client.sessions_by_id[response['session']]
+
+        if response.get('status') == ['eval-error']:
+            session.denounce(response)
+        elif response.get('status') == ['done']:
+            client.output.put({'append': '\n'})
+
+            if not session.is_denounced(response):
+                client.eval(
+                    '''
+                    ((requiring-resolve 'clojure.test/run-tests))
+                    ''',
+                    owner='plugin'
+                )
+        elif response.get('value'):
+            pass
+        else:
+            client.output.put(response)
+
     def run(self, edit):
         window = self.view.window()
         client = ClientRegistry.get(window.id())
@@ -128,15 +148,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
             client.eval(
                 region_content(self.view),
                 owner='plugin',
-                handler=lambda response: (
-                    response.get('status') == ['done'] and
-                    client.eval(
-                        '''
-                        ((requiring-resolve 'clojure.test/run-tests))
-                        ''',
-                        owner='plugin'
-                    )
-                )
+                handler=lambda response: self.run_tests(client, response)
             )
 
 
