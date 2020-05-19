@@ -32,11 +32,17 @@ class TestBrackets(TestCase):
             return self.view.substr(region)
 
     def test_inside_string(self):
-        self.append_to_view('"x"')
-        self.assertFalse(brackets.inside_string(self.view, 0))
-        self.assertTrue(brackets.inside_string(self.view, 1))
-        self.assertTrue(brackets.inside_string(self.view, 2))
-        self.assertFalse(brackets.inside_string(self.view, 3))
+        content = ' "x" '
+        self.append_to_view(content)
+        self.assertEquals(
+            list(
+                map(
+                    lambda point: brackets.inside_string(self.view, point),
+                    range(0, len(content))
+                )
+            ),
+            [False, False, True, True, False]
+        )
         # TODO: Test backslash escape scenarios
 
     def test_current_form_region_simple(self):

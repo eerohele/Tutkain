@@ -1,20 +1,15 @@
 import sublime
-import itertools
-
 LBRACKETS = {'(': ')', '[': ']', '{': '}'}
 RBRACKETS = {')': '(', ']': '[', '}': '{'}
 
 
-def point_inside_regions(point, regions):
-    for region in regions:
-        if point > region.begin() and point < region.end():
-            return region
-
-
 def inside_string(view, point):
     return (
-        view.match_selector(point, 'string') and
-        point_inside_regions(point, view.find_by_selector('string'))
+        view.match_selector(point, 'string')
+        and not view.match_selector(
+            point,
+            'punctuation.definition.string.begin'
+        )
     )
 
 
