@@ -294,7 +294,7 @@ class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
         client = ClientRegistry.get(self.window.id())
 
         if client is not None:
-            client.output.put({'out': 'Disconnecting...'})
+            client.output.put({'out': 'Disconnecting...\n'})
             client.halt()
             client = None
             ClientRegistry.deregister(self.window.id())
