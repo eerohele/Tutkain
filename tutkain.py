@@ -33,9 +33,9 @@ def print_characters(panel, characters):
 
 def append_to_output_panel(window, message):
     if message:
-        panel = window.find_output_panel('panel')
+        panel = window.find_output_panel('tutkain')
 
-        window.run_command('show_panel', {'panel': 'output.panel'})
+        window.run_command('show_panel', {'panel': 'output.tutkain'})
 
         panel.set_read_only(False)
         print_characters(panel, formatter.format(message))
@@ -50,7 +50,7 @@ def region_content(view):
 
 class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
     def run(self):
-        panel = self.window.find_output_panel('panel')
+        panel = self.window.find_output_panel('tutkain')
         panel.set_read_only(False)
         panel.run_command('select_all')
         panel.run_command('right_delete')
@@ -166,7 +166,7 @@ class PortInputHandler(sublime_plugin.TextInputHandler):
 class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
     def run(self):
         active_panel = self.window.active_panel()
-        panel = 'output.panel'
+        panel = 'output.tutkain'
 
         if active_panel == panel:
             self.window.run_command('hide_panel', {'panel': panel})
@@ -207,11 +207,11 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
 
 class TutkainConnectCommand(sublime_plugin.WindowCommand):
     def configure_output_panel(self):
-        panel = self.window.find_output_panel('panel')
+        panel = self.window.find_output_panel('tutkain')
         if panel is None:
-            panel = self.window.create_output_panel('panel')
+            panel = self.window.create_output_panel('tutkain')
 
-        panel.set_name('panel')
+        panel.set_name('tutkain')
         panel.settings().set('line_numbers', False)
         panel.settings().set('gutter', False)
         panel.settings().set('is_widget', True)
