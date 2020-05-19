@@ -65,6 +65,7 @@ class Session():
     def is_denounced(self, response):
         return response.get('id') in self.errors
 
+
 class Client(object):
     '''
     Here's how Client works:
