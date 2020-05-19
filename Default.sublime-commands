@@ -4,7 +4,7 @@
         "command": "tutkain_connect"
     },
     {
-        "caption": "Tutkain: Show Output Panel",
+        "caption": "Tutkain: Toggle Output Panel",
         "command": "tutkain_toggle_output_panel"
     },
     {
