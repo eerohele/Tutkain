@@ -1,3 +1,4 @@
+import os
 import sublime
 import sublime_plugin
 from threading import Thread
@@ -175,19 +176,75 @@ class HostInputHandler(sublime_plugin.TextInputHandler):
     def initial_text(self):
         return 'localhost'
 
+    def read_port(self, path):
+        with open(path, 'r') as file:
+            return (path, file.read())
+
+    def discover_ports(self):
+        # I mean, this is Pythonic, right...?
+        return list(
+            map(
+                self.read_port,
+                filter(
+                    os.path.isfile,
+                    map(
+                        lambda folder: os.path.join(folder, '.nrepl-port'),
+                        self.window.folders()
+                    )
+                )
+            )
+        )
+
     def next_input(self, host):
-        return PortInputHandler(self.window)
+        ports = self.discover_ports()
+
+        if len(ports) > 1:
+            return PortsInputHandler(ports)
+        elif len(ports) == 1:
+            return PortInputHandler(ports[0][1])
+        else:
+            return PortInputHandler('')
 
 
 class PortInputHandler(sublime_plugin.TextInputHandler):
-    def __init__(self, window):
-        self.window = window
+    def __init__(self, default_value):
+        self.default_value = default_value
+
+    def name(self):
+        return 'port'
 
     def placeholder(self):
         return 'Port'
 
     def validate(self, text):
         return text.isdigit()
+
+    def initial_text(self):
+        return self.default_value
+
+
+class PortsInputHandler(sublime_plugin.ListInputHandler):
+    def __init__(self, ports):
+        self.ports = ports
+
+    def name(self):
+        return 'port'
+
+    def validate(self, text):
+        return text.isdigit()
+
+    def contract_path(self, path):
+        return path.replace(os.path.expanduser('~'), '~')
+
+    def list_items(self):
+        return list(
+            map(
+                lambda x: (
+                    '{} ({})'.format(x[1], self.contract_path(x[0])), x[1]
+                ),
+                self.ports
+            )
+        )
 
 
 class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
