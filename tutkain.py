@@ -118,6 +118,14 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
 
 
 class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
+    def evaluate_view(self, client, response):
+        if response.get('status') == ['done']:
+            client.eval(
+                region_content(self.view),
+                owner='plugin',
+                handler=lambda response: self.run_tests(client, response)
+            )
+
     def run_tests(self, client, response):
         session = client.sessions_by_id[response['session']]
 
@@ -146,9 +154,11 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
             window.status_message('ERR: Not connected to a REPL.')
         else:
             client.eval(
-                region_content(self.view),
+                '''
+                (run! (fn [[sym _]] (ns-unmap *ns* sym)) (ns-publics *ns*))
+                ''',
                 owner='plugin',
-                handler=lambda response: self.run_tests(client, response)
+                handler=lambda response: self.evaluate_view(client, response)
             )
 
 
