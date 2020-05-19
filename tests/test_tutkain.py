@@ -30,13 +30,13 @@ class TestEvaluateViewCommand(TestCase):
             {'host': 'localhost', 'port': 1234}
         )
 
-        self.output_panel = self.view.window().find_output_panel('panel')
+        self.output_panel = self.view.window().find_output_panel('tutkain')
 
     @classmethod
     def tearDownClass(self):
         if self.view:
             self.view.window().run_command('tutkain_disconnect')
-            self.view.window().destroy_output_panel('panel')
+            self.view.window().destroy_output_panel('tutkain')
             self.view.window().run_command('close_file')
 
     def setUp(self):
