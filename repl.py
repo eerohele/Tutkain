@@ -31,20 +31,20 @@ class Session():
         return d
 
     def output(self, x):
-        self.client.output.put(x)
+        self.client.recvq.put(x)
 
     def send(self, op, handler=None):
         op = self.op(op)
 
         if not handler:
-            handler = self.client.output.put
+            handler = self.client.recvq.put
 
         self.handlers[op['id']] = handler
-        self.client.input.put(op)
+        self.client.sendq.put(op)
 
     def handle(self, response):
         id = response.get('id')
-        handler = self.handlers.get(id, self.client.output.put)
+        handler = self.handlers.get(id, self.client.recvq.put)
 
         try:
             handler.__call__(response)
@@ -106,13 +106,13 @@ class Client(object):
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.input = queue.Queue()
-        self.output = queue.Queue()
+        self.sendq = queue.Queue()
+        self.recvq = queue.Queue()
         self.stop_event = Event()
 
     def clone_session(self):
-        self.input.put({'op': 'clone'})
-        id = self.output.get().get('new-session')
+        self.sendq.put({'op': 'clone'})
+        id = self.recvq.get().get('new-session')
         return Session(id, self)
 
     def go(self):
@@ -134,7 +134,7 @@ class Client(object):
 
     def send_loop(self):
         while True:
-            item = self.input.get()
+            item = self.sendq.get()
 
             if item is None:
                 break
@@ -152,7 +152,7 @@ class Client(object):
         if session:
             session.handle(response)
         else:
-            self.output.put(response)
+            self.recvq.put(response)
 
     def recv_loop(self):
         try:
@@ -168,7 +168,8 @@ class Client(object):
         finally:
             # If we receive a stop event, put a None into the queue to tell
             # consumers to stop reading it.
-            self.output.put_nowait(None)
+            self.recvq.put(None)
+
             log.debug({'event': 'thread/exit'})
 
             # We've exited the loop that reads from the socket, so we can
@@ -178,7 +179,7 @@ class Client(object):
     # FIXME: Still doesn't seem to stop all threads.
     def halt(self):
         # Feed poison pill to input queue.
-        self.input.put(None)
+        self.sendq.put(None)
 
         # Trigger the kill switch to tell background threads to stop reading
         # from the socket.

@@ -299,9 +299,9 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
         panel.set_read_only(True)
         panel.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
 
-    def print_loop(self, client):
+    def print_loop(self, recvq):
         while True:
-            item = client.output.get()
+            item = recvq.get()
 
             if item is None:
                 break
@@ -313,36 +313,38 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
         log.debug({'event': 'thread/exit'})
 
     def run(self, host, port):
+        window = self.window
+
         try:
             client = Client(host, int(port)).go()
 
             plugin_session = client.clone_session()
-            sessions.register(self.window.id(), 'plugin', plugin_session)
+            sessions.register(window.id(), 'plugin', plugin_session)
 
             user_session = client.clone_session()
-            sessions.register(self.window.id(), 'user', user_session)
+            sessions.register(window.id(), 'user', user_session)
+
+            # Create an output panel for printing evaluation results and show
+            # it.
+            self.configure_output_panel()
+
+            # Start a worker thread that reads items from a queue and prints
+            # them into an output panel.
+            print_loop = Thread(
+                daemon=True,
+                target=self.print_loop,
+                args=(client.recvq,)
+            )
+            print_loop.name = 'tutkain.print_loop'
+            print_loop.start()
 
             plugin_session.output(
                 {'out': 'Connected to {}:{}.\n'.format(host, port)}
             )
 
-            plugin_session.client.input.put({'op': 'describe'})
-
-            # Start a worker that reads values from a Client output queue
-            # and prints them into an output panel.
-            print_loop = Thread(
-                daemon=True,
-                target=self.print_loop,
-                args=(client,)
-            )
-            print_loop.name = 'tutkain.print_loop'
-            print_loop.start()
-
-            # Create an output panel for printing evaluation results and show
-            # it.
-            self.configure_output_panel()
+            plugin_session.client.sendq.put({'op': 'describe'})
         except ConnectionRefusedError:
-            self.window.status_message(
+            window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)
             )
 

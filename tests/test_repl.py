@@ -20,14 +20,14 @@ class TestClient(TestCase):
 
     def test_client(self):
         with Client('localhost', 1234) as client:
-            client.input.put({'op': 'eval', 'code': '(+ 1 2 3)'})
-            self.assertEquals(client.output.get().get('value'), '6')
+            client.sendq.put({'op': 'eval', 'code': '(+ 1 2 3)'})
+            self.assertEquals(client.recvq.get().get('value'), '6')
 
     def test_client_session(self):
         with Client('localhost', 1234) as client:
             session = client.clone_session()
             session.send({'op': 'eval', 'code': '(+ 1 2 3)'})
-            self.assertEquals(client.output.get().get('value'), '6')
+            self.assertEquals(client.recvq.get().get('value'), '6')
 
     def test_session_registry(self):
         with Client('localhost', 1234) as client:
