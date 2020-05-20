@@ -158,6 +158,11 @@ class Client(object):
         try:
             while not self.stop_event.is_set():
                 item = bencode.read(self.buffer)
+
+                # nREPL session closed, break loop
+                if item.get('status') == ['done', 'session-closed']:
+                    break
+
                 log.debug({'event': 'socket/recv', 'item': item})
                 self.handle(item)
         except OSError as e:
@@ -176,8 +181,10 @@ class Client(object):
             # close the connection to the socket.
             self.disconnect()
 
-    # FIXME: Still doesn't seem to stop all threads.
     def halt(self):
+        # Close nREPL session
+        self.sendq.put({'op': 'close'})
+
         # Feed poison pill to input queue.
         self.sendq.put(None)
 
