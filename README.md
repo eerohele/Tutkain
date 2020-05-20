@@ -6,7 +6,8 @@ A bare-bones [Clojure] nREPL client for [Sublime Text].
 
 ## Status
 
-**Currently unreleased**.
+**Currently unreleased**. You might not want to use this yet — I'm still
+figuring things out.
 
 **Alpha**. Expect breaking changes and a veritable cavalcade of bugs.
 
