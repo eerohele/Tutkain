@@ -398,7 +398,7 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
                 if brackets.is_next_to_expand_anchor(view, pos):
                     selection.add(brackets.current_form_region(view, pos))
                 # If the next character is a double quote
-                elif brackets.char_range(view, pos, pos + 1) == '"':
+                elif view.substr(pos) == '"':
                     # Move cursor to within string
                     selection.add(sublime.Region(pos + 1))
 

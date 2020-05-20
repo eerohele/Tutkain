@@ -22,16 +22,12 @@ def ignore(view, point):
     return inside_string(view, point) or inside_comment(view, point)
 
 
-def char_range(view, start, end):
-    return view.substr(sublime.Region(start, end))
-
-
 def find_lbracket(view, start_point):
     point = start_point
     stack = 0
 
     while point > 0:
-        char = char_range(view, point, point - 1)
+        char = view.substr(point - 1)
 
         if ignore(view, point):
             point -= 1
@@ -58,7 +54,7 @@ def find_rbracket_point(view, lbracket, start_point):
         return None
 
     while point < max_point:
-        char = char_range(view, point, point + 1)
+        char = view.substr(point)
 
         if ignore(view, point):
             point += 1
@@ -75,24 +71,24 @@ def find_rbracket_point(view, lbracket, start_point):
 
 
 def calculate_start_point(view, point):
-    next_char = char_range(view, point, point + 1)
+    next_char = view.substr(point)
 
     # next char is a left bracket
     if next_char in LBRACKETS:
         return point + 1
 
     # previous char is a right bracket
-    elif char_range(view, point, point - 1) in RBRACKETS:
+    elif view.substr(point - 1) in RBRACKETS:
         return point - 1
 
     # next char is the hash mark of a set or anon fn
     elif next_char == '#':
-        nnext_char = char_range(view, point + 1, point + 2)
+        nnext_char = view.substr(sublime.Region(point + 1, point + 2))
         return point + 2 if nnext_char in {'(', '{'} else point
 
     # next char is a quote or an at sign preceding a left paren
     elif next_char in {'\'', '@'}:
-        nnext_char = char_range(view, point + 1, point + 2)
+        nnext_char = view.substr(sublime.Region(point + 1, point + 2))
         return point + 2 if nnext_char == '(' else point
 
     return point
@@ -105,7 +101,7 @@ def current_form_region(view, point):
     if lbracket:
         rpoint = find_rbracket_point(view, LBRACKETS[lbracket], lpoint + 1)
 
-        if char_range(view, lpoint, lpoint - 1) in {'#', '@', '\''}:
+        if view.substr(lpoint - 1) in {'#', '@', '\''}:
             return sublime.Region(lpoint - 1, rpoint)
         else:
             return sublime.Region(lpoint, rpoint)
@@ -113,11 +109,11 @@ def current_form_region(view, point):
 
 def is_next_to_expand_anchor(view, point):
     return (
-        char_range(view, point, point + 1) in LBRACKETS or
-        char_range(view, point, point + 1) in RBRACKETS or
-        char_range(view, point, point + 2) == '#{' or
-        char_range(view, point, point + 2) == '#(' or
-        char_range(view, point, point + 2) == '@(' or
-        char_range(view, point, point + 2) == '\'(' or
-        char_range(view, point, point - 1) in RBRACKETS
+        view.substr(point) in LBRACKETS or
+        view.substr(point) in RBRACKETS or
+        view.substr(sublime.Region(point, point + 2)) == '#{' or
+        view.substr(sublime.Region(point, point + 2)) == '#(' or
+        view.substr(sublime.Region(point, point + 2)) == '@(' or
+        view.substr(sublime.Region(point, point + 2)) == '\'(' or
+        view.substr(point - 1) in RBRACKETS
     )
