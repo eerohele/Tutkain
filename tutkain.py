@@ -135,8 +135,6 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
                         else session.output(response)
                     )
                 )
-
-            session.output({'append': '\n'})
         elif response.get('value'):
             pass
         else:
