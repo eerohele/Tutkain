@@ -42,6 +42,17 @@ class Session():
         self.handlers[op['id']] = handler
         self.client.input.put(op)
 
+    def handle(self, response):
+        id = response.get('id')
+        handler = self.handlers.get(id, self.client.output.put)
+
+        try:
+            handler.__call__(response)
+        finally:
+            if response.get('status') == ['done']:
+                self.handlers.pop(id, None)
+                self.errors.pop(id, None)
+
     def denounce(self, response):
         id = response.get('id')
 
@@ -135,21 +146,13 @@ class Client(object):
         log.debug({'event': 'thread/exit'})
 
     def handle(self, response):
-        session_id = response.get('session')
-        item_id = response.get('id')
-        session = sessions.get_by_id(session_id)
+        id = response.get('session')
+        session = sessions.get_by_id(id)
 
         if session:
-            handler = session.handlers.get(item_id, self.output.put)
+            session.handle(response)
         else:
-            handler = self.output.put
-
-        try:
-            handler.__call__(response)
-        finally:
-            if session and response.get('status') == ['done']:
-                session.handlers.pop(item_id, None)
-                session.errors.pop(item_id, None)
+            self.output.put(response)
 
     def recv_loop(self):
         try:
