@@ -276,13 +276,15 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
         pass
 
     def run(self):
-        self.window.show_input_panel(
+        view = self.window.show_input_panel(
             'Input: ',
             '',
             self.eval,
             self.noop,
             self.noop
         )
+
+        view.assign_syntax('Clojure.sublime-syntax')
 
 
 class TutkainConnectCommand(sublime_plugin.WindowCommand):
