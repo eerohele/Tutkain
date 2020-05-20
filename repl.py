@@ -1,46 +1,10 @@
-import collections
 import queue
 import socket
 from threading import Thread, Event, Lock
 
 from . import bencode
 from .log import log
-
-
-class SessionRegistry():
-    by_owner = collections.defaultdict(dict)
-    by_id = collections.defaultdict(dict)
-
-    @staticmethod
-    def get_by_id(id):
-        return SessionRegistry.by_id.get(id)
-
-    @staticmethod
-    def get_by_owner(window_id, owner):
-        by_window = SessionRegistry.by_owner.get(window_id)
-
-        if by_window:
-            return by_window.get(owner)
-
-    @staticmethod
-    def register(window_id, owner, session):
-        SessionRegistry.by_id[session.id] = session
-        SessionRegistry.by_owner[window_id][owner] = session
-
-    @staticmethod
-    def deregister(window_id):
-        for k, session in SessionRegistry.by_owner.get(window_id).items():
-            SessionRegistry.by_id.pop(session.id, None)
-
-        SessionRegistry.by_owner.pop(window_id, None)
-
-    @staticmethod
-    def wipe():
-        for id, session in SessionRegistry.by_id.items():
-            session.terminate()
-
-        SessionRegistry.by_owner.clear()
-        SessionRegistry.by_id.clear()
+from . import sessions
 
 
 class Session():
@@ -173,7 +137,7 @@ class Client(object):
     def handle(self, response):
         session_id = response.get('session')
         item_id = response.get('id')
-        session = SessionRegistry.get_by_id(session_id)
+        session = sessions.get_by_id(session_id)
 
         if session:
             handler = session.handlers.get(item_id, self.output.put)

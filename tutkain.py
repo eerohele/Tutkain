@@ -5,8 +5,9 @@ from threading import Thread
 
 from . import brackets
 from . import formatter
+from . import sessions
 from .log import enable_debug, log
-from .repl import Client, SessionRegistry
+from .repl import Client
 
 
 def plugin_loaded():
@@ -17,7 +18,7 @@ def plugin_loaded():
 
 
 def plugin_unloaded():
-    SessionRegistry.wipe()
+    sessions.wipe()
 
 
 def print_characters(panel, characters):
@@ -57,7 +58,7 @@ class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
 class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         window = self.view.window()
-        session = SessionRegistry.get_by_owner(window.id(), 'user')
+        session = sessions.get_by_owner(window.id(), 'user')
 
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
@@ -99,7 +100,7 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
         window = self.view.window()
-        session = SessionRegistry.get_by_owner(window.id(), 'user')
+        session = sessions.get_by_owner(window.id(), 'user')
 
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
@@ -143,7 +144,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
         window = self.view.window()
-        session = SessionRegistry.get_by_owner(window.id(), 'plugin')
+        session = sessions.get_by_owner(window.id(), 'plugin')
 
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
@@ -255,7 +256,7 @@ class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
 
 class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
     def eval(self, code):
-        session = SessionRegistry.get_by_owner(self.window.id(), 'user')
+        session = sessions.get_by_owner(self.window.id(), 'user')
 
         if session is None:
             self.window.status_message('ERR: Not connected to a REPL.')
@@ -316,18 +317,10 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
             client = Client(host, int(port)).go()
 
             plugin_session = client.clone_session()
-            SessionRegistry.register(
-                self.window.id(),
-                'plugin',
-                plugin_session
-            )
+            sessions.register(self.window.id(), 'plugin', plugin_session)
 
             user_session = client.clone_session()
-            SessionRegistry.register(
-                self.window.id(),
-                'user',
-                user_session
-            )
+            sessions.register(self.window.id(), 'user', user_session)
 
             plugin_session.output(
                 {'out': 'Connected to {}:{}.\n'.format(host, port)}
@@ -360,14 +353,14 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
     def run(self):
         window = self.window
-        session = SessionRegistry.get_by_owner(window.id(), 'plugin')
+        session = sessions.get_by_owner(window.id(), 'plugin')
 
         if session is not None:
             session.output({'out': 'Disconnecting...\n'})
             session.terminate()
-            user_session = SessionRegistry.get_by_owner(window.id(), 'user')
+            user_session = sessions.get_by_owner(window.id(), 'user')
             user_session.terminate()
-            SessionRegistry.deregister(window.id())
+            sessions.deregister(window.id())
             window.status_message('REPL disconnected.')
 
 
@@ -415,7 +408,7 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
 
 class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
     def run(self):
-        session = SessionRegistry.get_by_owner(self.window.id(), 'user')
+        session = sessions.get_by_owner(self.window.id(), 'user')
 
         if session is None:
             self.window.status_message('ERR: Not connected to a REPL.')

@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-from tutkain.repl import Client, SessionRegistry
+from tutkain.repl import Client
+from tutkain import sessions
 
 
 # NOTE: Before you run these tests, you must start an nREPL server at
@@ -11,11 +12,11 @@ from tutkain.repl import Client, SessionRegistry
 class TestClient(TestCase):
     @classmethod
     def setUpClass(self):
-        SessionRegistry.wipe()
+        sessions.wipe()
 
     @classmethod
     def tearDownClass(self):
-        SessionRegistry.wipe()
+        sessions.wipe()
 
     def test_client(self):
         with Client('localhost', 1234) as client:
@@ -31,19 +32,19 @@ class TestClient(TestCase):
     def test_session_registry(self):
         with Client('localhost', 1234) as client:
             session = client.clone_session()
-            SessionRegistry.register(1, 'user', session)
-            self.assertEquals(SessionRegistry.get_by_id(session.id), session)
-            self.assertEquals(SessionRegistry.get_by_owner(1, 'user'), session)
-            SessionRegistry.deregister(1)
-            self.assertEquals(SessionRegistry.get_by_id(session.id), None)
-            self.assertEquals(SessionRegistry.get_by_owner(1, 'user'), None)
+            sessions.register(1, 'user', session)
+            self.assertEquals(sessions.get_by_id(session.id), session)
+            self.assertEquals(sessions.get_by_owner(1, 'user'), session)
+            sessions.deregister(1)
+            self.assertEquals(sessions.get_by_id(session.id), None)
+            self.assertEquals(sessions.get_by_owner(1, 'user'), None)
 
     def test_session_registry_wipe(self):
         with Client('localhost', 1234) as client:
             session = client.clone_session()
-            SessionRegistry.register(1, 'user', session)
-            self.assertEquals(SessionRegistry.get_by_id(session.id), session)
-            self.assertEquals(SessionRegistry.get_by_owner(1, 'user'), session)
-            SessionRegistry.wipe()
-            self.assertEquals(SessionRegistry.get_by_id(session.id), None)
-            self.assertEquals(SessionRegistry.get_by_owner(1, 'user'), None)
+            sessions.register(1, 'user', session)
+            self.assertEquals(sessions.get_by_id(session.id), session)
+            self.assertEquals(sessions.get_by_owner(1, 'user'), session)
+            sessions.wipe()
+            self.assertEquals(sessions.get_by_id(session.id), None)
+            self.assertEquals(sessions.get_by_owner(1, 'user'), None)
