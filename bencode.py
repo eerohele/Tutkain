@@ -46,16 +46,15 @@ def read_until(b, terminator):
 
 
 def read_list(b):
-    def aux(b, acc):
+    items = []
+
+    while True:
         item = read(b)
 
         if item is None:
-            return acc
+            return items
         else:
-            acc.append(item)
-            return aux(b, acc)
-
-    return aux(b, [])
+            items.append(item)
 
 
 def into_dict(l):
