@@ -1,0 +1,12 @@
+[
+  {
+    "keys": ["enter"],
+    "command": "tutkain_insert_newline",
+    "context": [{"key": "tutkain.should"},
+      {
+        "key": "auto_complete_visible",
+        "operator": "equal",
+        "operand": false
+      }]
+  },
+]

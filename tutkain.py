@@ -3,8 +3,9 @@ import sublime
 import sublime_plugin
 from threading import Thread
 
-from . import brackets
+from . import sexp
 from . import formatter
+from . import indent
 from . import sessions
 from .log import enable_debug, log
 from .repl import Client
@@ -65,9 +66,11 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
         else:
             for region in self.view.sel():
                 eval_region = region if not region.empty() else (
-                    brackets.current_form_region(
+                    sexp.outermost(
                         self.view,
-                        region.begin()
+                        sexp.into_adjacent(self.view, region.begin()),
+                        absorb=True,
+                        ignore={'comment'}
                     )
                 )
 
@@ -387,7 +390,7 @@ class TutkainListenerCommand(sublime_plugin.EventListener):
     def on_query_context(self, view, key, operator, operand, match_all):
         if key == 'tutkain.should':
             syntax = view.settings().get('syntax')
-            return 'Clojure' in syntax or 'Markdown' in syntax
+            return 'Clojure' in syntax
 
 
 class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
@@ -397,18 +400,22 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
 
         # TODO: Add proper support for multiple cursors.
         for region in selection:
-            pos = region.begin()
+            point = region.begin()
 
             if not region.empty():
                 view.run_command('expand_selection', {'to': 'scope'})
             else:
                 # If we're next to a character that delimits a Clojure form
-                if brackets.is_next_to_expand_anchor(view, pos):
-                    selection.add(brackets.current_form_region(view, pos))
+                if sexp.is_next_to_expand_anchor(view, point):
+                    start_point = sexp.into_adjacent(view, region.begin())
+
+                    selection.add(
+                        sexp.innermost(view, start_point, absorb=True)
+                    )
                 # If the next character is a double quote
-                elif view.substr(pos) == '"':
+                elif view.substr(point) == '"':
                     # Move cursor to within string
-                    selection.add(sublime.Region(pos + 1))
+                    selection.add(sublime.Region(point + 1))
 
                     # Then expand
                     view.run_command('expand_selection', {'to': 'scope'})
@@ -425,3 +432,20 @@ class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
         else:
             log.debug({'event': 'eval/interrupt', 'id': session.id})
             session.send({'op': 'interrupt'})
+
+
+class TutkainInsertNewline(sublime_plugin.TextCommand):
+    def run(self, edit):
+        if 'Clojure' in self.view.settings().get('syntax'):
+            indent.insert_newline_and_indent(self.view, edit)
+
+
+class TutkainIndentRegion(sublime_plugin.TextCommand):
+    def run(self, edit):
+        if 'Clojure' in self.view.settings().get('syntax'):
+            for region in self.view.sel():
+                if region.empty():
+                    outermost = sexp.outermost(self.view, region.begin())
+                    indent.indent_region(self.view, edit, outermost)
+                else:
+                    indent.indent_region(self.view, edit, region)
