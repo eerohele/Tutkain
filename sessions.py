@@ -21,10 +21,22 @@ def register(window_id, owner, session):
 
 
 def deregister(window_id):
-    for k, session in by_owner.get(window_id).items():
-        by_id.pop(session.id, None)
+    sessions = by_owner.get(window_id)
+
+    if sessions:
+        for _, session in sessions.items():
+            by_id.pop(session.id, None)
 
     by_owner.pop(window_id, None)
+
+
+def terminate(window_id):
+    for session in [get_by_owner(window_id, 'user'),
+                    get_by_owner(window_id, 'plugin')]:
+        if session:
+            session.terminate()
+
+    deregister(window_id)
 
 
 def wipe():

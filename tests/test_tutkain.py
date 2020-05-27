@@ -3,6 +3,7 @@ import time
 
 from unittest import skip, TestCase
 from .util import ViewTestCase
+from tutkain import tutkain
 
 
 class TestCommands(ViewTestCase):
@@ -17,21 +18,21 @@ class TestCommands(ViewTestCase):
             {'host': 'localhost', 'port': 1234}
         )
 
-        self.output_panel = self.view.window().find_output_panel('tutkain')
-
-    def output_panel_content(self):
-        return self.output_panel.substr(sublime.Region(0, self.output_panel.size()))
+    def view_content(self, name):
+        view = tutkain.view_registry.get(name)
+        if view:
+            return view.substr(sublime.Region(0, view.size()))
 
     @classmethod
     def tearDownClass(self):
         if self.view:
             self.view.window().run_command('tutkain_disconnect')
-            self.view.window().destroy_output_panel('tutkain')
             self.view.window().run_command('close_file')
+            tutkain.view_registry.clear()
 
     def setUp(self):
         super().setUp()
-        self.view.window().run_command('tutkain_clear_output_panel')
+        self.view.window().run_command('tutkain_clear_output_views')
 
     def test_evaluate_form(self):
         content = '(+ 1 2)'
@@ -41,8 +42,8 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.output_panel_content(),
-            ''';; => (+ 1 2)\n3\n'''
+            self.view_content('result'),
+            '''=> (+ 1 2)\n3\n'''
         )
 
     def test_evaluate_view(self):
@@ -51,10 +52,9 @@ class TestCommands(ViewTestCase):
         self.view.run_command('tutkain_evaluate_view')
         time.sleep(self.delay)
 
-        self.assertEquals(
-            self.output_panel_content(),
-            ''';; Loading view...\n'''
-        )
+        self.assertEquals(self.view_content('result'), '')
+
+        self.assertEquals(self.view_content('out'), '')
 
         self.append_to_view(' (square 2)')
         self.add_cursors(40)
@@ -62,11 +62,10 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.output_panel_content(),
-            ''';; Loading view...
-;; => (square 2)
-4
-''')
+            self.view_content('result'),
+            '''=> (square 2)\n4\n''')
+
+        self.assertEquals(self.view_content('out'), '')
 
     def test_evaluate_view_with_error(self):
         content = '''(ns app.core) (inc "a")'''
@@ -75,7 +74,12 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertRegex(
-            self.output_panel_content(),
+            self.view_content('result'),
+            r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
+        )
+
+        self.assertRegex(
+            self.view_content('out'),
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
         )
 
@@ -91,7 +95,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.output_panel_content().splitlines()[-1],
+            self.view_content('result').splitlines()[-1],
             '''{:test 2, :pass 1, :fail 1, :error 0, :type :summary}'''
         )
 
@@ -106,7 +110,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertRegex(
-            self.output_panel_content(),
+            self.view_content('out'),
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
         )
 
@@ -121,7 +125,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertRegex(
-            self.output_panel_content(),
+            self.view_content('out'),
             r'.*Execution error .*InterruptedException\).*'
         )
 

@@ -11,6 +11,9 @@ from .log import enable_debug, log
 from .repl import Client
 
 
+view_registry = dict()
+
+
 def plugin_loaded():
     settings = sublime.load_settings('{}.sublime-settings'.format('tutkain'))
 
@@ -22,38 +25,35 @@ def plugin_unloaded():
     sessions.wipe()
 
 
-def print_characters(panel, characters):
+def print_characters(view, characters):
     if characters is not None:
-        panel.run_command('append', {
+        view.run_command('append', {
             'characters': characters,
             'scroll_to_end': True
         })
 
 
-def append_to_output_panel(window, message):
-    if message:
-        panel = window.find_output_panel('tutkain')
+def append_to_view(view_name, string):
+    view = view_registry.get(view_name)
 
-        window.run_command('show_panel', {'panel': 'output.tutkain'})
-
-        panel.set_read_only(False)
-        print_characters(panel, formatter.format(message))
-        panel.set_read_only(True)
-
-        panel.run_command('move_to', {'to': 'eof'})
+    if view and string:
+        view.set_read_only(False)
+        print_characters(view, string)
+        view.set_read_only(True)
+        view.run_command('move_to', {'to': 'eof'})
 
 
 def region_content(view):
     return view.substr(sublime.Region(0, view.size()))
 
 
-class TutkainClearOutputPanelCommand(sublime_plugin.WindowCommand):
+class TutkainClearOutputViewsCommand(sublime_plugin.WindowCommand):
     def run(self):
-        panel = self.window.find_output_panel('tutkain')
-        panel.set_read_only(False)
-        panel.run_command('select_all')
-        panel.run_command('right_delete')
-        panel.set_read_only(True)
+        for _, view in view_registry.items():
+            view.set_read_only(False)
+            view.run_command('select_all')
+            view.run_command('right_delete')
+            view.set_read_only(True)
 
 
 class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
@@ -76,7 +76,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 
                 code = self.view.substr(eval_region)
 
-                session.output({'out': '=> {}\n'.format(code)})
+                session.output({'in': code})
 
                 log.debug({
                     'event': 'send',
@@ -87,21 +87,21 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                 session.send(
                     {'op': 'eval',
                      'code': code,
-                     'file': self.view.file_name()},
-                    handler=lambda response: (
-                        session.output({'append': '\n'})
-                        if response.get('status') == ['done']
-                        else session.output(response)
-                    )
+                     'file': self.view.file_name()}
                 )
 
 
 class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
     def handler(self, session, response):
-        if response.get('value'):
-            pass
-        else:
+        if 'err' in response:
             session.output(response)
+            self.view.window().status_message('[Tutkain] View evaluation failed.')
+            session.denounce(response)
+        elif 'nrepl.middleware.caught/throwable' in response:
+            session.output(response)
+        elif response.get('status') == ['done']:
+            if not session.is_denounced(response):
+                self.view.window().status_message('[Tutkain] View evaluated.')
 
     def run(self, edit):
         window = self.view.window()
@@ -110,8 +110,6 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            session.output({'out': 'Loading view...\n'})
-
             session.send(
                 {'op': 'eval',
                  'code': region_content(self.view),
@@ -138,12 +136,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
                 session.send(
                     {'op': 'eval',
                      'code': '((requiring-resolve \'clojure.test/run-tests))',
-                     'file': self.view.file_name()},
-                    handler=lambda response: (
-                        session.output({'append': '\n'})
-                        if response.get('status') == ['done']
-                        else session.output(response)
-                    )
+                     'file': self.view.file_name()}
                 )
         elif response.get('value'):
             pass
@@ -252,17 +245,6 @@ class PortsInputHandler(sublime_plugin.ListInputHandler):
         )
 
 
-class TutkainToggleOutputPanelCommand(sublime_plugin.WindowCommand):
-    def run(self):
-        active_panel = self.window.active_panel()
-        panel = 'output.tutkain'
-
-        if active_panel == panel:
-            self.window.run_command('hide_panel', {'panel': panel})
-        else:
-            self.window.run_command('show_panel', {'panel': panel})
-
-
 class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
     def eval(self, code):
         session = sessions.get_by_owner(self.window.id(), 'user')
@@ -270,16 +252,8 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
         if session is None:
             self.window.status_message('ERR: Not connected to a REPL.')
         else:
-            session.output({'out': '=> {}\n'.format(code)})
-
-            session.send(
-                {'op': 'eval', 'code': code},
-                handler=lambda response: (
-                    session.output({'append': '\n'})
-                    if response.get('status') == ['done']
-                    else session.output(response)
-                )
-            )
+            session.output({'in': code})
+            session.send({'op': 'eval', 'code': code})
 
     def noop(*args):
         pass
@@ -297,18 +271,22 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
 
 
 class TutkainConnectCommand(sublime_plugin.WindowCommand):
-    def configure_output_panel(self):
-        panel = self.window.find_output_panel('tutkain')
-        if panel is None:
-            panel = self.window.create_output_panel('tutkain')
+    def create_output_view(self, name, host, port):
+        view = self.window.new_file()
+        view.set_name('REPL | *{}* | {}:{}'.format(name, host, port))
+        view.settings().set('line_numbers', False)
+        view.settings().set('gutter', False)
+        view.settings().set('is_widget', True)
+        view.settings().set('scroll_past_end', False)
+        view.set_read_only(True)
+        view.set_scratch(True)
+        return view
 
-        panel.set_name('tutkain')
-        panel.settings().set('line_numbers', False)
-        panel.settings().set('gutter', False)
-        panel.settings().set('is_widget', True)
-        panel.settings().set('scroll_past_end', False)
-        panel.set_read_only(True)
-        panel.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
+    def set_session_versions(self, sessions, response):
+        for session in sessions:
+            session.nrepl_version = response.get('versions').get('nrepl')
+
+        session.output(response)
 
     def print_loop(self, recvq):
         while True:
@@ -319,15 +297,50 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
             log.debug({'event': 'printer/recv', 'data': item})
 
-            append_to_output_panel(self.window, item)
+            # How can I de-uglify this?
+
+            if {'value',
+                'nrepl.middleware.caught/throwable',
+                'in'} & item.keys():
+                append_to_view('result', formatter.format(item))
+            elif 'versions' in item.keys():
+                append_to_view('result', formatter.format(item))
+                append_to_view('out', formatter.format(item))
+            elif item.get('status') == ['done']:
+                append_to_view('result', '\n')
+            else:
+                append_to_view('out', formatter.format(item))
 
         log.debug({'event': 'thread/exit'})
 
-    def set_session_versions(self, sessions, response):
-        for session in sessions:
-            session.nrepl_version = response.get('versions').get('nrepl')
+    def configure_output_views(self, host, port):
+        # Set up a two-row layout.
+        #
+        # TODO: Make configurable? This will clobber pre-existing layouts —
+        # maybe add a setting for toggling this bit?
+        self.window.set_layout({
+            'cells': [[0, 0, 1, 1], [0, 1, 1, 2]],
+            'cols': [0.0, 1.0],
+            'rows': [0.0, 0.5, 1.0]
+        })
 
-        session.output(response)
+        active_view = self.window.active_view()
+
+        out = self.create_output_view('out', host, port)
+        result = self.create_output_view('result', host, port)
+        result.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
+
+        # Move the result and out views into the second row.
+        self.window.set_view_index(result, 1, 0)
+        self.window.set_view_index(out, 1, 1)
+
+        # Activate the result view and the view that was active prior to
+        # creating the output views.
+        self.window.focus_view(result)
+        self.window.focus_view(active_view)
+
+        view_registry['out'] = out
+        view_registry['result'] = result
 
     def run(self, host, port):
         window = self.window
@@ -341,9 +354,7 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
             user_session = client.clone_session()
             sessions.register(window.id(), 'user', user_session)
 
-            # Create an output panel for printing evaluation results and show
-            # it.
-            self.configure_output_panel()
+            self.configure_output_views(host, port)
 
             # Start a worker thread that reads items from a queue and prints
             # them into an output panel.
@@ -352,12 +363,9 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
                 target=self.print_loop,
                 args=(client.recvq,)
             )
+
             print_loop.name = 'tutkain.print_loop'
             print_loop.start()
-
-            plugin_session.output(
-                {'out': 'Connected to {}:{}.\n'.format(host, port)}
-            )
 
             plugin_session.send(
                 {'op': 'describe'},
@@ -390,6 +398,19 @@ class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
             sessions.deregister(window.id())
             window.status_message('REPL disconnected.')
 
+            active_view = window.active_view()
+
+            for _, view in view_registry.items():
+                view.close()
+
+            window.set_layout({
+                'cells': [[0, 0, 1, 1]],
+                'cols': [0.0, 1.0],
+                'rows': [0.0, 1.0]
+            })
+
+            window.focus_view(active_view)
+
 
 class TutkainNewScratchView(sublime_plugin.WindowCommand):
     def run(self):
@@ -400,11 +421,22 @@ class TutkainNewScratchView(sublime_plugin.WindowCommand):
         self.window.focus_view(view)
 
 
-class TutkainListenerCommand(sublime_plugin.EventListener):
+class TutkainEventListener(sublime_plugin.EventListener):
     def on_query_context(self, view, key, operator, operand, match_all):
         if key == 'tutkain.should':
             syntax = view.settings().get('syntax')
             return 'Clojure' in syntax
+
+
+class TutkainViewEventListener(sublime_plugin.ViewEventListener):
+    def on_pre_close(self):
+        view = self.view
+
+        if view == view_registry.get('result') or view == view_registry.get('out'):
+            window = view.window()
+
+            if window:
+                sessions.terminate(window.id())
 
 
 class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
@@ -436,6 +468,25 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
                 else:
                     view.run_command('expand_selection', {'to': 'scope'})
 
+
+class TutkainActivateResultViewCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        view = view_registry.get('result')
+
+        if view:
+            active_view = self.window.active_view()
+            self.window.focus_view(view)
+            self.window.focus_view(active_view)
+
+
+class TutkainActivateOutputViewCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        view = view_registry.get('out')
+
+        if view:
+            active_view = self.window.active_view()
+            self.window.focus_view(view)
+            self.window.focus_view(active_view)
 
 class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
     def run(self):

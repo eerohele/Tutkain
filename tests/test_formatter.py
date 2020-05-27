@@ -13,8 +13,13 @@ class TestFormatter(TestCase):
         )
 
         self.assertEquals(
+            format({'in': '(+ 1 2)'}),
+            '=> (+ 1 2)\n'
+        )
+
+        self.assertEquals(
             format({'id': 1, 'out': 'Hello, world!\n'}),
-            ';; Hello, world!\n'
+            'Hello, world!\n'
         )
 
         self.assertEquals(
@@ -29,8 +34,8 @@ class TestFormatter(TestCase):
                 '''Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
 Boom!'''
             }),
-            ''';; Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
-;; Boom!'''
+            '''Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
+Boom!'''
         )
 
         self.assertEquals(

@@ -24,8 +24,8 @@
         "command": "tutkain_evaluate_input"
     },
     {
-        "caption": "Tutkain: Clear Output Panel",
-        "command": "tutkain_clear_output_panel"
+        "caption": "Tutkain: Clear Output Views",
+        "command": "tutkain_clear_output_views"
     },
     {
         "caption": "Tutkain: Expand Selection",
@@ -42,5 +42,13 @@
     {
         "caption": "Tutkain: Interrupt Evaluation",
         "command": "tutkain_interrupt_evaluation"
+    },
+    {
+        "caption": "Tutkain: Activate Result View",
+        "command": "tutkain_activate_result_view"
+    },
+    {
+        "caption": "Tutkain: Activate Output View",
+        "command": "tutkain_activate_output_view"
     },
 ]
