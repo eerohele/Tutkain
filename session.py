@@ -19,8 +19,9 @@ class Session():
         return self.op_count
 
     def supports_pretty_printing(self):
-        v = self.nrepl_version
-        return (v and (v.get('major') == 0 and v.get('minor') >= 8) or v.get('major') > 0)
+        if self.nrepl_version:
+            v = self.nrepl_version
+            return (v and (v.get('major') == 0 and v.get('minor') >= 8) or v.get('major') > 0)
 
     def op(self, d):
         d['session'] = self.id
