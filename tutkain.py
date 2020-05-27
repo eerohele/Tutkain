@@ -82,7 +82,9 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                 })
 
                 session.send(
-                    {'op': 'eval', 'code': code},
+                    {'op': 'eval',
+                     'code': code,
+                     'file': self.view.file_name()},
                     handler=lambda response: (
                         session.output({'append': '\n'})
                         if response.get('status') == ['done']
@@ -108,7 +110,9 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
             session.output({'out': 'Loading view...\n'})
 
             session.send(
-                {'op': 'eval', 'code': region_content(self.view)},
+                {'op': 'eval',
+                 'code': region_content(self.view),
+                 'file': self.view.file_name()},
                 handler=lambda response: self.handler(session, response)
             )
 
@@ -117,7 +121,9 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
     def evaluate_view(self, session, response):
         if response.get('status') == ['done']:
             session.send(
-                {'op': 'eval', 'code': region_content(self.view)},
+                {'op': 'eval',
+                 'code': region_content(self.view),
+                 'file': self.view.file_name()},
                 handler=lambda response: self.run_tests(session, response)
             )
 
@@ -128,7 +134,8 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
             if not session.is_denounced(response):
                 session.send(
                     {'op': 'eval',
-                     'code': '((requiring-resolve \'clojure.test/run-tests))'},
+                     'code': '((requiring-resolve \'clojure.test/run-tests))',
+                     'file': self.view.file_name()},
                     handler=lambda response: (
                         session.output({'append': '\n'})
                         if response.get('status') == ['done']
@@ -152,7 +159,8 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
                  'code': '''
                          (run! (fn [[sym _]] (ns-unmap *ns* sym))
                                (ns-publics *ns*))
-                         '''},
+                         ''',
+                 'file': self.view.file_name()},
                 handler=lambda response: self.evaluate_view(session, response)
             )
 

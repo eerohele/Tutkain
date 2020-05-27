@@ -22,6 +22,10 @@ class Session():
         d['id'] = self.op_id()
         d['nrepl.middleware.caught/print?'] = 'true'
         d['nrepl.middleware.print/stream?'] = 'true'
+
+        if 'file' in d and d['file'] is None:
+            del d['file']
+
         return d
 
     def output(self, x):
