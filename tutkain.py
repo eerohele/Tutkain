@@ -323,6 +323,12 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
 
         log.debug({'event': 'thread/exit'})
 
+    def set_session_versions(self, sessions, response):
+        for session in sessions:
+            session.nrepl_version = response.get('versions').get('nrepl')
+
+        session.output(response)
+
     def run(self, host, port):
         window = self.window
 
@@ -353,7 +359,15 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
                 {'out': 'Connected to {}:{}.\n'.format(host, port)}
             )
 
-            plugin_session.client.sendq.put({'op': 'describe'})
+            plugin_session.send(
+                {'op': 'describe'},
+                handler=lambda response: (
+                    self.set_session_versions(
+                        [plugin_session, user_session],
+                        response
+                    )
+                )
+            )
         except ConnectionRefusedError:
             window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)

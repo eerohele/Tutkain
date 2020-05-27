@@ -27,7 +27,7 @@ class TestClient(TestCase):
         with Client('localhost', 1234) as client:
             session = client.clone_session()
             session.send({'op': 'eval', 'code': '(+ 1 2 3)'})
-            self.assertIn('session', client.recvq.get())
+
             self.assertEquals(client.recvq.get().get('value'), '6')
 
     def test_session_registry(self):

@@ -10,6 +10,7 @@ class Session():
         self.client = client
         self.op_count = 0
         self.lock = Lock()
+        self.nrepl_version = None
 
     def op_id(self):
         with self.lock:
@@ -20,6 +21,10 @@ class Session():
     def op(self, d):
         d['session'] = self.id
         d['id'] = self.op_id()
+
+        if self.nrepl_version and self.nrepl_version.get('minor') >= 8:
+            d['nrepl.middleware.print/print'] = 'nrepl.util.print/pprint'
+
         d['nrepl.middleware.caught/print?'] = 'true'
         d['nrepl.middleware.print/stream?'] = 'true'
 
@@ -42,14 +47,16 @@ class Session():
 
     def handle(self, response):
         id = response.get('id')
-        handler = self.handlers.get(id, self.client.recvq.put)
 
-        try:
-            handler.__call__(response)
-        finally:
-            if response.get('status') == ['done']:
-                self.handlers.pop(id, None)
-                self.errors.pop(id, None)
+        if id:
+            handler = self.handlers.get(id, self.client.recvq.put)
+
+            try:
+                handler.__call__(response)
+            finally:
+                if response.get('status') == ['done']:
+                    self.handlers.pop(id, None)
+                    self.errors.pop(id, None)
 
     def denounce(self, response):
         id = response.get('id')
