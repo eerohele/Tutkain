@@ -43,7 +43,7 @@ def append_to_view(view_name, string):
         view.run_command('move_to', {'to': 'eof'})
 
 
-def region_content(view):
+def view_content(view):
     return view.substr(sublime.Region(0, view.size()))
 
 
@@ -112,7 +112,7 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
         else:
             session.send(
                 {'op': 'eval',
-                 'code': region_content(self.view),
+                 'code': view_content(self.view),
                  'file': self.view.file_name()},
                 handler=lambda response: self.handler(session, response)
             )
@@ -123,7 +123,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
         if response.get('status') == ['done']:
             session.send(
                 {'op': 'eval',
-                 'code': region_content(self.view),
+                 'code': view_content(self.view),
                  'file': self.view.file_name()},
                 handler=lambda response: self.run_tests(session, response)
             )
