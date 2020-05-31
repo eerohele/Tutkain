@@ -15,7 +15,7 @@ view_registry = dict()
 
 
 def plugin_loaded():
-    settings = sublime.load_settings('{}.sublime-settings'.format('tutkain'))
+    settings = sublime.load_settings('tutkain.sublime-settings')
 
     if settings.get('debug', False):
         enable_debug()
