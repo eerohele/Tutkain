@@ -80,6 +80,18 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             points=[7]
         )
 
+    def test_nested_sexp_c(self):
+        self.becomes(
+            '''
+            [(foo) (bar)]
+            ''',
+            '''
+            [(foo)
+             (bar)]
+            ''',
+            points=[6]
+        )
+
     def test_multiple_newlines_inside(self):
         self.becomes(
             '''{:a 1 :b 2}''',
