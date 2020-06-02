@@ -178,20 +178,15 @@ class HostInputHandler(sublime_plugin.TextInputHandler):
         with open(path, 'r') as file:
             return (path, file.read())
 
+    def possibilities(self, folder):
+        yield os.path.join(folder, '.nrepl-port')
+        yield os.path.join(folder, '.shadow-cljs', 'nrepl.port')
+
     def discover_ports(self):
-        # I mean, this is Pythonic, right...?
-        return list(
-            map(
-                self.read_port,
-                filter(
-                    os.path.isfile,
-                    map(
-                        lambda folder: os.path.join(folder, '.nrepl-port'),
-                        self.window.folders()
-                    )
-                )
-            )
-        )
+        return [self.read_port(port_file)
+                for folder in self.window.folders()
+                for port_file in self.possibilities(folder)
+                if os.path.isfile(port_file)]
 
     def next_input(self, host):
         ports = self.discover_ports()
