@@ -7,6 +7,7 @@
 
 (comment
   (+ 1 2)
+  (throw (ex-info "Boom!" {:a :1}))
   (range 512)
   (square 4)
   (set/union #{1 2 3} #{3 4 5})

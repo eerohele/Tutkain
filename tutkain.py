@@ -43,8 +43,18 @@ def append_to_view(view_name, string):
         view.run_command('move_to', {'to': 'eof'})
 
 
-def view_content(view):
-    return view.substr(sublime.Region(0, view.size()))
+def code_with_meta(view, region):
+    file = view.file_name()
+    code = view.substr(region)
+
+    if file:
+        line, column = view.rowcol(region.begin())
+
+        return '^{:clojure.core/eval-file "%s" :line %s :column %s} %s' % (
+            view.file_name(), line + 1, column + 1, code
+        )
+    else:
+        return code
 
 
 class TutkainClearOutputViewsCommand(sublime_plugin.WindowCommand):
@@ -86,7 +96,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
 
                 session.send(
                     {'op': 'eval',
-                     'code': code,
+                     'code': code_with_meta(self.view, eval_region),
                      'file': self.view.file_name()}
                 )
 
@@ -112,7 +122,7 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
         else:
             session.send(
                 {'op': 'eval',
-                 'code': view_content(self.view),
+                 'code': code_with_meta(self.view, sublime.Region(0, self.view.size())),
                  'file': self.view.file_name()},
                 handler=lambda response: self.handler(session, response)
             )
@@ -123,7 +133,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
         if response.get('status') == ['done']:
             session.send(
                 {'op': 'eval',
-                 'code': view_content(self.view),
+                 'code': code_with_meta(self.view, sublime.Region(0, self.view.size())),
                  'file': self.view.file_name()},
                 handler=lambda response: self.run_tests(session, response)
             )
@@ -132,11 +142,18 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
         if response.get('status') == ['eval-error']:
             session.denounce(response)
         elif response.get('status') == ['done']:
+            file_name = self.view.file_name()
+            base_name = os.path.basename(file_name) if file_name else 'NO_SOURCE_FILE'
+
             if not session.is_denounced(response):
                 session.send(
                     {'op': 'eval',
-                     'code': '((requiring-resolve \'clojure.test/run-tests))',
-                     'file': self.view.file_name()}
+                     'code': '''
+(let [report clojure.test/report]
+  (with-redefs [clojure.test/report (fn [event] (report (assoc event :file "%s")))]
+    ((requiring-resolve \'clojure.test/run-tests))))
+                     ''' % base_name,
+                     'file': file_name}
                 )
         elif response.get('value'):
             pass
@@ -152,10 +169,8 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
         else:
             session.send(
                 {'op': 'eval',
-                 'code': '''
-                         (run! (fn [[sym _]] (ns-unmap *ns* sym))
-                               (ns-publics *ns*))
-                         ''',
+                 'code': '''(run! (fn [[sym _]] (ns-unmap *ns* sym))
+                              (ns-publics *ns*))''',
                  'file': self.view.file_name()},
                 handler=lambda response: self.evaluate_view(session, response)
             )
