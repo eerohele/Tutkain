@@ -273,7 +273,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
 
 
 class TestIndentFormCommand(ViewTestCase):
-    def becomes(self, a, b, points=[1]):
+    def becomes(self, a, b, points=[0, 1]):
         self.append_to_view(cleandoc(a))
         self.add_cursors(*points)
         self.view.run_command('tutkain_indent_region')

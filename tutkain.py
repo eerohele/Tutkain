@@ -520,7 +520,8 @@ class TutkainIndentRegion(sublime_plugin.TextCommand):
         if 'Clojure' in self.view.settings().get('syntax'):
             for region in self.view.sel():
                 if region.empty():
-                    outermost = sexp.outermost(self.view, region.begin())
+                    point = sexp.into_adjacent(self.view, region.begin())
+                    outermost = sexp.outermost(self.view, point)
                     indent.indent_region(self.view, edit, outermost)
                 else:
                     indent.indent_region(self.view, edit, region)
