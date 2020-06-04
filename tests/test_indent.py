@@ -12,10 +12,10 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
     def newline(self):
         self.view.run_command('tutkain_insert_newline')
 
-    def becomes(self, a, b, points=[0], newlines=1, clean=True):
+    def becomes(self, a, b, selections=[(0, 0)], newlines=1, clean=True):
         self.append_to_view(cleandoc(a) if clean else a)
 
-        self.add_cursors(*points)
+        self.set_selections(*selections)
 
         for n in range(newlines):
             self.newline()
@@ -37,7 +37,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
         self.becomes(
             '''(foo)''',
             '''(foo)\n\n''',
-            newlines=2, points=[5], clean=False
+            newlines=2, selections=[(5, 5)], clean=False
         )
 
     def test_inside(self):
@@ -51,7 +51,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             \x20\x20
               (bar))
             ''',
-            points=[4]
+            selections=[(4, 4)]
         )
 
     def test_nested_sexp_a(self):
@@ -63,7 +63,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             (a
               (b (c)))
             ''',
-            points=[2]
+            selections=[(2, 2)]
         )
 
     def test_nested_sexp_b(self):
@@ -77,7 +77,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
               (b
                 (c)))
             ''',
-            points=[7]
+            selections=[(7, 7)]
         )
 
     def test_nested_sexp_c(self):
@@ -89,14 +89,14 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             [(foo)
              (bar)]
             ''',
-            points=[6]
+            selections=[(6, 6)]
         )
 
     def test_multiple_newlines_inside(self):
         self.becomes(
             '''{:a 1 :b 2}''',
             '''{:a 1\n\n :b 2}''',
-            points=[5], newlines=2, clean=False
+            selections=[(5, 5)], newlines=2, clean=False
         )
 
     # Test cases from https://tonsky.me/blog/clojurefmt/
@@ -110,7 +110,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             (when something
               body)
             ''',
-            points=[15]
+            selections=[(15, 15)]
         )
 
     def test_tonsky_1b(self):
@@ -122,7 +122,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             ( when something
               body)
             ''',
-            points=[16]
+            selections=[(16, 16)]
         )
 
     def test_tonsky_2(self):
@@ -134,7 +134,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             (defn f [x]
               body)
             ''',
-            points=[11]
+            selections=[(11, 11)]
         )
 
     def test_tonsky_2a(self):
@@ -146,7 +146,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             (defn f
               [x] body)
             ''',
-            points=[7]
+            selections=[(7, 7)]
         )
 
     def test_tonsky_2b(self):
@@ -160,7 +160,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
               [x]
               body)
             ''',
-            points=[13]
+            selections=[(13, 13)]
         )
 
     def test_tonsky_3_many_args(self):
@@ -174,7 +174,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
                              d e f]
               body)
             ''',
-            points=[22]
+            selections=[(22, 22)]
         )
 
     def test_tonsky_4a_multi_arity(self):
@@ -186,7 +186,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             (defn multi-arity
               ([x] body) ([x y] body))
             ''',
-            points=[17]
+            selections=[(17, 17)]
         )
 
     def test_tonsky_4b_multi_arity(self):
@@ -200,7 +200,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
               ([x] body)
               ([x y] body))
             ''',
-            points=[30]
+            selections=[(30, 30)]
         )
 
     def test_tonsky_5(self):
@@ -214,7 +214,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
                   y 2]
               body)
             ''',
-            points=[9]
+            selections=[(9, 9)]
         )
 
 
@@ -227,7 +227,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             [1 2 3
              4 5 6]
             ''',
-            points=[6]
+            selections=[(6, 6)]
         )
 
     def test_tonsky_7(self):
@@ -239,7 +239,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             {:key-1 v1
              :key-2 v2}
             ''',
-            points=[10]
+            selections=[(10, 10)]
         )
 
     def test_tonsky_8(self):
@@ -251,7 +251,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             #{a b c
               d e f}
             ''',
-            points=[7]
+            selections=[(7, 7)]
         )
 
     def test_multiple_cursors(self):
@@ -268,14 +268,14 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             #{a b c
               d e f}
             ''',
-            points=[10, 30]
+            selections=[(10, 10), (30, 30)]
         )
 
 
 class TestIndentFormCommand(ViewTestCase):
-    def becomes(self, a, b, points=[0, 1]):
+    def becomes(self, a, b, selections=[(0, 0), (1, 1)]):
         self.append_to_view(cleandoc(a))
-        self.add_cursors(*points)
+        self.set_selections(*selections)
         self.view.run_command('tutkain_indent_region')
         self.assertEquals(cleandoc(b), self.view_content())
 
@@ -337,5 +337,5 @@ class TestIndentFormCommand(ViewTestCase):
             #{a b c
               d e f}
             ''',
-            points=[11, 30]
+            selections=[(11, 11), (30, 30)]
         )

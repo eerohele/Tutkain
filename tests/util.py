@@ -26,11 +26,11 @@ class ViewTestCase(TestCase):
     def append_to_view(self, chars):
         self.view.run_command('append', {'characters': chars})
 
-    def add_cursors(self, *points):
+    def set_selections(self, *pairs):
         self.view.sel().clear()
 
-        for point in points:
-            self.view.sel().add(sublime.Region(point))
+        for begin, end in pairs:
+            self.view.sel().add(sublime.Region(begin, end))
 
     def selections(self):
         return [(region.begin(), region.end()) for region in self.view.sel()]

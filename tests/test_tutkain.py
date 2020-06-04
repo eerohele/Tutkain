@@ -37,7 +37,7 @@ class TestCommands(ViewTestCase):
     def test_evaluate_form(self):
         content = '(+ 1 2)'
         self.append_to_view(content)
-        self.add_cursors(0)
+        self.set_selections((0, 0))
         self.view.run_command('tutkain_evaluate_form')
         time.sleep(self.delay)
 
@@ -57,7 +57,7 @@ class TestCommands(ViewTestCase):
         self.assertEquals(self.view_content('out'), '')
 
         self.append_to_view(' (square 2)')
-        self.add_cursors(40)
+        self.set_selections((40, 40))
         self.view.run_command('tutkain_evaluate_form')
         time.sleep(self.delay)
 
@@ -119,7 +119,7 @@ class TestCommands(ViewTestCase):
     def test_interrupt_evaluation(self):
         content = '''(do (Thread/sleep 1000) (println "Boom!"))'''
         self.append_to_view(content)
-        self.add_cursors(0)
+        self.set_selections((0, 0))
         self.view.run_command('tutkain_evaluate_form')
         self.view.window().run_command('tutkain_interrupt_evaluation')
         time.sleep(self.delay)
@@ -136,116 +136,116 @@ class TestExpandSelectionCommand(ViewTestCase):
 
     def test_before_lparen(self):
         self.append_to_view('(foo)')
-        self.add_cursors(0)
+        self.set_selections((0, 0))
         self.expand()
         self.assertEquals(self.selection(0), '(foo)')
 
     def test_after_lparen(self):
         self.append_to_view('(foo)')
-        self.add_cursors(1)
+        self.set_selections((1, 1))
         self.expand()
         self.assertEquals(self.selection(0), 'foo')
 
     def test_before_rparen(self):
         self.append_to_view('(foo)')
-        self.add_cursors(4)
+        self.set_selections((4, 4))
         self.expand()
         self.assertEquals(self.selection(0), '(foo)')
 
     def test_after_rparen(self):
         self.append_to_view('(foo)')
-        self.add_cursors(6)
+        self.set_selections((6, 6))
         self.expand()
         self.assertEquals(self.selection(0), '(foo)')
 
     def test_before_lbracket(self):
         self.append_to_view('[foo]')
-        self.add_cursors(0)
+        self.set_selections((0, 0))
         self.expand()
         self.assertEquals(self.selection(0), '[foo]')
 
     def test_after_lbracket(self):
         self.append_to_view('[foo]')
-        self.add_cursors(1)
+        self.set_selections((1, 1))
         self.expand()
         self.assertEquals(self.selection(0), 'foo')
 
     def test_after_rbracket(self):
         self.append_to_view('[foo]')
-        self.add_cursors(6)
+        self.set_selections((6, 6))
         self.expand()
         self.assertEquals(self.selection(0), '[foo]')
 
     def test_before_lcurly(self):
         self.append_to_view('{:a 1}')
-        self.add_cursors(0)
+        self.set_selections((0, 0))
         self.expand()
         self.assertEquals(self.selection(0), '{:a 1}')
 
     @skip('Clojures')
     def test_after_lcurly(self):
         self.append_to_view('{:a 1}')
-        self.add_cursors(1)
+        self.set_selections((1, 1))
         self.expand()
         self.assertEquals(self.selection(0), ':a')
 
     def test_after_rcurly(self):
         self.append_to_view('{:a 1}')
-        self.add_cursors(7)
+        self.set_selections((7, 7))
         self.expand()
         self.assertEquals(self.selection(0), '{:a 1}')
 
     def test_before_set(self):
         self.append_to_view('#{1}')
-        self.add_cursors(0)
+        self.set_selections((0, 0))
         self.expand()
         self.assertEquals(self.selection(0), '#{1}')
 
     def test_between_set_hash_and_bracket(self):
         self.append_to_view('#{1}')
-        self.add_cursors(1)
+        self.set_selections((1, 1))
         self.expand()
         self.assertEquals(self.selection(0), '#{1}')
 
     def test_between_on_symbol(self):
         self.append_to_view('(inc 1)')
-        self.add_cursors(2)
+        self.set_selections((2, 2))
         self.expand()
         self.assertEquals(self.selection(0), 'inc')
 
     def test_before_at(self):
         self.append_to_view('@(foo)')
-        self.add_cursors(0)
+        self.set_selections((0, 0))
         self.expand()
         self.assertEquals(self.selection(0), '@(foo)')
 
     def test_after_at(self):
         self.append_to_view('@(foo)')
-        self.add_cursors(1)
+        self.set_selections((1, 1))
         self.expand()
         self.assertEquals(self.selection(0), '@(foo)')
 
     def test_after_at_rparen(self):
         self.append_to_view('@(foo)')
-        self.add_cursors(6)
+        self.set_selections((6, 6))
         self.expand()
         self.assertEquals(self.selection(0), '@(foo)')
 
     def test_before_quoted_list(self):
         self.append_to_view('\'(foo)')
-        self.add_cursors(0)
+        self.set_selections((0, 0))
         self.expand()
         self.assertEquals(self.selection(0), '\'(foo)')
 
     def test_after_quoted_list(self):
         self.append_to_view('\'(foo)')
-        self.add_cursors(6)
+        self.set_selections((6, 6))
         self.expand()
         self.assertEquals(self.selection(0), '\'(foo)')
 
     def test_nested(self):
         self.append_to_view('(foo (bar))')
-        self.add_cursors(5)
+        self.set_selections((5, 5))
         self.expand()
         self.assertEquals(self.selection(0), '(bar)')
         self.expand()

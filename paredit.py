@@ -4,7 +4,7 @@ from . import sexp
 
 
 def open_round(view, edit):
-    ends = []
+    begins = []
     selections = view.sel()
 
     for region in selections:
@@ -15,14 +15,14 @@ def open_round(view, edit):
         if not sexp.inside_string(view, begin):
             view.insert(edit, end, ')')
             new_end = end + 1
-            ends.append(end)
+            begins.append(begin + 1)
 
             # For some reason, we have to explicitly account for the NUL
             # character.
             if re.match(r'[^\s\x00]', view.substr(new_end)):
                 view.insert(edit, new_end, ' ')
 
-    if ends:
+    if begins:
         selections.clear()
-        for end in ends:
-            selections.add(sublime.Region(end, end))
+        for begin in begins:
+            selections.add(sublime.Region(begin, begin))
