@@ -57,3 +57,17 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_open_round')
         self.assertEquals(self.view_content(), '(a [b ()])')
         self.assertEquals(self.selections(), [(7, 7)])
+
+    def test_close_round(self):
+        self.append_to_view('(a )')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_close_round')
+        self.assertEquals(self.view_content(), '(a)')
+        self.assertEquals(self.selections(), [(3, 3)])
+
+    def test_close_round_multiple_cursors(self):
+        self.append_to_view('(a ) (b )')
+        self.set_selections((2, 2), (7, 7))
+        self.view.run_command('tutkain_paredit_close_round')
+        self.assertEquals(self.view_content(), '(a) (b)')
+        self.assertEquals(self.selections(), [(3, 3), (7, 7)])
