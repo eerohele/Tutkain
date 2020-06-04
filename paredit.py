@@ -3,23 +3,25 @@ import sublime
 from . import sexp
 
 
-def open_round(view, edit):
+def open_bracket(view, edit, open_bracket):
+    close_bracket = sexp.OPEN[open_bracket]
     begins = []
     selections = view.sel()
 
     for region in selections:
         begin = region.begin()
         end = region.end() + 1
-        view.insert(edit, begin, '(')
+        view.insert(edit, begin, open_bracket)
 
         if not sexp.inside_string(view, begin):
-            view.insert(edit, end, ')')
+            view.insert(edit, end, close_bracket)
             new_end = end + 1
             begins.append(begin + 1)
 
-            # For some reason, we have to explicitly account for the NUL
-            # character.
-            if re.match(r'[^\s\x00]', view.substr(new_end)):
+            # If the character that follows the close bracket we just inserted
+            # is a whitespace character, the NUL character, or a close bracket,
+            # don't insert a whitespace. Otherwise, do.
+            if re.match(r'[^\s\x00\)\]\}]', view.substr(new_end)):
                 view.insert(edit, new_end, ' ')
 
     if begins:

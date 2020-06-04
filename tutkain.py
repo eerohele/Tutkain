@@ -530,4 +530,4 @@ class TutkainIndentRegion(sublime_plugin.TextCommand):
 
 class TutkainPareditOpenRoundCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        paredit.open_round(self.view, edit)
+        paredit.open_bracket(self.view, edit, '(')
