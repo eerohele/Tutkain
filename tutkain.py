@@ -7,6 +7,7 @@ from . import sexp
 from . import formatter
 from . import indent
 from . import sessions
+from . import paredit
 from .log import enable_debug, log
 from .repl import Client
 
@@ -525,3 +526,8 @@ class TutkainIndentRegion(sublime_plugin.TextCommand):
                     indent.indent_region(self.view, edit, outermost)
                 else:
                     indent.indent_region(self.view, edit, region)
+
+
+class TutkainPareditOpenRoundCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.open_round(self.view, edit)

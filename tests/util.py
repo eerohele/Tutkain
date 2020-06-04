@@ -32,5 +32,8 @@ class ViewTestCase(TestCase):
         for point in points:
             self.view.sel().add(sublime.Region(point))
 
+    def selections(self):
+        return [(region.begin(), region.end()) for region in self.view.sel()]
+
     def selection(self, i):
         return self.view.substr(self.view.sel()[i])
