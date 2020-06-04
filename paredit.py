@@ -13,7 +13,7 @@ def open_bracket(view, edit, open_bracket):
         end = region.end() + 1
         view.insert(edit, begin, open_bracket)
 
-        if not sexp.inside_string(view, begin):
+        if not sexp.ignore(view, begin):
             view.insert(edit, end, close_bracket)
             new_end = end + 1
             begins.append(begin + 1)
