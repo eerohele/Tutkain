@@ -56,3 +56,24 @@ def close_bracket(view, edit, close_bracket):
         selections.clear()
         for region in regions:
             selections.add(region)
+
+
+def double_quote(view, edit):
+    selections = view.sel()
+    regions = []
+
+    for region in view.sel():
+        if view.substr(region.end()) == '"':
+            regions.append(sublime.Region(region.end() + 1, region.end() + 1))
+        elif sexp.inside_string(view, region.begin()):
+            view.insert(edit, region.begin(), '\\"')
+        elif sexp.inside_comment(view, region.begin()):
+            view.insert(edit, region.begin(), '"')
+        else:
+            view.insert(edit, region.begin(), '""')
+            regions.append(sublime.Region(region.begin() + 1, region.end() + 1))
+
+    if regions:
+        selections.clear()
+        for region in regions:
+            selections.add(region)

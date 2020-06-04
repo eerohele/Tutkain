@@ -71,3 +71,46 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_close_round')
         self.assertEquals(self.view_content(), '(a) (b)')
         self.assertEquals(self.selections(), [(3, 3), (7, 7)])
+
+    def test_double_quote_simple(self):
+        self.set_selections((0, 0))
+        self.view.run_command('tutkain_paredit_double_quote')
+        self.assertEquals(self.view_content(), '""')
+        self.assertEquals(self.selections(), [(1, 1)])
+
+    def test_double_quote_inside_string(self):
+        self.append_to_view('" "')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_double_quote')
+        self.assertEquals(self.view_content(), '"\\" "')
+        self.assertEquals(self.selections(), [(3, 3)])
+
+    def test_double_quote_next_to_left_double_quote(self):
+        self.append_to_view('""')
+        self.set_selections((0, 0))
+        self.view.run_command('tutkain_paredit_double_quote')
+        self.assertEquals(self.view_content(), '""')
+        self.assertEquals(self.selections(), [(1, 1)])
+
+    def test_double_quote_next_to_right_double_quote(self):
+        self.append_to_view('""')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_double_quote')
+        self.assertEquals(self.view_content(), '""')
+        self.assertEquals(self.selections(), [(2, 2)])
+
+    def test_double_quote_inside_comment(self):
+        self.append_to_view('; ')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_double_quote')
+        self.assertEquals(self.view_content(), '; "')
+        self.assertEquals(self.selections(), [(3, 3)])
+
+    def test_double_quote_multiple_cursors(self):
+        self.append_to_view(' ')
+        self.set_selections((0, 0), (1, 1))
+        self.view.run_command('tutkain_paredit_double_quote')
+        self.assertEquals(self.view_content(), '"" ""')
+        self.assertEquals(self.selections(), [(1, 1), (4, 4)])
+        self.view.run_command(('tutkain_paredit_double_quote'))
+        self.assertEquals(self.selections(), [(2, 2), (5, 5)])

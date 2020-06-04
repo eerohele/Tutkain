@@ -536,3 +536,8 @@ class TutkainPareditOpenRoundCommand(sublime_plugin.TextCommand):
 class TutkainPareditCloseRoundCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         paredit.close_bracket(self.view, edit, ')')
+
+
+class TutkainPareditDoubleQuoteCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.double_quote(self.view, edit)
