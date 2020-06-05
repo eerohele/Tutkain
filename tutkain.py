@@ -541,3 +541,8 @@ class TutkainPareditCloseRoundCommand(sublime_plugin.TextCommand):
 class TutkainPareditDoubleQuoteCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         paredit.double_quote(self.view, edit)
+
+
+class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        sexp.cycle_collection_type(self.view, edit)

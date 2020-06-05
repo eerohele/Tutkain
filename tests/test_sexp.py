@@ -1,5 +1,5 @@
 import sublime
-from unittest import TestCase
+from unittest import skip, TestCase
 
 from tutkain import sexp
 from .util import ViewTestCase
@@ -153,3 +153,38 @@ class TestSexp(ViewTestCase):
         self.assertEquals(self.outermost(4), form)
         self.assertIsNone(self.outermost(0))
         self.assertIsNone(self.outermost(len(form)))
+
+    def test_cycle_collection_type(self):
+        content = '(a b)'
+        self.append_to_view(content)
+
+        for n in range(len(content)):
+            self.set_selections((n, n))
+            self.view.run_command('tutkain_cycle_collection_type')
+            self.assertEquals('[a b]', self.view_content())
+            self.view.run_command('tutkain_cycle_collection_type')
+            self.assertEquals('{a b}', self.view_content())
+            self.view.run_command('tutkain_cycle_collection_type')
+            self.assertEquals('#{a b}', self.view_content())
+            self.view.run_command('tutkain_cycle_collection_type')
+            self.assertEquals('(a b)', self.view_content())
+
+    def test_cycle_collection_type_multiple_cursors(self):
+        self.append_to_view('(a b) [c d]')
+        self.set_selections((0, 0), (6, 6))
+        self.view.run_command('tutkain_cycle_collection_type')
+        self.assertEquals('[a b] {c d}', self.view_content())
+        self.view.run_command('tutkain_cycle_collection_type')
+        self.assertEquals('{a b} #{c d}', self.view_content())
+        self.view.run_command('tutkain_cycle_collection_type')
+        self.assertEquals('#{a b} (c d)', self.view_content())
+        self.view.run_command('tutkain_cycle_collection_type')
+        self.assertEquals('(a b) [c d]', self.view_content())
+
+    @skip('not implemented')
+    def test_cycle_collection_type_cursor_position(self):
+        self.append_to_view('{a b} {c d}')
+        self.set_selections((0, 0), (6, 6))
+        self.view.run_command('tutkain_cycle_collection_type')
+        self.assertEquals('#{a b} #{c d}', self.view_content())
+        self.assertEquals([(0, 0), (7, 7)], self.selections())
