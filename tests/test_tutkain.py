@@ -7,7 +7,7 @@ from tutkain import tutkain
 
 
 class TestCommands(ViewTestCase):
-    delay = 0.15
+    delay = 0.25
 
     @classmethod
     def setUpClass(self):
