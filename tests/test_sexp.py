@@ -8,8 +8,7 @@ from .util import ViewTestCase
 class TestSexp(ViewTestCase):
     def current(self, point, ignore={}):
         view = self.view
-        start_point = sexp.into_adjacent(view, point)
-        region = sexp.outermost(view, start_point, absorb=True, ignore=ignore)
+        region = sexp.outermost(view, point, absorb=True, ignore=ignore)
 
         if region:
             return view.substr(region)
@@ -43,16 +42,16 @@ class TestSexp(ViewTestCase):
     def test_innermost_simple(self):
         form = '(a (b) c)'
         self.append_to_view(form)
-        self.assertIsNone(self.innermost(0))
+        self.assertEquals(self.innermost(0), form)
         self.assertEquals(self.innermost(1), form)
         self.assertEquals(self.innermost(2), form)
-        self.assertEquals(self.innermost(3), form)
+        self.assertEquals(self.innermost(3), '(b)')
         self.assertEquals(self.innermost(4), '(b)')
         self.assertEquals(self.innermost(5), '(b)')
-        self.assertEquals(self.innermost(6), form)
+        self.assertEquals(self.innermost(6), '(b)')
         self.assertEquals(self.innermost(7), form)
         self.assertEquals(self.innermost(8), form)
-        self.assertIsNone(self.innermost(9))
+        self.assertEquals(self.innermost(9), form)
 
     def test_current_simple(self):
         form = '(+ 1 2)'
@@ -149,10 +148,9 @@ class TestSexp(ViewTestCase):
     def test_outermost(self):
         form = '(a (b))'
         self.append_to_view(form)
-        self.assertEquals(self.outermost(1), form)
-        self.assertEquals(self.outermost(4), form)
-        self.assertIsNone(self.outermost(0))
-        self.assertIsNone(self.outermost(len(form)))
+
+        for n in range(len(form)):
+            self.assertEquals(self.outermost(0), form)
 
     def test_cycle_collection_type(self):
         content = '(a b)'

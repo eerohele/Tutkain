@@ -69,7 +69,7 @@ def find_close_bracket(view, close_bracket, start_point):
             point += 1
 
 
-def into_adjacent(view, point):
+def move_inside(view, point):
     if inside_string(view, point):
         return point
 
@@ -94,30 +94,31 @@ def into_adjacent(view, point):
     return point
 
 
-def absorb_macro_characters(view, point, absorb=False):
-    if absorb and view.substr(point - 1) in {'#', '@', '\'', '`'}:
-        return point - 1
+def absorb_macro_characters(view, region, absorb=False):
+    if absorb and view.substr(region.begin() - 1) in {'#', '@', '\'', '`'}:
+        return Region(region.begin() - 1, region.end())
     else:
-        return point
+        return Region(region.begin(), region.end())
 
 
 def innermost(view, point, absorb=False):
-    char, region = find_open_bracket(view, point)
+    char, open_region = find_open_bracket(
+        view,
+        move_inside(view, point)
+    )
 
     if char:
         close_region = find_close_bracket(
             view,
             OPEN[char],
-            region.end()
+            open_region.end()
         )
 
-        begin = absorb_macro_characters(
+        return absorb_macro_characters(
             view,
-            region.begin(),
+            Region(open_region.begin(), close_region.end()),
             absorb=absorb
         )
-
-        return Region(begin, close_region.end())
 
 
 def head_word(view, open_bracket):
@@ -133,7 +134,10 @@ def head_word(view, open_bracket):
 
 
 def outermost(view, point, absorb=False, ignore={}):
-    previous = find_open_bracket(view, point)
+    previous = find_open_bracket(
+        view,
+        move_inside(view, point)
+    )
 
     while previous[0] and point >= 0:
         current = find_open_bracket(view, point)
@@ -147,13 +151,11 @@ def outermost(view, point, absorb=False, ignore={}):
                 previous[1].end()
             )
 
-            begin = absorb_macro_characters(
+            return absorb_macro_characters(
                 view,
-                previous[1].begin(),
+                Region(previous[1].begin(), close_bracket.end()),
                 absorb=absorb
             )
-
-            return Region(begin, close_bracket.end())
         else:
             point = previous[1].begin()
             previous = current
@@ -181,12 +183,7 @@ cycle_order = {
 
 def cycle_collection_type(view, edit):
     for region in view.sel():
-        sexp = innermost(
-            view,
-            # TODO: Need to figure out a better idiom for this.
-            into_adjacent(view, region.begin()),
-            absorb=False
-        )
+        sexp = innermost(view, region.begin(), absorb=False)
 
         if sexp:
             begin = sexp.begin()

@@ -79,7 +79,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                 eval_region = region if not region.empty() else (
                     sexp.outermost(
                         self.view,
-                        sexp.into_adjacent(self.view, region.begin()),
+                        region.begin(),
                         absorb=True,
                         ignore={'comment'}
                     )
@@ -464,10 +464,8 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
             else:
                 # If we're next to a character that delimits a Clojure form
                 if sexp.is_next_to_expand_anchor(view, point):
-                    start_point = sexp.into_adjacent(view, region.begin())
-
                     selection.add(
-                        sexp.innermost(view, start_point, absorb=True)
+                        sexp.innermost(view, point, absorb=True)
                     )
                 # If the next character is a double quote
                 elif view.substr(point) == '"':
@@ -521,8 +519,11 @@ class TutkainIndentRegion(sublime_plugin.TextCommand):
         if 'Clojure' in self.view.settings().get('syntax'):
             for region in self.view.sel():
                 if region.empty():
-                    point = sexp.into_adjacent(self.view, region.begin())
-                    outermost = sexp.outermost(self.view, point)
+                    outermost = sexp.outermost(
+                        self.view,
+                        region.begin()
+                    )
+
                     indent.indent_region(self.view, edit, outermost)
                 else:
                     indent.indent_region(self.view, edit, region)
