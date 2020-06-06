@@ -69,7 +69,10 @@ def find_close_bracket(view, close_bracket, start_point):
             point += 1
 
 
-def move_inside(view, point):
+def move_inside(view, point, do):
+    if do == False:
+        return point
+
     if inside_string(view, point):
         return point
 
@@ -101,10 +104,10 @@ def absorb_macro_characters(view, region, absorb=False):
         return Region(region.begin(), region.end())
 
 
-def innermost(view, point, absorb=False):
+def innermost(view, point, absorb=False, edge=True):
     char, open_region = find_open_bracket(
         view,
-        move_inside(view, point)
+        move_inside(view, point, edge)
     )
 
     if char:
@@ -133,10 +136,10 @@ def head_word(view, open_bracket):
     )
 
 
-def outermost(view, point, absorb=False, ignore={}):
+def outermost(view, point, edge=True, absorb=False, ignore={}):
     previous = find_open_bracket(
         view,
-        move_inside(view, point)
+        move_inside(view, point, edge)
     )
 
     while previous[0] and point >= 0:

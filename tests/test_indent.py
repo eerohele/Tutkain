@@ -13,7 +13,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
         self.view.run_command('tutkain_insert_newline')
 
     def becomes(self, a, b, selections=[(0, 0)], newlines=1, clean=True):
-        self.append_to_view(cleandoc(a) if clean else a)
+        self.set_view_content(cleandoc(a) if clean else a)
 
         self.set_selections(*selections)
 
@@ -274,7 +274,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
 
 class TestIndentFormCommand(ViewTestCase):
     def becomes(self, a, b, selections=[(0, 0), (1, 1)]):
-        self.append_to_view(cleandoc(a))
+        self.set_view_content(cleandoc(a))
         self.set_selections(*selections)
         self.view.run_command('tutkain_indent_region')
         self.assertEquals(cleandoc(b), self.view_content())

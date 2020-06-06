@@ -1,6 +1,8 @@
 import re
 import sublime
+
 from . import sexp
+from . import indent
 
 
 def each_region(view):
@@ -68,3 +70,53 @@ def double_quote(view, edit):
         else:
             view.insert(edit, begin, '""')
             sel.append(sublime.Region(end + 1, end + 1))
+
+
+def find_next_bracket_end(view, point):
+    end = view.find_by_class(point, True, sublime.CLASS_PUNCTUATION_END)
+    return sublime.Region(end - 1, end)
+
+
+def find_next_slurpable(view, point):
+    start = view.find_by_class(
+        point,
+        True,
+        sublime.CLASS_PUNCTUATION_START | sublime.CLASS_WORD_START
+    )
+
+    flags = view.classify(start)
+
+    if flags & sublime.CLASS_PUNCTUATION_START:
+        return sexp.innermost(view, start, absorb=True)
+    elif flags & sublime.CLASS_WORD_START:
+        return view.word(start)
+
+
+def forward_slurp(view, edit):
+    for region, sel in each_region(view):
+        bracket = find_next_bracket_end(view, region.begin())
+        bracket_string = view.substr(bracket)
+
+        # If we don't find a close bracket or a double quote, do nothing.
+        if bracket_string == '"' or bracket_string in sexp.CLOSE:
+            slurpable = find_next_slurpable(view, bracket.end())
+
+            if slurpable:
+                # Save cursor position so we can restore it after slurping.
+                sel.append(region)
+
+                # Put a copy of the close bracket we found after the slurpable.
+                view.insert(edit, slurpable.end(), view.substr(bracket))
+                # Erase the close bracket we copied.
+                view.erase(edit, bracket)
+
+                # If we slurped a sexp, indent it.
+                if not sexp.ignore(view, slurpable.begin()):
+                    innermost = sexp.innermost(
+                        view,
+                        region.begin(),
+                        edge=False,
+                        absorb=True
+                    )
+
+                    indent.indent_region(view, edit, innermost, prune=True)

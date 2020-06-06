@@ -52,15 +52,19 @@ def insert_newline_and_indent(view, edit):
             restore_cursors(view)
 
 
-def get_indented_string(view, region):
+def get_indented_string(view, region, prune=False):
     _, open_bracket = sexp.find_open_bracket(view, region.begin())
+
+    string = view.substr(region)
 
     if open_bracket:
         indentation = determine_indentation(view, open_bracket)
-        return indentation + view.substr(region).lstrip(' ')
+        string = indentation + string.lstrip(' ')
+
+    return  re.sub(r'  +', ' ', string) if prune else string
 
 
-def indent_region(view, edit, region):
+def indent_region(view, edit, region, prune=False):
     new_lines = []
 
     for line in view.lines(region):
@@ -73,7 +77,7 @@ def indent_region(view, edit, region):
                 end = begin + line.size()
                 replacee = sublime.Region(begin, end)
 
-        replacer = get_indented_string(view, replacee)
+        replacer = get_indented_string(view, replacee, prune=prune)
 
         if replacer:
             view.replace(edit, replacee, replacer)

@@ -17,13 +17,17 @@ class ViewTestCase(TestCase):
             self.view.window().run_command('close_file')
 
     def setUp(self):
-        self.view.run_command('select_all')
-        self.view.run_command('right_delete')
+        self.clear_view()
 
     def view_content(self):
         return self.view.substr(sublime.Region(0, self.view.size()))
 
-    def append_to_view(self, chars):
+    def clear_view(self):
+        self.view.run_command('select_all')
+        self.view.run_command('right_delete')
+
+    def set_view_content(self, chars):
+        self.clear_view()
         self.view.run_command('append', {'characters': chars})
 
     def set_selections(self, *pairs):

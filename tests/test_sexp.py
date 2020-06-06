@@ -27,7 +27,7 @@ class TestSexp(ViewTestCase):
 
     def test_inside_string(self):
         content = ' "x" '
-        self.append_to_view(content)
+        self.set_view_content(content)
         self.assertEquals(
             list(
                 map(
@@ -41,7 +41,7 @@ class TestSexp(ViewTestCase):
 
     def test_innermost_simple(self):
         form = '(a (b) c)'
-        self.append_to_view(form)
+        self.set_view_content(form)
         self.assertEquals(self.innermost(0), form)
         self.assertEquals(self.innermost(1), form)
         self.assertEquals(self.innermost(2), form)
@@ -55,69 +55,69 @@ class TestSexp(ViewTestCase):
 
     def test_current_simple(self):
         form = '(+ 1 2)'
-        self.append_to_view(form)
+        self.set_view_content(form)
         for n in range(len(form)):
             self.assertEquals(self.current(n), form)
 
     def test_current_sexp(self):
         form = '[1 [2 3] 4]'
-        self.append_to_view(form)
+        self.set_view_content(form)
         for n in range(len(form)):
             self.assertEquals(self.current(n), form)
 
     def test_current_mixed(self):
         form = '(a {:b :c} [:d] )'
-        self.append_to_view(form)
+        self.set_view_content(form)
         for n in range(len(form)):
             self.assertEquals(self.current(n), form)
 
     def test_current_set(self):
         form = '#{1 2 3}'
-        self.append_to_view(form)
+        self.set_view_content(form)
         for n in range(len(form)):
             self.assertEquals(self.current(n), form)
 
     def test_current_deref_sexp(self):
         form = '@(atom 1)'
-        self.append_to_view(form)
+        self.set_view_content(form)
         for n in range(len(form)):
             self.assertEquals(self.current(n), form)
 
     def test_current_lambda(self):
         form = '#(+ 1 2 3)'
-        self.append_to_view(form)
+        self.set_view_content(form)
         for n in range(len(form)):
             self.assertEquals(self.current(n), form)
 
     def test_current_discard(self):
         form = '(inc #_(dec 2) 4)'
-        self.append_to_view(form)
+        self.set_view_content(form)
         for n in range(len(form)):
             self.assertEquals(self.current(n), form)
 
     def test_current_string_next_to_lbracket(self):
         form = '(merge {"A" :B})'
-        self.append_to_view(form)
+        self.set_view_content(form)
         self.assertEquals(self.current(len(form)), form)
 
     def test_current_ignore_string_1(self):
         form = '(a "()" b)'
-        self.append_to_view(form)
+        self.set_view_content(form)
         self.assertEquals(self.current(len(form)), form)
 
     def test_current_ignore_string_2(self):
         form = '(a "\"()\"" b)'
-        self.append_to_view(form)
+        self.set_view_content(form)
         self.assertEquals(self.current(len(form)), form)
 
     def test_current_none_when_outside_sexp(self):
         form = '"#{"'
-        self.append_to_view(form)
+        self.set_view_content(form)
         self.assertEquals(self.current(1), None)
 
     def test_current_adjacent_parens(self):
         form = '((resolving-require \'clojure.test/run-tests))'
-        self.append_to_view(form)
+        self.set_view_content(form)
         self.assertEquals(self.current(0), form)
         self.assertEquals(self.current(1), form)
         self.assertEquals(self.current(44), form)
@@ -125,7 +125,7 @@ class TestSexp(ViewTestCase):
 
     def test_current_ignore_comment_list(self):
         form = '(comment (+ 1 1))'
-        self.append_to_view(form)
+        self.set_view_content(form)
         self.assertEquals(self.current(0, ignore={'comment'}), form)
         self.assertEquals(self.current(1, ignore={'comment'}), form)
         for n in range(9, 16):
@@ -133,7 +133,7 @@ class TestSexp(ViewTestCase):
 
     def test_current_ignore_comment_set(self):
         form = '(comment #{1 2 3})'
-        self.append_to_view(form)
+        self.set_view_content(form)
         self.assertEquals(self.current(0, ignore={'comment'}), form)
         self.assertEquals(self.current(1, ignore={'comment'}), form)
         for n in range(9, 17):
@@ -141,20 +141,20 @@ class TestSexp(ViewTestCase):
 
     def test_current_quote(self):
         form = '\'(1 2 3)'
-        self.append_to_view(form)
+        self.set_view_content(form)
         for n in range(len(form)):
             self.assertEquals(self.current(n), form)
 
     def test_outermost(self):
         form = '(a (b))'
-        self.append_to_view(form)
+        self.set_view_content(form)
 
         for n in range(len(form)):
             self.assertEquals(self.outermost(0), form)
 
     def test_cycle_collection_type(self):
         content = '(a b)'
-        self.append_to_view(content)
+        self.set_view_content(content)
 
         for n in range(len(content)):
             self.set_selections((n, n))
@@ -168,7 +168,7 @@ class TestSexp(ViewTestCase):
             self.assertEquals('(a b)', self.view_content())
 
     def test_cycle_collection_type_multiple_cursors(self):
-        self.append_to_view('(a b) [c d]')
+        self.set_view_content('(a b) [c d]')
         self.set_selections((0, 0), (6, 6))
         self.view.run_command('tutkain_cycle_collection_type')
         self.assertEquals('[a b] {c d}', self.view_content())
@@ -181,7 +181,7 @@ class TestSexp(ViewTestCase):
 
     @skip('not implemented')
     def test_cycle_collection_type_cursor_position(self):
-        self.append_to_view('{a b} {c d}')
+        self.set_view_content('{a b} {c d}')
         self.set_selections((0, 0), (6, 6))
         self.view.run_command('tutkain_cycle_collection_type')
         self.assertEquals('#{a b} #{c d}', self.view_content())
