@@ -22,6 +22,10 @@ jobs:
 
       - run: clojure -Sdeps '{:deps {nrepl {:mvn/version "0.8.0-SNAPSHOT"}}}' -m nrepl.cmdline --port 1234 &
 
+      - uses: jakejarvis/wait-action@master
+        with:
+          time: 15s
+
       - run: sh -e /etc/init.d/xvfb start
       - run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
       - run: |
@@ -44,6 +48,10 @@ jobs:
           tools-deps: '1.10.1.483'
 
       - run: clojure -Sdeps '{:deps {nrepl {:mvn/version "0.8.0-SNAPSHOT"}}}' -m nrepl.cmdline --port 1234 &
+
+      - uses: jakejarvis/wait-action@master
+        with:
+          time: 15s
 
       - run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
       - run: |
