@@ -5,23 +5,28 @@ from . import sexp
 from . import indent
 
 
-def each_region(view):
-    new_selections = []
+def iterate(view):
+    '''
+    Iterate over each region in all selections.
+
+    After iteration, add all selections saved by consumers.
+    '''
+    new_regions = []
     selections = view.sel()
 
     for region in selections:
-        yield region, new_selections
+        yield region, new_regions
 
-    if new_selections:
+    if new_regions:
         selections.clear()
-        for region in new_selections:
+        for region in new_regions:
             selections.add(region)
 
 
 def open_bracket(view, edit, open_bracket):
     close_bracket = sexp.OPEN[open_bracket]
 
-    for region, sel in each_region(view):
+    for region, sel in iterate(view):
         begin = region.begin()
         end = region.end() + 1
         view.insert(edit, begin, open_bracket)
@@ -39,7 +44,7 @@ def open_bracket(view, edit, open_bracket):
 
 
 def close_bracket(view, edit, close_bracket):
-    for region, sel in each_region(view):
+    for region, sel in iterate(view):
         begin = region.begin()
         end = region.end()
 
@@ -57,7 +62,7 @@ def close_bracket(view, edit, close_bracket):
 
 
 def double_quote(view, edit):
-    for region, sel in each_region(view):
+    for region, sel in iterate(view):
         begin = region.begin()
         end = region.end()
 
@@ -93,7 +98,7 @@ def find_next_slurpable(view, point):
 
 
 def forward_slurp(view, edit):
-    for region, sel in each_region(view):
+    for region, sel in iterate(view):
         bracket = find_next_bracket_end(view, region.begin())
         bracket_string = view.substr(bracket)
 
