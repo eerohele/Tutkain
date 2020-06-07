@@ -250,3 +250,9 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.assertEquals('(bar)', self.selection(0))
         self.expand()
         self.assertEquals('(foo (bar))', self.selection(0))
+
+    def test_before_string(self):
+        self.set_view_content('(a "b" c)')
+        self.set_selections((3, 3))
+        self.expand()
+        self.assertEquals('"b"', self.selection(0))

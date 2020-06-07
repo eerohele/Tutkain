@@ -457,18 +457,10 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
             if not region.empty():
                 view.run_command('expand_selection', {'to': 'scope'})
             else:
-                # If we're next to a character that delimits a Clojure form
                 if sexp.is_next_to_expand_anchor(view, point):
                     selection.add(
                         sexp.innermost(view, point, absorb=True)
                     )
-                # If the next character is a double quote
-                elif view.substr(point) == '"':
-                    # Move cursor to within string
-                    selection.add(sublime.Region(point + 1))
-
-                    # Then expand
-                    view.run_command('expand_selection', {'to': 'scope'})
                 else:
                     view.run_command('expand_selection', {'to': 'scope'})
 
@@ -542,6 +534,11 @@ class TutkainPareditDoubleQuoteCommand(sublime_plugin.TextCommand):
 class TutkainPareditForwardSlurpCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         paredit.forward_slurp(self.view, edit)
+
+
+class TutkainPareditForwardBarfCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.forward_barf(self.view, edit)
 
 
 class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):

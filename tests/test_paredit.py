@@ -129,6 +129,8 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_forward_slurp')
         self.assertEquals('(a (b c))', self.view_content())
         self.assertEquals(self.selections(), [(5, 5)])
+
+    def test_forward_slurp_indent(self):
         self.set_view_content('(a (b    ) {:c    :d})')
         self.set_selections((5, 5))
         self.view.run_command('tutkain_paredit_forward_slurp')
@@ -155,3 +157,47 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_forward_slurp')
         self.assertEquals('(a (b c)) (d (e f))', self.view_content())
         self.assertEquals(self.selections(), [(5, 5), (15, 15)])
+
+    def test_forward_barf_word(self):
+        self.set_view_content('(a (b c))')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_forward_barf')
+        self.assertEquals('(a (b) c)', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4)])
+        self.view.run_command('tutkain_paredit_forward_barf')
+        self.assertEquals('(a () b c)', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4)])
+        self.view.run_command('tutkain_paredit_forward_barf')
+        self.assertEquals('(a () b c)', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4)])
+
+    def test_forward_barf_empty(self):
+        self.set_view_content('(a () c)')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_forward_barf')
+        self.assertEquals('(a () c)', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4)])
+
+    def test_forward_barf_set(self):
+        self.set_view_content('(a (b #{1 2 3}))')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_forward_barf')
+        self.assertEquals('(a (b) #{1 2 3})', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4)])
+
+    def test_forward_barf_string(self):
+        self.set_view_content('"a b"')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_forward_barf')
+        self.assertEquals('"a" b', self.view_content())
+        self.assertEquals(self.selections(), [(1, 1)])
+        self.view.run_command('tutkain_paredit_forward_barf')
+        self.assertEquals('"" a b', self.view_content())
+        self.assertEquals(self.selections(), [(1, 1)])
+
+    def test_forward_barf_multiple_cursors(self):
+        self.set_view_content('(a (b c)) (d (e f))')
+        self.set_selections((4, 4), (14, 14))
+        self.view.run_command('tutkain_paredit_forward_barf')
+        self.assertEquals('(a (b) c) (d (e) f)', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4), (14, 14)])

@@ -37,7 +37,7 @@ def restore_cursors(view):
 def insert_newline_and_indent(view, edit):
     for region in view.sel():
         point = region.begin()
-        _, open_bracket = sexp.find_open_bracket(view, point)
+        _, open_bracket = sexp.find_open(view, point)
 
         if open_bracket is None:
             view.run_command('insert', {'characters': '\n'})
@@ -53,7 +53,7 @@ def insert_newline_and_indent(view, edit):
 
 
 def get_indented_string(view, region, prune=False):
-    _, open_bracket = sexp.find_open_bracket(view, region.begin())
+    _, open_bracket = sexp.find_open(view, region.begin())
 
     string = view.substr(region)
 
@@ -61,24 +61,25 @@ def get_indented_string(view, region, prune=False):
         indentation = determine_indentation(view, open_bracket)
         string = indentation + string.lstrip(' ')
 
-    return  re.sub(r'  +', ' ', string) if prune else string
+    return re.sub(r'  +', ' ', string) if prune else string
 
 
 def indent_region(view, edit, region, prune=False):
     new_lines = []
 
-    for line in view.lines(region):
-        replacee = line
+    if region and not sexp.ignore(view, region.begin()):
+        for line in view.lines(region):
+            replacee = line
 
-        if new_lines:
-            previous = new_lines.pop()
-            if previous:
-                begin = previous.end()
-                end = begin + line.size()
-                replacee = sublime.Region(begin, end)
+            if new_lines:
+                previous = new_lines.pop()
+                if previous:
+                    begin = previous.end()
+                    end = begin + line.size()
+                    replacee = sublime.Region(begin, end)
 
-        replacer = get_indented_string(view, replacee, prune=prune)
+            replacer = get_indented_string(view, replacee, prune=prune)
 
-        if replacer:
-            view.replace(edit, replacee, replacer)
-            new_lines.append(view.full_line(replacee.begin()))
+            if replacer:
+                view.replace(edit, replacee, replacer)
+                new_lines.append(view.full_line(replacee.begin()))

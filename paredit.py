@@ -77,11 +77,6 @@ def double_quote(view, edit):
             sel.append(sublime.Region(end + 1, end + 1))
 
 
-def find_next_bracket_end(view, point):
-    end = view.find_by_class(point, True, sublime.CLASS_PUNCTUATION_END)
-    return sublime.Region(end - 1, end)
-
-
 def find_element(view, point, forward=True):
     start = view.find_by_class(
         point,
@@ -99,29 +94,45 @@ def find_element(view, point, forward=True):
 
 def forward_slurp(view, edit):
     for region, sel in iterate(view):
-        bracket = find_next_bracket_end(view, region.begin())
-        bracket_string = view.substr(bracket)
+        innermost = sexp.innermost(view, region.begin(), edge=False, absorb=True)
 
-        # If we don't find a close bracket or a double quote, do nothing.
-        if bracket_string == '"' or bracket_string in sexp.CLOSE:
-            element = find_element(view, bracket.end())
+        # If we don't find a close char, do nothing.
+        if innermost:
+            point = innermost.end() - 1
+            element = find_element(view, point)
 
             if element:
                 # Save cursor position so we can restore it after slurping.
                 sel.append(region)
-
-                # Put a copy of the close bracket we found after the element.
-                view.insert(edit, element.end(), view.substr(bracket))
-                # Erase the close bracket we copied.
-                view.erase(edit, bracket)
-
+                # Save close char.
+                char = view.substr(point)
+                # Put a copy of the close char we found after the element.
+                view.insert(edit, element.end(), char)
+                # Erase the close char we copied.
+                view.erase(edit, sublime.Region(point, point + 1))
                 # If we slurped a sexp, indent it.
-                if not sexp.ignore(view, element.begin()):
-                    innermost = sexp.innermost(
-                        view,
-                        region.begin(),
-                        edge=False,
-                        absorb=True
-                    )
+                indent.indent_region(view, edit, innermost, prune=True)
 
-                    indent.indent_region(view, edit, innermost, prune=True)
+
+def forward_barf(view, edit):
+    for region, sel in iterate(view):
+        sel.append(region)
+
+        innermost = sexp.innermost(view, region.begin(), edge=False, absorb=True)
+
+        if innermost:
+            point = innermost.end() - 1
+            element = find_element(view, point, forward=False)
+
+            if element:
+                char = view.substr(point)
+                view.erase(edit, sublime.Region(point, point + 1))
+                insert_point = max(element.begin() - 1, innermost.begin() + 1)
+                view.insert(edit, insert_point, char)
+
+                # If we inserted the close char next to the open char, add a
+                # space after the new close char.
+                if insert_point - 1 == innermost.begin():
+                    view.insert(edit, insert_point + 1, ' ')
+
+                indent.indent_region(view, edit, innermost, prune=True)
