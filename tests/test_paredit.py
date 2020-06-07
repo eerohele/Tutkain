@@ -72,6 +72,34 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('(a) (b)', self.view_content())
         self.assertEquals(self.selections(), [(3, 3), (7, 7)])
 
+    def test_open_square(self):
+        self.set_view_content('(a b c d)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_open_square')
+        self.assertEquals('(a b [] c d)', self.view_content())
+        self.assertEquals(self.selections(), [(6, 6)])
+
+    def test_close_square(self):
+        self.set_view_content('[a ]')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_close_square')
+        self.assertEquals('[a]', self.view_content())
+        self.assertEquals(self.selections(), [(3, 3)])
+
+    def test_open_curly(self):
+        self.set_view_content('(a b c d)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_open_curly')
+        self.assertEquals('(a b {} c d)', self.view_content())
+        self.assertEquals(self.selections(), [(6, 6)])
+
+    def test_close_curly(self):
+        self.set_view_content('{a b }')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_close_curly')
+        self.assertEquals('{a b}', self.view_content())
+        self.assertEquals(self.selections(), [(5, 5)])
+
     def test_double_quote_simple(self):
         self.set_selections((0, 0))
         self.view.run_command('tutkain_paredit_double_quote')
