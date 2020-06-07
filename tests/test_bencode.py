@@ -62,7 +62,7 @@ class TestBencode(TestCase):
             {'cheese': 42, 'ham': ['eggs']}
         ]:
             bencode.write(self.buffer, val)
-            self.assertEquals(bencode.read(self.buffer), val)
+            self.assertEquals(val, bencode.read(self.buffer))
 
     def test_invalid_byte_string(self):
         self.client.sendall(b'4spam')

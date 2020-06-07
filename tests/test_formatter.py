@@ -8,37 +8,37 @@ class TestFormatter(TestCase):
     def test_format(self):
 
         self.assertEquals(
-            format({'id': 1, 'value': '2', 'ns': 'user'}),
-            '2'
+            '2',
+            format({'id': 1, 'value': '2', 'ns': 'user'})
         )
 
         self.assertEquals(
-            format({'in': '(+ 1 2)'}),
-            '=> (+ 1 2)\n'
+            '=> (+ 1 2)\n',
+            format({'in': '(+ 1 2)'})
         )
 
         self.assertEquals(
-            format({'id': 1, 'out': 'Hello, world!\n'}),
-            'Hello, world!\n'
+            'Hello, world!\n',
+            format({'id': 1, 'out': 'Hello, world!\n'})
         )
 
         self.assertEquals(
-            format({'append': 'Hello, world!'}),
-            'Hello, world!'
+            'Hello, world!',
+            format({'append': 'Hello, world!'})
         )
 
         self.assertEquals(
+            'Execution error (ExceptionInfo) at user/eval96107 (REPL:1).\nBoom!',
             format({
                 'id': 1,
                 'err':
                 '''Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
 Boom!'''
-            }),
-            '''Execution error (ExceptionInfo) at user/eval96107 (REPL:1).
-Boom!'''
+            })
         )
 
         self.assertEquals(
+            '#error {\n :cause "Boom!"\n :data {:a 1}\n}',
             format({
                 'ex': 'class clojure.lang.ExceptionInfo',
                 'status': ['eval-error'],
@@ -47,5 +47,4 @@ Boom!'''
                 'nrepl.middleware.caught/throwable':
                 '#error {\n :cause "Boom!"\n :data {:a 1}\n}'
             }),
-            '#error {\n :cause "Boom!"\n :data {:a 1}\n}'
         )

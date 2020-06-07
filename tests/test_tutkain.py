@@ -138,115 +138,115 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.set_view_content('(foo)')
         self.set_selections((0, 0))
         self.expand()
-        self.assertEquals(self.selection(0), '(foo)')
+        self.assertEquals('(foo)', self.selection(0))
 
     def test_after_lparen(self):
         self.set_view_content('(foo)')
         self.set_selections((1, 1))
         self.expand()
-        self.assertEquals(self.selection(0), 'foo')
+        self.assertEquals('foo', self.selection(0))
 
     def test_before_rparen(self):
         self.set_view_content('(foo)')
         self.set_selections((4, 4))
         self.expand()
-        self.assertEquals(self.selection(0), '(foo)')
+        self.assertEquals('(foo)', self.selection(0))
 
     def test_after_rparen(self):
         self.set_view_content('(foo)')
         self.set_selections((6, 6))
         self.expand()
-        self.assertEquals(self.selection(0), '(foo)')
+        self.assertEquals('(foo)', self.selection(0))
 
     def test_before_lbracket(self):
         self.set_view_content('[foo]')
         self.set_selections((0, 0))
         self.expand()
-        self.assertEquals(self.selection(0), '[foo]')
+        self.assertEquals('[foo]', self.selection(0))
 
     def test_after_lbracket(self):
         self.set_view_content('[foo]')
         self.set_selections((1, 1))
         self.expand()
-        self.assertEquals(self.selection(0), 'foo')
+        self.assertEquals('foo', self.selection(0))
 
     def test_after_rbracket(self):
         self.set_view_content('[foo]')
         self.set_selections((6, 6))
         self.expand()
-        self.assertEquals(self.selection(0), '[foo]')
+        self.assertEquals('[foo]', self.selection(0))
 
     def test_before_lcurly(self):
         self.set_view_content('{:a 1}')
         self.set_selections((0, 0))
         self.expand()
-        self.assertEquals(self.selection(0), '{:a 1}')
+        self.assertEquals('{:a 1}', self.selection(0))
 
     @skip('Clojures')
     def test_after_lcurly(self):
         self.set_view_content('{:a 1}')
         self.set_selections((1, 1))
         self.expand()
-        self.assertEquals(self.selection(0), ':a')
+        self.assertEquals(':a', self.selection(0))
 
     def test_after_rcurly(self):
         self.set_view_content('{:a 1}')
         self.set_selections((7, 7))
         self.expand()
-        self.assertEquals(self.selection(0), '{:a 1}')
+        self.assertEquals('{:a 1}', self.selection(0))
 
     def test_before_set(self):
         self.set_view_content('#{1}')
         self.set_selections((0, 0))
         self.expand()
-        self.assertEquals(self.selection(0), '#{1}')
+        self.assertEquals('#{1}', self.selection(0))
 
     def test_between_set_hash_and_bracket(self):
         self.set_view_content('#{1}')
         self.set_selections((1, 1))
         self.expand()
-        self.assertEquals(self.selection(0), '#{1}')
+        self.assertEquals('#{1}', self.selection(0))
 
     def test_between_on_symbol(self):
         self.set_view_content('(inc 1)')
         self.set_selections((2, 2))
         self.expand()
-        self.assertEquals(self.selection(0), 'inc')
+        self.assertEquals('inc', self.selection(0))
 
     def test_before_at(self):
         self.set_view_content('@(foo)')
         self.set_selections((0, 0))
         self.expand()
-        self.assertEquals(self.selection(0), '@(foo)')
+        self.assertEquals('@(foo)', self.selection(0))
 
     def test_after_at(self):
         self.set_view_content('@(foo)')
         self.set_selections((1, 1))
         self.expand()
-        self.assertEquals(self.selection(0), '@(foo)')
+        self.assertEquals('@(foo)', self.selection(0))
 
     def test_after_at_rparen(self):
         self.set_view_content('@(foo)')
         self.set_selections((6, 6))
         self.expand()
-        self.assertEquals(self.selection(0), '@(foo)')
+        self.assertEquals('@(foo)', self.selection(0))
 
     def test_before_quoted_list(self):
         self.set_view_content('\'(foo)')
         self.set_selections((0, 0))
         self.expand()
-        self.assertEquals(self.selection(0), '\'(foo)')
+        self.assertEquals('\'(foo)', self.selection(0))
 
     def test_after_quoted_list(self):
         self.set_view_content('\'(foo)')
         self.set_selections((6, 6))
         self.expand()
-        self.assertEquals(self.selection(0), '\'(foo)')
+        self.assertEquals('\'(foo)', self.selection(0))
 
     def test_nested(self):
         self.set_view_content('(foo (bar))')
         self.set_selections((5, 5))
         self.expand()
-        self.assertEquals(self.selection(0), '(bar)')
+        self.assertEquals('(bar)', self.selection(0))
         self.expand()
-        self.assertEquals(self.selection(0), '(foo (bar))')
+        self.assertEquals('(foo (bar))', self.selection(0))

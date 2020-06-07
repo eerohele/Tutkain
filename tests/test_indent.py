@@ -9,22 +9,18 @@ from .util import ViewTestCase
 
 
 class TestIndentInsertNewLineCommand(ViewTestCase):
-    def newline(self):
-        self.view.run_command('tutkain_insert_newline')
-
     def becomes(self, a, b, selections=[(0, 0)], newlines=1, clean=True):
         self.set_view_content(cleandoc(a) if clean else a)
 
         self.set_selections(*selections)
 
         for n in range(newlines):
-            self.newline()
+            self.view.run_command('tutkain_insert_newline')
 
         self.assertEquals(
             cleandoc(b) if clean else b,
             self.view_content()
         )
-
 
     def test_outside_before(self):
         self.becomes(
@@ -272,7 +268,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
         )
 
 
-class TestIndentFormCommand(ViewTestCase):
+class TestIndentRegionCommand(ViewTestCase):
     def becomes(self, a, b, selections=[(0, 0), (1, 1)]):
         self.set_view_content(cleandoc(a))
         self.set_selections(*selections)

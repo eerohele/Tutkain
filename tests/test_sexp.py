@@ -7,11 +7,10 @@ from .util import ViewTestCase
 
 class TestSexp(ViewTestCase):
     def current(self, point, ignore={}):
-        view = self.view
-        region = sexp.outermost(view, point, absorb=True, ignore=ignore)
+        region = sexp.current(self.view, point)
 
         if region:
-            return view.substr(region)
+            return self.view.substr(region)
 
     def innermost(self, pos):
         region = sexp.innermost(self.view, pos)

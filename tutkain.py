@@ -77,12 +77,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
         else:
             for region in self.view.sel():
                 eval_region = region if not region.empty() else (
-                    sexp.outermost(
-                        self.view,
-                        region.begin(),
-                        absorb=True,
-                        ignore={'comment'}
-                    )
+                    sexp.current(self.view, region.begin())
                 )
 
                 code = self.view.substr(eval_region)

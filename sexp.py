@@ -164,6 +164,10 @@ def outermost(view, point, edge=True, absorb=False, ignore={}):
             previous = current
 
 
+def current(view, point):
+    return outermost(view, point, absorb=True, ignore={'comment'})
+
+
 def is_next_to_expand_anchor(view, point):
     return (
         view.substr(point) in OPEN or
