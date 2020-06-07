@@ -82,10 +82,10 @@ def find_next_bracket_end(view, point):
     return sublime.Region(end - 1, end)
 
 
-def find_next_slurpable(view, point):
+def find_element(view, point, forward=True):
     start = view.find_by_class(
         point,
-        True,
+        forward,
         sublime.CLASS_PUNCTUATION_START | sublime.CLASS_WORD_START
     )
 
@@ -104,19 +104,19 @@ def forward_slurp(view, edit):
 
         # If we don't find a close bracket or a double quote, do nothing.
         if bracket_string == '"' or bracket_string in sexp.CLOSE:
-            slurpable = find_next_slurpable(view, bracket.end())
+            element = find_element(view, bracket.end())
 
-            if slurpable:
+            if element:
                 # Save cursor position so we can restore it after slurping.
                 sel.append(region)
 
-                # Put a copy of the close bracket we found after the slurpable.
-                view.insert(edit, slurpable.end(), view.substr(bracket))
+                # Put a copy of the close bracket we found after the element.
+                view.insert(edit, element.end(), view.substr(bracket))
                 # Erase the close bracket we copied.
                 view.erase(edit, bracket)
 
                 # If we slurped a sexp, indent it.
-                if not sexp.ignore(view, slurpable.begin()):
+                if not sexp.ignore(view, element.begin()):
                     innermost = sexp.innermost(
                         view,
                         region.begin(),
