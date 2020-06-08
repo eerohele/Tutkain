@@ -77,19 +77,26 @@ def double_quote(view, edit):
             sel.append(sublime.Region(end + 1, end + 1))
 
 
-def find_element(view, point, forward=True):
-    start = view.find_by_class(
-        point,
-        forward,
-        sublime.CLASS_PUNCTUATION_START | sublime.CLASS_WORD_START
-    )
+def find_element(view, point, forward=True, stop_at_close=False):
+    max_size = view.size()
 
-    flags = view.classify(start)
+    while point >= 0 and point <= max_size:
+        if forward:
+            char = view.substr(point)
+        else:
+            char = view.substr(point - 1)
 
-    if flags & sublime.CLASS_PUNCTUATION_START:
-        return sexp.innermost(view, start, absorb=True)
-    elif flags & sublime.CLASS_WORD_START:
-        return view.word(start)
+        if forward and stop_at_close and char in sexp.CLOSE:
+            return None
+        elif (forward and char in sexp.OPEN) or (not forward and char in sexp.CLOSE):
+            return sexp.innermost(view, point, absorb=True)
+        elif re.match(r'\w', char):
+            return view.word(point)
+        else:
+            if forward:
+                point += 1
+            else:
+                point -= 1
 
 
 def forward_slurp(view, edit):
@@ -136,3 +143,28 @@ def forward_barf(view, edit):
                     view.insert(edit, insert_point + 1, ' ')
 
                 indent.indent_region(view, edit, innermost, prune=True)
+
+
+def wrap_bracket(view, edit, open_bracket):
+    close_bracket = sexp.OPEN[open_bracket]
+
+    for region, sel in iterate(view):
+        previous_char = view.substr(region.begin() - 1)
+
+        # If we're next to a close char, wrap the preceding element. Otherwise, wrap the following
+        # element.
+        if re.match(r'[\w\"\]\)\}]', previous_char):
+            forward = False
+        else:
+            forward = True
+
+        element = find_element(view, region.begin(), forward=forward, stop_at_close=True)
+
+        if element:
+            view.insert(edit, element.end(), close_bracket)
+            view.insert(edit, element.begin(), open_bracket)
+        else:
+            # If we didn't find an element, add an empty pair of brackets.
+            view.insert(edit, region.begin(), open_bracket + close_bracket)
+            # Move cursors inside the newly added pair.
+            sel.append(sublime.Region(region.begin() + 1, region.begin() + 1))

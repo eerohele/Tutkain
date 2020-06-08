@@ -229,3 +229,39 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_forward_barf')
         self.assertEquals('(a (b) c) (d (e) f)', self.view_content())
         self.assertEquals(self.selections(), [(4, 4), (14, 14)])
+
+    def test_wrap_round(self):
+        self.set_view_content('(foo bar baz)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(foo (bar) baz)', self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
+
+        self.set_view_content('(foo [bar] baz)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(foo ([bar]) baz)', self.view_content())
+
+        self.set_view_content('(foo [bar] baz)')
+        self.set_selections((10, 10))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(foo ([bar]) baz)', self.view_content())
+
+        self.set_view_content('')
+        self.set_selections((0, 0))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('()', self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
+
+        self.set_view_content('(foo bar baz) (qux quux quuz)')
+        self.set_selections((5, 5), (19, 19))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(foo (bar) baz) (qux (quux) quuz)', self.view_content())
+        self.assertEquals([(6, 6), (22, 22)], self.selections())
+
+    def test_wrap_square(self):
+        self.set_view_content('(foo bar baz)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_wrap_square')
+        self.assertEquals('(foo [bar] baz)', self.view_content())
+        self.assertEquals([(6, 6)], self.selections())

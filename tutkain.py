@@ -561,6 +561,16 @@ class TutkainPareditForwardBarfCommand(sublime_plugin.TextCommand):
         paredit.forward_barf(self.view, edit)
 
 
+class TutkainPareditWrapRoundCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.wrap_bracket(self.view, edit, '(')
+
+
+class TutkainPareditWrapSquareCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.wrap_bracket(self.view, edit, '[')
+
+
 class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
