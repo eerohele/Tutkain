@@ -21,13 +21,27 @@ def ignore(view, point):
     return inside_string(view, point) or inside_comment(view, point)
 
 
+def find_point(view, start_point, predicate, forward=True):
+    point = start_point if forward else start_point - 1
+    max_size = view.size()
+
+    while point >= 0 and point <= max_size:
+        if predicate(point):
+            return point
+
+        if forward:
+            point += 1
+        else:
+            point -= 1
+
+
 def find_open(view, start_point):
     point = start_point
     stack = 0
     in_string = inside_string(view, point)
 
     if in_string:
-        begin = view.find_by_class(point, False, CLASS_PUNCTUATION_START)
+        begin = find_point(view, point, lambda p: view.substr(p) == '"', forward=False)
         return view.substr(begin), Region(begin, begin + 1)
 
     while point > 0:
@@ -56,7 +70,7 @@ def find_close(view, start_point, close=None):
     in_string = inside_string(view, point)
 
     if in_string:
-        begin = view.find_by_class(point, True, CLASS_PUNCTUATION_START)
+        begin = find_point(view, point, lambda p: view.substr(p) == '"')
         return Region(begin, begin + 1)
 
     if close is None:

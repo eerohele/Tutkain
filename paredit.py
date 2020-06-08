@@ -168,3 +168,24 @@ def wrap_bracket(view, edit, open_bracket):
             view.insert(edit, region.begin(), open_bracket + close_bracket)
             # Move cursors inside the newly added pair.
             sel.append(sublime.Region(region.begin() + 1, region.begin() + 1))
+
+
+def backward_delete(view, edit):
+    for region, sel in iterate(view):
+        point = region.begin() - 1
+        next_char = view.substr(region.begin())
+        previous_char = view.substr(point)
+
+        # If the previous character is a close bracket or the double quote of a non-empty string,
+        # move the cursor one point to the left.
+        if previous_char in sexp.CLOSE or (previous_char == '"' and next_char != '"'):
+            sel.append(point)
+        # If the previous character is an open bracket of an empty sexp or the double quote of an
+        # empty string, delete the empty string or sexp.
+        elif previous_char in sexp.OPEN or (previous_char == '"' and next_char == '"'):
+            innermost = sexp.innermost(view, point, absorb=True)
+            if innermost.size() == 2:
+                view.erase(edit, innermost)
+        # Otherwise, delete the previous character.
+        else:
+            view.erase(edit, sublime.Region(point, point + 1))

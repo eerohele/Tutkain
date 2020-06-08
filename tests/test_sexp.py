@@ -64,10 +64,15 @@ class TestSexp(ViewTestCase):
         self.assertEquals(sexp.innermost(self.view, 8), Region(0, 9))
         self.assertEquals(sexp.innermost(self.view, 9), Region(0, 9))
 
-    def test_innermost_inside_string(self):
+    def test_innermost_next_to_string(self):
         content = '"a"'
         self.set_view_content(content)
         self.assertEquals(sexp.innermost(self.view, 0), Region(0, 3))
+
+    def test_innermost_empty_string_in_brackets(self):
+        form = '("")'
+        self.set_view_content(form)
+        self.assertEquals(sexp.innermost(self.view, 2), Region(1, 3))
 
     def test_current_simple(self):
         form = '(+ 1 2)'
