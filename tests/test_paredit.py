@@ -302,3 +302,9 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_backward_delete')
         self.assertEquals('(a)', self.view_content())
         self.assertEquals([(1, 1)], self.selections())
+
+        self.set_view_content('(a)')
+        self.set_selections((0, 3))
+        self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
