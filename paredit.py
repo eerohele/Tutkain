@@ -91,7 +91,9 @@ def find_element(view, point, forward=True, stop_at_close=False):
 
         if forward and stop_at_close and char in sexp.CLOSE:
             return None
-        elif (forward and char in sexp.OPEN) or (not forward and char in sexp.CLOSE):
+        elif ((forward and char in sexp.OPEN) or
+              (not forward and char in sexp.CLOSE) or
+              (not sexp.inside_string(view, point) and char == '"')):
             return sexp.innermost(view, point, absorb=True)
         elif re.match(r'\w', char):
             return view.word(point)
@@ -197,3 +199,14 @@ def backward_delete(view, edit):
             # Otherwise, delete the previous character.
             else:
                 view.erase(edit, sublime.Region(point, point + 1))
+
+
+def raise_sexp(view, edit):
+    for region, _ in iterate(view):
+        point = region.begin()
+
+        if not sexp.ignore(view, point):
+            innermost = sexp.innermost(view, point, absorb=False, edge=False)
+            element = find_element(view, point, stop_at_close=True)
+            view.replace(edit, innermost, view.substr(element))
+            view.run_command('tutkain_indent_region')

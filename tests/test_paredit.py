@@ -322,3 +322,16 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('("(")', self.view_content())
         self.view.run_command('tutkain_paredit_backward_delete')
         self.assertEquals('("")', self.view_content())
+
+    def test_raise_sexp(self):
+        self.set_view_content('(def f (fn [] body))')
+        self.set_selections((14, 14))
+        self.view.run_command('tutkain_paredit_raise_sexp')
+        self.assertEquals('(def f body)', self.view_content())
+        self.set_view_content('(a "b")')
+        self.set_selections((3, 3))
+        self.view.run_command('tutkain_paredit_raise_sexp')
+        self.assertEquals('"b"', self.view_content())
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_raise_sexp')
+        self.assertEquals('"b"', self.view_content())

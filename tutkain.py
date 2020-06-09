@@ -576,6 +576,11 @@ class TutkainPareditBackwardDeleteCommand(sublime_plugin.TextCommand):
         paredit.backward_delete(self.view, edit)
 
 
+class TutkainPareditRaiseSexpCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.raise_sexp(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
