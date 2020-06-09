@@ -52,16 +52,20 @@ def insert_newline_and_indent(view, edit):
             restore_cursors(view)
 
 
+def prune_string(string):
+    return re.sub(r'  +', ' ', string)
+
+
 def get_indented_string(view, region, prune=False):
     _, open_bracket = sexp.find_open(view, region.begin())
 
-    string = view.substr(region)
+    string = prune_string(view.substr(region)) if prune else view.substr(region)
 
     if open_bracket:
         indentation = determine_indentation(view, open_bracket)
-        string = indentation + string.lstrip(' ')
-
-    return re.sub(r'  +', ' ', string) if prune else string
+        return indentation + string.lstrip(' ')
+    else:
+        return string
 
 
 def indent_region(view, edit, region, prune=False):
