@@ -571,6 +571,11 @@ class TutkainPareditWrapSquareCommand(sublime_plugin.TextCommand):
         paredit.wrap_bracket(self.view, edit, '[')
 
 
+class TutkainPareditWrapCurlyCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.wrap_bracket(self.view, edit, '{')
+
+
 class TutkainPareditBackwardDeleteCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         paredit.backward_delete(self.view, edit)
