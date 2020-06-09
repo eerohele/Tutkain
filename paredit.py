@@ -48,17 +48,20 @@ def close_bracket(view, edit, close_bracket):
         begin = region.begin()
         end = region.end()
 
-        close_bracket_begin = view.find_by_class(
-            begin,
-            True,
-            sublime.CLASS_PUNCTUATION_END
-        ) - 1
+        if sexp.ignore(view, begin):
+            view.insert(edit, begin, close_bracket)
+        else:
+            close_bracket_begin = view.find_by_class(
+                begin,
+                True,
+                sublime.CLASS_PUNCTUATION_END
+            ) - 1
 
-        # Get the region that starts at the current point and ends before the
-        # close bracket and trim the whitespace on its right.
-        replacee = sublime.Region(begin, close_bracket_begin)
-        view.replace(edit, replacee, view.substr(replacee).rstrip())
-        sel.append(sublime.Region(begin + 1, end + 1))
+            # Get the region that starts at the current point and ends before the
+            # close bracket and trim the whitespace on its right.
+            replacee = sublime.Region(begin, close_bracket_begin)
+            view.replace(edit, replacee, view.substr(replacee).rstrip())
+            sel.append(sublime.Region(begin + 1, end + 1))
 
 
 def double_quote(view, edit):

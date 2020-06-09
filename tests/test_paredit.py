@@ -44,14 +44,14 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('(a (b) c)', self.view_content())
         self.assertEquals(self.selections(), [(4, 4)])
 
-    def test_open_round_before_close_paren(self):
+    def test_open_round_before_close_round(self):
         self.set_view_content('(a )')
         self.set_selections((3, 3))
         self.view.run_command('tutkain_paredit_open_round')
         self.assertEquals('(a ())', self.view_content())
         self.assertEquals(self.selections(), [(4, 4)])
 
-    def test_open_round_before_close_paren(self):
+    def test_open_round_before_close_square(self):
         self.set_view_content('(a [b ])')
         self.set_selections((6, 6))
         self.view.run_command('tutkain_paredit_open_round')
@@ -64,6 +64,13 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_close_round')
         self.assertEquals('(a)', self.view_content())
         self.assertEquals(self.selections(), [(3, 3)])
+
+    def test_close_round_in_string(self):
+        self.set_view_content('(a "b")')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_close_round')
+        self.assertEquals('(a "b)")', self.view_content())
+        self.assertEquals(self.selections(), [(6, 6)])
 
     def test_close_round_multiple_cursors(self):
         self.set_view_content('(a ) (b )')
