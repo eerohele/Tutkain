@@ -196,7 +196,9 @@ def backward_delete(view, edit):
             elif ((not sexp.ignore(view, point) and previous_char in sexp.OPEN)
                   or (previous_char == '"' and next_char == '"')):
                 innermost = sexp.innermost(view, point, absorb=True)
-                if innermost.size() == 2:
+                open_char = view.substr(innermost.end() - 2)
+
+                if open_char in sexp.OPEN or open_char == '"':
                     view.erase(edit, innermost)
             # Otherwise, delete the previous character.
             else:

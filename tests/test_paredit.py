@@ -332,6 +332,11 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_backward_delete')
         self.assertEquals('("")', self.view_content())
 
+        self.set_view_content('#{}')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('', self.view_content())
+
     def test_raise_sexp(self):
         self.set_view_content('(def f (fn [] body))')
         self.set_selections((14, 14))
