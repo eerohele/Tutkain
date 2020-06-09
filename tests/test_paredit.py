@@ -186,6 +186,15 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('"a b"', self.view_content())
         self.assertEquals(self.selections(), [(2, 2)])
 
+    def test_forward_slurp_nested(self):
+        self.set_view_content('(([a]) b)')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('(([a] b))', self.view_content())
+        self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('(([a b]))', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4)])
+
     def test_forward_slurp_multiple_cursors(self):
         self.set_view_content('(a (b) c) (d (e) f)')
         self.set_selections((5, 5), (15, 15))

@@ -105,14 +105,17 @@ def find_element(view, point, forward=True, stop_at_close=False):
 
 def forward_slurp(view, edit):
     for region, sel in iterate(view):
-        innermost = sexp.innermost(view, region.begin(), edge=False, absorb=True)
+        element = find_element(view, region.begin())
 
-        # If we don't find a close char, do nothing.
-        if innermost:
-            point = innermost.end() - 1
-            element = find_element(view, point)
+        if element:
+            point = sexp.find_point(
+                view,
+                element.begin(),
+                lambda p: view.substr(p) in sexp.CLOSE or view.substr(p) == '"',
+                forward=False
+            )
 
-            if element:
+            if point:
                 # Save cursor position so we can restore it after slurping.
                 sel.append(region)
                 # Save close char.
