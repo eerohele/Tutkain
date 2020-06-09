@@ -2,7 +2,6 @@ import re
 import sublime
 
 from . import sexp
-from . import indent
 
 
 def iterate(view):
@@ -123,7 +122,7 @@ def forward_slurp(view, edit):
                 # Erase the close char we copied.
                 view.erase(edit, sublime.Region(point, point + 1))
                 # If we slurped a sexp, indent it.
-                indent.indent_region(view, edit, innermost, prune=True)
+                view.run_command('tutkain_indent_region', {'prune': True})
 
 
 def forward_barf(view, edit):
@@ -147,7 +146,7 @@ def forward_barf(view, edit):
                 if insert_point - 1 == innermost.begin():
                     view.insert(edit, insert_point + 1, ' ')
 
-                indent.indent_region(view, edit, innermost, prune=True)
+                view.run_command('tutkain_indent_region', {'prune': True})
 
 
 def wrap_bracket(view, edit, open_bracket):

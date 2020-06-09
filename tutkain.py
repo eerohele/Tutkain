@@ -502,7 +502,7 @@ class TutkainInsertNewline(sublime_plugin.TextCommand):
 
 
 class TutkainIndentRegion(sublime_plugin.TextCommand):
-    def run(self, edit):
+    def run(self, edit, prune=False):
         if 'Clojure' in self.view.settings().get('syntax'):
             for region in self.view.sel():
                 if region.empty():
@@ -511,9 +511,9 @@ class TutkainIndentRegion(sublime_plugin.TextCommand):
                         region.begin()
                     )
 
-                    indent.indent_region(self.view, edit, outermost)
+                    indent.indent_region(self.view, edit, outermost, prune=prune)
                 else:
-                    indent.indent_region(self.view, edit, region)
+                    indent.indent_region(self.view, edit, region, prune=prune)
 
 
 class TutkainPareditOpenRoundCommand(sublime_plugin.TextCommand):
