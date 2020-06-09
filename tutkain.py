@@ -484,6 +484,7 @@ class TutkainActivateOutputViewCommand(sublime_plugin.WindowCommand):
             self.window.focus_view(view)
             self.window.focus_view(active_view)
 
+
 class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
     def run(self):
         session = sessions.get_by_owner(self.window.id(), 'user')
