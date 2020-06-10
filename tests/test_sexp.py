@@ -1,17 +1,11 @@
 from sublime import Region
-from unittest import skip, TestCase
+from unittest import skip
 
 from tutkain import sexp
 from .util import ViewTestCase
 
 
 class TestSexp(ViewTestCase):
-    def current(self, point):
-        region = sexp.current(self.view, point)
-
-        if region:
-            return self.view.substr(region)
-
     def test_find_open(self):
         self.set_view_content('(a)')
         self.assertEquals((None, None), sexp.find_open(self.view, 0))
@@ -53,126 +47,126 @@ class TestSexp(ViewTestCase):
 
     def test_innermost_simple(self):
         self.set_view_content('(a (b) c)')
-        self.assertEquals(sexp.innermost(self.view, 0), Region(0, 9))
-        self.assertEquals(sexp.innermost(self.view, 1), Region(0, 9))
-        self.assertEquals(sexp.innermost(self.view, 2), Region(0, 9))
-        self.assertEquals(sexp.innermost(self.view, 3), Region(3, 6))
-        self.assertEquals(sexp.innermost(self.view, 4), Region(3, 6))
-        self.assertEquals(sexp.innermost(self.view, 5), Region(3, 6))
-        self.assertEquals(sexp.innermost(self.view, 6), Region(3, 6))
-        self.assertEquals(sexp.innermost(self.view, 7), Region(0, 9))
-        self.assertEquals(sexp.innermost(self.view, 8), Region(0, 9))
-        self.assertEquals(sexp.innermost(self.view, 9), Region(0, 9))
+        self.assertEquals(sexp.innermost(self.view, 0).extent(), Region(0, 9))
+        self.assertEquals(sexp.innermost(self.view, 1).extent(), Region(0, 9))
+        self.assertEquals(sexp.innermost(self.view, 2).extent(), Region(0, 9))
+        self.assertEquals(sexp.innermost(self.view, 3).extent(), Region(3, 6))
+        self.assertEquals(sexp.innermost(self.view, 4).extent(), Region(3, 6))
+        self.assertEquals(sexp.innermost(self.view, 5).extent(), Region(3, 6))
+        self.assertEquals(sexp.innermost(self.view, 6).extent(), Region(3, 6))
+        self.assertEquals(sexp.innermost(self.view, 7).extent(), Region(0, 9))
+        self.assertEquals(sexp.innermost(self.view, 8).extent(), Region(0, 9))
+        self.assertEquals(sexp.innermost(self.view, 9).extent(), Region(0, 9))
 
     def test_innermost_next_to_string(self):
         content = '"a"'
         self.set_view_content(content)
-        self.assertEquals(sexp.innermost(self.view, 0), Region(0, 3))
+        self.assertEquals(sexp.innermost(self.view, 0).extent(), Region(0, 3))
 
     def test_innermost_empty_string_in_brackets(self):
         form = '("")'
         self.set_view_content(form)
-        self.assertEquals(sexp.innermost(self.view, 2), Region(1, 3))
+        self.assertEquals(sexp.innermost(self.view, 2).extent(), Region(1, 3))
 
-    def test_current_simple(self):
+    def test_outermost_simple(self):
         form = '(+ 1 2)'
         self.set_view_content(form)
         for n in range(len(form)):
-            self.assertEquals(self.current(n), form)
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, len(form)))
 
-    def test_current_sexp(self):
+    def test_outermost_sexp(self):
         form = '[1 [2 3] 4]'
         self.set_view_content(form)
         for n in range(len(form)):
-            self.assertEquals(self.current(n), form)
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, len(form)))
 
-    def test_current_mixed(self):
+    def test_outermost_mixed(self):
         form = '(a {:b :c} [:d] )'
         self.set_view_content(form)
         for n in range(len(form)):
-            self.assertEquals(self.current(n), form)
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, len(form)))
 
-    def test_current_set(self):
+    def test_outermost_set(self):
         form = '#{1 2 3}'
         self.set_view_content(form)
         for n in range(len(form)):
-            self.assertEquals(self.current(n), form)
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, len(form)))
 
-    def test_current_deref_sexp(self):
+    def test_outermost_deref_sexp(self):
         form = '@(atom 1)'
         self.set_view_content(form)
         for n in range(len(form)):
-            self.assertEquals(self.current(n), form)
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, len(form)))
 
-    def test_current_lambda(self):
+    def test_outermost_lambda(self):
         form = '#(+ 1 2 3)'
         self.set_view_content(form)
         for n in range(len(form)):
-            self.assertEquals(self.current(n), form)
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, len(form)))
 
-    def test_current_discard(self):
+    def test_outermost_discard(self):
         form = '(inc #_(dec 2) 4)'
         self.set_view_content(form)
         for n in range(len(form)):
-            self.assertEquals(self.current(n), form)
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, len(form)))
 
-    def test_current_string_next_to_lbracket(self):
+    def test_outermost_string_next_to_lbracket(self):
         form = '(merge {"A" :B})'
         self.set_view_content(form)
-        self.assertEquals(self.current(len(form)), form)
+        self.assertEquals(sexp.outermost(self.view, len(form)).extent(), Region(0, len(form)))
 
-    def test_current_ignore_string_1(self):
+    def test_outermost_ignore_string_1(self):
         form = '(a "()" b)'
         self.set_view_content(form)
-        self.assertEquals(self.current(len(form)), form)
+        self.assertEquals(sexp.outermost(self.view, len(form)).extent(), Region(0, len(form)))
 
-    def test_current_ignore_string_2(self):
+    def test_outermost_ignore_string_2(self):
         form = '(a "\"()\"" b)'
         self.set_view_content(form)
-        self.assertEquals(self.current(len(form)), form)
+        self.assertEquals(sexp.outermost(self.view, len(form)).extent(), Region(0, len(form)))
 
-    def test_current_inside_string(self):
+    def test_outermost_inside_string(self):
         form = '"a"'
         self.set_view_content(form)
-        self.assertEquals(self.current(1), form)
-        self.assertEquals(self.current(2), form)
+        self.assertEquals(sexp.outermost(self.view, 1).extent(), Region(0, len(form)))
+        self.assertEquals(sexp.outermost(self.view, 2).extent(), Region(0, len(form)))
 
-    def test_current_adjacent_parens(self):
+    def test_outermost_adjacent_parens(self):
         form = '((resolving-require \'clojure.test/run-tests))'
         self.set_view_content(form)
-        self.assertEquals(self.current(0), form)
-        self.assertEquals(self.current(1), form)
-        self.assertEquals(self.current(44), form)
-        self.assertEquals(self.current(45), form)
+        self.assertEquals(sexp.outermost(self.view, 0).extent(), Region(0, len(form)))
+        self.assertEquals(sexp.outermost(self.view, 1).extent(), Region(0, len(form)))
+        self.assertEquals(sexp.outermost(self.view, 44).extent(), Region(0, len(form)))
+        self.assertEquals(sexp.outermost(self.view, 45).extent(), Region(0, len(form)))
 
-    def test_current_ignore_comment_list(self):
+    def test_outermost_ignore_comment_list(self):
         form = '(comment (+ 1 1))'
         self.set_view_content(form)
-        self.assertEquals(self.current(0), form)
-        self.assertEquals(self.current(1), form)
+        self.assertEquals(sexp.outermost(self.view, 0, ignore={'comment'}).extent(), Region(0, len(form)))
+        self.assertEquals(sexp.outermost(self.view, 1, ignore={'comment'}).extent(), Region(0, len(form)))
         for n in range(9, 16):
-            self.assertEquals(self.current(n), '(+ 1 1)')
+            self.assertEquals(sexp.outermost(self.view, n, ignore={'comment'}).extent(), Region(9, 16))
 
-    def test_current_ignore_comment_set(self):
+    def test_outermost_ignore_comment_set(self):
         form = '(comment #{1 2 3})'
         self.set_view_content(form)
-        self.assertEquals(self.current(0), form)
-        self.assertEquals(self.current(1), form)
+        self.assertEquals(sexp.outermost(self.view, 0, ignore={'comment'}).extent(), Region(0, len(form)))
+        self.assertEquals(sexp.outermost(self.view, 1, ignore={'comment'}).extent(), Region(0, len(form)))
         for n in range(9, 17):
-            self.assertEquals(self.current(n), '#{1 2 3}')
+            self.assertEquals(sexp.outermost(self.view, n, ignore={'comment'}).extent(), Region(9, 17))
 
-    def test_current_quote(self):
+    def test_outermost_quote(self):
         form = '\'(1 2 3)'
         self.set_view_content(form)
         for n in range(len(form)):
-            self.assertEquals(self.current(n), form)
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, len(form)))
 
     def test_outermost(self):
         form = '(a (b))'
         self.set_view_content(form)
 
         for n in range(len(form)):
-            self.assertEquals(sexp.outermost(self.view, n), Region(0, 7))
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, 7))
 
     def test_cycle_collection_type(self):
         content = '(a b)'

@@ -77,7 +77,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
         else:
             for region in self.view.sel():
                 eval_region = region if not region.empty() else (
-                    sexp.current(self.view, region.begin())
+                    sexp.outermost(self.view, region.begin(), ignore={'comment'}).extent()
                 )
 
                 code = self.view.substr(eval_region)
@@ -459,7 +459,7 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
             else:
                 if sexp.is_next_to_expand_anchor(view, point):
                     selection.add(
-                        sexp.innermost(view, point, absorb=True)
+                        sexp.innermost(view, point, absorb=True).extent()
                     )
                 else:
                     view.run_command('expand_selection', {'to': 'scope'})
@@ -512,7 +512,8 @@ class TutkainIndentRegion(sublime_plugin.TextCommand):
                         region.begin()
                     )
 
-                    indent.indent_region(self.view, edit, outermost, prune=prune)
+                    if outermost:
+                        indent.indent_region(self.view, edit, outermost.extent(), prune=prune)
                 else:
                     indent.indent_region(self.view, edit, region, prune=prune)
 

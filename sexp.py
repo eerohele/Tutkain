@@ -1,8 +1,30 @@
-from sublime import CLASS_PUNCTUATION_START, CLASS_WORD_START, Region
+from sublime import CLASS_WORD_START, Region
 
 
 OPEN = {'(': ')', '[': ']', '{': '}'}
 CLOSE = {')': '(', ']': '[', '}': '{'}
+MACRO_CHARACTERS = {'#', '@', '\'', '`'}
+
+
+class Sexp():
+    def __init__(self, view, open_region, close_region):
+        self.view = view
+        self.open = self.absorb_macro_characters(open_region)
+        self.close = close_region
+
+    def __str__(self):
+        return self.view.substr(self.extent())
+
+    def extent(self):
+        return Region(self.open.begin(), self.close.end())
+
+    def absorb_macro_characters(self, region):
+        begin = region.begin()
+
+        if self.view.substr(begin - 1) in MACRO_CHARACTERS:
+            begin = begin - 1
+
+        return Region(begin, region.end())
 
 
 def inside_string(view, point):
@@ -129,13 +151,6 @@ def move_inside(view, point, do):
     return point
 
 
-def absorb_macro_characters(view, region, absorb=False):
-    if absorb and view.substr(region.begin() - 1) in {'#', '@', '\'', '`'}:
-        return Region(region.begin() - 1, region.end())
-    else:
-        return Region(region.begin(), region.end())
-
-
 def innermost(view, point, absorb=False, edge=True):
     char, open_region = find_open(
         view,
@@ -149,11 +164,7 @@ def innermost(view, point, absorb=False, edge=True):
             close=OPEN.get(char)
         )
 
-        return absorb_macro_characters(
-            view,
-            Region(open_region.begin(), close_region.end()),
-            absorb=absorb
-        )
+        return Sexp(view, open_region, close_region)
 
 
 def head_word(view, open_bracket):
@@ -168,7 +179,7 @@ def head_word(view, open_bracket):
     )
 
 
-def outermost(view, point, edge=True, absorb=False, ignore={}):
+def outermost(view, point, edge=True, ignore={}):
     previous = find_open(view, move_inside(view, point, edge))
 
     while previous[0] and point >= 0:
@@ -177,24 +188,18 @@ def outermost(view, point, edge=True, absorb=False, ignore={}):
         if previous[0] and (
             not current[0] or (ignore and head_word(view, current[1]) in ignore)
         ):
-            close_bracket = find_close(
+            open_region = previous[1]
+
+            close_region = find_close(
                 view,
-                previous[1].end(),
+                open_region.end(),
                 close=OPEN.get(previous[0])
             )
 
-            return absorb_macro_characters(
-                view,
-                Region(previous[1].begin(), close_bracket.end()),
-                absorb=absorb
-            )
+            return Sexp(view, open_region, close_region)
         else:
             point = previous[1].begin()
             previous = current
-
-
-def current(view, point):
-    return outermost(view, point, absorb=True, ignore={'comment'})
 
 
 def is_next_to_open(view, point):
@@ -219,7 +224,7 @@ def is_next_to_expand_anchor(view, point):
     return is_next_to_open(view, point) or is_next_to_close(view, point)
 
 
-cycle_order = {
+CYCLE_ORDER = {
     '(': '[',
     '[': '{',
     '{': '#{',
@@ -229,31 +234,11 @@ cycle_order = {
 
 def cycle_collection_type(view, edit):
     for region in view.sel():
-        sexp = innermost(view, region.begin(), absorb=False)
+        sexp = innermost(view, region.begin())
 
         if sexp:
-            begin = sexp.begin()
-
-            # This is quite ugly. There's probably an elegant abstraction here
-            # somewhere, I just haven't found it yet.
-            if view.substr(Region(begin - 1, begin + 1)) == '#{':
-                open_bracket = '#{'
-                begin -= 1
-            else:
-                open_bracket = view.substr(begin)
-
-            new_open_bracket = cycle_order[open_bracket]
+            open_bracket = view.substr(sexp.open)
+            new_open_bracket = CYCLE_ORDER[open_bracket]
             new_close_bracket = OPEN.get(new_open_bracket[-1:])
-            open_region = Region(begin, begin + len(open_bracket))
-
-            view.replace(edit, open_region, new_open_bracket)
-
-            # This is slower than calculating the new position, but the
-            # implementation is *much* simpler.
-            close_region = find_close(
-                view,
-                begin + len(new_open_bracket),
-                close=OPEN.get(open_bracket[-1:])
-            )
-
-            view.replace(edit, close_region, new_close_bracket)
+            view.replace(edit, sexp.close, new_close_bracket)
+            view.replace(edit, sexp.open, new_open_bracket)

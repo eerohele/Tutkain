@@ -156,7 +156,7 @@ def find_next_element(view, point):
         if is_insignificant(view, point):
             point += 1
         elif sexp.is_next_to_open(view, point):
-            return sexp.innermost(view, point, absorb=True)
+            return sexp.innermost(view, point).extent()
         else:
             scope = extract_scope(view, point)
 
@@ -173,7 +173,7 @@ def find_previous_element(view, point):
         if is_insignificant(view, point - 1):
             point -= 1
         elif not sexp.ignore(view, point) and view.substr(point - 1) in sexp.CLOSE:
-            return sexp.innermost(view, point, absorb=True)
+            return sexp.innermost(view, point).extent()
         else:
             scope = extract_scope(view, point - 1)
 
@@ -214,21 +214,21 @@ def forward_barf(view, edit):
     for region, sel in iterate(view):
         sel.append(region)
 
-        innermost = sexp.innermost(view, region.begin(), edge=False, absorb=True)
+        innermost = sexp.innermost(view, region.begin(), edge=False)
 
         if innermost:
-            point = innermost.end() - 1
+            point = innermost.close.begin()
             element = find_previous_element(view, point)
 
             if element:
                 char = view.substr(point)
                 view.erase(edit, sublime.Region(point, point + 1))
-                insert_point = max(element.begin() - 1, innermost.begin() + 1)
+                insert_point = max(element.begin() - 1, innermost.open.end())
                 view.insert(edit, insert_point, char)
 
                 # If we inserted the close char next to the open char, add a
                 # space after the new close char.
-                if insert_point - 1 == innermost.begin():
+                if insert_point - 1 == innermost.open.begin():
                     view.insert(edit, insert_point + 1, ' ')
 
                 view.run_command('tutkain_indent_region', {'prune': True})
@@ -280,11 +280,10 @@ def backward_delete(view, edit):
             # an empty string, delete the empty string or sexp.
             elif ((not sexp.ignore(view, point) and previous_char in sexp.OPEN)
                   or (previous_char == '"' and next_char == '"')):
-                innermost = sexp.innermost(view, point, absorb=True)
-                open_char = view.substr(innermost.end() - 2)
+                innermost = sexp.innermost(view, point)
 
-                if open_char in sexp.OPEN or open_char == '"':
-                    view.erase(edit, innermost)
+                if innermost.open.end() == innermost.close.begin():
+                    view.erase(edit, innermost.extent())
             # Otherwise, delete the previous character.
             else:
                 view.erase(edit, sublime.Region(point, point + 1))
@@ -295,9 +294,9 @@ def raise_sexp(view, edit):
         point = region.begin()
 
         if not sexp.ignore(view, point):
-            innermost = sexp.innermost(view, point, absorb=True, edge=False)
+            innermost = sexp.innermost(view, point, edge=False)
             element = find_next_element(view, point)
-            view.replace(edit, innermost, view.substr(element))
+            view.replace(edit, innermost.extent(), view.substr(element))
             view.run_command('tutkain_indent_region', {'prune': True})
 
 
@@ -305,14 +304,10 @@ def splice_sexp(view, edit):
     for region, _ in iterate(view):
         point = region.begin()
 
-        innermost = sexp.innermost(view, point, absorb=True, edge=False)
-
-        open_point = sexp.find_point(
-            view, innermost.begin(), lambda p: view.substr(p) in sexp.OPEN or view.substr(p) in '"'
-        ) + 1
+        innermost = sexp.innermost(view, point, edge=False)
 
         # Erase the close character
-        view.erase(edit, sublime.Region(innermost.end(), innermost.end() - 1))
+        view.erase(edit, innermost.close)
         # Erase one or more open characters
-        view.erase(edit, sublime.Region(innermost.begin(), open_point))
+        view.erase(edit, innermost.open)
         view.run_command('tutkain_indent_region', {'prune': True})
