@@ -1,14 +1,46 @@
 from inspect import cleandoc
-import sublime
+from sublime import Region
 
 from tutkain import tutkain
 from unittest import TestCase
-
+from tutkain import paredit
 
 from .util import ViewTestCase
 
 
 class TestOpenRoundCommand(ViewTestCase):
+    def test_find_next_element(self):
+        self.set_view_content('a')
+        self.assertEquals(paredit.find_next_element(self.view, 0), Region(0, 1))
+        self.set_view_content(':foo')
+        self.assertEquals(paredit.find_next_element(self.view, 0), Region(0, 4))
+        self.set_view_content(':foo/bar')
+        self.assertEquals(paredit.find_next_element(self.view, 0), Region(0, 8))
+        self.set_view_content('(identity 1/2)')
+        self.assertEquals(paredit.find_next_element(self.view, 10), Region(10, 13))
+        self.set_view_content('(identity 0.2)')
+        self.assertEquals(paredit.find_next_element(self.view, 10), Region(10, 13))
+        self.set_view_content('(a (b) c)')
+        self.assertEquals(paredit.find_next_element(self.view, 2), Region(3, 6))
+        self.set_view_content('(a (b) c)')
+        self.assertEquals(paredit.find_next_element(self.view, 3), Region(3, 6))
+
+    def test_find_previous_element(self):
+        self.set_view_content('a')
+        self.assertEquals(paredit.find_previous_element(self.view, 1), Region(0, 1))
+        self.set_view_content(':foo')
+        self.assertEquals(paredit.find_previous_element(self.view, 4), Region(0, 4))
+        self.set_view_content(':foo/bar')
+        self.assertEquals(paredit.find_previous_element(self.view, 8), Region(0, 8))
+        self.set_view_content('(identity 1/2)')
+        self.assertEquals(paredit.find_previous_element(self.view, 13), Region(10, 13))
+        self.set_view_content('(identity 0.2)')
+        self.assertEquals(paredit.find_previous_element(self.view, 13), Region(10, 13))
+        self.set_view_content('(a (b) c)')
+        self.assertEquals(paredit.find_previous_element(self.view, 6), Region(3, 6))
+        self.set_view_content('(a (b) c)')
+        self.assertEquals(paredit.find_previous_element(self.view, 7), Region(3, 6))
+
     def test_open_round(self):
         self.set_view_content('(a b c d)')
         self.set_selections((5, 5))
@@ -165,6 +197,16 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('(a (b c))', self.view_content())
         self.assertEquals(self.selections(), [(5, 5)])
 
+    def test_forward_slurp_numbers(self):
+        self.set_view_content('(a (b) 1/2)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('(a (b 1/2))', self.view_content())
+        self.set_view_content('(a (b) 0.2)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('(a (b 0.2))', self.view_content())
+
     def test_forward_slurp_indent(self):
         self.set_view_content('(a (b    ) {:c    :d})')
         self.set_selections((5, 5))
@@ -269,11 +311,47 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('()', self.view_content())
         self.assertEquals([(1, 1)], self.selections())
 
+        self.set_view_content('  ')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals(' () ', self.view_content())
+        self.assertEquals([(2, 2)], self.selections())
+
         self.set_view_content('(foo bar baz) (qux quux quuz)')
         self.set_selections((5, 5), (19, 19))
         self.view.run_command('tutkain_paredit_wrap_round')
         self.assertEquals('(foo (bar) baz) (qux (quux) quuz)', self.view_content())
         self.assertEquals([(6, 6), (22, 22)], self.selections())
+
+        self.set_view_content('(foo  bar)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(foo () bar)', self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
+
+        self.set_view_content(':foo/bar')
+        self.set_selections((0, 0))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(:foo/bar)', self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
+
+        self.set_view_content(':foo/bar')
+        self.set_selections((8, 8))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(:foo/bar)', self.view_content())
+        self.assertEquals([(10, 10)], self.selections())
+
+        self.set_view_content('(+ 1/2 2/2)')
+        self.set_selections((3, 3))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(+ (1/2) 2/2)', self.view_content())
+        self.assertEquals([(4, 4)], self.selections())
+
+        self.set_view_content('(+ 1/2 2/2)')
+        self.set_selections((6, 6))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('(+ (1/2) 2/2)', self.view_content())
+        self.assertEquals([(8, 8)], self.selections())
 
     def test_wrap_square(self):
         self.set_view_content('(foo bar baz)')

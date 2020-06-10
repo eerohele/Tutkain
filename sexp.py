@@ -197,17 +197,26 @@ def current(view, point):
     return outermost(view, point, absorb=True, ignore={'comment'})
 
 
-def is_next_to_expand_anchor(view, point):
-    return (
+def is_next_to_open(view, point):
+    return not ignore(view, point) and (
         view.substr(point) in OPEN or
-        view.substr(point) in CLOSE or
         view.substr(point) == '"' or
         view.substr(Region(point, point + 2)) == '#{' or
         view.substr(Region(point, point + 2)) == '#(' or
         view.substr(Region(point, point + 2)) == '@(' or
-        view.substr(Region(point, point + 2)) == '\'(' or
+        view.substr(Region(point, point + 2)) == '\'('
+    )
+
+
+def is_next_to_close(view, point):
+    return not ignore(view, point) and (
+        view.substr(point) in CLOSE or
         view.substr(point - 1) in CLOSE
     )
+
+
+def is_next_to_expand_anchor(view, point):
+    return is_next_to_open(view, point) or is_next_to_close(view, point)
 
 
 cycle_order = {

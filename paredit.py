@@ -79,53 +79,135 @@ def double_quote(view, edit):
             sel.append(sublime.Region(end + 1, end + 1))
 
 
-def find_element(view, point, forward=True, stop_at_close=False):
+def has_null_character(view, point):
+    return view.substr(point) == '\x00'
+
+
+def extract_scope(view, point):
+    '''Like View.extract_scope(), but less fussy.
+
+    For example, take this Clojure keyword:
+
+        :foo
+
+    At point 0, the scope name is:
+
+        'source.clojure constant.other.keyword.clojure punctuation.definition.keyword.clojure '
+
+    At point 1, the scope name is:
+
+        'source.clojure constant.other.keyword.clojure '
+
+    View.extract_scope() considers them different scopes, even though the second part of the scope
+    name (constant.other.keyword.clojure) is the same.
+
+    This function considers two adjacent points as having the same scope if the second part of the
+    scope name is the same.
+    '''
+    if sexp.ignore(view, point):
+        return None
+
+    scope_name = view.scope_name(point)
+    scopes = scope_name.split()
+
+    try:
+        selector = scopes[1]
+    except IndexError:
+        # If this point has a single scope name (in practice, 'source.clojure'), there's no way we
+        # can know the extent of the syntax scope of this point, so we bail out.
+        return None
+
+    max_size = view.size()
+    begin = end = point
+
+    while begin >= 1:
+        if has_null_character(view, begin) or (
+            not view.match_selector(begin - 1, selector) and view.match_selector(begin, selector)
+        ):
+            break
+        else:
+            begin -= 1
+
+    while end <= max_size:
+        if has_null_character(view, end) or (
+            view.match_selector(end - 1, selector) and not view.match_selector(end, selector)
+        ):
+            break
+        else:
+            end += 1
+
+    return sublime.Region(begin, end)
+
+
+def is_insignificant(view, point):
+    return re.match(r'[\s,]', view.substr(point))
+
+
+def non_number_word(view, point):
+    return re.match(r'\w', view.substr(point)) and not re.match(r'\d', view.substr(point))
+
+
+def find_next_element(view, point):
     max_size = view.size()
 
-    while point >= 0 and point <= max_size:
-        if forward:
-            char = view.substr(point)
-        else:
-            char = view.substr(point - 1)
+    while point < max_size:
+        scope = extract_scope(view, point)
 
-        if forward and stop_at_close and char in sexp.CLOSE:
-            return None
-        elif ((forward and char in sexp.OPEN) or
-              (not forward and char in sexp.CLOSE) or
-              (not sexp.inside_string(view, point) and char == '"')):
+        if is_insignificant(view, point):
+            point += 1
+        elif sexp.is_next_to_open(view, point):
             return sexp.innermost(view, point, absorb=True)
-        elif re.match(r'\w', char):
-            return view.word(point)
         else:
-            if forward:
-                point += 1
+            scope = extract_scope(view, point)
+
+            if scope:
+                return scope
+            elif non_number_word(view, point):
+                return view.word(point)
             else:
-                point -= 1
+                return None
+
+
+def find_previous_element(view, point):
+    while point >= 0:
+        if is_insignificant(view, point - 1):
+            point -= 1
+        elif not sexp.ignore(view, point) and view.substr(point - 1) in sexp.CLOSE:
+            return sexp.innermost(view, point, absorb=True)
+        else:
+            scope = extract_scope(view, point - 1)
+
+            if scope:
+                return scope
+            elif non_number_word(view, point - 1):
+                return view.word(point)
+            else:
+                return None
 
 
 def forward_slurp(view, edit):
     for region, sel in iterate(view):
-        element = find_element(view, region.begin())
+        close_begin = view.find_by_class(
+            region.begin(),
+            True,
+            sublime.CLASS_PUNCTUATION_END
+        ) - 1
+
+        close_end = close_begin + 1
+
+        element = find_next_element(view, close_end)
 
         if element:
-            point = sexp.find_point(
-                view,
-                element.begin(),
-                lambda p: view.substr(p) in sexp.CLOSE or view.substr(p) == '"',
-                forward=False
-            )
-
-            if point:
-                # Save cursor position so we can restore it after slurping.
-                sel.append(region)
-                # Save close char.
-                char = view.substr(point)
-                # Put a copy of the close char we found after the element.
-                view.insert(edit, element.end(), char)
-                # Erase the close char we copied.
-                view.erase(edit, sublime.Region(point, point + 1))
-                # If we slurped a sexp, indent it.
-                view.run_command('tutkain_indent_region', {'prune': True})
+            # Save cursor position so we can restore it after slurping.
+            sel.append(region)
+            # Save close char.
+            char = view.substr(close_begin)
+            # Put a copy of the close char we found after the element.
+            view.insert(edit, element.end(), char)
+            # Erase the close char we copied.
+            view.erase(edit, sublime.Region(close_begin, close_end))
+            # # If we slurped a sexp, indent it.
+            view.run_command('tutkain_indent_region', {'prune': True})
 
 
 def forward_barf(view, edit):
@@ -136,7 +218,7 @@ def forward_barf(view, edit):
 
         if innermost:
             point = innermost.end() - 1
-            element = find_element(view, point, forward=False)
+            element = find_previous_element(view, point)
 
             if element:
                 char = view.substr(point)
@@ -152,29 +234,32 @@ def forward_barf(view, edit):
                 view.run_command('tutkain_indent_region', {'prune': True})
 
 
+def adjacent_element_direction(view, point):
+    if not sexp.ignore(view, point) and re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
+        return 1
+    elif not sexp.ignore(view, point - 1) and re.match(r'[^\s,\(\[\{\x00]', view.substr(point - 1)):
+        return -1
+    else:
+        return 0
+
+
 def wrap_bracket(view, edit, open_bracket):
     close_bracket = sexp.OPEN[open_bracket]
 
     for region, sel in iterate(view):
-        previous_char = view.substr(region.begin() - 1)
+        point = region.begin()
+        direction = adjacent_element_direction(view, point)
 
-        # If we're next to a close char, wrap the preceding element. Otherwise, wrap the following
-        # element.
-        if re.match(r'[\w\"\]\)\}]', previous_char):
-            forward = False
+        if direction == 1:
+            element = find_next_element(view, point)
+        elif direction == -1:
+            element = find_previous_element(view, point)
         else:
-            forward = True
+            element = sublime.Region(point, point)
+            sel.append(sublime.Region(point + 1, point + 1))
 
-        element = find_element(view, region.begin(), forward=forward, stop_at_close=True)
-
-        if element:
-            view.insert(edit, element.end(), close_bracket)
-            view.insert(edit, element.begin(), open_bracket)
-        else:
-            # If we didn't find an element, add an empty pair of brackets.
-            view.insert(edit, region.begin(), open_bracket + close_bracket)
-            # Move cursors inside the newly added pair.
-            sel.append(sublime.Region(region.begin() + 1, region.begin() + 1))
+        view.insert(edit, element.end(), close_bracket)
+        view.insert(edit, element.begin(), open_bracket)
 
 
 def backward_delete(view, edit):
@@ -211,6 +296,6 @@ def raise_sexp(view, edit):
 
         if not sexp.ignore(view, point):
             innermost = sexp.innermost(view, point, absorb=False, edge=False)
-            element = find_element(view, point, stop_at_close=True)
+            element = find_next_element(view, point)
             view.replace(edit, innermost, view.substr(element))
             view.run_command('tutkain_indent_region')
