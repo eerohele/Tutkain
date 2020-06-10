@@ -427,3 +427,22 @@ class TestOpenRoundCommand(ViewTestCase):
         self.set_selections((1, 1))
         self.view.run_command('tutkain_paredit_raise_sexp')
         self.assertEquals('"b"', self.view_content())
+
+    def test_splice_sexp(self):
+        self.set_view_content('(a (b c) d) (e (f g) h)')
+        self.set_selections((5, 5), (17, 17))
+        self.view.run_command('tutkain_paredit_splice_sexp')
+        self.assertEquals('(a b c d) (e f g h)', self.view_content())
+        self.assertEquals([(4, 4), (14, 14)], self.selections())
+
+        self.set_view_content('#{1 2 3}')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_splice_sexp')
+        self.assertEquals('1 2 3', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content('"a b"')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_splice_sexp')
+        self.assertEquals('a b', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())

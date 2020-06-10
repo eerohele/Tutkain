@@ -299,3 +299,20 @@ def raise_sexp(view, edit):
             element = find_next_element(view, point)
             view.replace(edit, innermost, view.substr(element))
             view.run_command('tutkain_indent_region', {'prune': True})
+
+
+def splice_sexp(view, edit):
+    for region, _ in iterate(view):
+        point = region.begin()
+
+        innermost = sexp.innermost(view, point, absorb=True, edge=False)
+
+        open_point = sexp.find_point(
+            view, innermost.begin(), lambda p: view.substr(p) in sexp.OPEN or view.substr(p) in '"'
+        ) + 1
+
+        # Erase the close character
+        view.erase(edit, sublime.Region(innermost.end(), innermost.end() - 1))
+        # Erase one or more open characters
+        view.erase(edit, sublime.Region(innermost.begin(), open_point))
+        view.run_command('tutkain_indent_region', {'prune': True})

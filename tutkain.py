@@ -587,6 +587,11 @@ class TutkainPareditRaiseSexpCommand(sublime_plugin.TextCommand):
         paredit.raise_sexp(self.view, edit)
 
 
+class TutkainPareditSpliceSexpCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.splice_sexp(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
