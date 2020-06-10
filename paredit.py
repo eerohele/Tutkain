@@ -311,3 +311,10 @@ def splice_sexp(view, edit):
         # Erase one or more open characters
         view.erase(edit, innermost.open)
         view.run_command('tutkain_indent_region', {'prune': True})
+
+
+def comment_dwim(view, edit):
+    for region, sel in iterate(view):
+        line = view.line(region.begin())
+        n = view.insert(edit, line.end(), ' ; ')
+        sel.append(line.end() + n)

@@ -446,3 +446,13 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_splice_sexp')
         self.assertEquals('a b', self.view_content())
         self.assertEquals([(0, 0)], self.selections())
+
+    def test_comment_dwim(self):
+        self.set_view_content('(a b c)')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_comment_dwim')
+        self.assertEquals('(a b c) ; ', self.view_content())
+        self.set_view_content('(a b\n c)')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_comment_dwim')
+        self.assertEquals('(a b ; \n c)', self.view_content())
