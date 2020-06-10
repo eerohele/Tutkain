@@ -295,7 +295,7 @@ def raise_sexp(view, edit):
         point = region.begin()
 
         if not sexp.ignore(view, point):
-            innermost = sexp.innermost(view, point, absorb=False, edge=False)
+            innermost = sexp.innermost(view, point, absorb=True, edge=False)
             element = find_next_element(view, point)
             view.replace(edit, innermost, view.substr(element))
             view.run_command('tutkain_indent_region', {'prune': True})
