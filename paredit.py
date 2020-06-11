@@ -152,7 +152,11 @@ def find_next_element(view, point):
     max_size = view.size()
 
     while point < max_size:
-        if is_insignificant(view, point) or sexp.is_next_to_close(view, point):
+        if sexp.has_end_double_quote(view, point) or (
+            not sexp.ignore(view, point) and view.substr(point) in sexp.CLOSE
+        ):
+            return None
+        elif is_insignificant(view, point):
             point += 1
         elif sexp.is_next_to_open(view, point):
             return sexp.innermost(view, point).extent()
@@ -169,9 +173,13 @@ def find_next_element(view, point):
 
 def find_previous_element(view, point):
     while point >= 0:
-        if is_insignificant(view, point - 1):
+        if sexp.has_begin_double_quote(view, point - 1) or (
+            not sexp.ignore(view, point) and view.substr(point - 1) in sexp.OPEN
+        ):
+            return None
+        elif is_insignificant(view, point - 1):
             point -= 1
-        elif not sexp.ignore(view, point) and view.substr(point - 1) in sexp.CLOSE:
+        elif view.substr(point - 1) in sexp.CLOSE:
             return sexp.innermost(view, point).extent()
         else:
             scope = extract_scope(view, point - 1)
