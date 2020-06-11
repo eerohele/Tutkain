@@ -185,7 +185,7 @@ def find_previous_element(view, point):
 
 def forward_slurp(view, edit):
     for region, sel in iterate(view):
-        innermost = sexp.innermost(view, region.begin())
+        innermost = sexp.innermost(view, region.begin(), edge=False)
 
         element = find_next_element(view, innermost.close.end())
 
