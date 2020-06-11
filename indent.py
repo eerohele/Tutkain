@@ -37,19 +37,23 @@ def restore_cursors(view):
 def insert_newline_and_indent(view, edit):
     for region in view.sel():
         point = region.begin()
-        _, open_bracket = sexp.find_open(view, point)
 
-        if open_bracket is None:
-            view.run_command('insert', {'characters': '\n'})
+        if sexp.inside_comment(view, point):
+            view.run_command('insert', {'characters': '\n;; '})
         else:
-            end = region.end()
-            view.insert(edit, end, '\n')
-            point_after_newline = end + 1
-            line = view.line(point_after_newline)
-            indentation = determine_indentation(view, open_bracket)
-            new_line = indentation + view.substr(line).lstrip()
-            view.replace(edit, line, new_line)
-            restore_cursors(view)
+            _, open_bracket = sexp.find_open(view, point)
+
+            if open_bracket is None:
+                view.run_command('insert', {'characters': '\n'})
+            else:
+                end = region.end()
+                view.insert(edit, end, '\n')
+                point_after_newline = end + 1
+                line = view.line(point_after_newline)
+                indentation = determine_indentation(view, open_bracket)
+                new_line = indentation + view.substr(line).lstrip()
+                view.replace(edit, line, new_line)
+                restore_cursors(view)
 
 
 def prune_string(string):
