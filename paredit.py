@@ -389,3 +389,23 @@ def semicolon(view, edit):
 
             sel.append(point + n)
             view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+
+
+def splice_sexp_killing_forward(view, edit):
+    for region, _ in iterate(view):
+        innermost = sexp.innermost(view, region.begin(), edge=False)
+
+        if innermost:
+            view.erase(edit, region.cover(innermost.close))
+            view.erase(edit, innermost.open)
+            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+
+
+def splice_sexp_killing_backward(view, edit, forward=True):
+    for region, _ in iterate(view):
+        innermost = sexp.innermost(view, region.begin(), edge=False)
+
+        if innermost:
+            view.erase(edit, innermost.close)
+            view.erase(edit, region.cover(innermost.open))
+            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})

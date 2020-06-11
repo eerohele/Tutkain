@@ -613,6 +613,16 @@ class TutkainPareditSemicolonCommand(sublime_plugin.TextCommand):
         paredit.semicolon(self.view, edit)
 
 
+class TutkainPareditSpliceSexpKillingForwardCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.splice_sexp_killing_forward(self.view, edit)
+
+
+class TutkainPareditSpliceSexpKillingBackwardCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.splice_sexp_killing_backward(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
