@@ -18,6 +18,9 @@ class Sexp():
     def extent(self):
         return Region(self.open.begin(), self.close.end())
 
+    def is_empty(self):
+        return self.open.end() == self.close.begin()
+
     def absorb_macro_characters(self, region):
         begin = region.begin()
 

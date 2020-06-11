@@ -262,31 +262,40 @@ def wrap_bracket(view, edit, open_bracket):
         view.insert(edit, element.begin(), open_bracket)
 
 
+def forward_delete(view, edit):
+    for region, sel in iterate(view):
+        if not region.empty():
+            view.erase(edit, region)
+        else:
+            point = region.begin()
+            innermost = sexp.innermost(view, point, edge=True)
+
+            if not innermost:
+                view.run_command('right_delete')
+            elif innermost.is_empty():
+                view.erase(edit, innermost.extent())
+            elif point == innermost.open.begin() or point == innermost.close.begin():
+                sel.append(point + 1)
+            else:
+                view.run_command('right_delete')
+
+
 def backward_delete(view, edit):
     for region, sel in iterate(view):
         if not region.empty():
             view.erase(edit, region)
         else:
-            point = region.begin() - 1
-            next_char = view.substr(region.begin())
-            previous_char = view.substr(point)
+            point = region.begin()
+            innermost = sexp.innermost(view, point, edge=True)
 
-            # If the previous character is a close bracket or the double quote of a non-empty
-            # string, move the cursor one point to the left.
-            if ((not sexp.ignore(view, point) and previous_char in sexp.CLOSE)
-               or (previous_char == '"' and next_char != '"')):
-                sel.append(point)
-            # If the previous character is an open bracket of an empty sexp or the double quote of
-            # an empty string, delete the empty string or sexp.
-            elif ((not sexp.ignore(view, point) and previous_char in sexp.OPEN)
-                  or (previous_char == '"' and next_char == '"')):
-                innermost = sexp.innermost(view, point)
-
-                if innermost.open.end() == innermost.close.begin():
-                    view.erase(edit, innermost.extent())
-            # Otherwise, delete the previous character.
+            if not innermost:
+                view.run_command('left_delete')
+            elif innermost.is_empty():
+                view.erase(edit, innermost.extent())
+            elif point == innermost.open.end() or point == innermost.close.end():
+                sel.append(point - 1)
             else:
-                view.erase(edit, sublime.Region(point, point + 1))
+                view.run_command('left_delete')
 
 
 def raise_sexp(view, edit):

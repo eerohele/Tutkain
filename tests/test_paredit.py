@@ -395,7 +395,7 @@ class TestOpenRoundCommand(ViewTestCase):
         self.set_selections((1, 1))
         self.view.run_command('tutkain_paredit_backward_delete')
         self.assertEquals('(a)', self.view_content())
-        self.assertEquals([(1, 1)], self.selections())
+        self.assertEquals([(0, 0)], self.selections())
 
         self.set_view_content('(a)')
         self.set_selections((0, 3))
@@ -413,6 +413,61 @@ class TestOpenRoundCommand(ViewTestCase):
         self.set_view_content('#{}')
         self.set_selections((2, 2))
         self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('', self.view_content())
+
+    def test_forward_delete(self):
+        self.set_view_content('("zot" quux)')
+        self.set_selections((7, 7))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('("zot" uux)', self.view_content())
+        self.assertEquals([(7, 7)], self.selections())
+
+        self.set_view_content('("zot" quux)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('("zot" quux)', self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('("zot"quux)', self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
+
+        self.set_view_content('(foo bar) (baz quux)')
+        self.set_selections((8, 8), (19, 19))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('(foo bar) (baz quux)', self.view_content())
+        self.assertEquals([(9, 9), (20, 20)], self.selections())
+
+        self.set_view_content('("")')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('()', self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content('(a)')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('(a)', self.view_content())
+        self.assertEquals([(3, 3)], self.selections())
+
+        self.set_view_content('(a)')
+        self.set_selections((0, 3))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content('("()")')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('(")")', self.view_content())
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('("")', self.view_content())
+
+        self.set_view_content('#{}')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_forward_delete')
         self.assertEquals('', self.view_content())
 
     def test_raise_sexp(self):
