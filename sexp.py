@@ -134,7 +134,7 @@ def find_close(view, start_point, close=None):
 
 
 def move_inside(view, point, do):
-    if do == False:
+    if not do:
         return point
 
     if inside_string(view, point):
