@@ -66,16 +66,15 @@ def find_point(view, start_point, predicate, forward=True):
 def find_open(view, start_point):
     point = start_point
     stack = 0
-    in_string = inside_string(view, point)
 
-    if in_string:
+    if inside_string(view, point):
         begin = find_point(view, point, lambda p: view.substr(p) == '"', forward=False)
         return view.substr(begin), Region(begin, begin + 1)
 
     while point > 0:
         char = view.substr(point - 1)
 
-        if in_string:
+        if inside_string(view, point):
             point -= 1
         elif char in CLOSE:
             stack += 1
@@ -95,9 +94,8 @@ def find_close(view, start_point, close=None):
     point = start_point
     stack = 0
     max_point = view.size()
-    in_string = inside_string(view, point)
 
-    if in_string:
+    if inside_string(view, point):
         begin = find_point(view, point, lambda p: view.substr(p) == '"')
         return Region(begin, begin + 1)
 
@@ -107,7 +105,7 @@ def find_close(view, start_point, close=None):
     while point < max_point:
         char = view.substr(point)
 
-        if in_string:
+        if inside_string(view, point):
             point += 1
         elif char == CLOSE[close]:
             stack += 1
