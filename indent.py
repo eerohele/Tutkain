@@ -1,6 +1,8 @@
 import re
 import sublime
 
+from itertools import groupby
+from operator import itemgetter
 from . import sexp
 
 
@@ -57,13 +59,79 @@ def insert_newline_and_indent(view, edit):
 
 
 def prune_string(string):
-    return re.sub(r'  +', ' ', string)
+    '''Prune a string.
+
+    - Replace multiple consecutive spaces with a single space.
+    - Remove spaces after open brackets.
+    - Remove spaces before close brackets.
+    '''
+    return re.sub(r' (?=[\)\]\}])', '', re.sub(r'(?<=[\(\[\{]) +', '', re.sub(r'  +', ' ', string)))
+
+
+def fuse(lst):
+    '''Given a list of points, fuse any consecutive runs of points into regions.'''
+    ranges = []
+
+    # https://docs.python.org/2.6/library/itertools.html#examples
+    for k, g in groupby(enumerate(lst), lambda x: x[0] - x[1]):
+        group = list(map(itemgetter(1), g))
+        ranges.append(sublime.Region(group[0], group[-1]))
+
+    return ranges
+
+
+def non_ignored_regions(view, region):
+    '''Given a region, return a list of the regions within that region that do not constitute an
+    ignored region (a string or a comment).'''
+    points = []
+    point = region.begin()
+
+    while point <= region.end():
+        if not sexp.ignore(view, point):
+            points.append(point)
+
+        point += 1
+
+    regions = fuse(points)
+
+    if regions:
+        regions.append(sublime.Region(region.end(), region.end()))
+
+    return regions
+
+
+def pairwise(lst):
+    for index in range(len(lst)):
+        next_index = index + 1
+
+        if next_index >= len(lst):
+            yield lst[index], None
+        else:
+            yield lst[index], lst[next_index]
+
+
+def prune_region(view, region):
+    '''Prune extraneous whitespace in the given region.'''
+    strings = []
+    regions = non_ignored_regions(view, region)
+
+    if regions:
+        for a, b in pairwise(regions):
+            if b is not None:
+                strings.append(prune_string(view.substr(a)))
+                strings.append(view.substr(sublime.Region(a.end(), b.begin())))
+                strings.append(prune_string(view.substr(b)))
+
+    return ''.join(strings)
 
 
 def get_indented_string(view, region, prune=False):
     _, open_bracket = sexp.find_open(view, region.begin())
 
-    string = prune_string(view.substr(region)) if prune else view.substr(region)
+    if prune:
+        string = prune_region(view, region)
+    else:
+        string = view.substr(region)
 
     if open_bracket:
         indentation = determine_indentation(view, open_bracket)
@@ -72,10 +140,13 @@ def get_indented_string(view, region, prune=False):
         return string
 
 
+IGNORE_SELECTORS = 'punctuation.definition.string | string | comment'
+
+
 def indent_region(view, edit, region, prune=False):
     new_lines = []
 
-    if region and not sexp.ignore(view, region.begin()):
+    if region and not view.match_selector(region.begin(), IGNORE_SELECTORS):
         for line in view.lines(region):
             replacee = line
 
