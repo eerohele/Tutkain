@@ -401,6 +401,21 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('', self.view_content())
         self.assertEquals([(0, 0)], self.selections())
 
+        self.set_view_content('()')
+        self.set_selections((0, 0))
+        self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('()', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content('()')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('()', self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
+        self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
         self.set_view_content('(a)')
         self.set_selections((1, 1))
         self.view.run_command('tutkain_paredit_backward_delete')
@@ -412,6 +427,12 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_backward_delete')
         self.assertEquals('', self.view_content())
         self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content('(a)(b)')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('(a)(b)', self.view_content())
+        self.assertEquals([(3, 3)], self.selections())
 
         self.set_view_content('("()")')
         self.set_selections((4, 4))
@@ -451,6 +472,15 @@ class TestOpenRoundCommand(ViewTestCase):
 
         self.set_view_content('("")')
         self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('()', self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content('()')
+        self.set_selections((0, 0))
         self.view.run_command('tutkain_paredit_forward_delete')
         self.assertEquals('()', self.view_content())
         self.assertEquals([(1, 1)], self.selections())

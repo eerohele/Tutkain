@@ -21,6 +21,9 @@ class Sexp():
     def is_empty(self):
         return self.open.end() == self.close.begin()
 
+    def contains(self, point):
+        return point >= self.open.end() and point <= self.close.begin()
+
     def absorb_macro_characters(self, region):
         begin = region.begin()
 
