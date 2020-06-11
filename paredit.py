@@ -409,3 +409,14 @@ def splice_sexp_killing_backward(view, edit, forward=True):
             view.erase(edit, innermost.close)
             view.erase(edit, region.cover(innermost.open))
             view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+
+
+def backward_kill_word(view, edit):
+    for region, sel in iterate(view):
+        point = view.find_by_class(region.begin(), False, sublime.CLASS_WORD_START)
+        sel.append(sublime.Region(point, point))
+        char = view.substr(point)
+
+        if char not in sexp.OPEN and char not in sexp.CLOSE:
+            view.erase(edit, view.word(point))
+            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
