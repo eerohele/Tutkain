@@ -446,6 +446,11 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_backward_delete')
         self.assertEquals('', self.view_content())
 
+        self.set_view_content('"\\""')
+        self.set_selections((3, 3))
+        self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('""', self.view_content())
+
     def test_forward_delete(self):
         self.set_view_content('("zot" quux)')
         self.set_selections((7, 7))
@@ -511,6 +516,11 @@ class TestOpenRoundCommand(ViewTestCase):
         self.set_selections((2, 2))
         self.view.run_command('tutkain_paredit_forward_delete')
         self.assertEquals('', self.view_content())
+
+        self.set_view_content('"\\""')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('""', self.view_content())
 
     def test_raise_sexp(self):
         self.set_view_content('(def f (fn [] body))')
