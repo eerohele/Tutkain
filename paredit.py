@@ -2,6 +2,7 @@ import re
 import sublime
 
 from . import sexp
+from . import indent
 
 
 def iterate(view):
@@ -187,27 +188,28 @@ def forward_slurp(view, edit):
     for region, sel in iterate(view):
         innermost = sexp.innermost(view, region.begin(), edge=False)
 
-        element = find_next_element(view, innermost.close.end())
+        if innermost:
+            element = find_next_element(view, innermost.close.end())
 
-        close_begin = view.find_by_class(
-            element.begin(),
-            False,
-            sublime.CLASS_PUNCTUATION_END
-        ) - 1
+            if element:
+                close_begin = view.find_by_class(
+                    element.begin(),
+                    False,
+                    sublime.CLASS_PUNCTUATION_END
+                ) - 1
 
-        close_end = close_begin + 1
+                close_end = close_begin + 1
 
-        if element:
-            # Save cursor position so we can restore it after slurping.
-            sel.append(region)
-            # Save close char.
-            char = view.substr(close_begin)
-            # Put a copy of the close char we found after the element.
-            view.insert(edit, element.end(), char)
-            # Erase the close char we copied.
-            view.erase(edit, sublime.Region(close_begin, close_end))
-            # # If we slurped a sexp, indent it.
-            view.run_command('tutkain_indent_region', {'prune': True})
+                # Save cursor position so we can restore it after slurping.
+                sel.append(region)
+                # Save close char.
+                char = view.substr(close_begin)
+                # Put a copy of the close char we found after the element.
+                view.insert(edit, element.end(), char)
+                # Erase the close char we copied.
+                view.erase(edit, sublime.Region(close_begin, close_end))
+                # # If we slurped a sexp, indent it.
+                view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 
 def forward_barf(view, edit):
@@ -231,7 +233,7 @@ def forward_barf(view, edit):
                 if insert_point - 1 == innermost.open.begin():
                     view.insert(edit, insert_point + 1, ' ')
 
-                view.run_command('tutkain_indent_region', {'prune': True})
+                view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 
 def adjacent_element_direction(view, point):
@@ -299,14 +301,14 @@ def backward_delete(view, edit):
 
 
 def raise_sexp(view, edit):
-    for region, _ in iterate(view):
+    for region, sel in iterate(view):
         point = region.begin()
 
         if not sexp.ignore(view, point):
             innermost = sexp.innermost(view, point, edge=False)
             element = find_next_element(view, point)
             view.replace(edit, innermost.extent(), view.substr(element))
-            view.run_command('tutkain_indent_region', {'prune': True})
+            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 
 def splice_sexp(view, edit):
@@ -319,7 +321,7 @@ def splice_sexp(view, edit):
         view.erase(edit, innermost.close)
         # Erase one or more open characters
         view.erase(edit, innermost.open)
-        view.run_command('tutkain_indent_region', {'prune': True})
+        view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 
 def comment_dwim(view, edit):

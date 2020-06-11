@@ -503,17 +503,17 @@ class TutkainInsertNewline(sublime_plugin.TextCommand):
 
 
 class TutkainIndentRegion(sublime_plugin.TextCommand):
-    def run(self, edit, prune=False):
+    def run(self, edit, scope='outermost', prune=False):
         if 'Clojure' in self.view.settings().get('syntax'):
             for region in self.view.sel():
                 if region.empty():
-                    outermost = sexp.outermost(
-                        self.view,
-                        region.begin()
-                    )
+                    if scope == 'outermost':
+                        s = sexp.outermost(self.view, region.begin())
+                    elif scope == 'innermost':
+                        s = sexp.innermost(self.view, region.begin())
 
-                    if outermost:
-                        indent.indent_region(self.view, edit, outermost.extent(), prune=prune)
+                    if s:
+                        indent.indent_region(self.view, edit, s.extent(), prune=prune)
                 else:
                     indent.indent_region(self.view, edit, region, prune=prune)
 
