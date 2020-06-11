@@ -63,12 +63,26 @@ def find_point(view, start_point, predicate, forward=True):
             point -= 1
 
 
+def has_begin_double_quote(view, point):
+    return view.match_selector(
+        point,
+        'punctuation.definition.string.begin - constant.character.escape'
+    )
+
+
+def has_end_double_quote(view, point):
+    return view.match_selector(
+        point,
+        'punctuation.definition.string.end - constant.character.escape'
+    )
+
+
 def find_open(view, start_point):
     point = start_point
     stack = 0
 
     if inside_string(view, point):
-        begin = find_point(view, point, lambda p: view.substr(p) == '"', forward=False)
+        begin = find_point(view, point, lambda point: has_begin_double_quote(view, point), forward=False)
         return view.substr(begin), Region(begin, begin + 1)
 
     while point > 0:
@@ -96,8 +110,8 @@ def find_close(view, start_point, close=None):
     max_point = view.size()
 
     if inside_string(view, point):
-        begin = find_point(view, point, lambda p: view.substr(p) == '"')
-        return Region(begin, begin + 1)
+        end = find_point(view, point, lambda point: has_end_double_quote(view, point))
+        return Region(end, end + 1)
 
     if close is None:
         return None
