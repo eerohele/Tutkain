@@ -418,7 +418,7 @@ class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
             window.focus_view(active_view)
 
 
-class TutkainNewScratchView(sublime_plugin.WindowCommand):
+class TutkainNewScratchViewCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.new_file()
         view.set_name('*scratch*')
@@ -496,13 +496,13 @@ class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
             session.send({'op': 'interrupt'})
 
 
-class TutkainInsertNewline(sublime_plugin.TextCommand):
+class TutkainInsertNewlineCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         if 'Clojure' in self.view.settings().get('syntax'):
             indent.insert_newline_and_indent(self.view, edit)
 
 
-class TutkainIndentRegion(sublime_plugin.TextCommand):
+class TutkainIndentRegionCommand(sublime_plugin.TextCommand):
     def run(self, edit, scope='outermost', prune=False):
         if 'Clojure' in self.view.settings().get('syntax'):
             for region in self.view.sel():
