@@ -597,3 +597,40 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_kill')
         self.assertEquals('() ()', self.view_content())
         self.assertEquals([(1, 1), (4, 4)], self.selections())
+
+    def test_semicolon(self):
+        self.set_view_content('(a b)')
+        self.set_selections((0, 0))
+        self.view.run_command('tutkain_paredit_semicolon')
+        self.assertEquals('; (a b)', self.view_content())
+        self.assertEquals([(2, 2)], self.selections())
+
+        self.set_view_content('(a b)')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_semicolon')
+        self.assertEquals('(; a b\n )', self.view_content())
+        self.assertEquals([(3, 3)], self.selections())
+
+        self.set_view_content('(a b)')
+        self.set_selections((3, 3))
+        self.view.run_command('tutkain_paredit_semicolon')
+        self.assertEquals('(a ; b\n  )', self.view_content())
+        self.assertEquals([(5, 5)], self.selections())
+
+        self.set_view_content('(a b)')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_semicolon')
+        self.assertEquals('(a b ; \n  )', self.view_content())
+        self.assertEquals([(7, 7)], self.selections())
+
+        self.set_view_content('(a b)(c d)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_semicolon')
+        self.assertEquals('(a b); (c d)', self.view_content())
+        self.assertEquals([(7, 7)], self.selections())
+
+        self.set_view_content('(a b)(c d)')
+        self.set_selections((3, 3), (8, 8))
+        self.view.run_command('tutkain_paredit_semicolon')
+        self.assertEquals('(a ; b\n  )(c ; d\n     )', self.view_content())
+        self.assertEquals([(5, 5), (15, 15)], self.selections())

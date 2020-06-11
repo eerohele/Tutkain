@@ -608,6 +608,11 @@ class TutkainPareditKillCommand(sublime_plugin.TextCommand):
         paredit.kill(self.view, edit)
 
 
+class TutkainPareditSemicolonCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.semicolon(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)

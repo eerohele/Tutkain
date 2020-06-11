@@ -366,3 +366,26 @@ def kill(view, edit):
             view.erase(edit, innermost.extent())
         elif point == innermost.open.end() or point == innermost.close.begin():
             view.erase(edit, sublime.Region(innermost.open.end(), innermost.close.begin()))
+
+
+def semicolon(view, edit):
+    for region, sel in iterate(view):
+        point = region.begin()
+
+        if sexp.ignore(view, point):
+            view.insert(edit, point, ';')
+        else:
+            innermost = sexp.innermost(view, point, edge=False)
+
+            if innermost:
+                view.insert(edit, innermost.close.begin(), '\n')
+
+            element = find_next_element(view, point)
+
+            if element:
+                n = view.insert(edit, point, '; ')
+            else:
+                n = view.insert(edit, point, ' ; ')
+
+            sel.append(point + n)
+            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
