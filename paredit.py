@@ -151,7 +151,7 @@ def find_next_element(view, point):
     max_size = view.size()
 
     while point < max_size:
-        if is_insignificant(view, point):
+        if is_insignificant(view, point) or sexp.is_next_to_close(view, point):
             point += 1
         elif sexp.is_next_to_open(view, point):
             return sexp.innermost(view, point).extent()
@@ -185,15 +185,17 @@ def find_previous_element(view, point):
 
 def forward_slurp(view, edit):
     for region, sel in iterate(view):
+        innermost = sexp.innermost(view, region.begin())
+
+        element = find_next_element(view, innermost.close.end())
+
         close_begin = view.find_by_class(
-            region.begin(),
-            True,
+            element.begin(),
+            False,
             sublime.CLASS_PUNCTUATION_END
         ) - 1
 
         close_end = close_begin + 1
-
-        element = find_next_element(view, close_end)
 
         if element:
             # Save cursor position so we can restore it after slurping.
