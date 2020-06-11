@@ -151,8 +151,6 @@ def find_next_element(view, point):
     max_size = view.size()
 
     while point < max_size:
-        scope = extract_scope(view, point)
-
         if is_insignificant(view, point):
             point += 1
         elif sexp.is_next_to_open(view, point):
