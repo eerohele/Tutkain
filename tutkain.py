@@ -459,7 +459,7 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
             else:
                 if sexp.is_next_to_expand_anchor(view, point):
                     selection.add(
-                        sexp.innermost(view, point, absorb=True).extent()
+                        sexp.innermost(view, point).extent()
                     )
                 else:
                     view.run_command('expand_selection', {'to': 'scope'})

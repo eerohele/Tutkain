@@ -157,7 +157,7 @@ def move_inside(view, point, do):
     return point
 
 
-def innermost(view, point, absorb=False, edge=True):
+def innermost(view, point, edge=True):
     char, open_region = find_open(
         view,
         move_inside(view, point, edge)
