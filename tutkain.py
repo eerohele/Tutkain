@@ -1,6 +1,15 @@
 import os
 import sublime
-import sublime_plugin
+
+from sublime_plugin import (
+    EventListener,
+    ListInputHandler,
+    TextCommand,
+    TextInputHandler,
+    ViewEventListener,
+    WindowCommand
+)
+
 from threading import Thread
 
 from . import sexp
@@ -58,7 +67,7 @@ def code_with_meta(view, region):
         return code
 
 
-class TutkainClearOutputViewsCommand(sublime_plugin.WindowCommand):
+class TutkainClearOutputViewsCommand(WindowCommand):
     def run(self):
         for _, view in view_registry.items():
             view.set_read_only(False)
@@ -67,7 +76,7 @@ class TutkainClearOutputViewsCommand(sublime_plugin.WindowCommand):
             view.set_read_only(True)
 
 
-class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
+class TutkainEvaluateFormCommand(TextCommand):
     def run(self, edit):
         window = self.view.window()
         session = sessions.get_by_owner(window.id(), 'user')
@@ -97,7 +106,7 @@ class TutkainEvaluateFormCommand(sublime_plugin.TextCommand):
                 )
 
 
-class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
+class TutkainEvaluateViewCommand(TextCommand):
     def handler(self, session, response):
         if 'err' in response:
             session.output(response)
@@ -124,7 +133,7 @@ class TutkainEvaluateViewCommand(sublime_plugin.TextCommand):
             )
 
 
-class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
+class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
     def evaluate_view(self, session, response):
         if response.get('status') == ['done']:
             session.send(
@@ -172,7 +181,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(sublime_plugin.TextCommand):
             )
 
 
-class HostInputHandler(sublime_plugin.TextInputHandler):
+class HostInputHandler(TextInputHandler):
     def __init__(self, window):
         self.window = window
 
@@ -210,7 +219,7 @@ class HostInputHandler(sublime_plugin.TextInputHandler):
             return PortInputHandler('')
 
 
-class PortInputHandler(sublime_plugin.TextInputHandler):
+class PortInputHandler(TextInputHandler):
     def __init__(self, default_value):
         self.default_value = default_value
 
@@ -227,7 +236,7 @@ class PortInputHandler(sublime_plugin.TextInputHandler):
         return self.default_value
 
 
-class PortsInputHandler(sublime_plugin.ListInputHandler):
+class PortsInputHandler(ListInputHandler):
     def __init__(self, ports):
         self.ports = ports
 
@@ -251,7 +260,7 @@ class PortsInputHandler(sublime_plugin.ListInputHandler):
         )
 
 
-class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
+class TutkainEvaluateInputCommand(WindowCommand):
     def eval(self, code):
         session = sessions.get_by_owner(self.window.id(), 'user')
 
@@ -276,7 +285,7 @@ class TutkainEvaluateInputCommand(sublime_plugin.WindowCommand):
         view.assign_syntax('Clojure.sublime-syntax')
 
 
-class TutkainConnectCommand(sublime_plugin.WindowCommand):
+class TutkainConnectCommand(WindowCommand):
     def create_output_view(self, name, host, port):
         view = self.window.new_file()
         view.set_name('REPL | *{}* | {}:{}'.format(name, host, port))
@@ -391,7 +400,7 @@ class TutkainConnectCommand(sublime_plugin.WindowCommand):
         return HostInputHandler(self.window)
 
 
-class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
+class TutkainDisconnectCommand(WindowCommand):
     def run(self):
         window = self.window
         session = sessions.get_by_owner(window.id(), 'plugin')
@@ -418,7 +427,7 @@ class TutkainDisconnectCommand(sublime_plugin.WindowCommand):
             window.focus_view(active_view)
 
 
-class TutkainNewScratchViewCommand(sublime_plugin.WindowCommand):
+class TutkainNewScratchViewCommand(WindowCommand):
     def run(self):
         view = self.window.new_file()
         view.set_name('*scratch*')
@@ -427,14 +436,14 @@ class TutkainNewScratchViewCommand(sublime_plugin.WindowCommand):
         self.window.focus_view(view)
 
 
-class TutkainEventListener(sublime_plugin.EventListener):
+class TutkainEventListener(EventListener):
     def on_query_context(self, view, key, operator, operand, match_all):
         if key == 'tutkain.should':
             syntax = view.settings().get('syntax')
             return 'Clojure' in syntax
 
 
-class TutkainViewEventListener(sublime_plugin.ViewEventListener):
+class TutkainViewEventListener(ViewEventListener):
     def on_pre_close(self):
         view = self.view
 
@@ -445,7 +454,7 @@ class TutkainViewEventListener(sublime_plugin.ViewEventListener):
                 sessions.terminate(window.id())
 
 
-class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
+class TutkainExpandSelectionCommand(TextCommand):
     def run(self, edit):
         view = self.view
         selection = view.sel()
@@ -465,7 +474,7 @@ class TutkainExpandSelectionCommand(sublime_plugin.TextCommand):
                     view.run_command('expand_selection', {'to': 'scope'})
 
 
-class TutkainActivateResultViewCommand(sublime_plugin.WindowCommand):
+class TutkainActivateResultViewCommand(WindowCommand):
     def run(self):
         view = view_registry.get('result')
 
@@ -475,7 +484,7 @@ class TutkainActivateResultViewCommand(sublime_plugin.WindowCommand):
             self.window.focus_view(active_view)
 
 
-class TutkainActivateOutputViewCommand(sublime_plugin.WindowCommand):
+class TutkainActivateOutputViewCommand(WindowCommand):
     def run(self):
         view = view_registry.get('out')
 
@@ -485,7 +494,7 @@ class TutkainActivateOutputViewCommand(sublime_plugin.WindowCommand):
             self.window.focus_view(active_view)
 
 
-class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
+class TutkainInterruptEvaluationCommand(WindowCommand):
     def run(self):
         session = sessions.get_by_owner(self.window.id(), 'user')
 
@@ -496,13 +505,13 @@ class TutkainInterruptEvaluationCommand(sublime_plugin.WindowCommand):
             session.send({'op': 'interrupt'})
 
 
-class TutkainInsertNewlineCommand(sublime_plugin.TextCommand):
+class TutkainInsertNewlineCommand(TextCommand):
     def run(self, edit):
         if 'Clojure' in self.view.settings().get('syntax'):
             indent.insert_newline_and_indent(self.view, edit)
 
 
-class TutkainIndentRegionCommand(sublime_plugin.TextCommand):
+class TutkainIndentRegionCommand(TextCommand):
     def run(self, edit, scope='outermost', prune=False):
         if 'Clojure' in self.view.settings().get('syntax'):
             for region in self.view.sel():
@@ -518,111 +527,111 @@ class TutkainIndentRegionCommand(sublime_plugin.TextCommand):
                     indent.indent_region(self.view, edit, region, prune=prune)
 
 
-class TutkainPareditOpenRoundCommand(sublime_plugin.TextCommand):
+class TutkainPareditOpenRoundCommand(TextCommand):
     def run(self, edit):
         paredit.open_bracket(self.view, edit, '(')
 
 
-class TutkainPareditCloseRoundCommand(sublime_plugin.TextCommand):
+class TutkainPareditCloseRoundCommand(TextCommand):
     def run(self, edit):
         paredit.close_bracket(self.view, edit, ')')
 
 
-class TutkainPareditOpenSquareCommand(sublime_plugin.TextCommand):
+class TutkainPareditOpenSquareCommand(TextCommand):
     def run(self, edit):
         paredit.open_bracket(self.view, edit, '[')
 
 
-class TutkainPareditCloseSquareCommand(sublime_plugin.TextCommand):
+class TutkainPareditCloseSquareCommand(TextCommand):
     def run(self, edit):
         paredit.close_bracket(self.view, edit, ']')
 
 
-class TutkainPareditOpenCurlyCommand(sublime_plugin.TextCommand):
+class TutkainPareditOpenCurlyCommand(TextCommand):
     def run(self, edit):
         paredit.open_bracket(self.view, edit, '{')
 
 
-class TutkainPareditCloseCurlyCommand(sublime_plugin.TextCommand):
+class TutkainPareditCloseCurlyCommand(TextCommand):
     def run(self, edit):
         paredit.close_bracket(self.view, edit, '}')
 
 
-class TutkainPareditDoubleQuoteCommand(sublime_plugin.TextCommand):
+class TutkainPareditDoubleQuoteCommand(TextCommand):
     def run(self, edit):
         paredit.double_quote(self.view, edit)
 
 
-class TutkainPareditForwardSlurpCommand(sublime_plugin.TextCommand):
+class TutkainPareditForwardSlurpCommand(TextCommand):
     def run(self, edit):
         paredit.forward_slurp(self.view, edit)
 
 
-class TutkainPareditForwardBarfCommand(sublime_plugin.TextCommand):
+class TutkainPareditForwardBarfCommand(TextCommand):
     def run(self, edit):
         paredit.forward_barf(self.view, edit)
 
 
-class TutkainPareditWrapRoundCommand(sublime_plugin.TextCommand):
+class TutkainPareditWrapRoundCommand(TextCommand):
     def run(self, edit):
         paredit.wrap_bracket(self.view, edit, '(')
 
 
-class TutkainPareditWrapSquareCommand(sublime_plugin.TextCommand):
+class TutkainPareditWrapSquareCommand(TextCommand):
     def run(self, edit):
         paredit.wrap_bracket(self.view, edit, '[')
 
 
-class TutkainPareditWrapCurlyCommand(sublime_plugin.TextCommand):
+class TutkainPareditWrapCurlyCommand(TextCommand):
     def run(self, edit):
         paredit.wrap_bracket(self.view, edit, '{')
 
 
-class TutkainPareditForwardDeleteCommand(sublime_plugin.TextCommand):
+class TutkainPareditForwardDeleteCommand(TextCommand):
     def run(self, edit):
         paredit.forward_delete(self.view, edit)
 
 
-class TutkainPareditBackwardDeleteCommand(sublime_plugin.TextCommand):
+class TutkainPareditBackwardDeleteCommand(TextCommand):
     def run(self, edit):
         paredit.backward_delete(self.view, edit)
 
 
-class TutkainPareditRaiseSexpCommand(sublime_plugin.TextCommand):
+class TutkainPareditRaiseSexpCommand(TextCommand):
     def run(self, edit):
         paredit.raise_sexp(self.view, edit)
 
 
-class TutkainPareditSpliceSexpCommand(sublime_plugin.TextCommand):
+class TutkainPareditSpliceSexpCommand(TextCommand):
     def run(self, edit):
         paredit.splice_sexp(self.view, edit)
 
 
-class TutkainPareditCommentDwimCommand(sublime_plugin.TextCommand):
+class TutkainPareditCommentDwimCommand(TextCommand):
     def run(self, edit):
         paredit.comment_dwim(self.view, edit)
 
 
-class TutkainPareditKillCommand(sublime_plugin.TextCommand):
+class TutkainPareditKillCommand(TextCommand):
     def run(self, edit):
         paredit.kill(self.view, edit)
 
 
-class TutkainPareditSemicolonCommand(sublime_plugin.TextCommand):
+class TutkainPareditSemicolonCommand(TextCommand):
     def run(self, edit):
         paredit.semicolon(self.view, edit)
 
 
-class TutkainPareditSpliceSexpKillingForwardCommand(sublime_plugin.TextCommand):
+class TutkainPareditSpliceSexpKillingForwardCommand(TextCommand):
     def run(self, edit):
         paredit.splice_sexp_killing_forward(self.view, edit)
 
 
-class TutkainPareditSpliceSexpKillingBackwardCommand(sublime_plugin.TextCommand):
+class TutkainPareditSpliceSexpKillingBackwardCommand(TextCommand):
     def run(self, edit):
         paredit.splice_sexp_killing_backward(self.view, edit)
 
 
-class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):
+class TutkainCycleCollectionTypeCommand(TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
