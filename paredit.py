@@ -227,24 +227,29 @@ def forward_barf(view, edit):
     for region, sel in iterate(view):
         sel.append(region)
 
-        innermost = sexp.innermost(view, region.begin(), edge=False)
+        innermost = None
+        element = None
 
-        if innermost:
-            point = innermost.close.begin()
-            element = find_previous_element(view, point)
-
+        # TODO: It would be faster just to find close brackets instead of the entire sexp.
+        for s in sexp.walk_outward(view, region.begin()):
+            element = find_previous_element(view, s.close.begin())
             if element:
-                char = view.substr(point)
-                view.erase(edit, sublime.Region(point, point + 1))
-                insert_point = max(element.begin() - 1, innermost.open.end())
-                view.insert(edit, insert_point, char)
+                innermost = s
+                break
 
-                # If we inserted the close char next to the open char, add a
-                # space after the new close char.
-                if insert_point - 1 == innermost.open.begin():
-                    view.insert(edit, insert_point + 1, ' ')
+        if innermost and element:
+            point = innermost.close.begin()
+            char = view.substr(point)
+            view.erase(edit, sublime.Region(point, point + 1))
+            insert_point = max(element.begin() - 1, innermost.open.end())
+            view.insert(edit, insert_point, char)
 
-                view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+            # If we inserted the close char next to the open char, add a
+            # space after the new close char.
+            if insert_point - 1 == innermost.open.begin():
+                view.insert(edit, insert_point + 1, ' ')
+
+            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 
 def adjacent_element_direction(view, point):

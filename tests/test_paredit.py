@@ -261,14 +261,14 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('(a () b c)', self.view_content())
         self.assertEquals(self.selections(), [(4, 4)])
         self.view.run_command('tutkain_paredit_forward_barf')
-        self.assertEquals('(a () b c)', self.view_content())
+        self.assertEquals('(a () b) c', self.view_content())
         self.assertEquals(self.selections(), [(4, 4)])
 
     def test_forward_barf_empty(self):
         self.set_view_content('(a () c)')
         self.set_selections((4, 4))
         self.view.run_command('tutkain_paredit_forward_barf')
-        self.assertEquals('(a () c)', self.view_content())
+        self.assertEquals('(a ()) c', self.view_content())
         self.assertEquals(self.selections(), [(4, 4)])
 
     def test_forward_barf_set(self):
