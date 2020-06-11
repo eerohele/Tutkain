@@ -388,6 +388,9 @@ class TestOpenRoundCommand(ViewTestCase):
         self.view.run_command('tutkain_paredit_backward_delete')
         self.assertEquals('(foo bar) (baz quux)', self.view_content())
         self.assertEquals([(8, 8), (19, 19)], self.selections())
+        self.view.run_command('tutkain_paredit_backward_delete')
+        self.assertEquals('(foo ba) (baz quu)', self.view_content())
+        self.assertEquals([(7, 7), (17, 17)], self.selections())
 
         self.set_view_content('("")')
         self.set_selections((2, 2))
@@ -439,10 +442,12 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals([(6, 6)], self.selections())
 
         self.set_view_content('(foo bar) (baz quux)')
-        self.set_selections((8, 8), (19, 19))
+        self.set_selections((7, 7), (18, 18))
         self.view.run_command('tutkain_paredit_forward_delete')
-        self.assertEquals('(foo bar) (baz quux)', self.view_content())
-        self.assertEquals([(9, 9), (20, 20)], self.selections())
+        self.assertEquals('(foo ba) (baz quu)', self.view_content())
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('(foo ba) (baz quu)', self.view_content())
+        self.assertEquals([(8, 8), (18, 18)], self.selections())
 
         self.set_view_content('("")')
         self.set_selections((2, 2))
