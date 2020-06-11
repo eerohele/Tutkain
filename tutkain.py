@@ -603,6 +603,11 @@ class TutkainPareditCommentDwimCommand(sublime_plugin.TextCommand):
         paredit.comment_dwim(self.view, edit)
 
 
+class TutkainPareditKillCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        paredit.kill(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
