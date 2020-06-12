@@ -65,7 +65,9 @@ def prune_string(string):
     - Remove spaces after open brackets.
     - Remove spaces before close brackets.
     '''
-    return re.sub(r' (?=[\)\]\}])', '', re.sub(r'(?<=[\(\[\{]) +', '', re.sub(r'  +', ' ', string)))
+    return re.sub(
+        r' +(?=[\)\]\}])', '', re.sub(r'(?<=[\(\[\{]) +', '', re.sub(r'  +', ' ', string))
+    )
 
 
 def fuse(lst):
