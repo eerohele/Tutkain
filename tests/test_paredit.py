@@ -170,6 +170,20 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('""', self.view_content())
         self.assertEquals(self.selections(), [(1, 1)])
 
+    def test_double_quote_selection(self):
+        self.set_view_content('(foo)')
+        self.set_selections((1, 4))
+        self.view.run_command('tutkain_paredit_double_quote')
+        self.assertEquals('("foo")', self.view_content())
+        self.assertEquals(self.selections(), [(2, 5)])
+
+    def test_double_quote_selection_across_sexps(self):
+        self.set_view_content('(foo) (bar)')
+        self.set_selections((4, 9))
+        self.view.run_command('tutkain_paredit_double_quote')
+        self.assertEquals('(foo"") (bar)', self.view_content())
+        self.assertEquals(self.selections(), [(5, 5)])
+
     def test_double_quote_inside_string(self):
         self.set_view_content('" "')
         self.set_selections((1, 1))

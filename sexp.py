@@ -32,6 +32,9 @@ class Sexp():
 
         return Region(begin, region.end())
 
+    def __eq__(self, other):
+        return other and self.extent() == other.extent()
+
 
 def inside_string(view, point):
     return view.match_selector(

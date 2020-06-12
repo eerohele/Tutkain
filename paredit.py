@@ -71,18 +71,31 @@ def close_bracket(view, edit, close_bracket):
 
 def double_quote(view, edit):
     for region, sel in iterate(view):
-        begin = region.begin()
-        end = region.end()
+        if region.empty():
+            begin = region.begin()
+            end = region.end()
 
-        if view.substr(end) == '"':
-            sel.append(sublime.Region(end + 1, end + 1))
-        elif sexp.inside_string(view, begin):
-            view.insert(edit, begin, '\\"')
-        elif sexp.inside_comment(view, begin):
-            view.insert(edit, begin, '"')
+            if view.substr(end) == '"':
+                sel.append(sublime.Region(end + 1, end + 1))
+            elif sexp.inside_string(view, begin):
+                view.insert(edit, begin, '\\"')
+            elif sexp.inside_comment(view, begin):
+                view.insert(edit, begin, '"')
+            else:
+                view.insert(edit, begin, '""')
+                sel.append(sublime.Region(end + 1, end + 1))
         else:
-            view.insert(edit, begin, '""')
-            sel.append(sublime.Region(end + 1, end + 1))
+            this = sexp.innermost(view, region.begin(), edge=False)
+            that = sexp.innermost(view, region.end(), edge=False)
+
+            if this == that:
+                view.insert(edit, region.end(), '"')
+                view.insert(edit, region.begin(), '"')
+            else:
+                # If the two ends of the region are inside different sexps, abort and insert double
+                # quotes at the beginning of the region.
+                view.insert(edit, region.begin(), '""')
+                sel.append(region.begin() + 1)
 
 
 def has_null_character(view, point):
