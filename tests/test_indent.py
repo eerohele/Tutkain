@@ -2,10 +2,20 @@ from inspect import cleandoc
 import sublime
 
 from tutkain import tutkain
+from tutkain import indent
 from unittest import TestCase
 
 
 from .util import ViewTestCase
+
+
+class TestPruneRegion(ViewTestCase):
+    def test_prune_region(self):
+        self.set_view_content('( a "( b\n  ) "  )  ; (  )  c ')
+        self.assertEquals(
+            '(a "( b\n  ) ") ; (  )  c ',
+            indent.prune_region(self.view, sublime.Region(0, self.view.size()))
+        )
 
 
 class TestIndentInsertNewLineCommand(ViewTestCase):

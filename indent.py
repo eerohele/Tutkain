@@ -2,7 +2,6 @@ import re
 import sublime
 
 from itertools import groupby
-from operator import itemgetter
 from . import sexp
 
 
@@ -71,58 +70,45 @@ def prune_string(string):
 
 
 def fuse(lst):
-    '''Given a list of points, fuse any consecutive runs of points into regions.'''
     ranges = []
 
     # https://docs.python.org/2.6/library/itertools.html#examples
-    for k, g in groupby(enumerate(lst), lambda x: x[0] - x[1]):
-        group = list(map(itemgetter(1), g))
-        ranges.append(sublime.Region(group[0], group[-1]))
+    for prune, g in groupby(lst, lambda x: x[0]):
+        # Err...
+        group = list(g)
+
+        # Ehhh... sorry.
+        begin = group[0][1][0]
+        end = group[-1][1][1]
+
+        ranges.append((prune, sublime.Region(begin, end)))
 
     return ranges
 
 
-def non_ignored_regions(view, region):
-    '''Given a region, return a list of the regions within that region that do not constitute an
-    ignored region (a string or a comment).'''
+def classify_region(view, region):
+    '''Given a region, return a list of pairs where the first item of the pair indicates whether
+    the region in the other item should be pruned.'''
     points = []
     point = region.begin()
+    end = region.end()
 
-    while point <= region.end():
-        if not sexp.ignore(view, point) and not re.match(r'[\n\x00]', view.substr(point)):
-            points.append(point)
-
+    while point <= end:
+        prune = not view.match_selector(point, 'string | comment')
+        points.append((prune, (point, min(point + 1, end))))
         point += 1
 
-    regions = fuse(points)
-
-    if regions:
-        regions.append(sublime.Region(region.end(), region.end()))
-
-    return regions
-
-
-def pairwise(lst):
-    for index in range(len(lst)):
-        next_index = index + 1
-
-        if next_index >= len(lst):
-            yield lst[index], None
-        else:
-            yield lst[index], lst[next_index]
+    return fuse(points)
 
 
 def prune_region(view, region):
     '''Prune extraneous whitespace in the given region.'''
     strings = []
-    regions = non_ignored_regions(view, region)
+    regions = classify_region(view, region)
 
-    if regions:
-        for a, b in pairwise(regions):
-            if b is not None:
-                strings.append(prune_string(view.substr(a)))
-                strings.append(view.substr(sublime.Region(a.end(), b.begin())))
-                strings.append(prune_string(view.substr(b)))
+    for prune, region in regions:
+        string = view.substr(region)
+        strings.append(prune_string(string) if prune else string)
 
     return ''.join(strings)
 
@@ -130,10 +116,7 @@ def prune_region(view, region):
 def get_indented_string(view, region, prune=False):
     _, open_bracket = sexp.find_open(view, region.begin())
 
-    if prune:
-        string = prune_region(view, region)
-    else:
-        string = view.substr(region)
+    string = prune_region(view, region) if prune else view.substr(region)
 
     if open_bracket:
         indentation = determine_indentation(view, open_bracket)

@@ -719,5 +719,5 @@ class TestOpenRoundCommand(ViewTestCase):
         self.assertEquals('(foo )    ; \n()', self.view_content())
         self.assertEquals([(5, 5)], self.selections())
         self.view.run_command('tutkain_paredit_backward_kill_word')
-        self.assertEquals('()  ; \n()', self.view_content())
+        self.assertEquals('() ; \n()', self.view_content())
         self.assertEquals([(1, 1)], self.selections())
