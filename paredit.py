@@ -144,10 +144,35 @@ def is_insignificant(view, point):
     return re.match(r'[\s,]', view.substr(point))
 
 
-def non_number_word(view, point):
-    return re.match(r'\w', view.substr(point)) and not re.match(r'\d', view.substr(point))
+def is_symbol_character(view, point):
+    return re.match(r'[\w\*\+\!\-\_\'\?\<\>\=]', view.substr(point))
 
 
+# FIXME: Remove duplication between this and extract_scope.
+def extract_symbol(view, point):
+    begin = end = point
+    max_size = view.size()
+
+    while begin >= 0:
+        if has_null_character(view, begin - 1) or (
+            not is_symbol_character(view, begin - 1) and is_symbol_character(view, begin)
+        ):
+            break
+        else:
+            begin -= 1
+
+    while end <= max_size:
+        if has_null_character(view, end) or (
+            is_symbol_character(view, end - 1) and not is_symbol_character(view, end)
+        ):
+            break
+        else:
+            end += 1
+
+    return sublime.Region(begin, end)
+
+
+# TODO: The conditional logic here is a bit convoluted. Can we make it more straightforward?
 def find_next_element(view, point):
     max_size = view.size()
 
@@ -165,8 +190,8 @@ def find_next_element(view, point):
 
             if scope:
                 return scope
-            elif non_number_word(view, point):
-                return view.word(point)
+            elif is_symbol_character(view, point):
+                return extract_symbol(view, point)
             else:
                 return None
 
@@ -186,8 +211,8 @@ def find_previous_element(view, point):
 
             if scope:
                 return scope
-            elif non_number_word(view, point - 1):
-                return view.word(point)
+            elif is_symbol_character(view, point - 1):
+                return extract_symbol(view, point)
             else:
                 return None
 
@@ -418,5 +443,5 @@ def backward_kill_word(view, edit):
         char = view.substr(point)
 
         if char not in sexp.OPEN and char not in sexp.CLOSE:
-            view.erase(edit, view.word(point))
+            view.erase(edit, extract_symbol(view, point))
             view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
