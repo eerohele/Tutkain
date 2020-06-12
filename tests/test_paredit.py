@@ -117,7 +117,7 @@ class TestOpenRoundCommand(ViewTestCase):
 
     def test_close_round(self):
         self.set_view_content('(a )')
-        self.set_selections((2, 2))
+        self.set_selections((1, 1))
         self.view.run_command('tutkain_paredit_close_round')
         self.assertEquals('(a)', self.view_content())
         self.assertEquals(self.selections(), [(3, 3)])
