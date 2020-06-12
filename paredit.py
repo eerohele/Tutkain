@@ -150,7 +150,7 @@ def is_insignificant(view, point):
 
 
 def is_symbol_character(view, point):
-    return re.match(r'[\w\*\+\!\-\_\'\?\<\>\=]', view.substr(point))
+    return re.match(r'[\w\*\+\!\-\_\'\?\<\>\=\/]', view.substr(point))
 
 
 # FIXME: Remove duplication between this and extract_scope.
