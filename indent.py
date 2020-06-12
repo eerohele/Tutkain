@@ -89,7 +89,7 @@ def non_ignored_regions(view, region):
     point = region.begin()
 
     while point <= region.end():
-        if not sexp.ignore(view, point):
+        if not sexp.ignore(view, point) and not re.match(r'[\n\x00]', view.substr(point)):
             points.append(point)
 
         point += 1
