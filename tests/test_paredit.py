@@ -1,8 +1,5 @@
-from inspect import cleandoc
 from sublime import Region
 
-from tutkain import tutkain
-from unittest import TestCase
 from tutkain import paredit
 
 from .util import ViewTestCase
