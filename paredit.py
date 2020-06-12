@@ -23,6 +23,26 @@ def iterate(view):
             selections.add(region)
 
 
+def move(view, forward):
+    for region, sel in iterate(view):
+        point = region.begin()
+
+        element = find_next_element(view, point) if forward else find_previous_element(view, point)
+        new_point = None
+
+        if element:
+            new_point = element.end() if forward else element.begin()
+        else:
+            innermost = sexp.innermost(view, point, edge=False)
+
+            if innermost:
+                new_point = innermost.close.end() if forward else innermost.open.begin()
+
+        if new_point is not None:
+            sel.append(new_point)
+            view.show(new_point)
+
+
 def open_bracket(view, edit, open_bracket):
     close_bracket = sexp.OPEN[open_bracket]
 
@@ -222,7 +242,7 @@ def find_previous_element(view, point):
             return None
         elif is_insignificant(view, point - 1):
             point -= 1
-        elif view.substr(point - 1) in sexp.CLOSE:
+        elif view.substr(point - 1) in sexp.CLOSE or view.substr(point - 1) == '"':
             return sexp.innermost(view, point).extent()
         else:
             scope = extract_scope(view, point - 1)

@@ -527,6 +527,16 @@ class TutkainIndentRegionCommand(TextCommand):
                     indent.indent_region(self.view, edit, region, prune=prune)
 
 
+class TutkainPareditForwardCommand(TextCommand):
+    def run(self, edit):
+        paredit.move(self.view, True)
+
+
+class TutkainPareditBackwardCommand(TextCommand):
+    def run(self, edit):
+        paredit.move(self.view, False)
+
+
 class TutkainPareditOpenRoundCommand(TextCommand):
     def run(self, edit):
         paredit.open_bracket(self.view, edit, '(')
