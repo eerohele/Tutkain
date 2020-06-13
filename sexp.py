@@ -1,9 +1,10 @@
+import re
 from sublime import CLASS_WORD_START, Region
 
 
 OPEN = {'(': ')', '[': ']', '{': '}'}
 CLOSE = {')': '(', ']': '[', '}': '{'}
-MACRO_CHARACTERS = {'#', '@', '\'', '`'}
+MACRO_CHARACTERS = {'#', '@', '\'', '`', '^'}
 
 
 class Sexp():
@@ -161,8 +162,8 @@ def move_inside(view, point, do):
     elif view.substr(point - 1) == '"':
         return point - 1
 
-    # next char is the hash mark of a set or anon fn
-    elif next_char == '#':
+    # next char is the hash mark of a set or anon fn or the metadata marker
+    elif next_char in {'#', '^'}:
         return point + 2 if view.substr(point + 1) in {'(', '{'} else point
 
     # next char is a quote or an at sign preceding a left paren
@@ -196,16 +197,8 @@ def walk_outward(view, point):
         sexp = innermost(view, sexp.open.begin(), edge=False)
 
 
-def head_word(view, open_bracket):
-    return view.substr(
-        view.word(
-            view.find_by_class(
-                open_bracket.begin(),
-                True,
-                CLASS_WORD_START
-            )
-        )
-    )
+def head_word(view, point):
+    return view.substr(view.word(view.find_by_class(point, True, CLASS_WORD_START)))
 
 
 def outermost(view, point, edge=True, ignore={}):
@@ -215,7 +208,7 @@ def outermost(view, point, edge=True, ignore={}):
         current = find_open(view, point)
 
         if previous[0] and (
-            not current[0] or (ignore and head_word(view, current[1]) in ignore)
+            not current[0] or (ignore and head_word(view, current[1].begin()) in ignore)
         ):
             open_region = previous[1]
 
@@ -236,6 +229,7 @@ def is_next_to_open(view, point):
         view.substr(point) in OPEN or
         view.substr(point) == '"' or
         view.substr(Region(point, point + 2)) == '#{' or
+        view.substr(Region(point, point + 2)) == '^{' or
         view.substr(Region(point, point + 2)) == '#(' or
         view.substr(Region(point, point + 2)) == '@(' or
         view.substr(Region(point, point + 2)) == '\'('
@@ -251,6 +245,141 @@ def is_next_to_close(view, point):
 
 def is_next_to_expand_anchor(view, point):
     return is_next_to_open(view, point) or is_next_to_close(view, point)
+
+
+def is_insignificant(view, point):
+    return re.match(r'[\s,]', view.substr(point))
+
+
+def extract_scope(view, point):
+    '''Like View.extract_scope(), but less fussy.
+
+    For example, take this Clojure keyword:
+
+        :foo
+
+    At point 0, the scope name is:
+
+        'source.clojure constant.other.keyword.clojure punctuation.definition.keyword.clojure '
+
+    At point 1, the scope name is:
+
+        'source.clojure constant.other.keyword.clojure '
+
+    View.extract_scope() considers them different scopes, even though the second part of the scope
+    name (constant.other.keyword.clojure) is the same.
+
+    This function considers two adjacent points as having the same scope if the second part of the
+    scope name is the same.
+    '''
+    if ignore(view, point):
+        return None
+
+    scope_name = view.scope_name(point)
+    scopes = scope_name.split()
+
+    try:
+        selector = scopes[1]
+    except IndexError:
+        # If this point has a single scope name (in practice, 'source.clojure'), there's no way we
+        # can know the extent of the syntax scope of this point, so we bail out.
+        return None
+
+    max_size = view.size()
+    begin = end = point
+
+    while begin > 0:
+        if ((view.match_selector(begin - 1, selector) and view.match_selector(begin, selector)) or
+            # account for shorthand meta notation (^:foo)
+            (view.match_selector(begin - 1, 'keyword.operator.macro') and
+             view.match_selector(begin, 'constant.other.keyword'))):
+            begin -= 1
+        else:
+            break
+
+    while end < max_size:
+        if (view.match_selector(end, 'keyword.operator.macro') and
+            # account for shorthand meta notation (^:foo)
+           view.match_selector(end + 1, 'constant.other.keyword')):
+            selector = 'constant.other.keyword'
+            end += 2
+        elif (view.match_selector(end - 1, selector) and not view.match_selector(end, selector)):
+            break
+        else:
+            end += 1
+
+    return Region(begin, end)
+
+
+RE_SYMBOL_CHARACTERS = r'[\w\*\+\!\-\_\'\?\<\>\=\/\.]'
+
+
+def is_symbol_character(view, point):
+    return re.match(RE_SYMBOL_CHARACTERS, view.substr(point))
+
+
+def extract_symbol(view, point):
+    begin = end = point
+    max_size = view.size()
+
+    while begin > 0:
+        if not is_symbol_character(view, begin - 1) and is_symbol_character(view, begin):
+            break
+        else:
+            begin -= 1
+
+    while end < max_size:
+        if is_symbol_character(view, end - 1) and not is_symbol_character(view, end):
+            break
+        else:
+            end += 1
+
+    return Region(begin, end)
+
+
+# TODO: The conditional logic here is a bit convoluted. Can we make it more straightforward?
+def find_next_element(view, point):
+    max_size = view.size()
+
+    while point < max_size:
+        if has_end_double_quote(view, point) or (
+            not ignore(view, point) and view.substr(point) in CLOSE
+        ):
+            return None
+        elif is_insignificant(view, point):
+            point += 1
+        elif is_next_to_open(view, point):
+            return innermost(view, point).extent()
+        else:
+            scope = extract_scope(view, point)
+
+            if scope:
+                return scope
+            elif is_symbol_character(view, point):
+                return extract_symbol(view, point)
+            else:
+                return None
+
+
+def find_previous_element(view, point):
+    while point >= 0:
+        if has_begin_double_quote(view, point - 1) or (
+            not ignore(view, point) and view.substr(point - 1) in OPEN
+        ):
+            return None
+        elif is_insignificant(view, point - 1):
+            point -= 1
+        elif view.substr(point - 1) in CLOSE or view.substr(point - 1) == '"':
+            return innermost(view, point).extent()
+        else:
+            scope = extract_scope(view, point - 1)
+
+            if scope:
+                return scope
+            elif is_symbol_character(view, point - 1):
+                return extract_symbol(view, point)
+            else:
+                return None
 
 
 CYCLE_ORDER = {

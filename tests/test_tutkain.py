@@ -67,6 +67,60 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(self.view_content('out'), '')
 
+    def test_evaluate_form_before_view(self):
+        content = '''(ns foo.bar) (defn square [x] (* x x)) (comment (square 2))'''
+        self.set_view_content(content)
+        self.set_selections((48, 58))
+        self.view.run_command('tutkain_evaluate_form')
+        time.sleep(self.delay)
+
+        self.assertEquals(
+            '''=> (square 2)\n:namespace-not-found\n''',
+            self.view_content('result')
+        )
+
+        self.assertEquals(self.view_content('out'), '')
+
+    def test_evaluate_form_switch_views(self):
+        view_1 = '''(ns baz.quux) (defn plus [x y] (+ x y)) (comment (plus 1 2))'''
+        self.set_view_content(view_1)
+        self.view.run_command('tutkain_evaluate_view')
+        self.set_selections((49, 59))
+        self.view.run_command('tutkain_evaluate_form')
+        time.sleep(self.delay)
+
+        self.assertEquals(
+            '''=> (plus 1 2)\n3\n''',
+            self.view_content('result')
+        )
+
+        self.view.window().run_command('tutkain_clear_output_views')
+
+        view_2 = '''(ns qux.zot) (defn minus [x y] (- x y)) (comment (minus 4 3))'''
+        self.set_view_content(view_2)
+        self.view.run_command('tutkain_evaluate_view')
+        self.set_selections((49, 60))
+        self.view.run_command('tutkain_evaluate_form')
+        time.sleep(self.delay)
+
+        self.assertEquals(
+            '''=> (minus 4 3)\n1\n''',
+            self.view_content('result')
+        )
+
+        self.view.window().run_command('tutkain_clear_output_views')
+
+        # Don't need to evaluate view 1 again to evaluate (plus)
+        self.set_view_content(view_1)
+        self.set_selections((49, 59))
+        self.view.run_command('tutkain_evaluate_form')
+        time.sleep(self.delay)
+
+        self.assertEquals(
+            '''=> (plus 1 2)\n3\n''',
+            self.view_content('result')
+        )
+
     def test_evaluate_view_with_error(self):
         content = '''(ns app.core) (inc "a")'''
         self.set_view_content(content)

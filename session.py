@@ -23,6 +23,13 @@ class Session():
             v = self.nrepl_version
             return (v and (v.get('major') == 0 and v.get('minor') >= 8) or v.get('major') > 0)
 
+    def prune(self, d):
+        if 'file' in d and d['file'] is None:
+            del d['file']
+
+        if 'ns' in d and d['ns'] is None:
+            del d['ns']
+
     def op(self, d):
         d['session'] = self.id
         d['id'] = self.op_id()
@@ -33,8 +40,7 @@ class Session():
         d['nrepl.middleware.caught/print?'] = 'true'
         d['nrepl.middleware.print/stream?'] = 'true'
 
-        if 'file' in d and d['file'] is None:
-            del d['file']
+        self.prune(d)
 
         return d
 
@@ -59,7 +65,7 @@ class Session():
             try:
                 handler.__call__(response)
             finally:
-                if response.get('status') == ['done']:
+                if response and 'status' in response and 'done' in response['status']:
                     self.handlers.pop(id, None)
                     self.errors.pop(id, None)
 

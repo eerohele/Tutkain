@@ -17,6 +17,7 @@ from . import formatter
 from . import indent
 from . import sessions
 from . import paredit
+from . import namespace
 from .log import enable_debug, log
 from .repl import Client
 
@@ -102,7 +103,8 @@ class TutkainEvaluateFormCommand(TextCommand):
                 session.send(
                     {'op': 'eval',
                      'code': code_with_meta(self.view, eval_region),
-                     'file': self.view.file_name()}
+                     'file': self.view.file_name(),
+                     'ns': namespace.find_declaration(self.view)}
                 )
 
 
@@ -268,7 +270,12 @@ class TutkainEvaluateInputCommand(WindowCommand):
             self.window.status_message('ERR: Not connected to a REPL.')
         else:
             session.output({'in': code})
-            session.send({'op': 'eval', 'code': code})
+
+            session.send({
+                'op': 'eval',
+                'code': code,
+                'ns': namespace.find_declaration(self.window.active_view())
+            })
 
     def noop(*args):
         pass
@@ -321,6 +328,8 @@ class TutkainConnectCommand(WindowCommand):
             elif 'versions' in item.keys():
                 append_to_view('result', formatter.format(item))
                 append_to_view('out', formatter.format(item))
+            elif 'status' in item and 'namespace-not-found' in item['status']:
+                append_to_view('result', ':namespace-not-found')
             elif item.get('status') == ['done']:
                 append_to_view('result', '\n')
             else:
