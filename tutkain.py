@@ -651,9 +651,14 @@ class TutkainPareditSpliceSexpKillingBackwardCommand(TextCommand):
         paredit.splice_sexp_killing_backward(self.view, edit)
 
 
-class TutkainPareditBackwardKillWordCommand(TextCommand):
+class TutkainPareditForwardKillElementCommand(TextCommand):
     def run(self, edit):
-        paredit.backward_kill_word(self.view, edit)
+        paredit.kill_element(self.view, edit, True)
+
+
+class TutkainPareditBackwardKillElementCommand(TextCommand):
+    def run(self, edit):
+        paredit.kill_element(self.view, edit, False)
 
 
 class TutkainCycleCollectionTypeCommand(TextCommand):
