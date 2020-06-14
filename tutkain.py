@@ -33,6 +33,7 @@ def plugin_loaded():
 
 
 def plugin_unloaded():
+    sublime.active_window().run_command('tutkain_disconnect')
     sessions.wipe()
 
 
