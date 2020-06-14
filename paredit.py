@@ -130,26 +130,37 @@ def forward_slurp(view, edit):
         for s in sexp.walk_outward(view, region.begin()):
             element = sexp.find_next_element(view, s.close.end())
             if element:
+                innermost = s
                 break
 
         if element:
-            close_begin = view.find_by_class(
-                element.begin(),
-                False,
-                sublime.CLASS_PUNCTUATION_END
-            ) - 1
-
-            close_end = close_begin + 1
-
             # Save cursor position so we can restore it after slurping.
             sel.append(region)
             # Save close char.
-            char = view.substr(close_begin)
+            char = view.substr(innermost.close)
             # Put a copy of the close char we found after the element.
             view.insert(edit, element.end(), char)
             # Erase the close char we copied.
-            view.erase(edit, sublime.Region(close_begin, close_end))
+            view.erase(edit, innermost.close)
             # # If we slurped a sexp, indent it.
+            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+
+
+def backward_slurp(view, edit):
+    for region, sel in iterate(view):
+        element = None
+
+        for s in sexp.walk_outward(view, region.begin()):
+            element = sexp.find_previous_element(view, s.open.begin())
+            if element:
+                innermost = s
+                break
+
+        if element:
+            sel.append(region)
+            chars = view.substr(innermost.open)
+            view.erase(edit, innermost.open)
+            view.insert(edit, element.begin(), chars)
             view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 

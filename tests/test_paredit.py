@@ -1,6 +1,4 @@
-from sublime import Region
-
-from tutkain import paredit
+from unittest import skip
 
 from .util import ViewTestCase
 
@@ -209,6 +207,7 @@ class TestParedit(ViewTestCase):
         self.set_view_content('(a (b) c)')
         self.set_selections((3, 3))
         self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('(a (b) c)', self.view_content())
         self.set_view_content('(a (b) c)')
         self.set_selections((5, 5))
         self.view.run_command('tutkain_paredit_forward_slurp')
@@ -273,6 +272,66 @@ class TestParedit(ViewTestCase):
         self.view.run_command('tutkain_paredit_forward_slurp')
         self.assertEquals('(a (b c)) (d (e f))', self.view_content())
         self.assertEquals(self.selections(), [(5, 5), (15, 15)])
+
+    def test_backward_slurp_word(self):
+        self.set_view_content('(a #{b} c)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('(#{a b} c)', self.view_content())
+        self.assertEquals(self.selections(), [(5, 5)])
+        self.set_view_content('(a ( b) c)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('((a b) c)', self.view_content())
+        self.assertEquals(self.selections(), [(5, 5)])
+
+    def test_backward_slurp_numbers(self):
+        self.set_view_content('(1/2 (b))')
+        self.set_selections((6, 6))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('((1/2 b))', self.view_content())
+        self.set_view_content('(0.2 (b))')
+        self.set_selections((6, 6))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('((0.2 b))', self.view_content())
+
+    @skip('')
+    def test_backward_slurp_indent(self):
+        self.set_view_content('({:c    :d} (b    ))')
+        self.set_selections((14, 14))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('(({:c :d} b))', self.view_content())
+        self.assertEquals(self.selections(), [(11, 11)])
+
+    def test_backward_slurp_string(self):
+        self.set_view_content('b "a"')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('"b a"', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4)])
+
+    def test_backward_slurp_nested(self):
+        self.set_view_content('(b ([a]))')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('((b [a]))', self.view_content())
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('(([b a]))', self.view_content())
+        self.assertEquals(self.selections(), [(5, 5)])
+
+    def test_backward_slurp_sexp_boundary(self):
+        self.set_view_content('((b) a)')
+        self.set_selections((6, 6))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('((b) a)', self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
+
+    def test_backward_slurp_multiple_cursors(self):
+        self.set_view_content('(a (b) c) (d (e) f)')
+        self.set_selections((4, 4), (14, 14))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('((a b) c) ((d e) f)', self.view_content())
+        self.assertEquals(self.selections(), [(4, 4), (14, 14)])
 
     def test_forward_barf_word(self):
         self.set_view_content('(a (b c))')

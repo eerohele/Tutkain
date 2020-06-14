@@ -362,7 +362,7 @@ def find_next_element(view, point):
 
 
 def find_previous_element(view, point):
-    while point >= 0:
+    while point > 0:
         if has_begin_double_quote(view, point - 1) or (
             not ignore(view, point) and view.substr(point - 1) in OPEN
         ):

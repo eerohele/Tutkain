@@ -587,6 +587,11 @@ class TutkainPareditForwardSlurpCommand(TextCommand):
         paredit.forward_slurp(self.view, edit)
 
 
+class TutkainPareditBackwardSlurpCommand(TextCommand):
+    def run(self, edit):
+        paredit.backward_slurp(self.view, edit)
+
+
 class TutkainPareditForwardBarfCommand(TextCommand):
     def run(self, edit):
         paredit.forward_barf(self.view, edit)
