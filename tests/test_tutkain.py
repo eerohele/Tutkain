@@ -68,9 +68,9 @@ class TestCommands(ViewTestCase):
         self.assertEquals(self.view_content('out'), '')
 
     def test_evaluate_form_before_view(self):
-        content = '''(ns foo.bar) (defn square [x] (* x x)) (comment (square 2))'''
+        content = '''(remove-ns 'foo.bar) (ns foo.bar) (defn square [x] (* x x)) (comment (square 2))'''
         self.set_view_content(content)
-        self.set_selections((48, 58))
+        self.set_selections((69, 79))
         self.view.run_command('tutkain_evaluate_form')
         time.sleep(self.delay)
 
