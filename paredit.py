@@ -2,7 +2,6 @@ import re
 import sublime
 
 from . import sexp
-from . import indent
 
 
 def iterate(view):
