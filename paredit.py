@@ -193,6 +193,30 @@ def forward_barf(view, edit):
             view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 
+def backward_barf(view, edit):
+    for region, sel in iterate(view):
+        sel.append(region)
+
+        innermost = None
+        element = None
+
+        for s in sexp.walk_outward(view, region.begin()):
+            element = sexp.find_next_element(view, s.open.end())
+            if element:
+                innermost = s
+                break
+
+        if innermost and element:
+            insert_point = min(element.end() + 1, innermost.close.begin())
+            view.insert(edit, insert_point, view.substr(innermost.open))
+            view.erase(edit, innermost.open)
+
+            if insert_point == innermost.close.begin():
+                view.insert(edit, insert_point - 1, ' ')
+
+            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+
+
 def adjacent_element_direction(view, point):
     if not sexp.ignore(view, point) and re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
         return 1

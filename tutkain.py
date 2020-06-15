@@ -597,6 +597,11 @@ class TutkainPareditForwardBarfCommand(TextCommand):
         paredit.forward_barf(self.view, edit)
 
 
+class TutkainPareditBackwardBarfCommand(TextCommand):
+    def run(self, edit):
+        paredit.backward_barf(self.view, edit)
+
+
 class TutkainPareditWrapRoundCommand(TextCommand):
     def run(self, edit):
         paredit.wrap_bracket(self.view, edit, '(')

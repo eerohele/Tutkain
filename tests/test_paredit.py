@@ -377,6 +377,51 @@ class TestParedit(ViewTestCase):
         self.assertEquals('(a (b) c) (d (e) f)', self.view_content())
         self.assertEquals(self.selections(), [(4, 4), (14, 14)])
 
+    # TODO: I'm not asserting selections here because I haven't figured out how to ensure the
+    # "correct" cursor position after running Paredit commands. It's especially tricky when
+    # whitespace pruning is involved.
+    def test_backward_barf_word(self):
+        self.set_view_content('((a b) c)')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('(a (b) c)', self.view_content())
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('(a b () c)', self.view_content())
+        self.set_selections((6, 6))
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('a (b () c)', self.view_content())
+
+    def test_backward_barf_empty(self):
+        self.set_view_content('(a () c)')
+        self.set_selections((4, 4))
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('a (() c)', self.view_content())
+
+    def test_backward_barf_set(self):
+        self.set_view_content('((#{1 2 3} b) c)')
+        self.set_selections((10, 10))
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('(#{1 2 3} (b) c)', self.view_content())
+        self.set_view_content('(a #{1 2 3} b)')
+        self.set_selections((5, 5))
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('(a 1 #{2 3} b)', self.view_content())
+
+    def test_backward_barf_string(self):
+        self.set_view_content('"a b"')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('a "b"', self.view_content())
+        self.set_selections((3, 3))
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('a b ""', self.view_content())
+
+    def test_backward_barf_multiple_cursors(self):
+        self.set_view_content('((a b) c) ((d e) f)')
+        self.set_selections((2, 2), (12, 12))
+        self.view.run_command('tutkain_paredit_backward_barf')
+        self.assertEquals('(a (b) c) (d (e) f)', self.view_content())
+
     def test_wrap_round(self):
         self.set_view_content('(foo bar baz)')
         self.set_selections((5, 5))
