@@ -204,7 +204,7 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.set_view_content('(foo)')
         self.set_selections((4, 4))
         self.expand()
-        self.assertEquals('(foo)', self.selection(0))
+        self.assertEquals('foo', self.selection(0))
 
     def test_after_rparen(self):
         self.set_view_content('(foo)')
@@ -236,7 +236,6 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.expand()
         self.assertEquals('{:a 1}', self.selection(0))
 
-    @skip('Clojures')
     def test_after_lcurly(self):
         self.set_view_content('{:a 1}')
         self.set_selections((1, 1))
@@ -310,3 +309,38 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.set_selections((3, 3))
         self.expand()
         self.assertEquals('"b"', self.selection(0))
+
+    def test_meta(self):
+        self.set_view_content('^{:foo true}')
+        self.set_selections((0, 0))
+        self.expand()
+        self.assertEquals('^{:foo true}', self.selection(0))
+        self.set_selections((12, 12))
+        self.expand()
+        self.assertEquals('^{:foo true}', self.selection(0))
+
+        self.set_view_content('^:foo')
+        self.set_selections((0, 0))
+        self.expand()
+        self.assertEquals('^:foo', self.selection(0))
+        self.set_view_content('^:foo')
+        self.set_selections((5, 5))
+        self.expand()
+        self.assertEquals('^:foo', self.selection(0))
+
+    def test_numbers(self):
+        self.set_view_content('0.2')
+        self.set_selections((0, 0))
+        self.expand()
+        self.assertEquals('0.2', self.selection(0))
+        self.set_view_content('0.2')
+        self.set_selections((3, 3))
+        self.expand()
+        self.assertEquals('0.2', self.selection(0))
+        self.set_view_content('1/2')
+        self.set_selections((0, 0))
+        self.expand()
+        self.assertEquals('1/2', self.selection(0))
+        self.set_selections((3, 3))
+        self.expand()
+        self.assertEquals('1/2', self.selection(0))

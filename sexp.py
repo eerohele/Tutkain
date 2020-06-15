@@ -243,10 +243,6 @@ def is_next_to_close(view, point):
     )
 
 
-def is_next_to_expand_anchor(view, point):
-    return is_next_to_open(view, point) or is_next_to_close(view, point)
-
-
 def is_insignificant(view, point):
     return re.match(r'[\s,]', view.substr(point))
 
@@ -335,6 +331,26 @@ def extract_symbol(view, point):
             end += 1
 
     return Region(begin, end)
+
+
+def adjacent_element_direction(view, point):
+    if not ignore(view, point) and re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
+        return 1
+    elif not ignore(view, point - 1) and re.match(r'[^\s,\(\[\{\x00]', view.substr(point - 1)):
+        return -1
+    else:
+        return 0
+
+
+def find_adjacent_element(view, point):
+    direction = adjacent_element_direction(view, point)
+
+    if direction == 1:
+        return find_next_element(view, point)
+    elif direction == -1:
+        return find_previous_element(view, point)
+    else:
+        return None
 
 
 # TODO: The conditional logic here is a bit convoluted. Can we make it more straightforward?

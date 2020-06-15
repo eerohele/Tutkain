@@ -216,27 +216,14 @@ def backward_barf(view, edit):
             view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 
-def adjacent_element_direction(view, point):
-    if not sexp.ignore(view, point) and re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
-        return 1
-    elif not sexp.ignore(view, point - 1) and re.match(r'[^\s,\(\[\{\x00]', view.substr(point - 1)):
-        return -1
-    else:
-        return 0
-
-
 def wrap_bracket(view, edit, open_bracket):
     close_bracket = sexp.OPEN[open_bracket]
 
     for region, sel in iterate(view):
         point = region.begin()
-        direction = adjacent_element_direction(view, point)
+        element = sexp.find_adjacent_element(view, point)
 
-        if direction == 1:
-            element = sexp.find_next_element(view, point)
-        elif direction == -1:
-            element = sexp.find_previous_element(view, point)
-        else:
+        if not element:
             element = Region(point, point)
             sel.append(Region(point + 1, point + 1))
 

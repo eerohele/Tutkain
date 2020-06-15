@@ -459,21 +459,16 @@ class TutkainViewEventListener(ViewEventListener):
 class TutkainExpandSelectionCommand(TextCommand):
     def run(self, edit):
         view = self.view
-        selection = view.sel()
+        selections = view.sel()
 
-        # TODO: Add proper support for multiple cursors.
-        for region in selection:
-            point = region.begin()
-
-            if not region.empty():
+        for region in selections:
+            if not region.empty() or sexp.ignore(view, region.begin()):
                 view.run_command('expand_selection', {'to': 'scope'})
             else:
-                if sexp.is_next_to_expand_anchor(view, point):
-                    selection.add(
-                        sexp.innermost(view, point).extent()
-                    )
-                else:
-                    view.run_command('expand_selection', {'to': 'scope'})
+                element = sexp.find_adjacent_element(view, region.begin())
+
+                if element:
+                    selections.add(element)
 
 
 class TutkainActivateResultViewCommand(WindowCommand):
