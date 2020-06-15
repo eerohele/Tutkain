@@ -13,6 +13,3 @@ log.addHandler(handler)
 
 def enable_debug():
     log.setLevel(logging.DEBUG)
-
-
-# enable_debug()

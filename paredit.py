@@ -1,5 +1,5 @@
 import re
-import sublime
+from sublime import CLASS_PUNCTUATION_END, Region
 
 from . import sexp
 
@@ -57,7 +57,7 @@ def open_bracket(view, edit, open_bracket):
         if not sexp.ignore(view, begin):
             view.insert(edit, end, close_bracket)
             new_end = end + 1
-            sel.append(sublime.Region(begin + 1, begin + 1))
+            sel.append(Region(begin + 1, begin + 1))
 
             # If the character that follows the close bracket we just inserted
             # is a whitespace character, the NUL character, or a close bracket,
@@ -75,21 +75,21 @@ def close_bracket(view, edit, close_bracket):
             close_bracket_begin = view.find_by_class(
                 begin,
                 True,
-                sublime.CLASS_PUNCTUATION_END
+                CLASS_PUNCTUATION_END
             ) - 1
 
             # Get the region that starts at the current point and ends before the
             # close bracket and trim the whitespace on its right.
-            replacee = sublime.Region(begin, close_bracket_begin)
+            replacee = Region(begin, close_bracket_begin)
             view.replace(edit, replacee, view.substr(replacee).rstrip())
 
             close_bracket_end = view.find_by_class(
                 begin,
                 True,
-                sublime.CLASS_PUNCTUATION_END
+                CLASS_PUNCTUATION_END
             )
 
-            sel.append(sublime.Region(close_bracket_end, close_bracket_end))
+            sel.append(Region(close_bracket_end, close_bracket_end))
 
 
 def double_quote(view, edit):
@@ -99,14 +99,14 @@ def double_quote(view, edit):
             end = region.end()
 
             if view.substr(end) == '"':
-                sel.append(sublime.Region(end + 1, end + 1))
+                sel.append(Region(end + 1, end + 1))
             elif sexp.inside_string(view, begin):
                 view.insert(edit, begin, '\\"')
             elif sexp.inside_comment(view, begin):
                 view.insert(edit, begin, '"')
             else:
                 view.insert(edit, begin, '""')
-                sel.append(sublime.Region(end + 1, end + 1))
+                sel.append(Region(end + 1, end + 1))
         else:
             this = sexp.innermost(view, region.begin(), edge=False)
             that = sexp.innermost(view, region.end(), edge=False)
@@ -180,7 +180,7 @@ def forward_barf(view, edit):
         if innermost and element:
             point = innermost.close.begin()
             char = view.substr(point)
-            view.erase(edit, sublime.Region(point, point + 1))
+            view.erase(edit, Region(point, point + 1))
             insert_point = max(element.begin() - 1, innermost.open.end())
             view.insert(edit, insert_point, char)
 
@@ -237,8 +237,8 @@ def wrap_bracket(view, edit, open_bracket):
         elif direction == -1:
             element = sexp.find_previous_element(view, point)
         else:
-            element = sublime.Region(point, point)
-            sel.append(sublime.Region(point + 1, point + 1))
+            element = Region(point, point)
+            sel.append(Region(point + 1, point + 1))
 
         view.insert(edit, element.end(), close_bracket)
         view.insert(edit, element.begin(), open_bracket)
@@ -253,15 +253,15 @@ def forward_delete(view, edit):
             innermost = sexp.innermost(view, point, edge=True)
 
             if view.match_selector(point, 'constant.character.escape'):
-                view.erase(edit, sublime.Region(point, point + 2))
+                view.erase(edit, Region(point, point + 2))
             elif not innermost:
-                view.erase(edit, sublime.Region(point, point + 1))
+                view.erase(edit, Region(point, point + 1))
             elif innermost.is_empty() and innermost.contains(point):
                 view.erase(edit, innermost.extent())
             elif point == innermost.open.begin() or point == innermost.close.begin():
                 sel.append(point + 1)
             else:
-                view.erase(edit, sublime.Region(point, point + 1))
+                view.erase(edit, Region(point, point + 1))
 
 
 def backward_delete(view, edit):
@@ -273,16 +273,16 @@ def backward_delete(view, edit):
             innermost = sexp.innermost(view, point, edge=True)
 
             if view.match_selector(point - 1, 'constant.character.escape'):
-                view.erase(edit, sublime.Region(point - 2, point))
+                view.erase(edit, Region(point - 2, point))
             elif not innermost:
-                view.erase(edit, sublime.Region(point - 1, point))
+                view.erase(edit, Region(point - 1, point))
             elif innermost.is_empty() and innermost.contains(point):
                 view.erase(edit, innermost.extent())
             elif (point == innermost.open.end() or point == innermost.close.end() or
                   (not sexp.ignore(view, point) and view.substr(point - 1) in sexp.CLOSE)):
                 sel.append(point - 1)
             else:
-                view.erase(edit, sublime.Region(point - 1, point))
+                view.erase(edit, Region(point - 1, point))
 
 
 def raise_sexp(view, edit):
@@ -329,7 +329,7 @@ def kill(view, edit):
         if point == innermost.open.begin() or point == innermost.close.end():
             view.erase(edit, innermost.extent())
         elif point == innermost.open.end() or point == innermost.close.begin():
-            view.erase(edit, sublime.Region(innermost.open.end(), innermost.close.begin()))
+            view.erase(edit, Region(innermost.open.end(), innermost.close.begin()))
 
 
 def semicolon(view, edit):

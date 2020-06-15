@@ -1,5 +1,5 @@
 import re
-import sublime
+from sublime import Region
 
 from itertools import groupby
 from . import sexp
@@ -32,7 +32,7 @@ def restore_cursors(view):
     view.sel().clear()
 
     for end in ends:
-        view.sel().add(sublime.Region(end, end))
+        view.sel().add(Region(end, end))
 
 
 def insert_newline_and_indent(view, edit):
@@ -81,7 +81,7 @@ def fuse(lst):
         begin = group[0][1][0]
         end = group[-1][1][1]
 
-        ranges.append((prune, sublime.Region(begin, end)))
+        ranges.append((prune, Region(begin, end)))
 
     return ranges
 
@@ -140,7 +140,7 @@ def indent_region(view, edit, region, prune=False):
                 if previous:
                     begin = previous.end()
                     end = begin + line.size()
-                    replacee = sublime.Region(begin, end)
+                    replacee = Region(begin, end)
 
             replacer = get_indented_string(view, replacee, prune=prune)
 

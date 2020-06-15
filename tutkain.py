@@ -2,7 +2,6 @@ import os
 import sublime
 
 from sublime_plugin import (
-    EventListener,
     ListInputHandler,
     TextCommand,
     TextInputHandler,

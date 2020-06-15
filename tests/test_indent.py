@@ -1,9 +1,7 @@
 from inspect import cleandoc
 import sublime
 
-from tutkain import tutkain
 from tutkain import indent
-from unittest import TestCase
 
 
 from .util import ViewTestCase
@@ -222,7 +220,6 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             ''',
             selections=[(9, 9)]
         )
-
 
     def test_tonsky_6(self):
         self.becomes(

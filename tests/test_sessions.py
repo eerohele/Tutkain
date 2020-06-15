@@ -9,7 +9,7 @@ class MockClient(object):
         pass
 
 
-class TestClient(TestCase):
+class TestSessions(TestCase):
     @classmethod
     def setUpClass(self):
         sessions.wipe()

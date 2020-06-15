@@ -1,7 +1,7 @@
 import sublime
 import time
 
-from unittest import skip, TestCase
+from unittest import skip
 from .util import ViewTestCase
 from tutkain import tutkain
 
