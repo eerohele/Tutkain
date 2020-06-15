@@ -1,34 +1,37 @@
 [
     // Connect to nREPL server
-    // {"keys": ["UNBOUND"], "command": "tutkain_connect","context": [{"key": "tutkain.should"}]},
+    // {"keys": ["UNBOUND"], "command": "tutkain_connect", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
     // Disconnect from nREPL server
-    // {"keys": ["UNBOUND"], "command": "tutkain_disconnect","context": [{"key": "tutkain.should"}]},
+    // {"keys": ["UNBOUND"], "command": "tutkain_disconnect", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
-    // Toggle output panel
-    // {"keys": ["UNBOUND"], "command": "tutkain_toggle_output_panel","context": [{"key": "tutkain.should"}]},
+    // Activate result view
+    // {"keys": ["UNBOUND"], "command": "tutkain_activate_result_view", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
-    // Evaluate current view
-    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_view","context": [{"key": "tutkain.should"}]},
+    // Activate output view
+    // {"keys": ["UNBOUND"], "command": "tutkain_activate_output_view", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
-    // Evaluate selected or current form
-    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_form","context": [{"key": "tutkain.should"}]},
+    // Evaluate view
+    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_view", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
+
+    // Evaluate selected or outermost form
+    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_form", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
     // Prompt for input and evaluate it
-    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_input","context": [{"key": "tutkain.should"}]},
+    // {"keys": ["UNBOUND"], "command": "tutkain_evaluate_input", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
     // Interrupt evaluation
-    // {"keys": ["UNBOUND"], "command": "tutkain_interrupt_evaluation","context": [{"key": "tutkain.should"}]},
+    // {"keys": ["UNBOUND"], "command": "tutkain_interrupt_evaluation", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
-    // Clear output panel
-    // {"keys": ["UNBOUND"], "command": "tutkain_clear_output_panel","context": [{"key": "tutkain.should"}]},
+    // Clear output views
+    // {"keys": ["UNBOUND"], "command": "tutkain_clear_output_views", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
     // Run tests in current namespace
-    // {"keys": ["UNBOUND"], "command": "tutkain_run_tests_in_current_namespace","context": [{"key": "tutkain.should"}]},
+    // {"keys": ["UNBOUND"], "command": "tutkain_run_tests_in_current_namespace", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
     // Open a new scratch view
-    // {"keys": ["UNBOUND"], "command": "tutkain_new_scratch_view","context": [{"key": "tutkain.should"}]},
+    // {"keys": ["UNBOUND"], "command": "tutkain_new_scratch_view", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 
     // Cycle collection type
-    // {"keys": ["UNBOUND"], "command": "tutkain_cycle_collection_type","context": [{"key": "tutkain.should"}]},
+    // {"keys": ["UNBOUND"], "command": "tutkain_cycle_collection_type", "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]},
 ]

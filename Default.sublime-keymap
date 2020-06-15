@@ -2,7 +2,12 @@
   {
     "keys": ["enter"],
     "command": "tutkain_insert_newline",
-    "context": [{"key": "tutkain.should"},
+    "context": [
+      {
+        "key": "selector",
+        "operator": "equal",
+        "operand": "source.clojure"
+      },
       {
         "key": "auto_complete_visible",
         "operator": "equal",

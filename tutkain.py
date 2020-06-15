@@ -446,13 +446,6 @@ class TutkainNewScratchViewCommand(WindowCommand):
         self.window.focus_view(view)
 
 
-class TutkainEventListener(EventListener):
-    def on_query_context(self, view, key, operator, operand, match_all):
-        if key == 'tutkain.should':
-            syntax = view.settings().get('syntax')
-            return 'Clojure' in syntax
-
-
 class TutkainViewEventListener(ViewEventListener):
     def on_pre_close(self):
         view = self.view
