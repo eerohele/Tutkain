@@ -63,7 +63,7 @@ def code_with_meta(view, region):
         line, column = view.rowcol(region.begin())
 
         return '^{:clojure.core/eval-file "%s" :line %s :column %s} %s' % (
-            view.file_name(), line + 1, column + 1, code
+            file.replace('\\', '\\\\'), line + 1, column + 1, code
         )
     else:
         return code
