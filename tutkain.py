@@ -10,6 +10,7 @@ from sublime_plugin import (
 )
 
 from threading import Thread
+from collections import defaultdict
 
 from . import sexp
 from . import formatter
@@ -21,7 +22,7 @@ from .log import enable_debug, log
 from .repl import Client
 
 
-view_registry = dict()
+view_registry = defaultdict(dict)
 
 
 def plugin_loaded():
@@ -44,8 +45,8 @@ def print_characters(view, characters):
         })
 
 
-def append_to_view(view_name, string):
-    view = view_registry.get(view_name)
+def append_to_view(window_id, view_name, string):
+    view = view_registry.get(window_id).get(view_name)
 
     if view and string:
         view.set_read_only(False)
@@ -70,7 +71,7 @@ def code_with_meta(view, region):
 
 class TutkainClearOutputViewsCommand(WindowCommand):
     def run(self):
-        for _, view in view_registry.items():
+        for _, view in view_registry.get(self.window.id()).items():
             view.set_read_only(False)
             view.run_command('select_all')
             view.run_command('right_delete')
@@ -311,6 +312,8 @@ class TutkainConnectCommand(WindowCommand):
         session.output(response)
 
     def print_loop(self, recvq):
+        window_id = self.window.id()
+
         while True:
             item = recvq.get()
 
@@ -324,16 +327,16 @@ class TutkainConnectCommand(WindowCommand):
             if {'value',
                 'nrepl.middleware.caught/throwable',
                 'in'} & item.keys():
-                append_to_view('result', formatter.format(item))
+                append_to_view(window_id, 'result', formatter.format(item))
             elif 'versions' in item:
-                append_to_view('result', formatter.format(item))
-                append_to_view('out', formatter.format(item))
+                append_to_view(window_id, 'result', formatter.format(item))
+                append_to_view(window_id, 'out', formatter.format(item))
             elif 'status' in item and 'namespace-not-found' in item['status']:
-                append_to_view('result', ':namespace-not-found')
+                append_to_view(window_id, 'result', ':namespace-not-found')
             elif item.get('status') == ['done']:
-                append_to_view('result', '\n')
+                append_to_view(window_id, 'result', '\n')
             else:
-                append_to_view('out', formatter.format(item))
+                append_to_view(window_id, 'out', formatter.format(item))
 
         log.debug({'event': 'thread/exit'})
 
@@ -363,8 +366,9 @@ class TutkainConnectCommand(WindowCommand):
         self.window.focus_view(result)
         self.window.focus_view(active_view)
 
-        view_registry['out'] = out
-        view_registry['result'] = result
+        window_id = self.window.id()
+        view_registry[window_id]['out'] = out
+        view_registry[window_id]['result'] = result
 
     def run(self, host, port):
         window = self.window
@@ -412,19 +416,20 @@ class TutkainConnectCommand(WindowCommand):
 class TutkainDisconnectCommand(WindowCommand):
     def run(self):
         window = self.window
-        session = sessions.get_by_owner(window.id(), 'plugin')
+        window_id = window.id()
+        session = sessions.get_by_owner(window_id, 'plugin')
 
         if session is not None:
             session.output({'out': 'Disconnecting...\n'})
             session.terminate()
-            user_session = sessions.get_by_owner(window.id(), 'user')
+            user_session = sessions.get_by_owner(window_id, 'user')
             user_session.terminate()
-            sessions.deregister(window.id())
+            sessions.deregister(window_id)
             window.status_message('REPL disconnected.')
 
             active_view = window.active_view()
 
-            for _, view in view_registry.items():
+            for _, view in view_registry.get(window_id).items():
                 view.close()
 
             window.set_layout({
@@ -448,12 +453,18 @@ class TutkainNewScratchViewCommand(WindowCommand):
 class TutkainViewEventListener(ViewEventListener):
     def on_pre_close(self):
         view = self.view
+        window = view.window()
 
-        if view == view_registry.get('result') or view == view_registry.get('out'):
-            window = view.window()
+        if window:
+            window_id = window.id()
+            window_views = view_registry.get(window_id)
 
-            if window:
-                sessions.terminate(window.id())
+            if (
+                window_views and
+                view == window_views.get('result') or
+                view == window_views.get('out')
+            ):
+                sessions.terminate(window_id)
 
 
 class TutkainExpandSelectionCommand(TextCommand):
@@ -473,7 +484,7 @@ class TutkainExpandSelectionCommand(TextCommand):
 
 class TutkainActivateResultViewCommand(WindowCommand):
     def run(self):
-        view = view_registry.get('result')
+        view = view_registry.get(self.window.id()).get('result')
 
         if view:
             active_view = self.window.active_view()
@@ -483,7 +494,7 @@ class TutkainActivateResultViewCommand(WindowCommand):
 
 class TutkainActivateOutputViewCommand(WindowCommand):
     def run(self):
-        view = view_registry.get('out')
+        view = view_registry.get(self.window.id()).get('out')
 
         if view:
             active_view = self.window.active_view()

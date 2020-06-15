@@ -19,7 +19,8 @@ class TestCommands(ViewTestCase):
         )
 
     def view_content(self, name):
-        view = tutkain.view_registry.get(name)
+        view = tutkain.view_registry.get(self.view.window().id()).get(name)
+
         if view:
             return view.substr(sublime.Region(0, view.size()))
 
@@ -47,17 +48,15 @@ class TestCommands(ViewTestCase):
         )
 
     def test_evaluate_view(self):
-        content = '''(ns app.core) (defn square [x] (* x x))'''
+        content = '''(ns app.core) (defn square [x] (* x x)) (comment (square 2))'''
         self.set_view_content(content)
         self.view.run_command('tutkain_evaluate_view')
         time.sleep(self.delay)
 
         self.assertEquals(self.view_content('result'), '')
-
         self.assertEquals(self.view_content('out'), '')
 
-        self.set_view_content(' (square 2)')
-        self.set_selections((40, 40))
+        self.set_selections((49, 59))
         self.view.run_command('tutkain_evaluate_form')
         time.sleep(self.delay)
 
