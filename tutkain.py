@@ -325,7 +325,7 @@ class TutkainConnectCommand(WindowCommand):
                 'nrepl.middleware.caught/throwable',
                 'in'} & item.keys():
                 append_to_view('result', formatter.format(item))
-            elif 'versions' in item.keys():
+            elif 'versions' in item:
                 append_to_view('result', formatter.format(item))
                 append_to_view('out', formatter.format(item))
             elif 'status' in item and 'namespace-not-found' in item['status']:
