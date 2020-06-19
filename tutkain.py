@@ -485,7 +485,7 @@ class TutkainEventListener(EventListener):
                 session = sessions.get_by_owner(view.window().id(), 'plugin')
 
                 # TODO: Cache lookup results?
-                if 'lookup' in session.capabilities.get('ops'):
+                if session and 'lookup' in session.capabilities.get('ops'):
                     session.send(
                         {
                             'op': 'lookup',
