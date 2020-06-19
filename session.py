@@ -10,7 +10,7 @@ class Session():
         self.client = client
         self.op_count = 0
         self.lock = Lock()
-        self.nrepl_version = None
+        self.capabilities = {}
 
     def op_id(self):
         with self.lock:
@@ -19,8 +19,8 @@ class Session():
         return self.op_count
 
     def supports_pretty_printing(self):
-        if self.nrepl_version:
-            v = self.nrepl_version
+        if 'version' in self.capabilities:
+            v = self.capabilities.get('version').get('nrepl')
             return (v and (v.get('major') == 0 and v.get('minor') >= 8) or v.get('major') > 0)
 
     def prune(self, d):

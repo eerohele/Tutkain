@@ -2,6 +2,7 @@ import os
 import sublime
 
 from sublime_plugin import (
+    EventListener,
     ListInputHandler,
     TextCommand,
     TextInputHandler,
@@ -18,6 +19,8 @@ from . import indent
 from . import sessions
 from . import paredit
 from . import namespace
+from . import info
+
 from .log import enable_debug, log
 from .repl import Client
 
@@ -130,12 +133,16 @@ class TutkainEvaluateViewCommand(TextCommand):
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            session.send(
-                {'op': 'eval',
-                 'code': code_with_meta(self.view, sublime.Region(0, self.view.size())),
-                 'file': self.view.file_name()},
-                handler=lambda response: self.handler(session, response)
-            )
+            op = {'op': 'load-file',
+                  'file': self.view.substr(sublime.Region(0, self.view.size()))}
+
+            file_path = self.view.file_name()
+
+            if file_path:
+                op['file-name'] = os.path.basename(file_path)
+                op['file-path'] = file_path
+
+            session.send(op, handler=lambda response: self.handler(session, response))
 
 
 class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
@@ -307,9 +314,9 @@ class TutkainConnectCommand(WindowCommand):
         view.set_scratch(True)
         return view
 
-    def set_session_versions(self, sessions, response):
+    def set_session_capabilities(self, sessions, response):
         for session in sessions:
-            session.nrepl_version = response.get('versions').get('nrepl')
+            session.capabilities = response
 
         session.output(response)
 
@@ -400,7 +407,7 @@ class TutkainConnectCommand(WindowCommand):
             plugin_session.send(
                 {'op': 'describe'},
                 handler=lambda response: (
-                    self.set_session_versions(
+                    self.set_session_capabilities(
                         [plugin_session, user_session],
                         response
                     )
@@ -467,6 +474,26 @@ class TutkainViewEventListener(ViewEventListener):
                 view == window_views.get('out')
             ):
                 sessions.terminate(window_id)
+
+
+class TutkainEventListener(EventListener):
+    def on_hover(self, view, point, hover_zone):
+        if view.match_selector(point, 'source.clojure'):
+            symbol = view.substr(sexp.extract_symbol(view, point))
+
+            if symbol:
+                session = sessions.get_by_owner(view.window().id(), 'plugin')
+
+                # TODO: Cache lookup results?
+                if 'lookup' in session.capabilities.get('ops'):
+                    session.send(
+                        {
+                            'op': 'lookup',
+                            'sym': symbol,
+                            'ns': namespace.find_declaration(view)
+                        },
+                        handler=lambda response: info.show_popup(view, point, response)
+                    )
 
 
 class TutkainExpandSelectionCommand(TextCommand):
