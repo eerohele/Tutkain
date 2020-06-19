@@ -461,19 +461,8 @@ class TutkainNewScratchViewCommand(WindowCommand):
 
 class TutkainViewEventListener(ViewEventListener):
     def on_pre_close(self):
-        view = self.view
-        window = view.window()
-
-        if window:
-            window_id = window.id()
-            window_views = view_registry.get(window_id)
-
-            if (
-                window_views and
-                view == window_views.get('result') or
-                view == window_views.get('out')
-            ):
-                sessions.terminate(window_id)
+        if self.view and self.view.window:
+            sessions.terminate(self.view.window.id())
 
 
 class TutkainEventListener(EventListener):
