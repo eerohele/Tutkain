@@ -328,18 +328,15 @@ def semicolon(view, edit):
         else:
             innermost = sexp.innermost(view, point, edge=False)
 
-            if innermost:
+            if innermost and view.line(point).contains(innermost.close):
                 view.insert(edit, innermost.close.begin(), '\n')
 
-            element = sexp.find_next_element(view, point)
-
-            if element:
-                n = view.insert(edit, point, '; ')
+            if not re.match(r'[\s\(\[\{\)\]\}]', view.substr(point - 1)):
+                n = view.insert(edit, point, ' ;')
             else:
-                n = view.insert(edit, point, ' ; ')
+                n = view.insert(edit, point, ';')
 
             sel.append(point + n)
-            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
 
 
 def splice_sexp_killing_forward(view, edit):
