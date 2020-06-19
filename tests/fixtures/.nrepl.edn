@@ -1,0 +1,1 @@
+{:middleware [cider.piggieback/wrap-cljs-repl]}
