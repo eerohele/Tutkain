@@ -279,7 +279,7 @@ class TestIndentRegionCommand(ViewTestCase):
     def becomes(self, a, b, selections=[(0, 0), (1, 1)]):
         self.set_view_content(cleandoc(a))
         self.set_selections(*selections)
-        self.view.run_command('tutkain_indent_region')
+        self.view.run_command('tutkain_indent_sexp')
         self.assertEquals(cleandoc(b), self.view_content())
 
     def test_1(self):

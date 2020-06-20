@@ -152,7 +152,7 @@ def backward_slurp(view, edit):
             chars = view.substr(innermost.open)
             view.erase(edit, innermost.open)
             view.insert(edit, element.begin(), chars)
-            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
 
 
 def forward_barf(view, edit):
@@ -181,7 +181,7 @@ def forward_barf(view, edit):
             if insert_point - 1 == innermost.open.begin():
                 view.insert(edit, insert_point + 1, ' ')
 
-            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
 
 
 def backward_barf(view, edit):
@@ -205,7 +205,7 @@ def backward_barf(view, edit):
             if insert_point == innermost.close.begin():
                 view.insert(edit, insert_point - 1, ' ')
 
-            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
 
 
 def wrap_bracket(view, edit, open_bracket):
@@ -272,7 +272,7 @@ def raise_sexp(view, edit):
             innermost = sexp.innermost(view, point, edge=False)
             element = sexp.find_next_element(view, point)
             view.replace(edit, innermost.extent(), view.substr(element))
-            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
 
 
 def splice_sexp(view, edit):
@@ -285,7 +285,7 @@ def splice_sexp(view, edit):
         view.erase(edit, innermost.close)
         # Erase one or more open characters
         view.erase(edit, innermost.open)
-        view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+        view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
 
 
 def comment_dwim(view, edit):
@@ -338,7 +338,7 @@ def splice_sexp_killing_forward(view, edit):
         if innermost:
             view.erase(edit, region.cover(innermost.close))
             view.erase(edit, innermost.open)
-            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
 
 
 def splice_sexp_killing_backward(view, edit, forward=True):
@@ -348,7 +348,7 @@ def splice_sexp_killing_backward(view, edit, forward=True):
         if innermost:
             view.erase(edit, innermost.close)
             view.erase(edit, region.cover(innermost.open))
-            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
 
 
 def kill_element(view, edit, forward):
@@ -371,4 +371,4 @@ def kill_element(view, edit, forward):
                     sel.append(point)
 
                 view.erase(edit, element)
-                view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+                view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})

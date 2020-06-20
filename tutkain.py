@@ -537,7 +537,7 @@ class TutkainInsertNewlineCommand(TextCommand):
             indent.insert_newline_and_indent(self.view, edit)
 
 
-class TutkainIndentRegionCommand(TextCommand):
+class TutkainIndentSexpCommand(TextCommand):
     def run(self, edit, scope='outermost', prune=False):
         if 'Clojure' in self.view.settings().get('syntax'):
             for region in self.view.sel():
