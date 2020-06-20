@@ -314,9 +314,9 @@ class TutkainConnectCommand(WindowCommand):
         view.set_scratch(True)
         return view
 
-    def set_session_capabilities(self, sessions, response):
+    def set_session_info(self, sessions, response):
         for session in sessions:
-            session.capabilities = response
+            session.info = response
 
         session.output(response)
 
@@ -407,7 +407,7 @@ class TutkainConnectCommand(WindowCommand):
             plugin_session.send(
                 {'op': 'describe'},
                 handler=lambda response: (
-                    self.set_session_capabilities(
+                    self.set_session_info(
                         [plugin_session, user_session],
                         response
                     )
@@ -460,7 +460,35 @@ class TutkainNewScratchViewCommand(WindowCommand):
 
 
 class TutkainViewEventListener(ViewEventListener):
-    pass
+    def handle_completions(self, completion_list, response):
+        completions = map(
+            lambda completion: completion.get('candidate'),
+            response.get('completions')
+        )
+
+        completion_list.set_completions(completions)
+
+    def on_query_completions(self, prefix, locations):
+        # CompletionList requires Sublime Text >= 4050, hence the try/except.
+        try:
+            # TODO: Does this make sense?
+            if self.view.match_selector(locations[0], 'source.clojure'):
+                session = sessions.get_by_owner(self.view.window().id(), 'plugin')
+
+                if session and session.supports('completions'):
+                    completion_list = sublime.CompletionList(flags=sublime.INHIBIT_WORD_COMPLETIONS)
+
+                    session.send(
+                        {
+                            'op': 'completions',
+                            'prefix': prefix
+                        },
+                        handler=lambda response: self.handle_completions(completion_list, response)
+                    )
+
+                    return completion_list
+        except NameError:
+            pass
 
 
 class TutkainEventListener(EventListener):
@@ -472,7 +500,7 @@ class TutkainEventListener(EventListener):
                 session = sessions.get_by_owner(view.window().id(), 'plugin')
 
                 # TODO: Cache lookup results?
-                if session and 'lookup' in session.capabilities.get('ops'):
+                if session and session.supports('lookup'):
                     session.send(
                         {
                             'op': 'lookup',
