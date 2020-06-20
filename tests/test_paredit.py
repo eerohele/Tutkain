@@ -104,6 +104,12 @@ class TestParedit(ViewTestCase):
         self.assertEquals('(a)', self.view_content())
         self.assertEquals(self.selections(), [(3, 3)])
 
+        self.set_view_content('(a "b")')
+        self.set_selections((1, 1))
+        self.view.run_command('tutkain_paredit_close_round')
+        self.assertEquals('(a "b")', self.view_content())
+        self.assertEquals(self.selections(), [(7, 7)])
+
     def test_close_round_in_string(self):
         self.set_view_content('(a "b")')
         self.set_selections((5, 5))

@@ -68,28 +68,18 @@ def open_bracket(view, edit, open_bracket):
 
 def close_bracket(view, edit, close_bracket):
     for region, sel in iterate(view):
-        begin = region.begin()
-        if sexp.ignore(view, begin):
-            view.insert(edit, begin, close_bracket)
+        point = region.begin()
+
+        if sexp.ignore(view, point):
+            view.insert(edit, point, close_bracket)
         else:
-            close_bracket_begin = view.find_by_class(
-                begin,
-                True,
-                CLASS_PUNCTUATION_END
-            ) - 1
+            innermost = sexp.innermost(view, point, edge=False)
 
             # Get the region that starts at the current point and ends before the
             # close bracket and trim the whitespace on its right.
-            replacee = Region(begin, close_bracket_begin)
+            replacee = Region(point, innermost.close.begin())
             view.replace(edit, replacee, view.substr(replacee).rstrip())
-
-            close_bracket_end = view.find_by_class(
-                begin,
-                True,
-                CLASS_PUNCTUATION_END
-            )
-
-            sel.append(Region(close_bracket_end, close_bracket_end))
+            sel.append(sexp.innermost(view, point, edge=False).close.end())
 
 
 def double_quote(view, edit):
