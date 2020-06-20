@@ -290,13 +290,13 @@
     },
 
     {
-        "keys": ["ctrl+super+s"],
+        "keys": ["ctrl+s", "ctrl+left"],
         "command": "tutkain_paredit_splice_sexp_killing_backward",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
     {
-        "keys": ["ctrl+alt+s"],
+        "keys": ["ctrl+s", "ctrl+right"],
         "command": "tutkain_paredit_splice_sexp_killing_forward",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
