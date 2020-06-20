@@ -1,5 +1,13 @@
 [
     {
+        "caption": "Tutkain: Edit Key Bindings",
+        "command": "edit_settings",
+        "args": {
+            "base_file": "${packages}/tutkain/Example.sublime-keymap",
+            "user_file": "${packages}/User/Default (${platform}).sublime-keymap"
+        }
+    },
+    {
         "caption": "Tutkain: Connect",
         "command": "tutkain_connect"
     },

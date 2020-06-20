@@ -1,0 +1,315 @@
+[
+    // This is a set of example key bindings for Tutkain.
+    //
+    // Tutkain comes with (almost) no key bindings enabled by default. To start using key bindings,
+    // copy the key binding definitions in this file into your own key binding settings.
+
+    // Connect to nREPL server.
+    {
+        "keys": ["ctrl+c", "ctrl+x"],
+        "command": "tutkain_connect",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Disconnect from nREPL server.
+    {
+        "keys": ["ctrl+c", "ctrl+d"],
+        "command": "tutkain_disconnect",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Evaluate view.
+    {
+        "keys": ["ctrl+c", "ctrl+k"],
+        "command": "tutkain_evaluate_view",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Evaluate current selections or the outermost form.
+    //
+    // If the outermost form is a (comment), instead of the outermost form, evaluate the form that's
+    // one level inward.
+    //
+    // For example, given:
+    //
+    //     (comment
+    //       (inc 1))
+    //
+    // If your cursor is at the open parenthesis of (inc 1), evaluate (inc 1) instead of
+    // (comment (inc 1)).
+    {
+        "keys": ["ctrl+c", "ctrl+c"],
+        "command": "tutkain_evaluate_form",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Prompt for input and evaluate it.
+    //
+    // If the active view defines a Clojure namespace (for example, via the (ns) form), Tutkain
+    // evaluates the input in the context of the namespace in that view.
+    {
+        "keys": ["ctrl+c", "ctrl+i"],
+        "command": "tutkain_evaluate_input",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Clear the result view and the output view.
+    {
+        "keys": ["ctrl+c", "ctrl+z"],
+        "command": "tutkain_clear_output_views",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Evaluate the current view and run the clojure.test tests in the view.
+    {
+        "keys": ["ctrl+c", "ctrl+t"],
+        "command": "tutkain_run_tests_in_current_namespace",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Interrupt any ongoing evaluation.
+    {
+        "keys": ["ctrl+c", "ctrl+r"],
+        "command": "tutkain_interrupt_evaluation",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Open new scratch view.
+    //
+    // Scratch views are useful for experimenting on the REPL.
+    {
+        "keys": ["ctrl+c", "ctrl+s"],
+        "command": "tutkain_new_scratch_view",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Expand the current selection by one nesting level.
+    //
+    // For example, given:
+    //
+    //     (a (b (c :d e)))
+    //
+    // If you cursor is at the point that precedes ":d", expanding the selection once expands it to
+    // cover :d. Expanding it once more expands it to cover (c :d e), then (b (c :d e)), and finally
+    // (a (b (c :d e))).
+    {
+        "keys": ["super+e"],
+        "command": "tutkain_expand_selection",
+        "context": [
+            {"key": "selector", "operator": "equal", "operand": "source.clojure"}
+        ]
+    },
+
+    // Indent the outermost sexp at point.
+    {
+        "keys": ["tab"],
+        "command": "tutkain_indent_sexp",
+        "context": [
+            {"key": "selector", "operator": "equal", "operand": "source.clojure"},
+            {"key": "auto_complete_visible", "operand": false}
+        ]
+    },
+
+    // Activate the view that contains evaluation results.
+    {
+        "keys": ["ctrl+c", "ctrl+,"],
+        "command": "tutkain_activate_result_view"
+    },
+
+    // Activate the view that contains standard output (stdout) and standard error (stderr).
+    {
+        "keys": ["ctrl+c", "ctrl+."],
+        "command": "tutkain_activate_output_view"
+    },
+
+    // Cycle collection type.
+    //
+    // For example, given:
+    //
+    //     (a b)
+    //
+    // If your cursor is at the point that precedes "a" and you run this command, the list becomes
+    // a vector:
+    //
+    //     [a b]
+    //
+    // If you run it again, it becomes a map:
+    //
+    //     {a b}
+    //
+    // Then a set:
+    //
+    //     #{a b}
+    {
+        "keys": ["ctrl+super+c"],
+        "command": "tutkain_cycle_collection_type",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Paredit commands
+    //
+    // Documentation TBD.
+    //
+    // In the meantime, see: http://danmidwood.com/content/2014/11/21/animated-paredit.html
+    {
+        "keys": ["ctrl+right"],
+        "command": "tutkain_paredit_forward",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+left"],
+        "command": "tutkain_paredit_backward",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["("],
+        "command": "tutkain_paredit_open_round",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["["],
+        "command": "tutkain_paredit_open_square",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["{"],
+        "command": "tutkain_paredit_open_curly",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": [")"],
+        "command": "tutkain_paredit_close_round",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["]"],
+        "command": "tutkain_paredit_close_square",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["}"],
+        "command": "tutkain_paredit_close_curly",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["\""],
+        "command": "tutkain_paredit_double_quote",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+c", "ctrl+right", "ctrl+left"],
+        "command": "tutkain_paredit_forward_slurp",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+c", "ctrl+left", "ctrl+right"],
+        "command": "tutkain_paredit_backward_slurp",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+c", "ctrl+right", "ctrl+right"],
+        "command": "tutkain_paredit_forward_barf",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+c", "ctrl+left", "ctrl+left"],
+        "command": "tutkain_paredit_backward_barf",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["super+shift+9"],
+        "command": "tutkain_paredit_wrap_round",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["super+shift+8"],
+        "command": "tutkain_paredit_wrap_square",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["super+shift+0"],
+        "command": "tutkain_paredit_wrap_curly",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["delete"],
+        "command": "tutkain_paredit_forward_delete",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["backspace"],
+        "command": "tutkain_paredit_backward_delete",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["alt+r"],
+        "command": "tutkain_paredit_raise_sexp",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["alt+s"],
+        "command": "tutkain_paredit_splice_sexp",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["alt+;"],
+        "command": "tutkain_paredit_comment_dwim",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+k"],
+        "command": "tutkain_paredit_kill",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": [";"],
+        "command": "tutkain_paredit_semicolon",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+super+s"],
+        "command": "tutkain_paredit_splice_sexp_killing_backward",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+alt+s"],
+        "command": "tutkain_paredit_splice_sexp_killing_forward",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+backspace"],
+        "command": "tutkain_paredit_backward_kill_element",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+delete"],
+        "command": "tutkain_paredit_forward_kill_element",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+]

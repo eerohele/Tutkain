@@ -30,7 +30,7 @@
                 "command": "edit_settings",
                 "args":
                 {
-                  "base_file": "${packages}/tutkain/Default (${platform}).sublime-keymap",
+                  "base_file": "${packages}/tutkain/Example.sublime-keymap",
                   "user_file": "${packages}/User/Default (${platform}).sublime-keymap"
                 }
               }
