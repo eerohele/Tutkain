@@ -242,6 +242,12 @@ class TestParedit(ViewTestCase):
         self.assertEquals('(a (b {:c :d}))', self.view_content())
         self.assertEquals(self.selections(), [(5, 5)])
 
+        self.set_view_content('(a (b))\n(c)')
+        self.set_selections((2, 2))
+        self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('(a (b)\n  (c))', self.view_content())
+        self.assertEquals(self.selections(), [(2, 2)])
+
     def test_forward_slurp_set(self):
         self.set_view_content('(a (b) #{1 2 3})')
         self.set_selections((5, 5))

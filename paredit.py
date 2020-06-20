@@ -2,7 +2,7 @@ import re
 from sublime import CLASS_PUNCTUATION_END, Region
 
 from . import sexp
-
+from . import indent
 
 def iterate(view):
     '''
@@ -131,8 +131,10 @@ def forward_slurp(view, edit):
             view.insert(edit, element.end(), char)
             # Erase the close char we copied.
             view.erase(edit, innermost.close)
-            # # If we slurped a sexp, indent it.
-            view.run_command('tutkain_indent_region', {'scope': 'innermost', 'prune': True})
+            # If we slurped a sexp, indent it.
+            indent.indent_region(
+                view, edit, sexp.innermost(view, region.begin(), edge=False).extent(), prune=True
+            )
 
 
 def backward_slurp(view, edit):
