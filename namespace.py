@@ -25,6 +25,8 @@ def find_declaration(view):
 
                     symbol = sexp.extract_symbol(view, ns.begin())
                     return view.substr(symbol).replace('\'', '')
+                else:
+                    return None
             else:
                 point = element.end()
         else:
