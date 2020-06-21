@@ -459,29 +459,51 @@ class TutkainNewScratchViewCommand(WindowCommand):
         self.window.focus_view(view)
 
 
+COMPLETION_KINDS = {
+    'function': sublime.KIND_FUNCTION,
+    'var': sublime.KIND_VARIABLE,
+    'macro': (sublime.KIND_ID_FUNCTION, 'm', 'macro'),
+    'namespace': sublime.KIND_NAMESPACE,
+    'class': sublime.KIND_TYPE,
+    'special-form': (sublime.KIND_ID_FUNCTION, 's', 'special form'),
+    'method': sublime.KIND_FUNCTION,
+    'static-method': sublime.KIND_FUNCTION
+}
+
+
 class TutkainViewEventListener(ViewEventListener):
-    def handle_completions(self, completion_list, response):
-        completions = map(
-            lambda completion: completion.get('candidate'),
-            response.get('completions')
+    def completion_item(self, item):
+        return sublime.CompletionItem(
+            item.get('candidate'),
+            kind=COMPLETION_KINDS.get(item.get('type'), sublime.KIND_AMBIGUOUS)
         )
 
+    def handle_completions(self, completion_list, response):
+        completions = map(self.completion_item, response.get('completions', []))
         completion_list.set_completions(completions)
 
     def on_query_completions(self, prefix, locations):
         # CompletionList requires Sublime Text >= 4050, hence the try/except.
         try:
+            point = locations[0]
+
             # TODO: Does this make sense?
-            if self.view.match_selector(locations[0], 'source.clojure'):
+            if self.view.match_selector(point, 'source.clojure'):
                 session = sessions.get_by_owner(self.view.window().id(), 'plugin')
 
                 if session and session.supports('completions'):
+                    scope = sexp.extract_scope(self.view, point - 1)
+
+                    if scope:
+                        prefix = self.view.substr(scope)
+
                     completion_list = sublime.CompletionList(flags=sublime.INHIBIT_WORD_COMPLETIONS)
 
                     session.send(
                         {
                             'op': 'completions',
-                            'prefix': prefix
+                            'prefix': prefix,
+                            'ns': namespace.find_declaration(self.view)
                         },
                         handler=lambda response: self.handle_completions(completion_list, response)
                     )
