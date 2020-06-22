@@ -1,5 +1,5 @@
 {:deps {org.clojure/clojurescript {:mvn/version "1.10.773"}}
- :aliases {:nrepl/server {:extra-deps {nrepl {:mvn/version "0.8.0-alpha3"}
+ :aliases {:nrepl/server {:extra-deps {nrepl {:mvn/version "0.8.0-alpha4"}
                                        cider/piggieback {:mvn/version "0.5.0"
                                                          :exclusions [org.clojure/clojurescript]}}
                           :main-opts ["--main" "nrepl.cmdline" "--port" "1234"]}}}
