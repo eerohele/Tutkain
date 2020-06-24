@@ -480,7 +480,7 @@ class TutkainViewEventListener(ViewEventListener):
 
     def handle_completions(self, completion_list, response):
         completions = map(self.completion_item, response.get('completions', []))
-        completion_list.set_completions(completions)
+        completion_list.set_completions(completions, flags=sublime.INHIBIT_WORD_COMPLETIONS)
 
     def on_query_completions(self, prefix, locations):
         # CompletionList requires Sublime Text >= 4050, hence the try/except.
@@ -497,7 +497,7 @@ class TutkainViewEventListener(ViewEventListener):
                     if scope:
                         prefix = self.view.substr(scope)
 
-                    completion_list = sublime.CompletionList(flags=sublime.INHIBIT_WORD_COMPLETIONS)
+                    completion_list = sublime.CompletionList()
 
                     session.send(
                         {
