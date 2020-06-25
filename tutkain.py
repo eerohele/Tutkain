@@ -289,8 +289,7 @@ class TutkainEvaluateInputCommand(WindowCommand):
 
             session.send({
                 'op': 'eval',
-                'code': code,
-                'ns': namespace.find_declaration(self.window.active_view())
+                'code': code
             })
 
     def noop(*args):
