@@ -98,19 +98,25 @@ class TutkainEvaluateFormCommand(TextCommand):
 
                 code = self.view.substr(eval_region)
 
-                session.output({'in': code})
+                ns = namespace.find_declaration(self.view)
+
+                session.output({
+                    'in': code,
+                    'ns': ns
+                })
 
                 log.debug({
                     'event': 'send',
                     'scope': 'form',
-                    'code': code
+                    'code': code,
+                    'ns': ns
                 })
 
                 session.send(
                     {'op': 'eval',
                      'code': code_with_meta(self.view, eval_region),
                      'file': self.view.file_name(),
-                     'ns': namespace.find_declaration(self.view)}
+                     'ns': ns}
                 )
 
 

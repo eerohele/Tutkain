@@ -61,10 +61,9 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.view_content('result'),
-            '''=> (square 2)\n4\n''')
-
-        self.assertEquals(self.view_content('out'), '')
+            self.view_content(),
+            '''app.core=> (square 2)\n4\n'''
+        )
 
     def test_evaluate_form_before_view(self):
         content = '''(remove-ns 'foo.bar) (ns foo.bar) (defn square [x] (* x x)) (comment (square 2))'''
@@ -74,8 +73,8 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            '''=> (square 2)\n:namespace-not-found\n''',
-            self.view_content('result')
+            '''foo.bar=> (square 2)\n:namespace-not-found\n''',
+            self.view_content()
         )
 
         self.assertEquals(self.view_content('out'), '')
@@ -89,8 +88,8 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            '''=> (plus 1 2)\n3\n''',
-            self.view_content('result')
+            '''baz.quux=> (plus 1 2)\n3\n''',
+            self.view_content()
         )
 
         self.view.window().run_command('tutkain_clear_output_views')
@@ -103,8 +102,8 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            '''=> (minus 4 3)\n1\n''',
-            self.view_content('result')
+            '''qux.zot=> (minus 4 3)\n1\n''',
+            self.view_content()
         )
 
         self.view.window().run_command('tutkain_clear_output_views')
@@ -116,8 +115,8 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            '''=> (plus 1 2)\n3\n''',
-            self.view_content('result')
+            '''baz.quux=> (plus 1 2)\n3\n''',
+            self.view_content()
         )
 
     def test_evaluate_view_with_error(self):
