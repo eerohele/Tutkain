@@ -83,8 +83,20 @@ class TutkainClearOutputViewsCommand(WindowCommand):
             view.set_read_only(True)
 
 
+def get_eval_region(view, region, scope='outermost'):
+    assert scope in {'innermost', 'outermost'}
+
+    if not region.empty():
+        return region
+    else:
+        if scope == 'outermost':
+            return sexp.outermost(view, region.begin(), ignore={'comment'}).extent()
+        elif scope == 'innermost':
+            return sexp.innermost(view, region.begin(), edge=True).extent()
+
+
 class TutkainEvaluateFormCommand(TextCommand):
-    def run(self, edit):
+    def run(self, edit, scope='outermost'):
         window = self.view.window()
         session = sessions.get_by_owner(window.id(), 'user')
 
@@ -92,12 +104,8 @@ class TutkainEvaluateFormCommand(TextCommand):
             window.status_message('ERR: Not connected to a REPL.')
         else:
             for region in self.view.sel():
-                eval_region = region if not region.empty() else (
-                    sexp.outermost(self.view, region.begin(), ignore={'comment'}).extent()
-                )
-
+                eval_region = get_eval_region(self.view, region, scope=scope)
                 code = self.view.substr(eval_region)
-
                 ns = namespace.find_declaration(self.view)
 
                 session.output({
