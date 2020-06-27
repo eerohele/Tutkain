@@ -60,20 +60,6 @@ def append_to_view(window_id, characters):
         view.run_command('move_to', {'to': 'eof'})
 
 
-def code_with_meta(view, region):
-    file = view.file_name()
-    code = view.substr(region)
-
-    if file:
-        line, column = view.rowcol(region.begin())
-
-        return '^{:clojure.core/eval-file "%s" :line %s :column %s} %s' % (
-            file.replace('\\', '\\\\'), line + 1, column + 1, code
-        )
-    else:
-        return code
-
-
 class TutkainClearOutputViewCommand(WindowCommand):
     def run(self):
         view = view_registry.get(self.window.id())
@@ -124,7 +110,7 @@ class TutkainEvaluateFormCommand(TextCommand):
 
                 session.send(
                     {'op': 'eval',
-                     'code': code_with_meta(self.view, eval_region),
+                     'code': self.view.substr(eval_region),
                      'file': self.view.file_name(),
                      'ns': ns}
                 )
@@ -166,7 +152,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
         if response.get('status') == ['done']:
             session.send(
                 {'op': 'eval',
-                 'code': code_with_meta(self.view, sublime.Region(0, self.view.size())),
+                 'code': self.view.substr(sublime.Region(0, self.view.size())),
                  'file': self.view.file_name()},
                 handler=lambda response: self.run_tests(session, response)
             )
