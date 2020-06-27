@@ -56,7 +56,7 @@
     // Clear the result view and the output view.
     {
         "keys": ["ctrl+c", "ctrl+z"],
-        "command": "tutkain_clear_output_views",
+        "command": "tutkain_clear_output_view",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 

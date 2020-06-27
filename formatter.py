@@ -6,7 +6,8 @@ def format(message):
     if 'out' in message:
         return message['out']
     if 'in' in message:
-        return '{}=> {}\n'.format(message.get('ns', ''), message['in'])
+        ns = message.get('ns') or ''
+        return '{}=> {}\n'.format(ns, message['in'])
     if 'append' in message:
         return message['append']
     if 'err' in message:

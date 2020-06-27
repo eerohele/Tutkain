@@ -18,8 +18,8 @@ class TestCommands(ViewTestCase):
             {'host': 'localhost', 'port': 1234}
         )
 
-    def view_content(self, name):
-        view = tutkain.view_registry.get(self.view.window().id()).get(name)
+    def view_content(self):
+        view = tutkain.view_registry.get(self.view.window().id())
 
         if view:
             return view.substr(sublime.Region(0, view.size()))
@@ -33,7 +33,7 @@ class TestCommands(ViewTestCase):
 
     def setUp(self):
         super().setUp()
-        self.view.window().run_command('tutkain_clear_output_views')
+        self.view.window().run_command('tutkain_clear_output_view')
 
     def test_evaluate_form(self):
         content = '(+ 1 2)'
@@ -43,7 +43,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.view_content('result'),
+            self.view_content(),
             '''=> (+ 1 2)\n3\n'''
         )
 
@@ -53,8 +53,7 @@ class TestCommands(ViewTestCase):
         self.view.run_command('tutkain_evaluate_view')
         time.sleep(self.delay)
 
-        self.assertEquals(self.view_content('result'), '')
-        self.assertEquals(self.view_content('out'), '')
+        self.assertEquals(self.view_content(), '')
 
         self.set_selections((49, 59))
         self.view.run_command('tutkain_evaluate_form')
@@ -77,8 +76,6 @@ class TestCommands(ViewTestCase):
             self.view_content()
         )
 
-        self.assertEquals(self.view_content('out'), '')
-
     def test_evaluate_form_switch_views(self):
         view_1 = '''(ns baz.quux) (defn plus [x y] (+ x y)) (comment (plus 1 2))'''
         self.set_view_content(view_1)
@@ -92,7 +89,7 @@ class TestCommands(ViewTestCase):
             self.view_content()
         )
 
-        self.view.window().run_command('tutkain_clear_output_views')
+        self.view.window().run_command('tutkain_clear_output_view')
 
         view_2 = '''(ns qux.zot) (defn minus [x y] (- x y)) (comment (minus 4 3))'''
         self.set_view_content(view_2)
@@ -106,7 +103,7 @@ class TestCommands(ViewTestCase):
             self.view_content()
         )
 
-        self.view.window().run_command('tutkain_clear_output_views')
+        self.view.window().run_command('tutkain_clear_output_view')
 
         # Don't need to evaluate view 1 again to evaluate (plus)
         self.set_view_content(view_1)
@@ -126,12 +123,12 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertRegex(
-            self.view_content('result'),
+            self.view_content(),
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
         )
 
         self.assertRegex(
-            self.view_content('out'),
+            self.view_content(),
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
         )
 
@@ -147,7 +144,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.view_content('result').splitlines()[-1],
+            self.view_content().splitlines()[-1],
             '''{:test 2, :pass 1, :fail 1, :error 0, :type :summary}'''
         )
 
@@ -162,7 +159,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertRegex(
-            self.view_content('out'),
+            self.view_content(),
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
         )
 
@@ -177,7 +174,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertRegex(
-            self.view_content('out'),
+            self.view_content(),
             r'.*Execution error .*InterruptedException\).*'
         )
 

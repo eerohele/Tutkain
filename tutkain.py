@@ -1,5 +1,6 @@
 import os
 import sublime
+import uuid
 
 from sublime_plugin import (
     EventListener,
@@ -11,7 +12,6 @@ from sublime_plugin import (
 )
 
 from threading import Thread
-from collections import defaultdict
 
 from . import sexp
 from . import formatter
@@ -25,7 +25,7 @@ from .log import enable_debug, log
 from .repl import Client
 
 
-view_registry = defaultdict(dict)
+view_registry = {}
 
 
 def plugin_loaded():
@@ -50,12 +50,12 @@ def print_characters(view, characters):
         })
 
 
-def append_to_view(window_id, view_name, string):
-    view = view_registry.get(window_id).get(view_name)
+def append_to_view(window_id, characters):
+    view = view_registry.get(window_id)
 
-    if view and string:
+    if view and characters:
         view.set_read_only(False)
-        print_characters(view, string)
+        print_characters(view, characters)
         view.set_read_only(True)
         view.run_command('move_to', {'to': 'eof'})
 
@@ -74,9 +74,11 @@ def code_with_meta(view, region):
         return code
 
 
-class TutkainClearOutputViewsCommand(WindowCommand):
+class TutkainClearOutputViewCommand(WindowCommand):
     def run(self):
-        for _, view in view_registry.get(self.window.id()).items():
+        view = view_registry.get(self.window.id())
+
+        if view:
             view.set_read_only(False)
             view.run_command('select_all')
             view.run_command('right_delete')
@@ -316,9 +318,9 @@ class TutkainEvaluateInputCommand(WindowCommand):
 
 
 class TutkainConnectCommand(WindowCommand):
-    def create_output_view(self, name, host, port):
+    def create_output_view(self, host, port):
         view = self.window.new_file()
-        view.set_name('REPL | *{}* | {}:{}'.format(name, host, port))
+        view.set_name('REPL | {}:{}'.format(host, port))
         view.settings().set('line_numbers', False)
         view.settings().set('gutter', False)
         view.settings().set('is_widget', True)
@@ -349,16 +351,31 @@ class TutkainConnectCommand(WindowCommand):
             if {'value',
                 'nrepl.middleware.caught/throwable',
                 'in'} & item.keys():
-                append_to_view(window_id, 'result', formatter.format(item))
+                append_to_view(window_id, formatter.format(item))
             elif 'versions' in item:
-                append_to_view(window_id, 'result', formatter.format(item))
-                append_to_view(window_id, 'out', formatter.format(item))
+                append_to_view(window_id, formatter.format(item))
             elif 'status' in item and 'namespace-not-found' in item['status']:
-                append_to_view(window_id, 'result', ':namespace-not-found')
+                append_to_view(window_id, ':namespace-not-found')
             elif item.get('status') == ['done']:
-                append_to_view(window_id, 'result', '\n')
+                append_to_view(window_id, '\n')
             else:
-                append_to_view(window_id, 'out', formatter.format(item))
+                characters = formatter.format(item)
+
+                if characters:
+                    append_to_view(window_id, characters)
+
+                    view = view_registry[window_id]
+                    size = view.size()
+                    key = str(uuid.uuid4())
+                    regions = [sublime.Region(size - len(characters), size)]
+
+                    # TODO: Add setting for scope name?
+                    view.add_regions(
+                        key,
+                        regions,
+                        scope='repl.output',
+                        flags=sublime.DRAW_NO_OUTLINE
+                    )
 
         log.debug({'event': 'thread/exit'})
 
@@ -375,22 +392,18 @@ class TutkainConnectCommand(WindowCommand):
 
         active_view = self.window.active_view()
 
-        out = self.create_output_view('out', host, port)
-        result = self.create_output_view('result', host, port)
-        result.assign_syntax('Clojure.sublime-syntax')
+        output = self.create_output_view(host, port)
+        output.assign_syntax('Clojure.sublime-syntax')
 
-        # Move the result and out views into the second row.
-        self.window.set_view_index(result, 1, 0)
-        self.window.set_view_index(out, 1, 1)
+        # Move the output view into the second row.
+        self.window.set_view_index(output, 1, 0)
 
-        # Activate the result view and the view that was active prior to
-        # creating the output views.
-        self.window.focus_view(result)
+        # Activate the output view and the view that was active prior to
+        # creating the output view.
+        self.window.focus_view(output)
         self.window.focus_view(active_view)
 
-        window_id = self.window.id()
-        view_registry[window_id]['out'] = out
-        view_registry[window_id]['result'] = result
+        view_registry[self.window.id()] = output
 
     def run(self, host, port):
         window = self.window
@@ -451,7 +464,8 @@ class TutkainDisconnectCommand(WindowCommand):
 
             active_view = window.active_view()
 
-            for _, view in view_registry.get(window_id).items():
+            view = view_registry.get(window_id)
+            if view:
                 view.close()
 
             window.set_layout({
@@ -563,17 +577,7 @@ class TutkainExpandSelectionCommand(TextCommand):
 
 class TutkainActivateResultViewCommand(WindowCommand):
     def run(self):
-        view = view_registry.get(self.window.id()).get('result')
-
-        if view:
-            active_view = self.window.active_view()
-            self.window.focus_view(view)
-            self.window.focus_view(active_view)
-
-
-class TutkainActivateOutputViewCommand(WindowCommand):
-    def run(self):
-        view = view_registry.get(self.window.id()).get('out')
+        view = view_registry.get(self.window.id())
 
         if view:
             active_view = self.window.active_view()
