@@ -1,4 +1,7 @@
+import glob
+import json
 import os
+import re
 import sublime
 import uuid
 
@@ -28,8 +31,65 @@ from .repl import Client
 view_registry = {}
 
 
+def make_color_scheme(cache_dir):
+    '''
+    Add the tutkain.repl.standard-streams scope into the current color scheme.
+
+    We want stdout/stderr messages in the same REPL output view as evaluation results, but we don't
+    want them to be use syntax highlighting. We can use view.add_regions() to add a scope to such
+    messages such that they are not highlighted. Unfortunately, it is not possible to use
+    view.add_regions() to only set the foreground color of a region. Furthermore, if we set the
+    background color of the scope to use exactly the same color as the global background color of
+    the color scheme, Sublime Text refuses to apply the scope.
+
+    We therefore have to resort to this awful hack where every time the plugin is loaded or the
+    color scheme changes, we generate a new color scheme in the Sublime Text cache directory. That
+    color scheme defines the tutkain.repl.standard-streams scope which has an almost-transparent
+    background color, creating the illusion that we're only setting the foreground color of the
+    text.
+
+    Yeah. So, please go give this issue a thumbs-up:
+
+    https://github.com/sublimehq/sublime_text/issues/817
+    '''
+    view = sublime.active_window().active_view()
+
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+
+    if view:
+        color_scheme = view.settings().get('color_scheme')
+
+        if color_scheme:
+            (scheme_name, _) = os.path.splitext(os.path.basename(color_scheme))
+
+            scheme_path = os.path.join(cache_dir, '{}.sublime-color-scheme'.format(scheme_name))
+
+            if not os.path.isfile(scheme_path):
+                with open(scheme_path, 'w') as scheme_file:
+                    scheme_file.write(
+                        json.dumps({
+                            'rules': [{
+                                'name': 'Tutkain REPL Standard Streams',
+                                'scope': 'tutkain.repl.standard-streams',
+                                'background': 'rgba(0, 0, 0, 0.01)'
+                            }]
+                        })
+                    )
+
+
 def plugin_loaded():
     settings = sublime.load_settings('tutkain.sublime-settings')
+    preferences = sublime.load_settings('Preferences.sublime-settings')
+
+    cache_dir = os.path.join(sublime.cache_path(), 'tutkain')
+
+    # Clean up any custom color schemes we've previously created.
+    for filename in glob.glob('{}/*.sublime-color-scheme'.format(cache_dir)):
+        os.remove(filename)
+
+    make_color_scheme(cache_dir)
+    preferences.add_on_change('tutkain', lambda: make_color_scheme(cache_dir))
 
     if settings.get('debug', False):
         enable_debug()
@@ -40,6 +100,9 @@ def plugin_unloaded():
         window.run_command('tutkain_disconnect')
 
     sessions.wipe()
+
+    preferences = sublime.load_settings('Preferences.sublime-settings')
+    preferences.clear_on_change('tutkain')
 
 
 def print_characters(view, characters):
@@ -355,11 +418,10 @@ class TutkainConnectCommand(WindowCommand):
                     key = str(uuid.uuid4())
                     regions = [sublime.Region(size - len(characters), size)]
 
-                    # TODO: Add setting for scope name?
                     view.add_regions(
                         key,
                         regions,
-                        scope='repl.output',
+                        scope='tutkain.repl.standard-streams',
                         flags=sublime.DRAW_NO_OUTLINE
                     )
 
