@@ -346,11 +346,11 @@ class TutkainConnectCommand(WindowCommand):
                 append_to_view(window_id, '\n')
             else:
                 characters = formatter.format(item)
+                view = view_registry.get(window_id)
 
-                if characters:
+                if view and characters:
                     append_to_view(window_id, characters)
 
-                    view = view_registry[window_id]
                     size = view.size()
                     key = str(uuid.uuid4())
                     regions = [sublime.Region(size - len(characters), size)]
