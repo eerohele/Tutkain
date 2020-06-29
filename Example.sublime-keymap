@@ -43,10 +43,15 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
-    // Prompt for input and evaluate it.
-    //
-    // If the active view defines a Clojure namespace (for example, via the (ns) form), Tutkain
-    // evaluates the input in the context of the namespace in that view.
+    // Evaluate current selections or the innermost form.
+    {
+        "keys": ["ctrl+c", "ctrl+e"],
+        "command": "tutkain_evaluate_form",
+        "args": {"scope": "innermost"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Prompt for input and evaluate it in the "user" namespace.
     {
         "keys": ["ctrl+c", "ctrl+i"],
         "command": "tutkain_evaluate_input",
