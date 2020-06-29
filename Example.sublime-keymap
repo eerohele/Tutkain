@@ -151,6 +151,17 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // Show information about the symbol under the cursor.
+    //
+    // If the view has multiple cursors, show information about the symbol under the first cursor.
+    //
+    // Click the name of the symbol in the popup to go to the definition for that symbol.
+    {
+        "keys": ["ctrl+c", "ctrl+f"],
+        "command": "tutkain_show_symbol_information",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
     // Paredit commands
     //
     // Documentation TBD.
