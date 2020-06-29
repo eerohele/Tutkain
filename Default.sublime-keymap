@@ -12,6 +12,32 @@
         "key": "auto_complete_visible",
         "operator": "equal",
         "operand": false
-      }]
+      }
+    ]
+  },
+
+  {
+    "keys": ["up"],
+    "command": "tutkain_navigate_repl_history",
+    "context": [
+      {
+        "key": "setting.tutkain_repl_input_panel",
+        "operator": "equal",
+        "operand": true
+      }
+    ]
+  },
+
+  {
+    "keys": ["down"],
+    "command": "tutkain_navigate_repl_history",
+    "args": {"forward": true},
+    "context": [
+      {
+        "key": "setting.tutkain_repl_input_panel",
+        "operator": "equal",
+        "operand": true
+      }
+    ]
   },
 ]

@@ -1,7 +1,6 @@
 import glob
 import json
 import os
-import re
 import sublime
 import uuid
 
@@ -23,6 +22,7 @@ from . import sessions
 from . import paredit
 from . import namespace
 from . import info
+from . import repl_history
 
 from .log import enable_debug, log
 from .repl import Client
@@ -338,32 +338,30 @@ class PortsInputHandler(ListInputHandler):
 
 
 class TutkainEvaluateInputCommand(WindowCommand):
-    def eval(self, code):
-        session = sessions.get_by_owner(self.window.id(), 'user')
-
-        if session is None:
-            self.window.status_message('ERR: Not connected to a REPL.')
-        else:
-            session.output({'in': code})
-
-            session.send({
-                'op': 'eval',
-                'code': code
-            })
+    def eval(self, session, code):
+        session.output({'in': code})
+        session.send({'op': 'eval', 'code': code})
+        repl_history.update(self.window, code)
 
     def noop(*args):
         pass
 
     def run(self):
-        view = self.window.show_input_panel(
-            'Input: ',
-            '',
-            self.eval,
-            self.noop,
-            self.noop
-        )
+        session = sessions.get_by_owner(self.window.id(), 'user')
 
-        view.assign_syntax('Clojure.sublime-syntax')
+        if session is None:
+            self.window.status_message('ERR: Not connected to a REPL.')
+        else:
+            view = self.window.show_input_panel(
+                'Input: ',
+                repl_history.get(self.window),
+                lambda code: self.eval(session, code),
+                self.noop,
+                self.noop
+            )
+
+            view.settings().set('tutkain_repl_input_panel', True)
+            view.assign_syntax('Clojure.sublime-syntax')
 
 
 class TutkainConnectCommand(WindowCommand):
