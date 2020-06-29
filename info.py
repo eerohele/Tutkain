@@ -3,7 +3,9 @@ from zipfile import ZipFile
 
 
 def doc_lines(doc):
-    return ['<p style="margin-top: 1rem 0;">{}</p>'.format(line) for line in doc.split('\n\n')]
+    return [
+        '<p style="margin-top: 1rem 0;">{}</p>'.format(line) for line in doc.split('\n\n') if line
+    ]
 
 
 def parse_location(path):
@@ -70,7 +72,7 @@ def show_popup(view, point, response):
                     <p style="margin: 0;">
                         <a href="{}:{}:{}"><code>{}/{}</code></a>
                     </p>
-                    <p style="margin: .25rem 0 0 0;">
+                    <p style="margin: 0;">
                         <code style="color: grey;">{}</code>
                     </p>
                     {}
