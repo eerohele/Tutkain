@@ -162,6 +162,13 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // Goto symbol definition.
+    {
+        "keys": ["ctrl+c", "ctrl+g"],
+        "command": "tutkain_goto_symbol_definition",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
     // Paredit commands
     //
     // Documentation TBD.

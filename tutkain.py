@@ -594,7 +594,7 @@ class TutkainViewEventListener(ViewEventListener):
             pass
 
 
-def lookup(view, point):
+def lookup(view, point, handler):
     if view.match_selector(point, 'source.clojure'):
         symbol = view.substr(sexp.extract_symbol(view, point))
 
@@ -609,18 +609,34 @@ def lookup(view, point):
                         'sym': symbol,
                         'ns': namespace.find_declaration(view)
                     },
-                    handler=lambda response: info.show_popup(view, point, response)
+                    handler=handler
                 )
 
 
 class TutkainShowSymbolInformationCommand(TextCommand):
     def run(self, edit):
-        lookup(self.view, self.view.sel()[0].begin())
+        lookup(
+            self.view,
+            self.view.sel()[0].begin(),
+            lambda response: info.show_popup(self.view, self.view.sel()[0].begin(), response)
+        )
+
+
+class TutkainGotoSymbolDefinitionCommand(TextCommand):
+    def run(self, edit):
+        lookup(
+            self.view,
+            self.view.sel()[0].begin(),
+            lambda response: info.goto(
+                self.view.window(),
+                info.parse_location(response.get('info'))
+            )
+        )
 
 
 class TutkainEventListener(EventListener):
     def on_hover(self, view, point, hover_zone):
-        lookup(view, point)
+        lookup(view, point, lambda response: info.show_popup(view, point, response))
 
 
 class TutkainExpandSelectionCommand(TextCommand):
