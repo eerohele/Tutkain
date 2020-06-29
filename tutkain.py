@@ -156,27 +156,29 @@ class TutkainEvaluateFormCommand(TextCommand):
         else:
             for region in self.view.sel():
                 eval_region = get_eval_region(self.view, region, scope=scope)
-                code = self.view.substr(eval_region)
-                ns = namespace.find_declaration(self.view)
 
-                session.output({
-                    'in': code,
-                    'ns': ns
-                })
+                if eval_region:
+                    code = self.view.substr(eval_region)
+                    ns = namespace.find_declaration(self.view)
 
-                log.debug({
-                    'event': 'send',
-                    'scope': 'form',
-                    'code': code,
-                    'ns': ns
-                })
+                    session.output({
+                        'in': code,
+                        'ns': ns
+                    })
 
-                session.send(
-                    {'op': 'eval',
-                     'code': self.view.substr(eval_region),
-                     'file': self.view.file_name(),
-                     'ns': ns}
-                )
+                    log.debug({
+                        'event': 'send',
+                        'scope': 'form',
+                        'code': code,
+                        'ns': ns
+                    })
+
+                    session.send(
+                        {'op': 'eval',
+                         'code': self.view.substr(eval_region),
+                         'file': self.view.file_name(),
+                         'ns': ns}
+                    )
 
 
 class TutkainEvaluateViewCommand(TextCommand):
