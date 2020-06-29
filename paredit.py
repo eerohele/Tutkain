@@ -77,9 +77,10 @@ def close_bracket(view, edit, close_bracket):
 
             # Get the region that starts at the current point and ends before the
             # close bracket and trim the whitespace on its right.
-            replacee = Region(point, innermost.close.begin())
-            view.replace(edit, replacee, view.substr(replacee).rstrip())
-            sel.append(sexp.innermost(view, point, edge=False).close.end())
+            if innermost:
+                replacee = Region(point, innermost.close.begin())
+                view.replace(edit, replacee, view.substr(replacee).rstrip())
+                sel.append(sexp.innermost(view, point, edge=False).close.end())
 
 
 def double_quote(view, edit):
