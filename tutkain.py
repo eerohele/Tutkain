@@ -141,9 +141,15 @@ def get_eval_region(view, region, scope='outermost'):
         return region
     else:
         if scope == 'outermost':
-            return sexp.outermost(view, region.begin(), ignore={'comment'}).extent()
+            outermost = sexp.outermost(view, region.begin(), ignore={'comment'})
+
+            if outermost:
+                return outermost.extent()
         elif scope == 'innermost':
-            return sexp.innermost(view, region.begin(), edge=True).extent()
+            innermost = sexp.innermost(view, region.begin(), edge=True)
+
+            if innermost:
+                return innermost.extent()
 
 
 class TutkainEvaluateFormCommand(TextCommand):
