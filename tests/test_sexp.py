@@ -23,14 +23,6 @@ class TestSexp(ViewTestCase):
         self.assertEquals(Region(5, 6), sexp.find_close(self.view, 4, close=']'))
         self.assertEquals(Region(8, 9), sexp.find_close(self.view, 6, close=')'))
 
-    def test_find_open_string(self):
-        self.set_view_content('"a"')
-        self.assertEquals(sexp.find_open(self.view, 1), ('"', Region(0, 1)))
-
-    def test_find_close_string(self):
-        self.set_view_content('"a"')
-        self.assertEquals(sexp.find_close(self.view, 1), Region(2, 3))
-
     def test_inside_string(self):
         content = ' "x" '
         self.set_view_content(content)
@@ -125,6 +117,7 @@ class TestSexp(ViewTestCase):
         self.set_view_content(form)
         self.assertEquals(sexp.outermost(self.view, len(form)).extent(), Region(0, len(form)))
 
+    @skip('not implemented -- unnecessary?')
     def test_outermost_inside_string(self):
         form = '"a"'
         self.set_view_content(form)

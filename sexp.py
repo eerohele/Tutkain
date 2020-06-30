@@ -69,16 +69,6 @@ def find_open(view, start_point):
     point = start_point
     stack = 0
 
-    if inside_string(view, point):
-        begin = find_by_selector(
-            view,
-            point,
-            'punctuation.definition.string.begin - constant.character.escape',
-            forward=False
-        )
-
-        return view.substr(begin), Region(begin, begin + 1)
-
     while point > 0:
         char = view.substr(point - 1)
 
@@ -102,15 +92,6 @@ def find_close(view, start_point, close=None):
     point = start_point
     stack = 0
     max_point = view.size()
-
-    if inside_string(view, point):
-        end = find_by_selector(
-            view,
-            point,
-            'punctuation.definition.string.end - constant.character.escape'
-        )
-
-        return Region(end, end + 1)
 
     if close is None:
         return None
@@ -143,17 +124,36 @@ def move_inside(view, point, edge):
         return point
 
 
-def innermost(view, point, edge=True):
-    char, open_region = find_open(view, move_inside(view, point, edge))
+def innermost(view, start_point, edge=True):
+    point = move_inside(view, start_point, edge)
 
-    if char:
-        close_region = find_close(
+    if inside_string(view, point):
+        begin = find_by_selector(
             view,
-            open_region.end(),
-            close=OPEN.get(char)
+            point,
+            'punctuation.definition.string.begin - constant.character.escape',
+            forward=False
         )
 
-        return Sexp(view, open_region, close_region)
+        end = find_by_selector(
+            view,
+            point,
+            'punctuation.definition.string.end - constant.character.escape'
+        )
+
+        # TODO: Is a string a sexp?
+        return Sexp(view, Region(begin, begin + 1), Region(end, end + 1))
+    else:
+        char, open_region = find_open(view, point)
+
+        if char:
+            close_region = find_close(
+                view,
+                open_region.end(),
+                close=OPEN.get(char)
+            )
+
+            return Sexp(view, open_region, close_region)
 
 
 def walk_outward(view, point):
