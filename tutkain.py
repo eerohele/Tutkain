@@ -380,6 +380,7 @@ class TutkainConnectCommand(WindowCommand):
         view.settings().set('gutter', False)
         view.settings().set('is_widget', True)
         view.settings().set('scroll_past_end', False)
+        view.settings().set('tutkain_repl_output_view', True)
         view.set_read_only(True)
         view.set_scratch(True)
         return view
@@ -595,7 +596,9 @@ class TutkainViewEventListener(ViewEventListener):
 
 
 def lookup(view, point, handler):
-    if view.match_selector(point, 'source.clojure'):
+    is_repl_output_view = view.settings().get('tutkain_repl_output_view')
+
+    if view.match_selector(point, 'source.clojure') and not is_repl_output_view:
         symbol = view.substr(sexp.extract_symbol(view, point))
 
         if symbol:
