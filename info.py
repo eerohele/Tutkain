@@ -28,6 +28,7 @@ def goto(window, location):
             if not view:
                 view = window.open_file(resource.path)
 
+            window.focus_view(view)
             show(view, line, column)
         elif resource.scheme == 'jar' and '!' in resource.path:
             parts = resource.path.split('!')
