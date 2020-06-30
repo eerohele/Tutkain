@@ -504,6 +504,11 @@ class TutkainConnectCommand(WindowCommand):
 
 
 class TutkainDisconnectCommand(WindowCommand):
+    def output_views(self):
+        return [
+            v for v in self.window.views() if v.settings().get('tutkain_repl_output_view')
+        ]
+
     def run(self):
         window = self.window
         window_id = window.id()
@@ -519,8 +524,7 @@ class TutkainDisconnectCommand(WindowCommand):
 
             active_view = window.active_view()
 
-            view = view_registry.get(window_id)
-            if view:
+            for view in self.output_views():
                 view.close()
 
             window.set_layout({
