@@ -651,6 +651,11 @@ class TestParedit(ViewTestCase):
         self.view.run_command('tutkain_paredit_forward_delete')
         self.assertEquals('("")', self.view_content())
 
+        self.set_view_content('#(a b)')
+        self.set_selections((0, 0))
+        self.view.run_command('tutkain_paredit_forward_delete')
+        self.assertEquals('(a b)', self.view_content())
+
         self.set_view_content('#{}')
         self.set_selections((2, 2))
         self.view.run_command('tutkain_paredit_forward_delete')

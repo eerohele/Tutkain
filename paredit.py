@@ -238,7 +238,7 @@ def forward_delete(view, edit):
                 view.erase(edit, Region(point, point + 1))
             elif innermost.is_empty() and innermost.contains(point):
                 view.erase(edit, innermost.extent())
-            elif point == innermost.open.begin() or point == innermost.close.begin():
+            elif point == innermost.open.end() - 1 or point == innermost.close.begin():
                 sel.append(point + 1)
             else:
                 view.erase(edit, Region(point, point + 1))
