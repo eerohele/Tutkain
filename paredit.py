@@ -258,8 +258,10 @@ def backward_delete(view, edit):
                 view.erase(edit, Region(point - 1, point))
             elif innermost.is_empty() and innermost.contains(point):
                 view.erase(edit, innermost.extent())
-            elif (point == innermost.open.end() or point == innermost.close.end() or
-                  (not sexp.ignore(view, point) and view.substr(point - 1) in sexp.CLOSE)):
+            elif (
+                view.match_selector(point - 1, sexp.BEGIN_SELECTOR) or
+                view.match_selector(point - 1, sexp.END_SELECTOR)
+            ):
                 sel.append(point - 1)
             else:
                 view.erase(edit, Region(point - 1, point))
