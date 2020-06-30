@@ -1,3 +1,5 @@
+from itertools import groupby
+
 import sublime
 from sublime_plugin import EventListener, TextCommand
 
@@ -31,6 +33,8 @@ def update(window, code):
 
         if len(history) > MAX_HISTORY_ITEMS:
             project_data['repl_history'] = history[-MAX_HISTORY_ITEMS:]
+
+        project_data['repl_history'] = [item[0] for item in groupby(history)]
     else:
         project_data['repl_history'] = [code]
 
