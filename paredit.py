@@ -113,16 +113,27 @@ def double_quote(view, edit):
                 sel.append(region.begin() + 1)
 
 
+def find_slurp_barf_targets(view, point, finder):
+    element = None
+    innermost = None
+
+    for s in sexp.walk_outward(view, point):
+        element = finder(s)
+
+        if element:
+            innermost = s
+            break
+
+    return element, innermost
+
+
 def forward_slurp(view, edit):
     for region, sel in iterate(view):
-        element = None
-
-        # TODO: It would be faster just to find close brackets instead of the entire sexp.
-        for s in sexp.walk_outward(view, region.begin()):
-            element = sexp.find_next_element(view, s.close.end())
-            if element:
-                innermost = s
-                break
+        element, innermost = find_slurp_barf_targets(
+            view,
+            region.begin(),
+            lambda s: sexp.find_next_element(view, s.close.end())
+        )
 
         if element:
             # Save cursor position so we can restore it after slurping.
@@ -141,13 +152,11 @@ def forward_slurp(view, edit):
 
 def backward_slurp(view, edit):
     for region, sel in iterate(view):
-        element = None
-
-        for s in sexp.walk_outward(view, region.begin()):
-            element = sexp.find_previous_element(view, s.open.begin())
-            if element:
-                innermost = s
-                break
+        element, innermost = find_slurp_barf_targets(
+            view,
+            region.begin(),
+            lambda s: sexp.find_previous_element(view, s.open.begin())
+        )
 
         if element:
             sel.append(region)
@@ -161,15 +170,11 @@ def forward_barf(view, edit):
     for region, sel in iterate(view):
         sel.append(region)
 
-        innermost = None
-        element = None
-
-        # TODO: It would be faster just to find close brackets instead of the entire sexp.
-        for s in sexp.walk_outward(view, region.begin()):
-            element = sexp.find_previous_element(view, s.close.begin())
-            if element:
-                innermost = s
-                break
+        element, innermost = find_slurp_barf_targets(
+            view,
+            region.begin(),
+            lambda s: sexp.find_previous_element(view, s.close.begin())
+        )
 
         if innermost and element:
             point = innermost.close.begin()
@@ -190,14 +195,11 @@ def backward_barf(view, edit):
     for region, sel in iterate(view):
         sel.append(region)
 
-        innermost = None
-        element = None
-
-        for s in sexp.walk_outward(view, region.begin()):
-            element = sexp.find_next_element(view, s.open.end())
-            if element:
-                innermost = s
-                break
+        element, innermost = find_slurp_barf_targets(
+            view,
+            region.begin(),
+            lambda s: sexp.find_next_element(view, s.open.end())
+        )
 
         if innermost and element:
             insert_point = min(element.end() + 1, innermost.close.begin())
