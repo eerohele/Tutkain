@@ -269,6 +269,13 @@ class TestParedit(ViewTestCase):
         self.assertEquals('''(foo (bar 'baz))''', self.view_content())
         self.assertEquals(self.selections(), [(9, 9)])
 
+    def test_forward_slurp_var_quoted_symbol(self):
+        self.set_view_content('''(foo (bar) #'baz)''')
+        self.set_selections((9, 9))
+        self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('''(foo (bar #'baz))''', self.view_content())
+        self.assertEquals(self.selections(), [(9, 9)])
+
     def test_forward_slurp_nested(self):
         self.set_view_content('(([a]) b)')
         self.set_selections((4, 4))
@@ -335,6 +342,13 @@ class TestParedit(ViewTestCase):
         self.view.run_command('tutkain_paredit_backward_slurp')
         self.assertEquals('''(foo (bar) ('baz quux))''', self.view_content())
         self.assertEquals(self.selections(), [(17, 17)])
+
+    def test_backward_slurp_var_quoted_symbol(self):
+        self.set_view_content('''(foo (bar) #'baz (quux))''')
+        self.set_selections((18, 18))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('''(foo (bar) (#'baz quux))''', self.view_content())
+        self.assertEquals(self.selections(), [(18, 18)])
 
     def test_backward_slurp_nested(self):
         self.set_view_content('(b ([a]))')

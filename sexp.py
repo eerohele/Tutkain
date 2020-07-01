@@ -4,6 +4,7 @@ from sublime import CLASS_WORD_START, Region
 
 OPEN = {'(': ')', '[': ']', '{': '}'}
 CLOSE = {')': '(', ']': '[', '}': '{'}
+RE_NON_SYMBOL_CHARACTERS = r'[\s,\(\[\{\)\]\}\"\x00]'
 
 
 class Sexp():
@@ -259,10 +260,10 @@ def extract_scope(view, point):
 
     while end < max_size:
         if view.match_selector(end, 'keyword.operator.macro'):
-            end += 2
+            end = find_by_selector(view, end, 'source - keyword.operator.macro') + 1
         elif (
             (view.match_selector(end - 1, selector) and not view.match_selector(end, selector)) or
-            is_whitespacey(view, end)
+            re.match(RE_NON_SYMBOL_CHARACTERS, view.substr(end))
         ):
             break
         else:
@@ -271,11 +272,8 @@ def extract_scope(view, point):
     return Region(begin, end)
 
 
-RE_SYMBOL_CHARACTERS = r'[\w\*\+\!\-\_\'\?\<\>\=\/\.]'
-
-
 def is_symbol_character(view, point):
-    return re.match(RE_SYMBOL_CHARACTERS, view.substr(point))
+    return not re.match(RE_NON_SYMBOL_CHARACTERS, view.substr(point))
 
 
 def extract_symbol(view, point):
@@ -283,7 +281,7 @@ def extract_symbol(view, point):
     max_size = view.size()
 
     while begin > 0:
-        if not is_symbol_character(view, begin - 1) and is_symbol_character(view, begin):
+        if re.match(RE_NON_SYMBOL_CHARACTERS, view.substr(begin - 1)):
             break
         else:
             begin -= 1
