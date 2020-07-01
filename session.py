@@ -24,8 +24,13 @@ class Session():
 
     def supports_pretty_printing(self):
         if 'versions' in self.info:
-            v = self.info['versions'].get('nrepl')
-            return (v and (v.get('major') == 0 and v.get('minor') >= 8) or v.get('major') > 0)
+            versions = self.info['versions']
+
+            if versions and 'nrepl' in versions:
+                v = versions.get('nrepl')
+                return (v and (v.get('major') == 0 and v.get('minor') >= 8) or v.get('major') > 0)
+
+        return False
 
     def prune(self, d):
         if 'file' in d and d['file'] is None:

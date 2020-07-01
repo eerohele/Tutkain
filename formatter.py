@@ -15,9 +15,20 @@ def format(message):
     if 'versions' in message:
         versions = message.get('versions')
 
-        clojure_version = versions.get('clojure').get('version-string')
-        nrepl_version = versions.get('nrepl').get('version-string')
+        clojure_version = versions.get('clojure')
+        nrepl_version = versions.get('nrepl')
+        babashka_version = versions.get('babashka')
 
-        return (
-            '''Clojure {}\nnREPL {}\n'''.format(clojure_version, nrepl_version)
-        )
+        if clojure_version and nrepl_version:
+            return (
+                '''Clojure {}\nnREPL {}\n'''.format(
+                    clojure_version.get('version-string'), nrepl_version.get('version-string')
+                )
+            )
+        elif babashka_version:
+            return (
+                '''Babashka {}\nbabashka.nrepl {}\n'''.format(
+                    babashka_version,
+                    versions.get('babashka.nrepl')
+                )
+            )
