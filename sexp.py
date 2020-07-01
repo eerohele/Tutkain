@@ -252,9 +252,7 @@ def extract_scope(view, point):
 
     while begin > 0:
         if ((view.match_selector(begin - 1, selector) and view.match_selector(begin, selector)) or
-            # account for shorthand meta notation (^:foo)
-            (view.match_selector(begin - 1, 'keyword.operator.macro') and
-             view.match_selector(begin, 'constant.other.keyword'))):
+           view.match_selector(begin - 1, 'keyword.operator.macro')):
             begin -= 1
         else:
             break
