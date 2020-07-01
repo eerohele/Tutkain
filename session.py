@@ -4,6 +4,7 @@ from threading import Lock
 class Session():
     handlers = dict()
     errors = dict()
+    namespace = 'user'
 
     def __init__(self, id, client):
         self.id = id
@@ -61,6 +62,9 @@ class Session():
 
     def handle(self, response):
         id = response.get('id')
+
+        if 'ns' in response:
+            self.namespace = response['ns']
 
         if id:
             handler = self.handlers.get(id, self.client.recvq.put)

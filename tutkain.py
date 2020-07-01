@@ -347,8 +347,8 @@ class PortsInputHandler(ListInputHandler):
 
 class TutkainEvaluateInputCommand(WindowCommand):
     def eval(self, session, code):
-        session.output({'in': code, 'ns': 'user'})
-        session.send({'op': 'eval', 'code': code, 'ns': 'user'})
+        session.output({'in': code, 'ns': session.namespace})
+        session.send({'op': 'eval', 'code': code, 'ns': session.namespace})
         repl_history.update(self.window, code)
 
     def noop(*args):
