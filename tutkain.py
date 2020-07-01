@@ -645,6 +645,10 @@ class TutkainEventListener(EventListener):
     def on_hover(self, view, point, hover_zone):
         lookup(view, point, lambda response: info.show_popup(view, point, response))
 
+    def on_pre_close(self, view):
+        if view.settings().get('tutkain_repl_output_view'):
+            sessions.terminate(view.window().id())
+
 
 class TutkainExpandSelectionCommand(TextCommand):
     def run(self, edit):
