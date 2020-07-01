@@ -209,7 +209,7 @@ def right_of_end(view, point):
     return view.match_selector(point - 1, END_SELECTOR)
 
 
-def is_insignificant(view, point):
+def is_whitespacey(view, point):
     return re.match(r'[\s,]', view.substr(point))
 
 
@@ -258,12 +258,12 @@ def extract_scope(view, point):
             break
 
     while end < max_size:
-        if (view.match_selector(end, 'keyword.operator.macro') and
-            # account for shorthand meta notation (^:foo)
-           view.match_selector(end + 1, 'constant.other.keyword')):
-            selector = 'constant.other.keyword'
+        if view.match_selector(end, 'keyword.operator.macro'):
             end += 2
-        elif (view.match_selector(end - 1, selector) and not view.match_selector(end, selector)):
+        elif (
+            (view.match_selector(end - 1, selector) and not view.match_selector(end, selector)) or
+            is_whitespacey(view, end)
+        ):
             break
         else:
             end += 1
@@ -324,7 +324,7 @@ def find_next_element(view, point):
     while point < max_size:
         if view.match_selector(point, END_SELECTOR):
             return None
-        elif is_insignificant(view, point):
+        elif is_whitespacey(view, point):
             point += 1
         elif left_of_start(view, point):
             return innermost(view, point).extent()
@@ -343,7 +343,7 @@ def find_previous_element(view, point):
     while point > 0:
         if view.match_selector(point - 1, BEGIN_SELECTOR):
             return None
-        elif is_insignificant(view, point - 1):
+        elif is_whitespacey(view, point - 1):
             point -= 1
         elif right_of_end(view, point):
             return innermost(view, point).extent()
