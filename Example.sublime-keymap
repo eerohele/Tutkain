@@ -84,8 +84,7 @@
     // Scratch views are useful for experimenting on the REPL.
     {
         "keys": ["ctrl+c", "ctrl+s"],
-        "command": "tutkain_new_scratch_view",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "command": "tutkain_new_scratch_view"
     },
 
     // Expand the current selection by one nesting level.
