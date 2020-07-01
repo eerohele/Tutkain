@@ -514,6 +514,19 @@ class TutkainDisconnectCommand(WindowCommand):
         window_id = window.id()
         session = sessions.get_by_owner(window_id, 'plugin')
 
+        for view in self.output_views():
+            view.close()
+
+        active_view = window.active_view()
+
+        window.set_layout({
+            'cells': [[0, 0, 1, 1]],
+            'cols': [0.0, 1.0],
+            'rows': [0.0, 1.0]
+        })
+
+        window.focus_view(active_view)
+
         if session is not None:
             session.output({'out': 'Disconnecting...\n'})
             session.terminate()
@@ -521,19 +534,6 @@ class TutkainDisconnectCommand(WindowCommand):
             user_session.terminate()
             sessions.deregister(window_id)
             window.status_message('REPL disconnected.')
-
-            active_view = window.active_view()
-
-            for view in self.output_views():
-                view.close()
-
-            window.set_layout({
-                'cells': [[0, 0, 1, 1]],
-                'cols': [0.0, 1.0],
-                'rows': [0.0, 1.0]
-            })
-
-            window.focus_view(active_view)
 
 
 class TutkainNewScratchViewCommand(WindowCommand):
