@@ -4,6 +4,7 @@ from sublime import CLASS_PUNCTUATION_END, Region
 from . import sexp
 from . import indent
 
+
 def iterate(view):
     '''
     Iterate over each region in all selections.
