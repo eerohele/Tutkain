@@ -1,5 +1,5 @@
 import re
-from sublime import CLASS_PUNCTUATION_END, Region
+from sublime import Region
 
 from . import sexp
 from . import indent
