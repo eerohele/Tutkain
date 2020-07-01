@@ -128,7 +128,9 @@ def move_inside(view, point, edge):
 def innermost(view, start_point, edge=True):
     point = move_inside(view, start_point, edge)
 
-    if inside_string(view, point):
+    if inside_comment(view, point):
+        return None
+    elif inside_string(view, point):
         begin = find_by_selector(
             view,
             point,
