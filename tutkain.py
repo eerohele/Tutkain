@@ -402,13 +402,7 @@ class TutkainConnectCommand(WindowCommand):
 
             log.debug({'event': 'printer/recv', 'data': item})
 
-            # How can I de-uglify this?
-
-            if {'value',
-                'nrepl.middleware.caught/throwable',
-                'in'} & item.keys():
-                append_to_view(window_id, formatter.format(item))
-            elif 'versions' in item:
+            if {'value', 'nrepl.middleware.caught/throwable', 'in', 'versions'} & item.keys():
                 append_to_view(window_id, formatter.format(item))
             elif 'status' in item and 'namespace-not-found' in item['status']:
                 append_to_view(window_id, ':namespace-not-found')
