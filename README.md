@@ -11,6 +11,8 @@ figuring things out.
 
 ## Install
 
-1. Via [Package Control](https://packagecontrol.io).
+1. Clone this repo into your Sublime Text Packages directory.
+
+   Tutkain is available on Package Control, but the version there is very old, and I don't advise using it at the moment.
 
 More documentation coming up. Check back later.
