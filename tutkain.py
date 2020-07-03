@@ -18,14 +18,14 @@ from threading import Thread
 from . import sexp
 from . import formatter
 from . import indent
-from . import sessions
 from . import paredit
 from . import namespace
-from . import info
-from . import repl_history
+from .repl import sessions
+from .repl import info
+from .repl import history
+from .repl.client import Client
 
 from .log import enable_debug, log
-from .repl import Client
 
 
 view_registry = {}
@@ -349,7 +349,7 @@ class TutkainEvaluateInputCommand(WindowCommand):
     def eval(self, session, code):
         session.output({'in': code, 'ns': session.namespace})
         session.send({'op': 'eval', 'code': code, 'ns': session.namespace})
-        repl_history.update(self.window, code)
+        history.update(self.window, code)
 
     def noop(*args):
         pass
@@ -362,7 +362,7 @@ class TutkainEvaluateInputCommand(WindowCommand):
         else:
             view = self.window.show_input_panel(
                 'Input: ',
-                repl_history.get(self.window),
+                history.get(self.window),
                 lambda code: self.eval(session, code),
                 self.noop,
                 self.noop

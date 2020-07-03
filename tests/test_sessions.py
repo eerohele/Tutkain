@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from tutkain.session import Session
-from tutkain import sessions
+from tutkain.repl.session import Session
+from tutkain.repl import sessions
 
 
 class MockClient(object):
