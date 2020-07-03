@@ -298,15 +298,18 @@ def extract_symbol(view, point):
 
 
 def adjacent_element_direction(view, point):
-    if not ignore(view, point) and re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
+    if re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
         return 1
-    elif not ignore(view, point - 1) and re.match(r'[^\s,\(\[\{\x00]', view.substr(point - 1)):
+    elif re.match(r'[^\s,\(\[\{\x00]', view.substr(point - 1)):
         return -1
     else:
         return 0
 
 
 def find_adjacent_element(view, point):
+    if ignore(view, point):
+        return None
+
     direction = adjacent_element_direction(view, point)
 
     if direction == 1:

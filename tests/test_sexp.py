@@ -271,3 +271,5 @@ class TestSexp(ViewTestCase):
         self.assertEquals(sexp.find_previous_element(self.view, 10), Region(5, 9))
         self.set_view_content('''(foo #'bar baz)''')
         self.assertEquals(sexp.find_previous_element(self.view, 11), Region(5, 10))
+        self.set_view_content('(foo "bar")')
+        self.assertEquals(sexp.find_previous_element(self.view, 10), Region(5, 10))

@@ -161,3 +161,9 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.set_selections((3, 3))
         self.expand()
         self.assertEquals('1/2', self.selection(0))
+
+    def test_string_close_paren(self):
+        self.set_view_content('(a "b")')
+        self.set_selections((6, 6))
+        self.expand()
+        self.assertEquals('"b"', self.selection(0))
