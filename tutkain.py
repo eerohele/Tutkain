@@ -846,3 +846,23 @@ class TutkainPareditBackwardKillElementCommand(TextCommand):
 class TutkainCycleCollectionTypeCommand(TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
+
+
+class TutkainTutorialCommand(WindowCommand):
+    def run(self):
+        path = os.path.join(
+            sublime.packages_path(),
+            'tutkain/tutorial/src/tutkain/tutorial.clj'
+        )
+
+        with open(path, 'r') as file:
+            view = self.window.new_file()
+            view.set_scratch(True)
+            view.set_name('tutorial.clj')
+
+            view.run_command('append', {
+                'characters': file.read()
+            })
+
+            view.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
+            self.window.focus_view(view)
