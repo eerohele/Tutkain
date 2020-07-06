@@ -531,7 +531,10 @@ class TutkainDisconnectCommand(WindowCommand):
             session.output({'out': 'Disconnecting...\n'})
             session.terminate()
             user_session = sessions.get_by_owner(window_id, 'user')
-            user_session.terminate()
+
+            if user_session:
+                user_session.terminate()
+
             sessions.deregister(window_id)
             window.status_message('REPL disconnected.')
 
