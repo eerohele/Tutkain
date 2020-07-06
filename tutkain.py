@@ -576,8 +576,7 @@ class TutkainViewEventListener(ViewEventListener):
         try:
             point = locations[0]
 
-            # TODO: Does this make sense?
-            if self.view.match_selector(point, 'source.clojure'):
+            if self.view.match_selector(point, 'source.clojure - string - comment'):
                 session = sessions.get_by_owner(self.view.window().id(), 'plugin')
 
                 if session and session.supports('completions'):
