@@ -6,3 +6,9 @@
 
 (deftest nok
   (is (= 3 (+ 1 1))))
+
+(deftest error
+  (is (= {:a 1} {:a 2}))
+  (is (= 4 (+ 2 2)))
+  (is (= 0 (/ 4 0)))
+  (is (= {:a 2} (update {:a 1} :a inc))))

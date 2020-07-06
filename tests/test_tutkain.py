@@ -145,7 +145,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(
             self.view_content().splitlines()[-1],
-            '''{:test 2, :pass 1, :fail 1, :error 0, :type :summary}'''
+            '''{:test 2, :pass 1, :fail 1, :error 0}'''
         )
 
     def test_run_test_in_current_namespace_with_error(self):
@@ -158,9 +158,9 @@ class TestCommands(ViewTestCase):
         self.view.run_command('tutkain_run_tests_in_current_namespace')
         time.sleep(self.delay)
 
-        self.assertRegex(
-            self.view_content(),
-            r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
+        self.assertEquals(
+            self.view_content().splitlines()[-1],
+            '''{:test 1, :pass 0, :fail 0, :error 1}'''
         )
 
     # TODO: Figure out how to test EvaluateInputCommand

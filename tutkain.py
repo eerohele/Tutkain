@@ -1,3 +1,4 @@
+import base64
 import glob
 import json
 import os
@@ -128,6 +129,10 @@ def append_to_view(window_id, characters):
         view.run_command('move_to', {'to': 'eof'})
 
 
+def test_region_key(view, result_type):
+    return '{}:{}'.format(view.file_name(), result_type)
+
+
 class TutkainClearOutputViewCommand(WindowCommand):
     def run(self):
         view = view_registry.get(self.window.id())
@@ -233,23 +238,113 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
                 handler=lambda response: self.run_tests(session, response)
             )
 
+    def annotation(self, response):
+        args = json.dumps({
+            'reference': response['expected'],
+            'actual': response['actual']
+            # TODO: Replacing single quotes is probably not enough. Is there a better approach?
+        }).replace("'", '&#39;')
+
+        return '''
+        <a style="font-size: 0.8rem"
+           href='subl:tutkain_open_diff_window {}'>{}</a>
+        '''.format(args, 'diff' if response.get('type', 'fail') == 'fail' else 'show')
+
+    def add_markers(self, session, response):
+        if 'status' not in response:
+            self.view.run_command('tutkain_clear_test_markers')
+
+        passes = []
+        failures = []
+        errors = []
+
+        if 'results' in response:
+            for result in response['results']:
+                if result['type'] == 'pass':
+                    line = result['line'] - 1
+                    point = self.view.text_point(line, 0)
+
+                    passes.append({
+                        'type': result['type'],
+                        'region': sublime.Region(point, point)
+                    })
+                elif result['type'] == 'fail':
+                    line = result['line'] - 1
+                    point = self.view.text_point(line, 0)
+
+                    failures.append({
+                        'type': result['type'],
+                        'region': sublime.Region(point, point),
+                        'expected': result['expected'],
+                        'actual': result['actual']
+                    })
+                elif result['type'] == 'error':
+                    line = result['var-meta']['line'] - 1
+                    point = self.view.text_point(line, 0)
+
+                    errors.append({
+                        'type': result['type'],
+                        'region': sublime.Region(point, point),
+                        'expected': result['expected'],
+                        'actual': result['actual']
+                    })
+
+            if passes:
+                self.view.add_regions(
+                    test_region_key(self.view, 'passes'),
+                    [p['region'] for p in passes],
+                    scope='region.greenish',
+                    icon='circle'
+                )
+
+            if failures:
+                self.view.add_regions(
+                    test_region_key(self.view, 'failures'),
+                    [f['region'] for f in failures],
+                    scope='region.redish',
+                    icon='circle',
+                    annotations=[self.annotation(f) for f in failures]
+                )
+
+            if errors:
+                self.view.add_regions(
+                    test_region_key(self.view, 'errors'),
+                    [e['region'] for e in errors],
+                    scope='region.orangish',
+                    icon='circle',
+                    annotation_color='orange',
+                    annotations=[self.annotation(e) for e in errors]
+                )
+
     def run_tests(self, session, response):
         if response.get('status') == ['eval-error']:
             session.denounce(response)
         elif response.get('status') == ['done']:
-            file_name = self.view.file_name()
-            base_name = os.path.basename(file_name) if file_name else 'NO_SOURCE_FILE'
-
             if not session.is_denounced(response):
-                session.send(
-                    {'op': 'eval',
-                     'code': '''
-(let [report clojure.test/report]
-  (with-redefs [clojure.test/report (fn [event] (report (assoc event :file "%s")))]
-    ((requiring-resolve \'clojure.test/run-tests))))
-                     ''' % base_name,
-                     'file': file_name}
-                )
+                file_name = self.view.file_name()
+                base_name = os.path.basename(file_name) if file_name else 'NO_SOURCE_FILE'
+
+                if int(sublime.version()) >= 4073 and session.supports('tutkain/test'):
+                    def handler(response):
+                        session.output(response)
+                        self.add_markers(session, response)
+
+                    session.send({
+                        'op': 'tutkain/test',
+                        'ns': namespace.find_declaration(self.view),
+                        'file': base_name
+                    }, handler=handler)
+                else:
+                    # For nREPL < 0.8 compatibility
+                    session.send(
+                        {'op': 'eval',
+                         'code': '''
+    (let [report clojure.test/report]
+      (with-redefs [clojure.test/report (fn [event] (report (assoc event :file "%s")))]
+        ((requiring-resolve \'clojure.test/run-tests))))
+                         ''' % base_name,
+                         'file': file_name}
+                    )
         elif response.get('value'):
             pass
         else:
@@ -390,11 +485,47 @@ class TutkainConnectCommand(WindowCommand):
         view.set_scratch(True)
         return view
 
-    def set_session_info(self, sessions, response):
-        for session in sessions:
-            session.info = response
+    def sideload_middleware(self, response):
+        session = sessions.get_by_owner(self.window.id(), 'plugin')
 
-        session.output(response)
+        if session.supports('sideloader-provide'):
+            name = response['name']
+
+            op = {
+                'id': response['id'],
+                'op': 'sideloader-provide',
+                'type': response['type'],
+                'name': name
+            }
+
+            if name == 'tutkain/nrepl/middleware/test.clj':
+                path = os.path.join(sublime.packages_path(), 'tutkain/clojure/src', name)
+
+                with open(path, 'rb') as file:
+                    op['content'] = base64.b64encode(file.read()).decode('utf-8')
+            else:
+                op['content'] = 'Cg=='  # empty string
+
+            session.send(op, handler=lambda _: None)
+
+    def inject_middleware(self, session):
+        if (
+            int(sublime.version()) >= 4073 and
+            session.supports('sideloader-start') and
+            session.supports('add-middleware')
+        ):
+            session.send(
+                {'op': 'sideloader-start'},
+                handler=lambda response: self.sideload_middleware(response)
+            )
+
+            session.send({
+                'op': 'add-middleware',
+                'middleware': ['tutkain.nrepl.middleware.test/wrap-test']
+            }, handler=lambda _: session.send(
+                {'op': 'describe'},
+                handler=lambda response: session.set_info(response))
+            )
 
     def print_loop(self, recvq):
         window_id = self.window.id()
@@ -485,15 +616,13 @@ class TutkainConnectCommand(WindowCommand):
             print_loop.name = 'tutkain.print_loop'
             print_loop.start()
 
-            plugin_session.send(
-                {'op': 'describe'},
-                handler=lambda response: (
-                    self.set_session_info(
-                        [plugin_session, user_session],
-                        response
-                    )
-                )
-            )
+            def handler(response):
+                plugin_session.set_info(response)
+                self.inject_middleware(plugin_session)
+                user_session.output(response)
+                user_session.set_info(response)
+
+            plugin_session.send({'op': 'describe'}, handler=handler)
         except ConnectionRefusedError:
             window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)
@@ -518,6 +647,7 @@ class TutkainDisconnectCommand(WindowCommand):
             view.close()
 
         active_view = window.active_view()
+        active_view.run_command('tutkain_clear_test_markers')
 
         window.set_layout({
             'cells': [[0, 0, 1, 1]],
@@ -881,3 +1011,28 @@ class TutkainNavigateReplHistoryCommand(TextCommand):
         if index is not None and index < len(history):
             self.view.insert(edit, 0, history[index])
 
+
+class TutkainClearTestMarkersCommand(TextCommand):
+    def run(self, edit):
+        self.view.erase_regions(test_region_key(self.view, 'passes'))
+        self.view.erase_regions(test_region_key(self.view, 'failures'))
+        self.view.erase_regions(test_region_key(self.view, 'errors'))
+
+
+class TutkainOpenDiffWindowCommand(TextCommand):
+    def run(self, edit, reference='', actual=''):
+        self.view.window().run_command('new_window')
+
+        window = sublime.active_window()
+        window.set_tabs_visible(False)
+        window.set_minimap_visible(False)
+        window.set_status_bar_visible(False)
+        window.set_menu_visible(False)
+
+        view = window.new_file()
+        view.set_name('Tutkain: Diff')
+        view.assign_syntax('Clojure.sublime-syntax')
+        view.set_scratch(True)
+        view.set_reference_document(reference.replace('&#39;', "'"))
+        view.run_command('append', {'characters': actual.replace('&#39;', "'")})
+        view.run_command('toggle_inline_diff')

@@ -59,4 +59,8 @@
         "caption": "Tutkain: Activate Output View",
         "command": "tutkain_activate_output_view"
     },
+    {
+        "caption": "Tutkain: Clear Test Markers",
+        "command": "tutkain_clear_test_markers"
+    },
 ]
