@@ -736,6 +736,12 @@ class TestParedit(ViewTestCase):
         self.assertEquals('foo?', self.view_content())
         self.assertEquals([(0, 0)], self.selections())
 
+        self.set_view_content('(foo #bar/baz "quux")')
+        self.set_selections((5, 13))
+        self.view.run_command('tutkain_paredit_raise_sexp')
+        self.assertEquals('#bar/baz', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
     def test_splice_sexp(self):
         self.set_view_content('(a (b c) d) (e (f g) h)')
         self.set_selections((5, 5), (17, 17))

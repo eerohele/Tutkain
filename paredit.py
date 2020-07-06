@@ -284,9 +284,13 @@ def raise_sexp(view, edit):
 
         if not sexp.ignore(view, point):
             innermost = sexp.innermost(view, point, edge=False)
-            element = sexp.find_next_element(view, point)
-            view.replace(edit, innermost.extent(), view.substr(element))
-            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+
+            if region.empty():
+                element = sexp.find_next_element(view, point)
+                view.replace(edit, innermost.extent(), view.substr(element))
+                view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+            else:
+                view.replace(edit, innermost.extent(), view.substr(region))
 
 
 def splice_sexp(view, edit):
