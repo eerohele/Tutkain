@@ -70,9 +70,14 @@ def make_color_scheme(cache_dir):
                     scheme_file.write(
                         json.dumps({
                             'rules': [{
-                                'name': 'Tutkain REPL Standard Streams',
-                                'scope': 'tutkain.repl.standard-streams',
+                                'name': 'Tutkain REPL Standard Output',
+                                'scope': 'tutkain.repl.stdout',
                                 'background': 'rgba(0, 0, 0, 0.01)'
+                            }, {
+                                'name': 'Tutkain REPL Standard Error',
+                                'scope': 'tutkain.repl.stderr',
+                                'background': 'rgba(0, 0, 0, 0.01)',
+                                'foreground': 'crimson'
                             }]
                         })
                     )
@@ -418,11 +423,12 @@ class TutkainConnectCommand(WindowCommand):
                     size = view.size()
                     key = str(uuid.uuid4())
                     regions = [sublime.Region(size - len(characters), size)]
+                    scope = 'tutkain.repl.stderr' if 'err' in item else 'tutkain.repl.stdout'
 
                     view.add_regions(
                         key,
                         regions,
-                        scope='tutkain.repl.standard-streams',
+                        scope=scope,
                         flags=sublime.DRAW_NO_OUTLINE
                     )
 
