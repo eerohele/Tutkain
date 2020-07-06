@@ -442,7 +442,7 @@ class TutkainConnectCommand(WindowCommand):
         self.window.set_layout({
             'cells': [[0, 0, 1, 1], [0, 1, 1, 2]],
             'cols': [0.0, 1.0],
-            'rows': [0.0, 0.5, 1.0]
+            'rows': [0.0, 0.75, 1.0]
         })
 
         active_view = self.window.active_view()
