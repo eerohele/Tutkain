@@ -43,11 +43,12 @@ class Session():
         d['session'] = self.id
         d['id'] = self.op_id()
 
-        if self.supports_pretty_printing():
-            d['nrepl.middleware.print/print'] = 'nrepl.util.print/pprint'
+        if d['op'] == 'eval':
+            if self.supports_pretty_printing():
+                d['nrepl.middleware.print/print'] = 'nrepl.util.print/pprint'
 
-        d['nrepl.middleware.caught/print?'] = 'true'
-        d['nrepl.middleware.print/stream?'] = 'true'
+            d['nrepl.middleware.caught/print?'] = 'true'
+            d['nrepl.middleware.print/stream?'] = 'true'
 
         self.prune(d)
 
