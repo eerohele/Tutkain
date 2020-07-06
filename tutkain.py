@@ -602,7 +602,7 @@ class TutkainViewEventListener(ViewEventListener):
 def lookup(view, point, handler):
     is_repl_output_view = view.settings().get('tutkain_repl_output_view')
 
-    if view.match_selector(point, 'source.clojure') and not is_repl_output_view:
+    if view.match_selector(point, 'source.clojure - string - comment') and not is_repl_output_view:
         symbol = view.substr(sexp.extract_symbol(view, point))
 
         if symbol:
