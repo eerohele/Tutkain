@@ -219,6 +219,14 @@ def wrap_bracket(view, edit, open_bracket):
         point = region.begin()
         element = sexp.find_adjacent_element(view, point)
 
+        # cursor is in between the dispatch macro and an open paren
+        if (
+            element and
+            view.match_selector(point - 1, 'keyword.operator.macro') and
+            view.match_selector(point, 'punctuation.section.parens.begin')
+        ):
+            element = Region(element.begin() + 1, element.end())
+
         if not element:
             element = Region(point, point)
             sel.append(Region(point + 1, point + 1))
