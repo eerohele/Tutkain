@@ -7,15 +7,13 @@
     // Connect to nREPL server.
     {
         "keys": ["ctrl+c", "ctrl+x"],
-        "command": "tutkain_connect",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "command": "tutkain_connect"
     },
 
     // Disconnect from nREPL server.
     {
         "keys": ["ctrl+c", "ctrl+d"],
-        "command": "tutkain_disconnect",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "command": "tutkain_disconnect"
     },
 
     // Evaluate view.
