@@ -594,6 +594,8 @@ class TutkainConnectCommand(WindowCommand):
     def run(self, host, port):
         window = self.window
 
+        window.run_command('tutkain_disconnect')
+
         try:
             client = Client(host, int(port)).go()
 
