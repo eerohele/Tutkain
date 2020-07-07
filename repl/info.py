@@ -1,3 +1,5 @@
+import sublime
+
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -26,7 +28,7 @@ def goto(window, location):
             view = window.find_open_file(resource.path)
 
             if not view:
-                view = window.open_file(resource.path)
+                view = window.open_file(resource.path, flags=sublime.TRANSIENT)
 
             window.focus_view(view)
             show(view, line, column)
