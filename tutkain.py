@@ -666,7 +666,7 @@ class TutkainDisconnectCommand(WindowCommand):
                 user_session.terminate()
 
             sessions.deregister(window_id)
-            window.status_message('REPL disconnected.')
+            window.status_message('[Tutkain] REPL disconnected.')
 
 
 class TutkainNewScratchViewCommand(WindowCommand):
