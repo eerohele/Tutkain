@@ -504,7 +504,7 @@ class TutkainConnectCommand(WindowCommand):
                 with open(path, 'rb') as file:
                     op['content'] = base64.b64encode(file.read()).decode('utf-8')
             else:
-                op['content'] = 'Cg=='  # empty string
+                op['content'] = ''
 
             session.send(op, handler=lambda _: None)
 
