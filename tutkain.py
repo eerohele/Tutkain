@@ -359,8 +359,9 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
         else:
             session.send(
                 {'op': 'eval',
-                 'code': '''(run! (fn [[sym _]] (ns-unmap *ns* sym))
-                              (ns-publics *ns*))''',
+                 'code': '''(->> (ns-publics *ns*)
+                                 (filter (fn [[_ v]] (-> v meta :test)))
+                                 (run! (fn [[sym _]] (ns-unmap *ns* sym))))''',
                  'file': self.view.file_name()},
                 handler=lambda response: self.evaluate_view(session, response)
             )
