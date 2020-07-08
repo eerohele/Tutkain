@@ -105,8 +105,6 @@ def plugin_unloaded():
     for window in sublime.windows():
         window.run_command('tutkain_disconnect')
 
-    sessions.wipe()
-
     preferences = sublime.load_settings('Preferences.sublime-settings')
     preferences.clear_on_change('tutkain')
 
@@ -667,12 +665,7 @@ class TutkainDisconnectCommand(WindowCommand):
 
         if session is not None:
             session.output({'out': 'Disconnecting...\n'})
-            session.terminate()
-            user_session = sessions.get_by_owner(window_id, 'user')
-
-            if user_session:
-                user_session.terminate()
-
+            session.client.halt()
             sessions.deregister(window_id)
             window.status_message('[Tutkain] REPL disconnected.')
 
@@ -787,7 +780,10 @@ class TutkainEventListener(EventListener):
 
     def on_pre_close(self, view):
         if view.settings().get('tutkain_repl_output_view'):
-            sessions.terminate(view.window().id())
+            session = sessions.get_by_owner(view.window().id(), 'plugin')
+
+            if session:
+                session.client.halt()
 
 
 class TutkainExpandSelectionCommand(TextCommand):

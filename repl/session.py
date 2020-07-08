@@ -95,6 +95,3 @@ class Session():
 
     def is_denounced(self, response):
         return response.get('id') in self.errors
-
-    def terminate(self):
-        self.client.halt()

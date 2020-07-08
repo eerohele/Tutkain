@@ -28,20 +28,3 @@ def deregister(window_id):
             by_id.pop(session.id, None)
 
     by_owner.pop(window_id, None)
-
-
-def terminate(window_id):
-    for session in [get_by_owner(window_id, 'user'),
-                    get_by_owner(window_id, 'plugin')]:
-        if session:
-            session.terminate()
-
-    deregister(window_id)
-
-
-def wipe():
-    for id, session in by_id.items():
-        session.terminate()
-
-    by_owner.clear()
-    by_id.clear()
