@@ -486,9 +486,7 @@ class TutkainConnectCommand(WindowCommand):
         view.set_scratch(True)
         return view
 
-    def sideload_middleware(self, response):
-        session = sessions.get_by_owner(self.window.id(), 'plugin')
-
+    def sideload_middleware(self, session, response):
         if session.supports('sideloader-provide'):
             name = response['name']
 
@@ -517,15 +515,20 @@ class TutkainConnectCommand(WindowCommand):
         ):
             session.send(
                 {'op': 'sideloader-start'},
-                handler=lambda response: self.sideload_middleware(response)
+                handler=lambda response: self.sideload_middleware(session, response)
             )
 
+            def handler(response):
+                for session_name in ['sideloader', 'plugin', 'user']:
+                    session = sessions.get_by_owner(self.window.id(), session_name)
+                    session.set_info(response)
+
             session.send({
-                'op': 'add-middleware',
-                'middleware': ['tutkain.nrepl.middleware.test/wrap-test']
-            }, handler=lambda _: session.send(
-                {'op': 'describe'},
-                handler=lambda response: session.set_info(response))
+                    'op': 'add-middleware',
+                    'middleware': ['tutkain.nrepl.middleware.test/wrap-test']
+                }, handler=lambda _: session.send({
+                    'op': 'describe'
+                }, handler=handler)
             )
 
     def print_loop(self, recvq):
@@ -592,6 +595,16 @@ class TutkainConnectCommand(WindowCommand):
 
         view_registry[self.window.id()] = output
 
+    def initialize_sideloader(self):
+        session = sessions.get_by_owner(self.window.id(), 'sideloader')
+
+        def handler(response):
+            session.output(response)
+            session.set_info(response)
+            self.inject_middleware(session)
+
+        session.send({'op': 'describe'}, handler=handler)
+
     def run(self, host, port):
         window = self.window
 
@@ -600,11 +613,9 @@ class TutkainConnectCommand(WindowCommand):
         try:
             client = Client(host, int(port)).go()
 
-            plugin_session = client.clone_session()
-            sessions.register(window.id(), 'plugin', plugin_session)
-
-            user_session = client.clone_session()
-            sessions.register(window.id(), 'user', user_session)
+            sessions.register(window.id(), 'sideloader', client.clone_session())
+            sessions.register(window.id(), 'plugin', client.clone_session())
+            sessions.register(window.id(), 'user', client.clone_session())
 
             self.configure_output_views(host, port)
 
@@ -619,13 +630,7 @@ class TutkainConnectCommand(WindowCommand):
             print_loop.name = 'tutkain.print_loop'
             print_loop.start()
 
-            def handler(response):
-                plugin_session.set_info(response)
-                self.inject_middleware(plugin_session)
-                user_session.output(response)
-                user_session.set_info(response)
-
-            plugin_session.send({'op': 'describe'}, handler=handler)
+            self.initialize_sideloader()
         except ConnectionRefusedError:
             window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)

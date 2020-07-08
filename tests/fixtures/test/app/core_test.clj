@@ -14,3 +14,6 @@
   (is (= 4 (+ 2 2)))
   (is (= 0 (/ 4 0)))
   (is (= {:a 2} (update {:a 1} :a inc))))
+
+(deftest util
+  (is (= 1 (test-util/my-util-fn 1))))
