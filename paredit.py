@@ -320,13 +320,14 @@ def kill(view, edit):
 
         innermost = sexp.innermost(view, point, edge=True)
 
-        # Cursive only deletes until newline, we delete the contents of the sexp regardless of
-        # newlines. Not sure which is right, but this is easier to implement and makes more sense
-        # to me.
-        if point == innermost.open.begin() or point == innermost.close.end():
-            view.erase(edit, innermost.extent())
-        elif point == innermost.open.end() or point == innermost.close.begin():
-            view.erase(edit, Region(innermost.open.end(), innermost.close.begin()))
+        if innermost:
+            # Cursive only deletes until newline, we delete the contents of the sexp regardless of
+            # newlines. Not sure which is right, but this is easier to implement and makes more
+            # sense to me.
+            if point == innermost.open.begin() or point == innermost.close.end():
+                view.erase(edit, innermost.extent())
+            elif point == innermost.open.end() or point == innermost.close.begin():
+                view.erase(edit, Region(innermost.open.end(), innermost.close.begin()))
 
 
 def semicolon(view, edit):
