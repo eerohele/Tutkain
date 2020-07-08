@@ -1,5 +1,6 @@
-(ns core.test
-  (:require [clojure.test :refer [deftest is]]))
+(ns app.core-test
+  (:require [clojure.test :refer [deftest is]]
+            [app.test-util :as test-util]))
 
 (deftest ok
   (is (= 2 (+ 1 1))))
