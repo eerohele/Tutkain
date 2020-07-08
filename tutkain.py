@@ -1030,6 +1030,7 @@ class TutkainOpenDiffWindowCommand(TextCommand):
         window.set_tabs_visible(False)
         window.set_minimap_visible(False)
         window.set_status_bar_visible(False)
+        window.set_sidebar_visible(False)
         window.set_menu_visible(False)
 
         view = window.new_file()
