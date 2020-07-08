@@ -11,7 +11,7 @@
 
 (defn- pprint-expected
   [{:keys [actual expected] :as event}]
-  (if (= (first expected) '=)
+  (if (and (= (first expected) '=) (sequential? actual))
     (assoc event :expected (->> actual last second pprint/pprint with-out-str))
     (update event :expected str)))
 

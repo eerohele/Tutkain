@@ -133,7 +133,7 @@ class TestCommands(ViewTestCase):
         )
 
     def test_run_test_in_current_namespace(self):
-        content = '''(ns app.core-test
+        content = '''(ns mytest.core-test
         (:require [clojure.test :refer [deftest is]]))
 
         (deftest ok (is (=  2 (+ 1 1))))
