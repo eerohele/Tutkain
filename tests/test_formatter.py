@@ -23,11 +23,6 @@ class TestFormatter(TestCase):
         )
 
         self.assertEquals(
-            'Hello, world!',
-            format({'append': 'Hello, world!'})
-        )
-
-        self.assertEquals(
             'Execution error (ExceptionInfo) at user/eval96107 (REPL:1).\nBoom!',
             format({
                 'id': 1,
