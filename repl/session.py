@@ -12,12 +12,14 @@ class Session():
         self.op_count = 0
         self.lock = Lock()
         self.info = {}
+        self.pprint = False
 
     def supports(self, key):
         return 'ops' in self.info and key in self.info['ops']
 
     def set_info(self, info):
         self.info = info
+        self.pprint = self.supports_pretty_printing(info)
 
     def op_id(self):
         with self.lock:
@@ -25,9 +27,9 @@ class Session():
 
         return self.op_count
 
-    def supports_pretty_printing(self):
-        if 'versions' in self.info:
-            versions = self.info['versions']
+    def supports_pretty_printing(self, info):
+        if 'versions' in info:
+            versions = info['versions']
 
             if versions and 'nrepl' in versions:
                 v = versions.get('nrepl')
@@ -47,7 +49,7 @@ class Session():
         d['id'] = self.op_id()
 
         if d['op'] == 'eval':
-            if self.supports_pretty_printing():
+            if self.pprint:
                 d['nrepl.middleware.print/print'] = 'nrepl.util.print/pprint'
 
             d['nrepl.middleware.caught/print?'] = 'true'
