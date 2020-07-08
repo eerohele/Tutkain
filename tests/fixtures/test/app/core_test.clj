@@ -5,7 +5,8 @@
   (is (= 2 (+ 1 1))))
 
 (deftest nok
-  (is (= 3 (+ 1 1))))
+  (is (= 3 (+ 1 1)))
+  (is (empty? [1])))
 
 (deftest error
   (is (= {:a 1} {:a 2}))

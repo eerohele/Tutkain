@@ -10,8 +10,10 @@
 
 
 (defn- pprint-expected
-  [event]
-  (update event :expected (comp #(with-out-str (pprint/pprint %)) second)))
+  [{:keys [actual expected] :as event}]
+  (if (= (first expected) '=)
+    (assoc event :expected (->> actual last second pprint/pprint with-out-str))
+    (update event :expected str)))
 
 
 (defn- pprint-actual
