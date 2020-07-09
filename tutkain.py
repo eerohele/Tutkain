@@ -117,9 +117,7 @@ def print_characters(view, characters):
         })
 
 
-def append_to_view(window_id, characters):
-    view = view_registry.get(window_id)
-
+def append_to_view(view, characters):
     if view and characters:
         view.set_read_only(False)
         print_characters(view, characters)
@@ -133,13 +131,12 @@ def test_region_key(view, result_type):
 
 class TutkainClearOutputViewCommand(WindowCommand):
     def run(self):
-        view = view_registry.get(self.window.id())
-
-        if view:
-            view.set_read_only(False)
-            view.run_command('select_all')
-            view.run_command('right_delete')
-            view.set_read_only(True)
+        for view in [view_registry.get(self.window.id()), self.window.find_output_panel('tutkain')]:
+            if view:
+                view.set_read_only(False)
+                view.run_command('select_all')
+                view.run_command('right_delete')
+                view.set_read_only(True)
 
 
 def get_eval_region(view, region, scope='outermost'):
@@ -495,7 +492,7 @@ class TutkainConnectCommand(WindowCommand):
                 'name': name
             }
 
-            if name == 'tutkain/nrepl/middleware/test.clj':
+            if name in {'tutkain/nrepl/middleware/test.clj', 'tutkain/nrepl/middleware/tap.clj'}:
                 path = os.path.join(sublime.packages_path(), 'tutkain/clojure/src', name)
 
                 with open(path, 'rb') as file:
@@ -521,12 +518,16 @@ class TutkainConnectCommand(WindowCommand):
                     session = sessions.get_by_owner(self.window.id(), session_name)
                     session.set_info(response)
 
+                    if session_name == 'sideloader':
+                        session.send({'op': 'tutkain/add-tap'}, handler)
+
             session.send({
                     'op': 'add-middleware',
-                    'middleware': ['tutkain.nrepl.middleware.test/wrap-test']
-                }, handler=lambda _: session.send({
-                    'op': 'describe'
-                }, handler=handler)
+                    'middleware': [
+                        'tutkain.nrepl.middleware.test/wrap-test',
+                        'tutkain.nrepl.middleware.tap/wrap-tap',
+                    ]
+                }, handler=lambda response: session.send({'op': 'describe'}, handler=handler)
             )
 
     def print_loop(self, recvq):
@@ -540,30 +541,36 @@ class TutkainConnectCommand(WindowCommand):
 
             log.debug({'event': 'printer/recv', 'data': item})
 
-            if {'value', 'nrepl.middleware.caught/throwable', 'in', 'versions'} & item.keys():
-                append_to_view(window_id, formatter.format(item))
-            elif 'status' in item and 'namespace-not-found' in item['status']:
-                append_to_view(window_id, ':namespace-not-found')
-            elif item.get('status') == ['done']:
-                append_to_view(window_id, '\n')
-            else:
-                characters = formatter.format(item)
-                view = view_registry.get(window_id)
+            view = view_registry.get(window_id)
 
-                if view and characters:
-                    append_to_view(window_id, characters)
+            if view:
+                if 'tap' in item:
+                    view = self.window.find_output_panel('tutkain')
+                    self.window.run_command('show_panel', {'panel': 'output.tutkain'})
+                    append_to_view(view, item['tap'])
+                elif {'value', 'nrepl.middleware.caught/throwable', 'in', 'versions'} & item.keys():
+                    append_to_view(view, formatter.format(item))
+                elif 'status' in item and 'namespace-not-found' in item['status']:
+                    append_to_view(view, ':namespace-not-found')
+                elif item.get('status') == ['done']:
+                    append_to_view(view, '\n')
+                else:
+                    characters = formatter.format(item)
 
-                    size = view.size()
-                    key = str(uuid.uuid4())
-                    regions = [sublime.Region(size - len(characters), size)]
-                    scope = 'tutkain.repl.stderr' if 'err' in item else 'tutkain.repl.stdout'
+                    if characters:
+                        append_to_view(view, characters)
 
-                    view.add_regions(
-                        key,
-                        regions,
-                        scope=scope,
-                        flags=sublime.DRAW_NO_OUTLINE
-                    )
+                        size = view.size()
+                        key = str(uuid.uuid4())
+                        regions = [sublime.Region(size - len(characters), size)]
+                        scope = 'tutkain.repl.stderr' if 'err' in item else 'tutkain.repl.stdout'
+
+                        view.add_regions(
+                            key,
+                            regions,
+                            scope=scope,
+                            flags=sublime.DRAW_NO_OUTLINE
+                        )
 
         log.debug({'event': 'thread/exit'})
 
@@ -592,6 +599,13 @@ class TutkainConnectCommand(WindowCommand):
         self.window.focus_view(active_view)
 
         view_registry[self.window.id()] = output
+
+        panel = self.window.create_output_panel('tutkain')
+        panel.settings().set('line_numbers', False)
+        panel.settings().set('gutter', False)
+        panel.settings().set('is_widget', True)
+        panel.settings().set('scroll_past_end', False)
+        panel.assign_syntax('Clojure.sublime-syntax')
 
     def initialize_sideloader(self):
         session = sessions.get_by_owner(self.window.id(), 'sideloader')

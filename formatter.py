@@ -1,6 +1,8 @@
 def format(message):
     if 'value' in message:
         return message['value']
+    if 'tap' in message:
+        return message['tap']
     if 'nrepl.middleware.caught/throwable' in message:
         return message.get('nrepl.middleware.caught/throwable')
     if 'out' in message:
