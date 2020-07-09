@@ -673,7 +673,10 @@ class TutkainDisconnectCommand(WindowCommand):
             view.close()
 
         active_view = window.active_view()
-        active_view.run_command('tutkain_clear_test_markers')
+
+        if active_view:
+            active_view.run_command('tutkain_clear_test_markers')
+            clear_view_eval_status(active_view)
 
         window.set_layout({
             'cells': [[0, 0, 1, 1]],
@@ -681,7 +684,8 @@ class TutkainDisconnectCommand(WindowCommand):
             'rows': [0.0, 1.0]
         })
 
-        window.focus_view(active_view)
+        if active_view:
+            window.focus_view(active_view)
 
         if session is not None:
             session.output({'out': 'Disconnecting...\n'})
