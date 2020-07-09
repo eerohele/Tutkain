@@ -1064,4 +1064,11 @@ class TutkainOpenDiffWindowCommand(TextCommand):
         view.set_scratch(True)
         view.set_reference_document(reference.replace('&#39;', "'"))
         view.run_command('append', {'characters': actual.replace('&#39;', "'")})
+
+        # Hackity hack to try to ensure that the inline diff is open when the diff window opens.
+        #
+        # I have no idea why this works, or whether it actually even works.
+        view.run_command('next_modification')
+        view.show(0)
+
         view.run_command('toggle_inline_diff')
