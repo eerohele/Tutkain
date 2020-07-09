@@ -676,7 +676,6 @@ class TutkainDisconnectCommand(WindowCommand):
 
         if active_view:
             active_view.run_command('tutkain_clear_test_markers')
-            clear_view_eval_status(active_view)
 
         window.set_layout({
             'cells': [[0, 0, 1, 1]],
