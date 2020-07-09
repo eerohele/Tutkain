@@ -41,8 +41,8 @@
 
 
 (defn- add-result
-  [results result]
-  (swap! results update :results (fnil conj []) result))
+  [results id result]
+  (swap! results update id (fnil conj []) result))
 
 
 (defn wrap-test
@@ -50,7 +50,7 @@
   (fn [{:keys [op transport ns file] :as message}]
     (case op
       "tutkain/test"
-      (let [results (atom {:results []})
+      (let [results (atom {:fail [] :pass [] :error []})
             var-meta (atom nil)]
         (binding [test/report (fn [event*]
                                 (let [{:keys [type] :as event} (cond-> event* (seq file) (assoc :file file))]
@@ -60,13 +60,13 @@
                                     :end-test-var (reset! var-meta nil)
                                     :fail (do
                                             (test/inc-report-counter :fail)
-                                            (add-result results (-> event pprint-expected pprint-actual (assoc :var-meta @var-meta))))
+                                            (add-result results :fail (-> event pprint-expected pprint-actual (assoc :var-meta @var-meta))))
                                     :pass (do
                                             (test/inc-report-counter :pass)
-                                            (add-result results {:type :pass :line (line-number ns) :var-meta @var-meta}))
+                                            (add-result results :pass {:type :pass :line (line-number ns) :var-meta @var-meta}))
                                     :error (do
                                              (test/inc-report-counter :error)
-                                             (add-result results
+                                             (add-result results :error
                                                (-> event pprint-expected (update :actual #(with-out-str (stacktrace/print-stack-trace %))) (assoc :var-meta @var-meta))))
                                     :summary (swap! results assoc :value (-> event (dissoc :type :file) str))
                                     nil)))]
@@ -83,4 +83,7 @@
                              :requires {"ns" "The name of the namespace with the tests."}
                              :optional {"file" "The path to the Clojure source file with the tests."}
                              :returns {"status" "'done' when all tests have been run and results have been delivered to the client."
-                                       "results" "A map with test results."}}}})
+                                       "fail" "Test failures."
+                                       "errors" "Test errors."
+                                       "pass" "Test passes."
+                                       "value" "A summary of the test results."}}}})

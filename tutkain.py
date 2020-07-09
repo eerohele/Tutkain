@@ -249,41 +249,45 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
         if 'status' not in response:
             self.view.run_command('tutkain_clear_test_markers')
 
-        passes = []
-        failures = []
-        errors = []
+        results = {'fail': {}, 'error': {}, 'pass': {}}
 
-        if 'results' in response:
-            for result in response['results']:
-                if result['type'] == 'pass':
-                    line = result['line'] - 1
-                    point = self.view.text_point(line, 0)
+        if 'fail' in response:
+            for result in response['fail']:
+                line = result['line'] - 1
+                point = self.view.text_point(line, 0)
 
-                    passes.append({
+                results['fail'][line] = {
+                    'type': result['type'],
+                    'region': sublime.Region(point, point),
+                    'expected': result['expected'],
+                    'actual': result['actual']
+                }
+
+        if 'error' in response:
+            for result in response['error']:
+                line = result['var-meta']['line'] - 1
+                point = self.view.text_point(line, 0)
+
+                results['error'][line] = {
+                    'type': result['type'],
+                    'region': sublime.Region(point, point),
+                    'expected': result['expected'],
+                    'actual': result['actual']
+                }
+
+        if 'pass' in response:
+            for result in response['pass']:
+                line = result['line'] - 1
+                point = self.view.text_point(line, 0)
+
+                # Only add pass for line if there's no fail for the same line.
+                if line not in results['fail']:
+                    results['pass'][line] = {
                         'type': result['type'],
                         'region': sublime.Region(point, point)
-                    })
-                elif result['type'] == 'fail':
-                    line = result['line'] - 1
-                    point = self.view.text_point(line, 0)
+                    }
 
-                    failures.append({
-                        'type': result['type'],
-                        'region': sublime.Region(point, point),
-                        'expected': result['expected'],
-                        'actual': result['actual']
-                    })
-                elif result['type'] == 'error':
-                    line = result['var-meta']['line'] - 1
-                    point = self.view.text_point(line, 0)
-
-                    errors.append({
-                        'type': result['type'],
-                        'region': sublime.Region(point, point),
-                        'expected': result['expected'],
-                        'actual': result['actual']
-                    })
-
+            passes = results['pass'].values()
             if passes:
                 self.view.add_regions(
                     test_region_key(self.view, 'passes'),
@@ -292,6 +296,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
                     icon='circle'
                 )
 
+            failures = results['fail'].values()
             if failures:
                 self.view.add_regions(
                     test_region_key(self.view, 'failures'),
@@ -301,6 +306,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
                     annotations=[self.annotation(f) for f in failures]
                 )
 
+            errors = results['error'].values()
             if errors:
                 self.view.add_regions(
                     test_region_key(self.view, 'errors'),
