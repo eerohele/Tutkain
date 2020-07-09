@@ -371,11 +371,21 @@ CYCLE_ORDER = {
 
 def cycle_collection_type(view, edit):
     for region in view.sel():
-        sexp = innermost(view, region.begin())
+        point = region.begin()
 
-        if sexp:
-            open_bracket = view.substr(sexp.open)
-            new_open_bracket = CYCLE_ORDER[open_bracket]
-            new_close_bracket = OPEN.get(new_open_bracket[-1:])
-            view.replace(edit, sexp.close, new_close_bracket)
-            view.replace(edit, sexp.open, new_open_bracket)
+        if not ignore(view, point):
+            if view.match_selector(point, 'string') or view.match_selector(point - 1, 'string'):
+                edge = False
+            else:
+                edge = True
+
+            sexp = innermost(view, point, edge=edge)
+
+            if sexp:
+                open_bracket = view.substr(sexp.open)
+                new_open_bracket = CYCLE_ORDER[open_bracket]
+
+                if new_open_bracket[-1:] in OPEN:
+                    new_close_bracket = OPEN[new_open_bracket[-1:]]
+                    view.replace(edit, sexp.close, new_close_bracket)
+                    view.replace(edit, sexp.open, new_open_bracket)
