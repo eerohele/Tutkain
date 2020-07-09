@@ -78,7 +78,7 @@ def make_color_scheme(cache_dir):
                                 'name': 'Tutkain REPL Standard Error',
                                 'scope': 'tutkain.repl.stderr',
                                 'background': 'rgba(0, 0, 0, 0.01)',
-                                'foreground': 'crimson'
+                                'foreground': view.style().get('redish', 'crimson')
                             }]
                         })
                     )
