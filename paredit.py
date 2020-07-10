@@ -390,4 +390,3 @@ def kill_element(view, edit, forward):
                     sel.append(point)
 
                 view.erase(edit, element)
-                view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
