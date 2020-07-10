@@ -824,16 +824,6 @@ class TutkainExpandSelectionCommand(TextCommand):
                     selections.add(element)
 
 
-class TutkainActivateResultViewCommand(WindowCommand):
-    def run(self):
-        view = view_registry.get(self.window.id())
-
-        if view:
-            active_view = self.window.active_view()
-            self.window.focus_view(view)
-            self.window.focus_view(active_view)
-
-
 class TutkainInterruptEvaluationCommand(WindowCommand):
     def run(self):
         session = sessions.get_by_owner(self.window.id(), 'user')
