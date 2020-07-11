@@ -253,6 +253,7 @@ def extract_scope(view, point):
     max_size = view.size()
     begin = end = point
 
+    # TODO: Could we rewrite this to use find_by_selector()?
     while begin > 0:
         if ((view.match_selector(begin - 1, selector) and view.match_selector(begin, selector)) or
            view.match_selector(begin - 1, 'keyword.operator.macro')):
