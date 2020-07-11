@@ -79,6 +79,8 @@ class TestCommands(ViewTestCase):
         view_1 = '''(ns baz.quux) (defn plus [x y] (+ x y)) (comment (plus 1 2))'''
         self.set_view_content(view_1)
         self.view.run_command('tutkain_evaluate_view')
+        time.sleep(self.delay)
+
         self.set_selections((49, 59))
         self.view.run_command('tutkain_evaluate_form')
         time.sleep(self.delay)
