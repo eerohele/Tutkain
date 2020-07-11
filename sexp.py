@@ -331,6 +331,8 @@ def find_next_element(view, point):
             point += 1
         elif left_of_start(view, point):
             return innermost(view, point).extent()
+        elif inside_comment(view, point):
+            point = find_by_selector(view, point, 'source.clojure - comment')
         else:
             scope = extract_scope(view, point)
 
@@ -350,6 +352,8 @@ def find_previous_element(view, point):
             point -= 1
         elif right_of_end(view, point):
             return innermost(view, point).extent()
+        elif inside_comment(view, point - 1):
+            point = find_by_selector(view, point - 1, 'source.clojure - comment', False)
         else:
             scope = extract_scope(view, point - 1)
 
