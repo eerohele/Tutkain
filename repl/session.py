@@ -6,9 +6,10 @@ class Session():
     errors = dict()
     namespace = 'user'
 
-    def __init__(self, id, client):
+    def __init__(self, id, client, view):
         self.id = id
         self.client = client
+        self.view = view
         self.op_count = 0
         self.lock = Lock()
         self.info = {}
@@ -59,8 +60,9 @@ class Session():
 
         return d
 
-    def output(self, x):
-        self.client.recvq.put(x)
+    def output(self, message):
+        message['session'] = self.id
+        self.client.recvq.put(message)
 
     def send(self, op, handler=None):
         op = self.op(op)
@@ -77,7 +79,9 @@ class Session():
         if 'ns' in response:
             self.namespace = response['ns']
 
-        if id:
+        if not id:
+            self.client.recvq.put(response)
+        else:
             handler = self.handlers.get(id, self.client.recvq.put)
 
             try:

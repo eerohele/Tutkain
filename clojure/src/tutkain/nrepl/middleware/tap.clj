@@ -13,7 +13,9 @@
       "tutkain/add-tap"
       (add-tap
         (fn [value]
-          (transport/send transport {:tap (with-out-str (pprint/pprint value))})))
+          (let [tap (with-out-str (pprint/pprint value))
+                response (response-for message {:tap tap})]
+            (transport/send transport (dissoc response :id)))))
       (handler message))))
 
 

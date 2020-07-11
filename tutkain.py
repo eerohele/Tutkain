@@ -21,7 +21,6 @@ from . import formatter
 from . import indent
 from . import paredit
 from . import namespace
-from .repl import sessions
 from .repl import info
 from .repl import history
 from .repl.client import Client
@@ -29,7 +28,7 @@ from .repl.client import Client
 from .log import enable_debug, log
 
 
-view_registry = {}
+state = {'sessions_by_view': {}}
 
 
 def make_color_scheme(cache_dir):
@@ -129,14 +128,35 @@ def test_region_key(view, result_type):
     return '{}:{}'.format(view.file_name(), result_type)
 
 
+def get_active_repl_view():
+    return state.get('active_repl_view')
+
+
+def get_active_view_sessions():
+    view = get_active_repl_view()
+    return view and state['sessions_by_view'].get(view.id())
+
+
+def get_session_by_owner(owner):
+    sessions = get_active_view_sessions()
+    return sessions and sessions.get(owner)
+
+
 class TutkainClearOutputViewCommand(WindowCommand):
+    def clear_view(self, view):
+        if view:
+            view.set_read_only(False)
+            view.run_command('select_all')
+            view.run_command('right_delete')
+            view.set_read_only(True)
+
     def run(self):
-        for view in [view_registry.get(self.window.id()), self.window.find_output_panel('tutkain')]:
-            if view:
-                view.set_read_only(False)
-                view.run_command('select_all')
-                view.run_command('right_delete')
-                view.set_read_only(True)
+        session = get_session_by_owner('plugin')
+
+        if session:
+            self.clear_view(session.view)
+
+        self.clear_view(self.window.find_output_panel('tutkain'))
 
 
 def get_eval_region(view, region, scope='outermost'):
@@ -159,11 +179,10 @@ def get_eval_region(view, region, scope='outermost'):
 
 class TutkainEvaluateFormCommand(TextCommand):
     def run(self, edit, scope='outermost'):
-        window = self.view.window()
-        session = sessions.get_by_owner(window.id(), 'user')
+        session = get_session_by_owner('user')
 
         if session is None:
-            window.status_message('ERR: Not connected to a REPL.')
+            self.view.window().status_message('ERR: Not connected to a REPL.')
         else:
             for region in self.view.sel():
                 eval_region = get_eval_region(self.view, region, scope=scope)
@@ -206,7 +225,7 @@ class TutkainEvaluateViewCommand(TextCommand):
 
     def run(self, edit):
         window = self.view.window()
-        session = sessions.get_by_owner(window.id(), 'user')
+        session = get_session_by_owner('user')
 
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
@@ -353,7 +372,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
 
     def run(self, edit):
         window = self.view.window()
-        session = sessions.get_by_owner(window.id(), 'plugin')
+        session = get_session_by_owner('plugin')
 
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
@@ -457,7 +476,7 @@ class TutkainEvaluateInputCommand(WindowCommand):
         pass
 
     def run(self):
-        session = sessions.get_by_owner(self.window.id(), 'user')
+        session = get_session_by_owner('user')
 
         if session is None:
             self.window.status_message('ERR: Not connected to a REPL.')
@@ -475,18 +494,6 @@ class TutkainEvaluateInputCommand(WindowCommand):
 
 
 class TutkainConnectCommand(WindowCommand):
-    def create_output_view(self, host, port):
-        view = self.window.new_file()
-        view.set_name('REPL | {}:{}'.format(host, port))
-        view.settings().set('line_numbers', False)
-        view.settings().set('gutter', False)
-        view.settings().set('is_widget', True)
-        view.settings().set('scroll_past_end', False)
-        view.settings().set('tutkain_repl_output_view', True)
-        view.set_read_only(True)
-        view.set_scratch(True)
-        return view
-
     def sideload_middleware(self, session, response):
         if session.supports('sideloader-provide'):
             name = response['name']
@@ -508,7 +515,9 @@ class TutkainConnectCommand(WindowCommand):
 
             session.send(op, handler=lambda _: None)
 
-    def inject_middleware(self, session):
+    def inject_middleware(self, sessions):
+        session = sessions['sideloader']
+
         if (
             int(sublime.version()) >= 4073 and
             session.supports('sideloader-start') and
@@ -519,13 +528,13 @@ class TutkainConnectCommand(WindowCommand):
                 handler=lambda response: self.sideload_middleware(session, response)
             )
 
-            def handler(response):
-                for session_name in ['sideloader', 'plugin', 'user']:
-                    session = sessions.get_by_owner(self.window.id(), session_name)
+            def update_session_info(response):
+                for session in sessions.values():
                     session.set_info(response)
 
-                    if session_name == 'sideloader':
-                        session.send({'op': 'tutkain/add-tap'}, handler)
+            def handler(response):
+                update_session_info(response)
+                sessions['sideloader'].send({'op': 'tutkain/add-tap'}, update_session_info)
 
             session.send({
                     'op': 'add-middleware',
@@ -536,51 +545,53 @@ class TutkainConnectCommand(WindowCommand):
                 }, handler=lambda response: session.send({'op': 'describe'}, handler=handler)
             )
 
-    def print_loop(self, recvq):
-        window_id = self.window.id()
+    def print(self, view, item):
+        if view:
+            if {'value', 'nrepl.middleware.caught/throwable', 'in', 'versions'} & item.keys():
+                append_to_view(view, formatter.format(item))
+            elif 'status' in item and 'namespace-not-found' in item['status']:
+                append_to_view(view, ':namespace-not-found')
+            elif item.get('status') == ['done']:
+                append_to_view(view, '\n')
+            else:
+                characters = formatter.format(item)
 
+                if characters:
+                    append_to_view(view, characters)
+
+                    size = view.size()
+                    key = str(uuid.uuid4())
+                    regions = [sublime.Region(size - len(characters), size)]
+                    scope = 'tutkain.repl.stderr' if 'err' in item else 'tutkain.repl.stdout'
+
+                    view.add_regions(key, regions, scope=scope, flags=sublime.DRAW_NO_OUTLINE)
+
+    def print_loop(self, client):
         while True:
-            item = recvq.get()
+            item = client.recvq.get()
 
             if item is None:
                 break
 
             log.debug({'event': 'printer/recv', 'data': item})
 
-            view = view_registry.get(window_id)
+            session = client.sessions.get(item.get('session'))
 
-            if view:
-                if 'tap' in item:
-                    view = self.window.find_output_panel('tutkain')
-                    self.window.run_command('show_panel', {'panel': 'output.tutkain'})
-                    append_to_view(view, item['tap'])
-                elif {'value', 'nrepl.middleware.caught/throwable', 'in', 'versions'} & item.keys():
-                    append_to_view(view, formatter.format(item))
-                elif 'status' in item and 'namespace-not-found' in item['status']:
-                    append_to_view(view, ':namespace-not-found')
-                elif item.get('status') == ['done']:
-                    append_to_view(view, '\n')
+            if session:
+                if 'tap' in item and 'session' in item:
+                    view = get_active_repl_view()
+                    session_ids = view.settings().get('tutkain_session_ids')
+
+                    if view and item['session'] in session_ids:
+                        panel = self.window.find_output_panel('tutkain')
+                        self.window.run_command('show_panel', {'panel': 'output.tutkain'})
+                        append_to_view(panel, item['tap'])
                 else:
-                    characters = formatter.format(item)
-
-                    if characters:
-                        append_to_view(view, characters)
-
-                        size = view.size()
-                        key = str(uuid.uuid4())
-                        regions = [sublime.Region(size - len(characters), size)]
-                        scope = 'tutkain.repl.stderr' if 'err' in item else 'tutkain.repl.stdout'
-
-                        view.add_regions(
-                            key,
-                            regions,
-                            scope=scope,
-                            flags=sublime.DRAW_NO_OUTLINE
-                        )
+                    self.print(session.view, item)
 
         log.debug({'event': 'thread/exit'})
 
-    def configure_output_views(self, host, port):
+    def create_output_view(self, host, port):
         # Set up a two-row layout.
         #
         # TODO: Make configurable? This will clobber pre-existing layouts —
@@ -593,62 +604,83 @@ class TutkainConnectCommand(WindowCommand):
 
         active_view = self.window.active_view()
 
-        output = self.create_output_view(host, port)
-        output.assign_syntax('Clojure.sublime-syntax')
+        view_count = len(self.window.views_in_group(1))
+        suffix = '' if view_count == 0 else ' ({})'.format(view_count)
+
+        view = self.window.new_file()
+        view.set_name('REPL | {}:{}{}'.format(host, port, suffix))
+        view.settings().set('line_numbers', False)
+        view.settings().set('gutter', False)
+        view.settings().set('is_widget', True)
+        view.settings().set('scroll_past_end', False)
+        view.settings().set('tutkain_repl_output_view', True)
+        view.set_read_only(True)
+        view.set_scratch(True)
+
+        view.assign_syntax('Clojure.sublime-syntax')
 
         # Move the output view into the second row.
-        self.window.set_view_index(output, 1, 0)
+        self.window.set_view_index(view, 1, view_count)
 
         # Activate the output view and the view that was active prior to
         # creating the output view.
-        self.window.focus_view(output)
+        self.window.focus_view(view)
         self.window.focus_view(active_view)
 
-        view_registry[self.window.id()] = output
+        return view
 
-        panel = self.window.create_output_panel('tutkain')
-        panel.settings().set('line_numbers', False)
-        panel.settings().set('gutter', False)
-        panel.settings().set('is_widget', True)
-        panel.settings().set('scroll_past_end', False)
-        panel.assign_syntax('Clojure.sublime-syntax')
+    def create_tap_panel(self):
+        if not self.window.find_output_panel('tutkain'):
+            panel = self.window.create_output_panel('tutkain')
+            panel.settings().set('line_numbers', False)
+            panel.settings().set('gutter', False)
+            panel.settings().set('is_widget', True)
+            panel.settings().set('scroll_past_end', False)
+            panel.assign_syntax('Clojure.sublime-syntax')
 
-    def initialize_sideloader(self):
-        session = sessions.get_by_owner(self.window.id(), 'sideloader')
-
+    def initialize_sideloader(self, sessions):
         def handler(response):
-            session.output(response)
-            session.set_info(response)
-            self.inject_middleware(session)
+            sessions['sideloader'].output(response)
+            sessions['sideloader'].set_info(response)
+            self.inject_middleware(sessions)
 
-        session.send({'op': 'describe'}, handler=handler)
+        sessions['sideloader'].send({'op': 'describe'}, handler=handler)
 
     def run(self, host, port):
         window = self.window
 
-        window.run_command('tutkain_disconnect')
-
         try:
             client = Client(host, int(port)).go()
 
-            sessions.register(window.id(), 'sideloader', client.clone_session())
-            sessions.register(window.id(), 'plugin', client.clone_session())
-            sessions.register(window.id(), 'user', client.clone_session())
+            self.create_tap_panel()
+            view = self.create_output_view(host, port)
 
-            self.configure_output_views(host, port)
+            sessions_by_owner = {
+                'sideloader': client.clone_session(view),
+                'plugin': client.clone_session(view),
+                'user': client.clone_session(view)
+            }
+
+            state['sessions_by_view'][view.id()] = sessions_by_owner
+            state['active_repl_view'] = view
+
+            view.settings().set(
+                'tutkain_session_ids',
+                list(map(lambda session: session.id, sessions_by_owner.values()))
+            )
 
             # Start a worker thread that reads items from a queue and prints
             # them into an output panel.
             print_loop = Thread(
                 daemon=True,
                 target=self.print_loop,
-                args=(client.recvq,)
+                args=(client,)
             )
 
             print_loop.name = 'tutkain.print_loop'
             print_loop.start()
 
-            self.initialize_sideloader()
+            self.initialize_sideloader(sessions_by_owner)
         except ConnectionRefusedError:
             window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)
@@ -666,31 +698,30 @@ class TutkainDisconnectCommand(WindowCommand):
 
     def run(self):
         window = self.window
-        window_id = window.id()
-        session = sessions.get_by_owner(window_id, 'plugin')
-
-        for view in self.output_views():
-            view.close()
-
         active_view = window.active_view()
+        session = get_session_by_owner('plugin')
+
+        if session:
+            session.client.halt()
+            session.view.close()
+            state['sessions_by_view'].pop(session.view.id(), None)
 
         if active_view:
             active_view.run_command('tutkain_clear_test_markers')
-
-        window.set_layout({
-            'cells': [[0, 0, 1, 1]],
-            'cols': [0.0, 1.0],
-            'rows': [0.0, 1.0]
-        })
-
-        if active_view:
             window.focus_view(active_view)
 
-        if session is not None:
-            session.output({'out': 'Disconnecting...\n'})
-            session.client.halt()
-            sessions.deregister(window_id)
-            window.status_message('[Tutkain] REPL disconnected.')
+        # If this is the final REPL view, restore layout to single.
+        if not state['sessions_by_view']:
+            window.set_layout({
+                'cells': [[0, 0, 1, 1]],
+                'cols': [0.0, 1.0],
+                'rows': [0.0, 1.0]
+            })
+
+            # Destroy tap panel
+            self.window.destroy_output_panel('tutkain')
+
+        window.status_message('[Tutkain] REPL disconnected.')
 
 
 class TutkainNewScratchViewCommand(WindowCommand):
@@ -731,7 +762,7 @@ class TutkainViewEventListener(ViewEventListener):
             point = locations[0]
 
             if self.view.match_selector(point, 'source.clojure - string - comment'):
-                session = sessions.get_by_owner(self.view.window().id(), 'plugin')
+                session = get_session_by_owner('plugin')
 
                 if session and session.supports('completions'):
                     scope = sexp.extract_scope(self.view, point - 1)
@@ -762,7 +793,7 @@ def lookup(view, point, handler):
         symbol = view.substr(sexp.extract_symbol(view, point))
 
         if symbol:
-            session = sessions.get_by_owner(view.window().id(), 'plugin')
+            session = get_session_by_owner('plugin')
 
             # TODO: Cache lookup results?
             if session and session.supports('lookup'):
@@ -798,12 +829,16 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
 
 
 class TutkainEventListener(EventListener):
+    def on_activated(self, view):
+        if view.settings().get('tutkain_repl_output_view'):
+            state['active_repl_view'] = view
+
     def on_hover(self, view, point, hover_zone):
         lookup(view, point, lambda response: info.show_popup(view, point, response))
 
     def on_pre_close(self, view):
         if view.settings().get('tutkain_repl_output_view'):
-            session = sessions.get_by_owner(view.window().id(), 'plugin')
+            session = get_session_by_owner('plugin')
 
             if session:
                 session.client.halt()
@@ -826,7 +861,7 @@ class TutkainExpandSelectionCommand(TextCommand):
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
     def run(self):
-        session = sessions.get_by_owner(self.window.id(), 'user')
+        session = get_session_by_owner('user')
 
         if session is None:
             self.window.status_message('ERR: Not connected to a REPL.')

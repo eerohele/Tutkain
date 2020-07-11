@@ -1,3 +1,4 @@
+from inspect import cleandoc
 import sublime
 import time
 
@@ -18,10 +19,9 @@ class TestCommands(ViewTestCase):
             {'host': 'localhost', 'port': 1234}
         )
 
-    def view_content(self):
-        view = tutkain.view_registry.get(self.view.window().id())
-
-        if view:
+    def repl_view_content(self):
+        if 'active_repl_view' in tutkain.state:
+            view = tutkain.get_active_repl_view()
             return view.substr(sublime.Region(0, view.size()))
 
     @classmethod
@@ -29,7 +29,6 @@ class TestCommands(ViewTestCase):
         if self.view:
             self.view.window().run_command('tutkain_disconnect')
             self.view.window().run_command('close_file')
-            tutkain.view_registry.clear()
 
     def setUp(self):
         super().setUp()
@@ -43,7 +42,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.view_content(),
+            self.repl_view_content(),
             '''=> (+ 1 2)\n3\n'''
         )
 
@@ -53,14 +52,14 @@ class TestCommands(ViewTestCase):
         self.view.run_command('tutkain_evaluate_view')
         time.sleep(self.delay)
 
-        self.assertEquals(self.view_content(), '')
+        self.assertEquals(self.repl_view_content(), '')
 
         self.set_selections((49, 59))
         self.view.run_command('tutkain_evaluate_form')
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.view_content(),
+            self.repl_view_content(),
             '''app.core=> (square 2)\n4\n'''
         )
 
@@ -73,7 +72,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(
             '''foo.bar=> (square 2)\n:namespace-not-found\n''',
-            self.view_content()
+            self.repl_view_content()
         )
 
     def test_evaluate_form_switch_views(self):
@@ -86,7 +85,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(
             '''baz.quux=> (plus 1 2)\n3\n''',
-            self.view_content()
+            self.repl_view_content()
         )
 
         self.view.window().run_command('tutkain_clear_output_view')
@@ -100,7 +99,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(
             '''qux.zot=> (minus 4 3)\n1\n''',
-            self.view_content()
+            self.repl_view_content()
         )
 
         self.view.window().run_command('tutkain_clear_output_view')
@@ -113,7 +112,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(
             '''baz.quux=> (plus 1 2)\n3\n''',
-            self.view_content()
+            self.repl_view_content()
         )
 
     def test_evaluate_view_with_error(self):
@@ -123,12 +122,12 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertRegex(
-            self.view_content(),
+            self.repl_view_content(),
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
         )
 
         self.assertRegex(
-            self.view_content(),
+            self.repl_view_content(),
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*'
         )
 
@@ -144,7 +143,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.view_content().splitlines()[-1],
+            self.repl_view_content().splitlines()[-1],
             '''{:test 2, :pass 1, :fail 1, :error 0}'''
         )
 
@@ -159,7 +158,7 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertEquals(
-            self.view_content().splitlines()[-1],
+            self.repl_view_content().splitlines()[-1],
             '''{:test 1, :pass 0, :fail 0, :error 1}'''
         )
 
@@ -174,6 +173,109 @@ class TestCommands(ViewTestCase):
         time.sleep(self.delay)
 
         self.assertRegex(
-            self.view_content(),
+            self.repl_view_content(),
             r'.*Execution error .*InterruptedException\).*'
         )
+
+
+class TestMultipleReplViews(ViewTestCase):
+    delay = 0.25
+
+    def content(self, view):
+        return view.substr(sublime.Region(0, view.size()))
+
+    def setUp(self):
+        super().setUp()
+        self.view.window().run_command('tutkain_clear_output_view')
+
+    def tearDown(self):
+        super().tearDown()
+
+        if self.view:
+            window = self.view.window()
+            window.run_command('tutkain_disconnect')
+
+    def test_evaluate(self):
+        self.view.window().run_command('tutkain_connect', {'host': 'localhost', 'port': 1234})
+        repl_view_1 = tutkain.get_active_repl_view()
+
+        content = cleandoc('''
+        (remove-ns 'app.core)
+
+        (ns app.core)
+
+        (defn square
+          [x]
+          (* x x))
+
+        (comment
+          (square 2)
+          (square 4)
+          (tap> (square 8))
+          )
+        ''')
+
+        self.set_view_content(content)
+
+        self.view.run_command('tutkain_evaluate_view')
+        time.sleep(self.delay)
+
+        self.set_selections((80, 90))
+
+        self.view.run_command('tutkain_evaluate_form')
+        time.sleep(self.delay)
+
+        self.assertEquals('''Clojure 1.10.1
+nREPL 0.8.0-alpha5
+app.core=> (square 2)
+4\n''', self.content(repl_view_1))
+
+        self.view.window().run_command('tutkain_connect', {'host': 'localhost', 'port': 1234})
+        time.sleep(self.delay)
+        repl_view_2 = tutkain.get_active_repl_view()
+
+        self.set_selections((93, 103))
+
+        self.view.run_command('tutkain_evaluate_form')
+        time.sleep(self.delay)
+
+        self.assertEquals('''Clojure 1.10.1
+nREPL 0.8.0-alpha5
+app.core=> (square 4)
+16\n''', self.content(repl_view_2))
+
+        # REPL view 1 content remains the same
+        self.assertEquals('''Clojure 1.10.1
+nREPL 0.8.0-alpha5
+app.core=> (square 2)
+4\n''', self.content(repl_view_1))
+
+        # Evaluate (tap> ,,,)
+        self.set_selections((106, 123))
+        self.view.run_command('tutkain_evaluate_form')
+        time.sleep(self.delay)
+
+        panel = self.view.window().find_output_panel('tutkain')
+
+        # Tap is in the tap panel only once
+        self.assertEquals('64\n', self.content(panel))
+
+        self.view.window().focus_view(repl_view_1)
+        self.view.window().focus_view(self.view)
+        self.set_selections((93, 103))
+        self.view.run_command('tutkain_evaluate_form')
+        time.sleep(self.delay)
+
+        self.assertEquals('''Clojure 1.10.1
+nREPL 0.8.0-alpha5
+app.core=> (square 4)
+16
+app.core=> (tap> (square 8))
+true\n''', self.content(repl_view_2))
+
+        self.assertEquals('''Clojure 1.10.1
+nREPL 0.8.0-alpha5
+app.core=> (square 2)
+4
+app.core=> (square 4)
+16\n''', self.content(repl_view_1))

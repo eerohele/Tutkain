@@ -5,7 +5,6 @@ from threading import Thread, Event
 from . import bencode
 from ..log import log
 from .session import Session
-from . import sessions
 
 
 class Client(object):
@@ -22,6 +21,8 @@ class Client(object):
     the socket connection. Client is a context manager, so you can use it
     with the `with` statement.
     '''
+
+    sessions = {}
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -52,10 +53,12 @@ class Client(object):
         self.recvq = queue.Queue()
         self.stop_event = Event()
 
-    def clone_session(self):
+    def clone_session(self, view):
         self.sendq.put({'op': 'clone'})
         id = self.recvq.get().get('new-session')
-        return Session(id, self)
+        session = Session(id, self, view)
+        self.sessions[session.id] = session
+        return session
 
     def go(self):
         self.connect()
@@ -89,7 +92,7 @@ class Client(object):
 
     def handle(self, response):
         id = response.get('session')
-        session = sessions.get_by_id(id)
+        session = self.sessions.get(id)
 
         if session:
             session.handle(response)
