@@ -196,6 +196,7 @@ class TestMultipleReplViews(ViewTestCase):
         if self.view:
             window = self.view.window()
             window.run_command('tutkain_disconnect')
+            window.run_command('tutkain_disconnect')
 
     def test_evaluate(self):
         self.view.window().run_command('tutkain_connect', {'host': 'localhost', 'port': 1234})
