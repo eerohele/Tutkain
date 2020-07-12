@@ -70,6 +70,16 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // Show unsuccessful tests.
+    //
+    // After running tests, run this command to show a list of unsuccessful tests (failures and
+    // errors) and navigate between them.
+    {
+        "keys": ["ctrl+c", "ctrl+u"],
+        "command": "tutkain_show_unsuccessful_tests",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
     // Interrupt any ongoing evaluation.
     {
         "keys": ["ctrl+c", "ctrl+r"],

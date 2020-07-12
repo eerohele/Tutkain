@@ -1096,3 +1096,28 @@ class TutkainOpenDiffWindowCommand(TextCommand):
         view.show(0)
 
         view.run_command('toggle_inline_diff')
+
+
+class TutkainShowUnsuccessfulTestsCommand(TextCommand):
+    def get_preview(self, region):
+        line = self.view.rowcol(region.begin())[0] + 1
+        return '{}: {}'.format(line, self.view.substr(self.view.line(region)).lstrip())
+
+    def run(self, args):
+        view = self.view
+        failures = view.get_regions(test_region_key(view, 'failures'))
+        errors = view.get_regions(test_region_key(view, 'errors'))
+        regions = failures + errors
+
+        if regions:
+            regions.sort()
+
+            def goto(i):
+                view.set_viewport_position(view.text_to_layout(regions[i].begin()))
+
+            view.window().show_quick_panel(
+                [self.get_preview(region) for region in regions],
+                goto,
+                flags=sublime.MONOSPACE_FONT,
+                on_highlight=goto
+            )
