@@ -299,6 +299,20 @@ class TestParedit(ViewTestCase):
         self.assertEquals('(a (b\n     ;; c\n     (d)))', self.view_content())
         self.assertEquals([(5, 5)], self.selections())
 
+    def test_forward_slurp_discard(self):
+        self.set_view_content('(foo (bar) #_(baz))')
+        self.set_selections((9, 9))
+        self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('(foo (bar #_(baz)))', self.view_content())
+        self.assertEquals([(9, 9)], self.selections())
+
+    def test_forward_slurp_reader_conditional(self):
+        self.set_view_content('(foo (bar) #?(:cljs baz))')
+        self.set_selections((9, 9))
+        self.view.run_command('tutkain_paredit_forward_slurp')
+        self.assertEquals('(foo (bar #?(:cljs baz)))', self.view_content())
+        self.assertEquals([(9, 9)], self.selections())
+
     def test_forward_slurp_multiple_cursors(self):
         self.set_view_content('(a (b) c) (d (e) f)')
         self.set_selections((5, 5), (15, 15))
@@ -324,6 +338,20 @@ class TestParedit(ViewTestCase):
         self.view.run_command('tutkain_paredit_backward_slurp')
         self.assertEquals('(a\n  ((b)\n   ;; c\n   d))', self.view_content())
         self.assertEquals(self.selections(), [(19, 19)])
+
+    def test_backward_slurp_discard(self):
+        self.set_view_content('(foo #_(bar) (baz))')
+        self.set_selections((14, 14))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('(foo (#_(bar) baz))', self.view_content())
+        self.assertEquals([(14, 14)], self.selections())
+
+    def test_backward_slurp_reader_conditional(self):
+        self.set_view_content('(foo #?(:cljs bar) (baz))')
+        self.set_selections((20, 20))
+        self.view.run_command('tutkain_paredit_backward_slurp')
+        self.assertEquals('(foo (#?(:cljs bar) baz))', self.view_content())
+        self.assertEquals([(20, 20)], self.selections())
 
     def test_backward_slurp_numbers(self):
         self.set_view_content('(1/2 (b))')

@@ -244,6 +244,10 @@ class TestSexp(ViewTestCase):
         self.assertEquals(sexp.find_next_element(self.view, 4), Region(5, 9))
         self.set_view_content('''(foo #'bar baz)''')
         self.assertEquals(sexp.find_next_element(self.view, 4), Region(5, 10))
+        self.set_view_content('''(foo #_(bar) baz)''')
+        self.assertEquals(sexp.find_next_element(self.view, 4), Region(5, 12))
+        self.set_view_content('''(foo #?(:cljs bar) baz)''')
+        self.assertEquals(sexp.find_next_element(self.view, 4), Region(5, 18))
 
     def test_find_previous_element(self):
         self.set_view_content('a')
@@ -284,3 +288,7 @@ class TestSexp(ViewTestCase):
         self.assertEquals(sexp.find_previous_element(self.view, 11), Region(5, 10))
         self.set_view_content('(foo "bar")')
         self.assertEquals(sexp.find_previous_element(self.view, 10), Region(5, 10))
+        self.set_view_content('''(foo #_(bar) baz)''')
+        self.assertEquals(sexp.find_previous_element(self.view, 13), Region(5, 12))
+        self.set_view_content('''(foo #?(:cljs bar) baz)''')
+        self.assertEquals(sexp.find_previous_element(self.view, 19), Region(5, 18))

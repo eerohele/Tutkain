@@ -32,7 +32,15 @@ class Sexp():
             self.view.match_selector(begin - 1, 'keyword.operator.macro') or
             self.view.substr(begin - 1) == '#'
         ):
-            begin = begin - 1
+            # Find the first point that contains a character other than a macro character
+            boundary = find_by_selector(
+                self.view,
+                begin - 1,
+                'source - keyword.operator.macro',
+                forward=False
+            )
+
+            begin = max(boundary + 1, 0)
 
         return Region(begin, region.end())
 
@@ -67,6 +75,8 @@ def find_by_selector(view, start_point, selector, forward=True):
             point += 1
         else:
             point -= 1
+
+    return -1
 
 
 def find_open(view, start_point):
@@ -203,7 +213,8 @@ def left_of_start(view, point):
     return (
         view.match_selector(point, BEGIN_SELECTOR) or
         (view.match_selector(point, 'keyword.operator.macro')
-            and view.match_selector(point + 1, BEGIN_SELECTOR))
+            and (view.match_selector(point + 1, BEGIN_SELECTOR) or
+                 view.match_selector(point + 2, BEGIN_SELECTOR)))
     )
 
 
