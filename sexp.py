@@ -40,6 +40,9 @@ class Sexp():
         return other and self.extent() == other.extent()
 
 
+IGNORE_SELECTOR = 'string - punctuation.definition.string.begin | comment'
+
+
 def inside_string(view, point):
     return view.match_selector(point, 'string - punctuation.definition.string.begin')
 
@@ -49,7 +52,7 @@ def inside_comment(view, point):
 
 
 def ignore(view, point):
-    return inside_string(view, point) or inside_comment(view, point)
+    return view.match_selector(point, IGNORE_SELECTOR)
 
 
 def find_by_selector(view, start_point, selector, forward=True):
@@ -73,15 +76,13 @@ def find_open(view, start_point):
     while point > 0:
         char = view.substr(point - 1)
 
-        if inside_string(view, point):
-            point -= 1
-        elif char in CLOSE:
+        if char in CLOSE and not ignore(view, point - 1):
             stack += 1
             point -= 1
-        elif stack > 0 and char in OPEN:
+        elif stack > 0 and char in OPEN and not ignore(view, point - 1):
             stack -= 1
             point -= 1
-        elif stack == 0 and char in OPEN:
+        elif stack == 0 and char in OPEN and not ignore(view, point - 1):
             return char, Region(point - 1, point)
         else:
             point -= 1
@@ -100,15 +101,13 @@ def find_close(view, start_point, close=None):
     while point < max_point:
         char = view.substr(point)
 
-        if inside_string(view, point):
-            point += 1
-        elif char == CLOSE[close]:
+        if char == CLOSE[close] and not ignore(view, point):
             stack += 1
             point += 1
-        elif stack > 0 and char == close:
+        elif stack > 0 and char == close and not ignore(view, point):
             stack -= 1
             point += 1
-        elif stack == 0 and char == close:
+        elif stack == 0 and char == close and not ignore(view, point):
             return Region(point, point + 1)
         else:
             point += 1
