@@ -226,7 +226,7 @@ def find_adjacent_element(view, point):
 SELECTOR = 'meta.reader-form | meta.metadata | meta.quoted | meta.deref'
 
 
-def expand_to_selector(view, start_point, selector):
+def expand_by_selector(view, start_point, selector):
     point = start_point
     max_point = view.size()
     begin = 0
@@ -262,7 +262,7 @@ def find_next_element(view, point):
                 print(point, innermost(view, point).extent())
                 return innermost(view, point).extent()
             elif view.match_selector(point, SELECTOR):
-                return expand_to_selector(view, point, SELECTOR)
+                return expand_by_selector(view, point, SELECTOR)
             else:
                 point += 1
 
@@ -277,7 +277,7 @@ def find_previous_element(view, point):
             elif view.match_selector(point - 1, 'meta.sexp.end'):
                 return innermost(view, point).extent()
             elif view.match_selector(point - 1, SELECTOR):
-                return expand_to_selector(view, point - 1, SELECTOR)
+                return expand_by_selector(view, point - 1, SELECTOR)
             else:
                 point -= 1
 
