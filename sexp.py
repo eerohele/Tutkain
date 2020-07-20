@@ -1,5 +1,5 @@
 import re
-from sublime import CLASS_WORD_START, Region
+from sublime import CLASS_WORD_START, CLASS_WORD_END, Region
 
 
 OPEN = {'(': ')', '[': ']', '{': '}'}
@@ -28,19 +28,19 @@ class Sexp():
     def absorb_macro_characters(self, region):
         begin = region.begin()
 
-        if (
-            self.view.match_selector(begin - 1, 'keyword.operator.macro') or
-            self.view.substr(begin - 1) == '#'
+        if self.view.match_selector(
+            begin - 1,
+            'meta.sexp.prefix | meta.quoted.begin | meta.metadata.begin'
         ):
             # Find the first point that contains a character other than a macro character
             boundary = find_by_selector(
                 self.view,
                 begin - 1,
-                'source - keyword.operator.macro',
+                '(- meta.sexp.prefix & - meta.quoted.begin & - meta.metadata.begin)',
                 forward=False
-            )
+            ) + 1
 
-            begin = max(boundary + 1, 0)
+            begin = max(boundary, 0)
 
         return Region(begin, region.end())
 
@@ -48,19 +48,19 @@ class Sexp():
         return other and self.extent() == other.extent()
 
 
-IGNORE_SELECTOR = 'string - punctuation.definition.string.begin | comment'
-
-
 def inside_string(view, point):
     return view.match_selector(point, 'string - punctuation.definition.string.begin')
 
 
 def inside_comment(view, point):
-    return view.match_selector(point, 'comment')
+    return view.match_selector(point, 'comment.line')
 
 
 def ignore(view, point):
-    return view.match_selector(point, IGNORE_SELECTOR)
+    return view.match_selector(
+        point,
+        'string - punctuation.definition.string.begin | comment.line'
+    )
 
 
 def find_by_selector(view, start_point, selector, forward=True):
@@ -126,9 +126,12 @@ def find_close(view, start_point, close=None):
 def move_inside(view, point, edge):
     if not edge or inside_string(view, point):
         return point
-    elif left_of_start(view, point):
+    elif view.match_selector(
+        point,
+        'meta.sexp.begin | meta.sexp.prefix | meta.quoted.begin | meta.metadata.begin'
+    ):
         return view.find(r'[\(\[\{\"]', point).end()
-    elif right_of_end(view, point):
+    elif view.match_selector(point - 1, 'meta.sexp.end'):
         return point - 1
     else:
         return point
@@ -197,117 +200,6 @@ def outermost(view, point, edge=True, ignore={}):
             previous = current
 
 
-BEGIN_SELECTOR = '''punctuation.definition.string.begin - constant.character.escape |
-                    punctuation.section.parens.begin |
-                    punctuation.section.brackets.begin |
-                    punctuation.section.braces.begin'''
-
-
-END_SELECTOR = '''punctuation.definition.string.end - constant.character.escape |
-                  punctuation.section.parens.end |
-                  punctuation.section.brackets.end |
-                  punctuation.section.braces.end'''
-
-
-def left_of_start(view, point):
-    return (
-        view.match_selector(point, BEGIN_SELECTOR) or
-        (view.match_selector(point, 'keyword.operator.macro')
-            and (view.match_selector(point + 1, BEGIN_SELECTOR) or
-                 view.match_selector(point + 2, BEGIN_SELECTOR)))
-    )
-
-
-def right_of_end(view, point):
-    return view.match_selector(point - 1, END_SELECTOR)
-
-
-def is_whitespacey(view, point):
-    return re.match(r'[\s,]', view.substr(point))
-
-
-def extract_scope(view, point):
-    '''Like View.extract_scope(), but less fussy.
-
-    For example, take this Clojure keyword:
-
-        :foo
-
-    At point 0, the scope name is:
-
-        'source.clojure constant.other.keyword.clojure punctuation.definition.keyword.clojure '
-
-    At point 1, the scope name is:
-
-        'source.clojure constant.other.keyword.clojure '
-
-    View.extract_scope() considers them different scopes, even though the second part of the scope
-    name (constant.other.keyword.clojure) is the same.
-
-    This function considers two adjacent points as having the same scope if the second part of the
-    scope name is the same.
-    '''
-    if ignore(view, point):
-        return None
-
-    scope_name = view.scope_name(point)
-    scopes = scope_name.split()
-
-    try:
-        selector = scopes[1]
-    except IndexError:
-        # If this point has a single scope name (in practice, 'source.clojure'), there's no way we
-        # can know the extent of the syntax scope of this point, so we bail out.
-        return None
-
-    max_size = view.size()
-    begin = end = point
-
-    # TODO: Could we rewrite this to use find_by_selector()?
-    while begin > 0:
-        if ((view.match_selector(begin - 1, selector) and view.match_selector(begin, selector)) or
-           view.match_selector(begin - 1, 'keyword.operator.macro')):
-            begin -= 1
-        else:
-            break
-
-    while end < max_size:
-        if view.match_selector(end, 'keyword.operator.macro'):
-            end = find_by_selector(view, end, 'source - keyword.operator.macro') + 1
-        elif (
-            (view.match_selector(end - 1, selector) and not view.match_selector(end, selector)) or
-            re.match(RE_NON_SYMBOL_CHARACTERS, view.substr(end))
-        ):
-            break
-        else:
-            end += 1
-
-    return Region(begin, end)
-
-
-def is_symbol_character(view, point):
-    return not re.match(RE_NON_SYMBOL_CHARACTERS, view.substr(point))
-
-
-def extract_symbol(view, point):
-    begin = end = point
-    max_size = view.size()
-
-    while begin > 0:
-        if re.match(RE_NON_SYMBOL_CHARACTERS, view.substr(begin - 1)):
-            break
-        else:
-            begin -= 1
-
-    while end < max_size:
-        if is_symbol_character(view, end - 1) and not is_symbol_character(view, end):
-            break
-        else:
-            end += 1
-
-    return Region(begin, end)
-
-
 def adjacent_element_direction(view, point):
     if re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
         return 1
@@ -331,59 +223,63 @@ def find_adjacent_element(view, point):
         return None
 
 
-# TODO: The conditional logic here is a bit convoluted. Can we make it more straightforward?
-def find_next_element(view, point):
-    max_size = view.size()
+SELECTOR = 'meta.reader-form | meta.metadata | meta.quoted | meta.deref'
 
-    while point < max_size:
-        if view.match_selector(point, END_SELECTOR):
-            return None
-        elif is_whitespacey(view, point):
-            point += 1
-        elif left_of_start(view, point):
-            return innermost(view, point).extent()
-        elif inside_comment(view, point):
-            end = find_by_selector(view, point, 'source.clojure - comment')
 
-            if end == -1:
-                return None
-            else:
-                point = end
+def expand_to_selector(view, start_point, selector):
+    point = start_point
+    max_point = view.size()
+    begin = 0
+    end = max_point
+
+    while point > 0:
+        if view.match_selector(point, selector) and not view.match_selector(point - 1, selector):
+            begin = point
+            break
         else:
-            scope = extract_scope(view, point)
+            point -= 1
 
-            if scope:
-                return scope
-            elif is_symbol_character(view, point):
-                return extract_symbol(view, point)
-            else:
+    while point < max_point:
+        if view.match_selector(point - 1, selector) and not view.match_selector(point, selector):
+            end = point
+            break
+        else:
+            point += 1
+
+    return Region(begin, end)
+
+
+def find_next_element(view, point):
+    max_point = view.size()
+
+    if inside_string(view, point):
+        return view.word(view.find_by_class(point, True, CLASS_WORD_END))
+    else:
+        while point <= max_point:
+            if view.match_selector(point, 'meta.sexp.end'):
                 return None
+            elif view.match_selector(point, 'meta.sexp.begin | meta.sexp.prefix'):
+                print(point, innermost(view, point).extent())
+                return innermost(view, point).extent()
+            elif view.match_selector(point, SELECTOR):
+                return expand_to_selector(view, point, SELECTOR)
+            else:
+                point += 1
 
 
 def find_previous_element(view, point):
-    while point > 0:
-        if view.match_selector(point - 1, BEGIN_SELECTOR):
-            return None
-        elif is_whitespacey(view, point - 1):
-            point -= 1
-        elif right_of_end(view, point):
-            return innermost(view, point).extent()
-        elif inside_comment(view, point - 1):
-            begin = find_by_selector(view, point - 1, 'source.clojure - comment', False)
-
-            if begin == -1:
+    if inside_string(view, point):
+        return view.word(view.find_by_class(point, False, CLASS_WORD_START))
+    else:
+        while point > 0:
+            if view.match_selector(point - 1, 'meta.sexp.begin | meta.sexp.prefix'):
                 return None
+            elif view.match_selector(point - 1, 'meta.sexp.end'):
+                return innermost(view, point).extent()
+            elif view.match_selector(point - 1, SELECTOR):
+                return expand_to_selector(view, point - 1, SELECTOR)
             else:
-                point = begin
-        else:
-            scope = extract_scope(view, point - 1)
-
-            if scope:
-                return scope
-            elif is_symbol_character(view, point - 1):
-                return extract_symbol(view, point)
-            else:
-                return None
+                point -= 1
 
 
 CYCLE_ORDER = {

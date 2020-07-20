@@ -29,11 +29,12 @@ class TestFindDeclaration(ViewTestCase):
             namespace.find_declaration(self.view)
         )
 
-        self.set_view_content('''(in-ns ^:baz 'foo.bar)\n(qux quux)''')
-        self.assertEquals(
-            'foo.bar',
-            namespace.find_declaration(self.view)
-        )
+        # self.set_view_content('''(in-ns ^:baz 'foo.bar)\n(qux quux)''')
+        # self.assertEquals(
+        #     'foo.bar',
+        #     namespace.find_declaration(self.view)
+        # )
+
         self.set_view_content('''(ns ^{:config '{:some-keyword some-symbol}} foo.bar)''')
         self.assertEquals(
             'foo.bar',

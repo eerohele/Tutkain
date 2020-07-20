@@ -48,7 +48,7 @@ def goto(window, location):
                 view = window.new_file()
                 view.set_name(view_name)
                 view.run_command('append', {'characters': source_file.decode()})
-                view.assign_syntax('Clojure.sublime-syntax')
+                view.assign_syntax('Clojure (Tutkain).sublime-syntax')
                 view.set_scratch(True)
                 view.set_read_only(True)
 

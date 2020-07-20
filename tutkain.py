@@ -490,7 +490,7 @@ class TutkainEvaluateInputCommand(WindowCommand):
             )
 
             view.settings().set('tutkain_repl_input_panel', True)
-            view.assign_syntax('Clojure.sublime-syntax')
+            view.assign_syntax('Clojure (Tutkain).sublime-syntax')
 
 
 class TutkainConnectCommand(WindowCommand):
@@ -617,7 +617,7 @@ class TutkainConnectCommand(WindowCommand):
         view.set_read_only(True)
         view.set_scratch(True)
 
-        view.assign_syntax('Clojure.sublime-syntax')
+        view.assign_syntax('Clojure (Tutkain).sublime-syntax')
 
         # Move the output view into the second row.
         self.window.set_view_index(view, 1, view_count)
@@ -636,7 +636,7 @@ class TutkainConnectCommand(WindowCommand):
             panel.settings().set('gutter', False)
             panel.settings().set('is_widget', True)
             panel.settings().set('scroll_past_end', False)
-            panel.assign_syntax('Clojure.sublime-syntax')
+            panel.assign_syntax('Clojure (Tutkain).sublime-syntax')
 
     def initialize_sideloader(self, sessions):
         def handler(response):
@@ -729,7 +729,7 @@ class TutkainNewScratchViewCommand(WindowCommand):
         view = self.window.new_file()
         view.set_name('*scratch*')
         view.set_scratch(True)
-        view.assign_syntax('Clojure.sublime-syntax')
+        view.assign_syntax('Clojure (Tutkain).sublime-syntax')
         self.window.focus_view(view)
 
 
@@ -759,13 +759,13 @@ class TutkainViewEventListener(ViewEventListener):
     def on_query_completions(self, prefix, locations):
         # CompletionList requires Sublime Text >= 4050, hence the try/except.
         try:
-            point = locations[0]
+            point = locations[0] - 1
 
-            if self.view.match_selector(point, 'source.clojure - string - comment'):
+            if self.view.match_selector(point, 'source.symbol.clojure'):
                 session = get_session_by_owner('plugin')
 
                 if session and session.supports('completions'):
-                    scope = sexp.extract_scope(self.view, point - 1)
+                    scope = sexp.expand_to_selector(self.view, point, 'source.symbol.clojure')
 
                     if scope:
                         prefix = self.view.substr(scope)
@@ -789,8 +789,8 @@ class TutkainViewEventListener(ViewEventListener):
 def lookup(view, point, handler):
     is_repl_output_view = view.settings().get('tutkain_repl_output_view')
 
-    if view.match_selector(point, 'source.clojure - string - comment') and not is_repl_output_view:
-        symbol = view.substr(sexp.extract_symbol(view, point))
+    if view.match_selector(point, 'source.symbol.clojure') and not is_repl_output_view:
+        symbol = sexp.expand_to_selector(view, point, 'source.symbol.clojure')
 
         if symbol:
             session = get_session_by_owner('plugin')
@@ -800,7 +800,7 @@ def lookup(view, point, handler):
                 session.send(
                     {
                         'op': 'lookup',
-                        'sym': symbol,
+                        'sym': view.substr(symbol),
                         'ns': namespace.find_declaration(view)
                     },
                     handler=handler
@@ -1084,7 +1084,7 @@ class TutkainOpenDiffWindowCommand(TextCommand):
 
         view = window.new_file()
         view.set_name('Tutkain: Diff')
-        view.assign_syntax('Clojure.sublime-syntax')
+        view.assign_syntax('Clojure (Tutkain).sublime-syntax')
         view.set_scratch(True)
         view.set_reference_document(reference.replace('&#39;', "'"))
         view.run_command('append', {'characters': actual.replace('&#39;', "'")})

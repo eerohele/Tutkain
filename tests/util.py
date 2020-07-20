@@ -9,7 +9,7 @@ class ViewTestCase(TestCase):
         self.view.set_scratch(True)
         self.view.sel().clear()
         self.view.window().focus_view(self.view)
-        self.view.assign_syntax('Packages/Clojure/Clojure.sublime-syntax')
+        self.view.assign_syntax('Clojure (Tutkain).sublime-syntax')
 
     @classmethod
     def tearDownClass(self):
