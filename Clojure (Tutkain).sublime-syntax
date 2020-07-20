@@ -9,6 +9,7 @@ variables:
   whitespace: '(?:\s|(,))*'
   end: '(?=$|[\s,()\[\]{}";])'
   number_end: '(?=$|[\s,()\[\]{}";''`#])'
+  # FIXME: Simplify symbol parsing as per the default syntax
   symbol_head: '[\p{Alpha}*!_?$%&=<>]'
   symbol_head_lax: '[\p{Alpha}*!_?$%&=<>''\-+.#:]'
   symbol_body: '[\p{Alpha}*!_?$%&=<>''\-+.#:0-9]'

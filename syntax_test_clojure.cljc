@@ -1882,6 +1882,9 @@
 ;   ^^^^^- storage
 ;   ^^^^^- entity
 
+  (defn -main [& args] ,,,)
+;       ^^^^^ entity.name.function.clojure
+
   ; Invalid but take care anyway
   (defn declare-defn dont-declare [] dont-declare)
 ;  ^^^^ storage.modifier.def.clojure
