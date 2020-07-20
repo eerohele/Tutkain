@@ -201,6 +201,7 @@ def outermost(view, point, edge=True, ignore={}):
 
 
 def adjacent_element_direction(view, point):
+    # TODO: Use view.match_selector() instead.
     if re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
         return 1
     elif re.match(r'[^\s,\(\[\{\x00]', view.substr(point - 1)):
