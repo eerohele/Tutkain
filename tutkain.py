@@ -189,7 +189,7 @@ class TutkainEvaluateFormCommand(TextCommand):
 
                 if eval_region:
                     code = self.view.substr(eval_region)
-                    ns = namespace.find_declaration(self.view)
+                    ns = namespace.find_declaration(self.view) or 'user'
 
                     session.output({
                         'in': code,

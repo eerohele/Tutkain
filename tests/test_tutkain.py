@@ -43,7 +43,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(
             self.repl_view_content(),
-            '''=> (+ 1 2)\n3\n'''
+            '''user=> (+ 1 2)\n3\n'''
         )
 
     def test_evaluate_view(self):
