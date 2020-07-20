@@ -15,4 +15,8 @@ figuring things out.
 
    Tutkain is available on Package Control, but the version there is very old, and I don't advise using it at the moment.
 
+2. Open a Clojure file (a file whose extension is `.clj`, `.cljc`, or `.cljs`).
+
+3. Under **View** > **Syntax** > **Open all with current extension as...**, select "Clojure (Tutkain)". You must repeat this for each file extension.
+
 More documentation coming up. Check back later.
