@@ -259,7 +259,6 @@ def find_next_element(view, point):
             if view.match_selector(point, 'meta.sexp.end'):
                 return None
             elif view.match_selector(point, 'meta.sexp.begin | meta.sexp.prefix'):
-                print(point, innermost(view, point).extent())
                 return innermost(view, point).extent()
             elif view.match_selector(point, SELECTOR):
                 return expand_by_selector(view, point, SELECTOR)
