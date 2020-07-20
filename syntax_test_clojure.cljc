@@ -1633,6 +1633,7 @@
 ;      ^ entity.name.constant.clojure
 ;        ^^^ constant.language.clojure
 
+;; FIXME
   (def 👽 nil)
 ;  ^^^ storage.modifier.def.clojure
 ;      ^ entity.name.constant.clojure
