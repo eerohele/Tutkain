@@ -25,7 +25,7 @@ from .repl import info
 from .repl import history
 from .repl.client import Client
 
-from .log import enable_debug, log
+from .log import log, start_logging, stop_logging
 
 
 state = {'sessions_by_view': {}}
@@ -85,6 +85,9 @@ def make_color_scheme(cache_dir):
 
 def plugin_loaded():
     settings = sublime.load_settings('tutkain.sublime-settings')
+
+    start_logging(settings.get('debug', False))
+
     preferences = sublime.load_settings('Preferences.sublime-settings')
 
     cache_dir = os.path.join(sublime.cache_path(), 'tutkain')
@@ -96,11 +99,10 @@ def plugin_loaded():
     make_color_scheme(cache_dir)
     preferences.add_on_change('tutkain', lambda: make_color_scheme(cache_dir))
 
-    if settings.get('debug', False):
-        enable_debug()
-
 
 def plugin_unloaded():
+    stop_logging()
+
     for window in sublime.windows():
         window.run_command('tutkain_disconnect')
 
