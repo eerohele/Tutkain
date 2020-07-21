@@ -761,11 +761,11 @@ class TutkainViewEventListener(ViewEventListener):
         try:
             point = locations[0] - 1
 
-            if self.view.match_selector(point, 'source.symbol.clojure'):
+            if self.view.match_selector(point, 'meta.symbol.clojure'):
                 session = get_session_by_owner('plugin')
 
                 if session and session.supports('completions'):
-                    scope = sexp.expand_by_selector(self.view, point, 'source.symbol.clojure')
+                    scope = sexp.expand_by_selector(self.view, point, 'meta.symbol.clojure')
 
                     if scope:
                         prefix = self.view.substr(scope)
@@ -789,8 +789,8 @@ class TutkainViewEventListener(ViewEventListener):
 def lookup(view, point, handler):
     is_repl_output_view = view.settings().get('tutkain_repl_output_view')
 
-    if view.match_selector(point, 'source.symbol.clojure') and not is_repl_output_view:
-        symbol = sexp.expand_by_selector(view, point, 'source.symbol.clojure')
+    if view.match_selector(point, 'meta.symbol.clojure') and not is_repl_output_view:
+        symbol = sexp.expand_by_selector(view, point, 'meta.symbol.clojure')
 
         if symbol:
             session = get_session_by_owner('plugin')

@@ -73,7 +73,7 @@ contexts:
 
   symbol:
     - match: '{{qualified_symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure
       captures:
         1: meta.namespace.clojure
         2: punctuation.definition.symbol.namespace.clojure
@@ -470,31 +470,31 @@ contexts:
       captures:
         1: meta.namespace.clojure
         2: punctuation.definition.symbol.namespace.clojure
-      scope: meta.reader-form.clojure source.symbol.clojure variable.function.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure variable.function.clojure
       set: list-tail
     - include: main
 
   ns-tail:
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.namespace.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.namespace.clojure
       set: list-tail
     - include: list-tail
 
   defmulti-tail:
     - match: '{{qualified_symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.function.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
       set: list-tail
     - include: list-tail
 
   defmethod-tail:
     - match: '{{qualified_symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.function.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
       set: list-tail
     - include: list-tail
 
   classdef-tail:
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.type.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.type.clojure
       set: type-symbol
     - include: list-tail
 
@@ -509,7 +509,7 @@ contexts:
   typedef-tail:
     - include: list-end
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.type.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.type.clojure
       set:
         - match: \)
           scope: punctuation.section.parens.end.clojure
@@ -525,13 +525,13 @@ contexts:
       scope: constant.language.clojure
       set: list-tail
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.constant.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.constant.clojure
       set: list-tail
     - include: list-tail
 
   declare-tail:
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.variable.forward-decl.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.variable.forward-decl.clojure
     - include: list-tail
 
   defn-head:
@@ -541,13 +541,13 @@ contexts:
 
   defn-tail:
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.function.clojure variable.function.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure variable.function.clojure
       set: list-tail
     - include: list-tail
 
   deftest-tail:
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure source.symbol.clojure entity.name.function.clojure variable.function.clojure meta.test-var.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure variable.function.clojure meta.test-var.clojure
       set: list-tail
     - include: list-tail
 
