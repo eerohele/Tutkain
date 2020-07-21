@@ -1633,7 +1633,6 @@
 ;      ^ entity.name.constant.clojure
 ;        ^^^ constant.language.clojure
 
-;; FIXME
   (def 👽 nil)
 ;  ^^^ storage.modifier.def.clojure
 ;      ^ entity.name.constant.clojure
@@ -1884,6 +1883,12 @@
 
   (defn -main [& args] ,,,)
 ;       ^^^^^ entity.name.function.clojure
+
+  (def !bang (atom 1))
+;      ^^^^^ entity.name.constant.clojure
+
+  (def *db* ,,,)
+;      ^^^^ entity.name.constant.clojure
 
   ; Invalid but take care anyway
   (defn declare-defn dont-declare [] dont-declare)
