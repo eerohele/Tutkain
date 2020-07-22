@@ -255,16 +255,18 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
             )
 
     def annotation(self, response):
-        args = json.dumps({
+        args = {
             'reference': response['expected'],
             'actual': response['actual']
-            # TODO: Replacing single quotes is probably not enough. Is there a better approach?
-        }).replace("'", '&#39;')
+        }
 
         return '''
         <a style="font-size: 0.8rem"
-           href='subl:tutkain_open_diff_window {}'>{}</a>
-        '''.format(args, 'diff' if response.get('type', 'fail') == 'fail' else 'show')
+           href='{}'>{}</a>
+        '''.format(
+            sublime.command_url('tutkain_open_diff_window', args=args),
+            'diff' if response.get('type', 'fail') == 'fail' else 'show'
+        )
 
     def add_markers(self, session, response):
         if 'status' not in response:
@@ -1088,8 +1090,8 @@ class TutkainOpenDiffWindowCommand(TextCommand):
         view.set_name('Tutkain: Diff')
         view.assign_syntax('Clojure (Tutkain).sublime-syntax')
         view.set_scratch(True)
-        view.set_reference_document(reference.replace('&#39;', "'"))
-        view.run_command('append', {'characters': actual.replace('&#39;', "'")})
+        view.set_reference_document(reference)
+        view.run_command('append', {'characters': actual})
 
         # Hackity hack to try to ensure that the inline diff is open when the diff window opens.
         #
