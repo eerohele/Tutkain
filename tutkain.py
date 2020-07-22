@@ -509,8 +509,10 @@ class TutkainConnectCommand(WindowCommand):
                 'name': name
             }
 
-            if name in {'tutkain/nrepl/middleware/test.clj', 'tutkain/nrepl/middleware/tap.clj'}:
-                path = os.path.join(sublime.packages_path(), 'tutkain/clojure/src', name)
+            path = os.path.join(sublime.packages_path(), 'tutkain/clojure/src', name)
+
+            if os.path.isfile(path):
+                log.debug({'event': 'sideloader/provide', 'path': path})
 
                 with open(path, 'rb') as file:
                     op['content'] = base64.b64encode(file.read()).decode('utf-8')
