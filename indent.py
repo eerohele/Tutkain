@@ -2,6 +2,7 @@ import re
 from sublime import Region
 
 from itertools import groupby
+from . import selectors
 from . import sexp
 
 
@@ -39,7 +40,7 @@ def insert_newline_and_indent(view, edit):
     for region in view.sel():
         point = region.begin()
 
-        if sexp.inside_comment(view, point):
+        if selectors.inside_comment(view, point):
             view.run_command('insert', {'characters': '\n;; '})
         else:
             _, open_bracket = sexp.find_open(view, point)

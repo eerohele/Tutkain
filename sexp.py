@@ -1,10 +1,9 @@
-import re
-from sublime import CLASS_WORD_START, CLASS_WORD_END, Region
+from . import selectors
+from sublime import CLASS_WORD_START, Region
 
 
 OPEN = {'(': ')', '[': ']', '{': '}'}
 CLOSE = {')': '(', ']': '[', '}': '{'}
-RE_NON_SYMBOL_CHARACTERS = r'[\s,\(\[\{\)\]\}\"\x00]'
 
 
 class Sexp():
@@ -33,7 +32,7 @@ class Sexp():
             'meta.sexp.prefix | meta.quoted.begin | meta.metadata.begin'
         ):
             # Find the first point that contains a character other than a macro character
-            boundary = find_by_selector(
+            boundary = selectors.find(
                 self.view,
                 begin - 1,
                 '(- meta.sexp.prefix & - meta.quoted.begin & - meta.metadata.begin)',
@@ -48,37 +47,6 @@ class Sexp():
         return other and self.extent() == other.extent()
 
 
-def inside_string(view, point):
-    return view.match_selector(point, 'string - punctuation.definition.string.begin')
-
-
-def inside_comment(view, point):
-    return view.match_selector(point, 'comment.line')
-
-
-def ignore(view, point):
-    return view.match_selector(
-        point,
-        'string - punctuation.definition.string.begin | comment.line'
-    )
-
-
-def find_by_selector(view, start_point, selector, forward=True):
-    point = start_point if forward else start_point - 1
-    max_size = view.size()
-
-    while point >= 0 and point <= max_size:
-        if view.match_selector(point, selector):
-            return point
-
-        if forward:
-            point += 1
-        else:
-            point -= 1
-
-    return -1
-
-
 def find_open(view, start_point):
     point = start_point
     stack = 0
@@ -86,13 +54,13 @@ def find_open(view, start_point):
     while point > 0:
         char = view.substr(point - 1)
 
-        if char in CLOSE and not ignore(view, point - 1):
+        if char in CLOSE and not selectors.ignore(view, point - 1):
             stack += 1
             point -= 1
-        elif stack > 0 and char in OPEN and not ignore(view, point - 1):
+        elif stack > 0 and char in OPEN and not selectors.ignore(view, point - 1):
             stack -= 1
             point -= 1
-        elif stack == 0 and char in OPEN and not ignore(view, point - 1):
+        elif stack == 0 and char in OPEN and not selectors.ignore(view, point - 1):
             return char, Region(point - 1, point)
         else:
             point -= 1
@@ -111,20 +79,20 @@ def find_close(view, start_point, close=None):
     while point < max_point:
         char = view.substr(point)
 
-        if char == CLOSE[close] and not ignore(view, point):
+        if char == CLOSE[close] and not selectors.ignore(view, point):
             stack += 1
             point += 1
-        elif stack > 0 and char == close and not ignore(view, point):
+        elif stack > 0 and char == close and not selectors.ignore(view, point):
             stack -= 1
             point += 1
-        elif stack == 0 and char == close and not ignore(view, point):
+        elif stack == 0 and char == close and not selectors.ignore(view, point):
             return Region(point, point + 1)
         else:
             point += 1
 
 
 def move_inside(view, point, edge):
-    if not edge or inside_string(view, point):
+    if not edge or selectors.inside_string(view, point):
         return point
     elif view.match_selector(
         point,
@@ -140,17 +108,17 @@ def move_inside(view, point, edge):
 def innermost(view, start_point, edge=True):
     point = move_inside(view, start_point, edge)
 
-    if inside_comment(view, point):
+    if selectors.inside_comment(view, point):
         return None
-    elif inside_string(view, point):
-        begin = find_by_selector(
+    elif selectors.inside_string(view, point):
+        begin = selectors.find(
             view,
             point,
             'punctuation.definition.string.begin - constant.character.escape',
             forward=False
         )
 
-        end = find_by_selector(
+        end = selectors.find(
             view,
             point,
             'punctuation.definition.string.end - constant.character.escape'
@@ -200,88 +168,6 @@ def outermost(view, point, edge=True, ignore={}):
             previous = current
 
 
-def adjacent_element_direction(view, point):
-    # TODO: Use view.match_selector() instead.
-    if re.match(r'[^\s,\)\]\}\x00]', view.substr(point)):
-        return 1
-    elif re.match(r'[^\s,\(\[\{\x00]', view.substr(point - 1)):
-        return -1
-    else:
-        return 0
-
-
-def find_adjacent_element(view, point):
-    if ignore(view, point):
-        return None
-
-    direction = adjacent_element_direction(view, point)
-
-    if direction == 1:
-        return find_next_element(view, point)
-    elif direction == -1:
-        return find_previous_element(view, point)
-    else:
-        return None
-
-
-SELECTOR = 'meta.reader-form | meta.metadata | meta.quoted | meta.deref'
-
-
-def expand_by_selector(view, start_point, selector):
-    point = start_point
-    max_point = view.size()
-    begin = 0
-    end = max_point
-
-    while point > 0:
-        if view.match_selector(point, selector) and not view.match_selector(point - 1, selector):
-            begin = point
-            break
-        else:
-            point -= 1
-
-    while point < max_point:
-        if view.match_selector(point - 1, selector) and not view.match_selector(point, selector):
-            end = point
-            break
-        else:
-            point += 1
-
-    return Region(begin, end)
-
-
-def find_next_element(view, point):
-    max_point = view.size()
-
-    if inside_string(view, point):
-        return view.word(view.find_by_class(point, True, CLASS_WORD_END))
-    else:
-        while point <= max_point:
-            if view.match_selector(point, 'meta.sexp.end'):
-                return None
-            elif view.match_selector(point, 'meta.sexp.begin | meta.sexp.prefix'):
-                return innermost(view, point).extent()
-            elif view.match_selector(point, SELECTOR):
-                return expand_by_selector(view, point, SELECTOR)
-            else:
-                point += 1
-
-
-def find_previous_element(view, point):
-    if inside_string(view, point):
-        return view.word(view.find_by_class(point, False, CLASS_WORD_START))
-    else:
-        while point > 0:
-            if view.match_selector(point - 1, 'meta.sexp.begin | meta.sexp.prefix'):
-                return None
-            elif view.match_selector(point - 1, 'meta.sexp.end'):
-                return innermost(view, point).extent()
-            elif view.match_selector(point - 1, SELECTOR):
-                return expand_by_selector(view, point - 1, SELECTOR)
-            else:
-                point -= 1
-
-
 CYCLE_ORDER = {
     '(': '[',
     '[': '{',
@@ -294,7 +180,7 @@ def cycle_collection_type(view, edit):
     for region in view.sel():
         point = region.begin()
 
-        if not ignore(view, point):
+        if not selectors.ignore(view, point):
             if view.match_selector(point, 'string') or view.match_selector(point - 1, 'string'):
                 edge = False
             else:

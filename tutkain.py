@@ -16,7 +16,9 @@ from sublime_plugin import (
 
 from threading import Thread
 
+from . import selectors
 from . import sexp
+from . import forms
 from . import formatter
 from . import indent
 from . import paredit
@@ -781,7 +783,7 @@ class TutkainViewEventListener(ViewEventListener):
                 session = get_session_by_owner('plugin')
 
                 if session and session.supports('completions'):
-                    scope = sexp.expand_by_selector(self.view, point, 'meta.symbol.clojure')
+                    scope = selectors.expand_by_selector(self.view, point, 'meta.symbol.clojure')
 
                     if scope:
                         prefix = self.view.substr(scope)
@@ -806,7 +808,7 @@ def lookup(view, point, handler):
     is_repl_output_view = view.settings().get('tutkain_repl_output_view')
 
     if view.match_selector(point, 'meta.symbol.clojure') and not is_repl_output_view:
-        symbol = sexp.expand_by_selector(view, point, 'meta.symbol.clojure')
+        symbol = selectors.expand_by_selector(view, point, 'meta.symbol.clojure')
 
         if symbol:
             session = get_session_by_owner('plugin')
@@ -866,13 +868,11 @@ class TutkainExpandSelectionCommand(TextCommand):
         selections = view.sel()
 
         for region in selections:
-            if not region.empty() or sexp.ignore(view, region.begin()):
+            if not region.empty() or selectors.ignore(view, region.begin()):
                 view.run_command('expand_selection', {'to': 'scope'})
             else:
-                element = sexp.find_adjacent_element(view, region.begin())
-
-                if element:
-                    selections.add(element)
+                form = forms.find_adjacent(view, region.begin())
+                form and selections.add(form)
 
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
@@ -1033,24 +1033,24 @@ class TutkainPareditSpliceSexpKillingBackwardCommand(TextCommand):
         paredit.splice_sexp_killing_backward(self.view, edit)
 
 
-class TutkainPareditForwardKillElementCommand(TextCommand):
+class TutkainPareditForwardKillFormCommand(TextCommand):
     def run(self, edit):
-        paredit.kill_element(self.view, edit, True)
+        paredit.kill_form(self.view, edit, True)
 
 
-class TutkainPareditBackwardKillElementCommand(TextCommand):
+class TutkainPareditBackwardKillFormCommand(TextCommand):
     def run(self, edit):
-        paredit.kill_element(self.view, edit, False)
+        paredit.kill_form(self.view, edit, False)
 
 
-class TutkainPareditBackwardMoveElementCommand(TextCommand):
+class TutkainPareditBackwardMoveFormCommand(TextCommand):
     def run(self, edit):
-        paredit.backward_move_element(self.view, edit)
+        paredit.backward_move_form(self.view, edit)
 
 
-class TutkainPareditForwardMoveElementCommand(TextCommand):
+class TutkainPareditForwardMoveFormCommand(TextCommand):
     def run(self, edit):
-        paredit.forward_move_element(self.view, edit)
+        paredit.forward_move_form(self.view, edit)
 
 
 class TutkainCycleCollectionTypeCommand(TextCommand):
