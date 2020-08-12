@@ -1053,6 +1053,16 @@ class TutkainPareditForwardMoveFormCommand(TextCommand):
         paredit.forward_move_form(self.view, edit)
 
 
+class TutkainPareditThreadFirstCommand(TextCommand):
+    def run(self, edit):
+        paredit.thread_first(self.view, edit)
+
+
+class TutkainPareditThreadLastCommand(TextCommand):
+    def run(self, edit):
+        paredit.thread_last(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)

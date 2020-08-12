@@ -430,3 +430,54 @@ def forward_move_form(view, edit):
                 point = next_form.end() - erase.size()
                 sel.append(point + 1)
                 view.insert(edit, point, ' ' + form_str)
+
+
+def thread(view, edit, arrow):
+    for region, sel in iterate(view):
+        point = region.begin()
+
+        if not selectors.ignore(view, point):
+            if region.empty():
+                element = forms.find_next(view, point)
+            else:
+                element = region
+
+            innermost = sexp.innermost(view, point, edge=False)
+
+            def thread_unthreaded():
+                characters = '({} {} '.format(arrow, view.substr(element))
+                insert = view.insert(edit, innermost.open.begin(), characters)
+                begin = insert + element.begin()
+                view.insert(edit, innermost.close.end() + insert, ')')
+
+                erase = Region(begin - 1, begin + element.size())
+                view.erase(edit, erase)
+
+            # If the element is the first element in a sexp, abort.
+            if element and innermost and forms.find_previous(view, point):
+                sel.append(innermost.open.begin())
+
+                if view.match_selector(element.begin(), 'punctuation.section.parens.begin'):
+                    head = forms.find_next(view, element.begin() + 1)
+
+                    if view.substr(head) == arrow:
+                        element_str = view.substr(element)
+                        view.erase(edit, element)
+                        enclosing = sexp.innermost(view, element.begin(), edge=False).extent()
+                        enclosing_str = view.substr(enclosing)
+                        view.erase(edit, enclosing)
+                        insert = element_str[:-1] + ' ' + indent.prune_string(enclosing_str + ')')
+                        view.insert(edit, enclosing.begin(), insert)
+
+                    else:
+                        thread_unthreaded()
+                else:
+                    thread_unthreaded()
+
+
+def thread_first(view, edit):
+    thread(view, edit, '->')
+
+
+def thread_last(view, edit):
+    thread(view, edit, '->>')
