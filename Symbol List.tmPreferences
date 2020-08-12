@@ -5,7 +5,7 @@
     <key>name</key>
     <string>Symbol List</string>
     <key>scope</key>
-    <string>source.clojure entity.name.function.clojure, source.clojure entity.name.constant.clojure, source.clojure entity.name.variable.forward-decl.clojure, source.clojure constant.other.keyword.qualified, source.clojure constant.other.keyword.auto-qualified</string>
+    <string>source.clojure entity.name.function.clojure, source.clojure entity.name.constant.clojure, source.clojure entity.name.variable.forward-decl.clojure</string>
     <key>settings</key>
     <dict>
         <key>showInSymbolList</key>
