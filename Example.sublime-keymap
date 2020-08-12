@@ -4,6 +4,13 @@
     // Tutkain comes with (almost) no key bindings enabled by default. To start using key bindings,
     // copy the key binding definitions in this file into your own key binding settings.
 
+    // The default binding for cancel_build is ctrl+c, which interferes with the key bindings
+    // coming up next.
+    {
+        "keys": ["ctrl+alt+c"],
+        "command": "cancel_build"
+    },
+
     // Connect to nREPL server.
     {
         "keys": ["ctrl+c", "ctrl+x"],
