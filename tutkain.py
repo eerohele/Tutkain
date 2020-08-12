@@ -767,7 +767,7 @@ class TutkainViewEventListener(ViewEventListener):
         try:
             point = locations[0] - 1
 
-            if self.view.match_selector(point, 'meta.symbol.clojure'):
+            if self.view.match_selector(point, 'meta.symbol.clojure - meta.function.parameters'):
                 session = get_session_by_owner('plugin')
 
                 if session and session.supports('completions'):
