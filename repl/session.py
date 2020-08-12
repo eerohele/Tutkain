@@ -13,30 +13,18 @@ class Session():
         self.op_count = 0
         self.lock = Lock()
         self.info = {}
-        self.pprint = False
 
     def supports(self, key):
         return 'ops' in self.info and key in self.info['ops']
 
     def set_info(self, info):
         self.info = info
-        self.pprint = self.supports_pretty_printing(info)
 
     def op_id(self):
         with self.lock:
             self.op_count += 1
 
         return self.op_count
-
-    def supports_pretty_printing(self, info):
-        if 'versions' in info:
-            versions = info['versions']
-
-            if versions and 'nrepl' in versions:
-                v = versions.get('nrepl')
-                return (v and (v.get('major') == 0 and v.get('minor') >= 8) or v.get('major') > 0)
-
-        return False
 
     def prune(self, d):
         if 'file' in d and d['file'] is None:
@@ -45,13 +33,15 @@ class Session():
         if 'ns' in d and d['ns'] is None:
             del d['ns']
 
-    def op(self, d):
+    def op(self, d, pprint=True):
         d['session'] = self.id
         d['id'] = self.op_id()
 
         if d['op'] == 'eval':
-            if self.pprint:
-                d['nrepl.middleware.print/print'] = 'nrepl.util.print/pprint'
+            if pprint:
+                d['nrepl.middleware.print/print'] = 'tutkain.nrepl.util.pprint/pprint'
+                # TODO: Read wrap_width setting or the last ruler from the rulers setting?
+                d['nrepl.middleware.print/options'] = {'width': 100}
 
             d['nrepl.middleware.caught/print?'] = 'true'
             d['nrepl.middleware.print/stream?'] = 'true'
@@ -64,8 +54,8 @@ class Session():
         message['session'] = self.id
         self.client.recvq.put(message)
 
-    def send(self, op, handler=None):
-        op = self.op(op)
+    def send(self, op, handler=None, pprint=True):
+        op = self.op(op, pprint=pprint)
 
         if not handler:
             handler = self.client.recvq.put

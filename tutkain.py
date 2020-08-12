@@ -498,30 +498,29 @@ class TutkainEvaluateInputCommand(WindowCommand):
 
 
 class TutkainConnectCommand(WindowCommand):
-    def sideload_middleware(self, session, response):
-        if session.supports('sideloader-provide'):
-            name = response['name']
+    def sideloader_provide(self, session, response):
+        name = response['name']
 
-            op = {
-                'id': response['id'],
-                'op': 'sideloader-provide',
-                'type': response['type'],
-                'name': name
-            }
+        op = {
+            'id': response['id'],
+            'op': 'sideloader-provide',
+            'type': response['type'],
+            'name': name
+        }
 
-            path = os.path.join(sublime.packages_path(), 'tutkain/clojure/src', name)
+        path = os.path.join(sublime.packages_path(), 'tutkain/clojure/src', name)
 
-            if os.path.isfile(path):
-                log.debug({'event': 'sideloader/provide', 'path': path})
+        if os.path.isfile(path):
+            log.debug({'event': 'sideloader/provide', 'path': path})
 
-                with open(path, 'rb') as file:
-                    op['content'] = base64.b64encode(file.read()).decode('utf-8')
-            else:
-                op['content'] = ''
+            with open(path, 'rb') as file:
+                op['content'] = base64.b64encode(file.read()).decode('utf-8')
+        else:
+            op['content'] = ''
 
-            session.send(op, handler=lambda _: None)
+        session.send(op, handler=lambda _: None)
 
-    def inject_middleware(self, sessions):
+    def initialize(self, sessions):
         session = sessions['sideloader']
 
         if (
@@ -529,36 +528,49 @@ class TutkainConnectCommand(WindowCommand):
             session.supports('sideloader-start') and
             session.supports('add-middleware')
         ):
-            session.send(
-                {'op': 'sideloader-start'},
-                handler=lambda response: self.sideload_middleware(session, response)
-            )
-
             def update_session_info(response):
-                for session in sessions.values():
-                    session.set_info(response)
+                if response.get('status') == ['done']:
+                    sessions['plugin'].output({'value': ':tutkain/ready\n'})
 
-            def handler(response):
-                update_session_info(response)
-                sessions['sideloader'].send({'op': 'tutkain/add-tap'}, update_session_info)
+                    for session in sessions.values():
+                        session.set_info(response)
+
+            def add_tap(response):
+                if response.get('status') == ['done']:
+                    session.send({'op': 'tutkain/add-tap'})
+                    session.send({'op': 'describe'}, handler=update_session_info)
+
+            def add_middleware(response):
+                if response.get('status') == ['done']:
+                    session.send({
+                        'op': 'add-middleware',
+                        'middleware': [
+                            'tutkain.nrepl.middleware.test/wrap-test',
+                            'tutkain.nrepl.middleware.tap/wrap-tap',
+                        ]
+                    }, handler=add_tap)
 
             session.send({
-                    'op': 'add-middleware',
-                    'middleware': [
-                        'tutkain.nrepl.middleware.test/wrap-test',
-                        'tutkain.nrepl.middleware.tap/wrap-tap',
-                    ]
-                }, handler=lambda response: session.send({'op': 'describe'}, handler=handler)
-            )
+                'op': 'sideloader-start'
+            }, handler=lambda response: self.sideloader_provide(session, response))
+
+            session.send({
+                'op': 'eval',
+                'code': '''(require 'tutkain.nrepl.util.pprint)'''
+                # We use a noop handler, to prevent the printer printing the nil response of this
+                # eval op.
+            }, pprint=False, handler=add_middleware)
 
     def print(self, view, item):
         if view:
-            if {'value', 'nrepl.middleware.caught/throwable', 'in', 'versions'} & item.keys():
+            if {'value', 'nrepl.middleware.caught/throwable', 'in', 'versions', 'summary'} & item.keys():
                 append_to_view(view, formatter.format(item))
+            elif 'status' in item and 'interrupted' in item['status']:
+                append_to_view(view, ':interrupted\n')
+            elif 'status' in item and 'session-idle' in item['status']:
+                append_to_view(view, ':nothing-to-interrupt\n')
             elif 'status' in item and 'namespace-not-found' in item['status']:
-                append_to_view(view, ':namespace-not-found')
-            elif item.get('status') == ['done']:
-                append_to_view(view, '\n')
+                append_to_view(view, ':tutkain/namespace-not-found\n')
             else:
                 characters = formatter.format(item)
 
@@ -644,14 +656,6 @@ class TutkainConnectCommand(WindowCommand):
             panel.settings().set('scroll_past_end', False)
             panel.assign_syntax('Clojure (Tutkain).sublime-syntax')
 
-    def initialize_sideloader(self, sessions):
-        def handler(response):
-            sessions['sideloader'].output(response)
-            sessions['sideloader'].set_info(response)
-            self.inject_middleware(sessions)
-
-        sessions['sideloader'].send({'op': 'describe'}, handler=handler)
-
     def run(self, host, port):
         window = self.window
 
@@ -686,7 +690,13 @@ class TutkainConnectCommand(WindowCommand):
             print_loop.name = 'tutkain.print_loop'
             print_loop.start()
 
-            self.initialize_sideloader(sessions_by_owner)
+            def handler(response):
+                session = sessions_by_owner['sideloader']
+                session.output(response)
+                session.set_info(response)
+                self.initialize(sessions_by_owner)
+
+            sessions_by_owner['sideloader'].send({'op': 'describe'}, handler=handler)
         except ConnectionRefusedError:
             window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)

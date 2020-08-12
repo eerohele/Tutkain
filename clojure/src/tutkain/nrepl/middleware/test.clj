@@ -1,6 +1,6 @@
 (ns tutkain.nrepl.middleware.test
   (:require
-   [clojure.pprint :as pprint]
+   [fipp.edn :as pprint]
    [clojure.stacktrace :as stacktrace]
    [clojure.string :as str]
    [clojure.test :as test]
@@ -68,7 +68,7 @@
                                              (test/inc-report-counter :error)
                                              (add-result results :error
                                                (-> event pprint-expected (update :actual #(with-out-str (stacktrace/print-stack-trace %))) (assoc :var-meta @var-meta))))
-                                    :summary (swap! results assoc :value (-> event (dissoc :type :file) str))
+                                    :summary (swap! results assoc :summary (-> event (dissoc :type :file) str))
                                     nil)))]
           (test/run-tests (symbol ns)))
         (transport/send transport (response-for message @results))
