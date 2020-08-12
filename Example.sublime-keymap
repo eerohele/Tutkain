@@ -337,4 +337,16 @@
         "command": "tutkain_paredit_forward_kill_element",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
+
+    {
+        "keys": ["ctrl+c", "ctrl+up"],
+        "command": "tutkain_paredit_backward_move_element",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+c", "ctrl+down"],
+        "command": "tutkain_paredit_forward_move_element",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
 ]

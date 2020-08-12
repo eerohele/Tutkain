@@ -387,3 +387,44 @@ def kill_element(view, edit, forward):
                     sel.append(point)
 
                 view.erase(edit, element)
+
+
+def backward_move_element(view, edit):
+    for region, sel in iterate(view):
+        point = region.begin()
+        element = sexp.find_adjacent_element(view, point)
+
+        if element:
+            element_str = view.substr(element)
+            previous_element = sexp.find_previous_element(view, element.begin())
+
+            if previous_element:
+                sel.append(previous_element.begin())
+
+                if view.match_selector(element.begin() - 1, 'punctuation'):
+                    erase = element
+                else:
+                    erase = Region(element.begin() - 1, element.end())
+
+                view.erase(edit, erase)
+                view.insert(edit, previous_element.begin(), element_str + ' ')
+
+
+def forward_move_element(view, edit):
+    for region, sel in iterate(view):
+        element = sexp.find_adjacent_element(view, region.begin())
+
+        if element:
+            element_str = view.substr(element)
+            next_element = sexp.find_next_element(view, element.end())
+
+            if next_element:
+                if view.match_selector(element.end(), 'punctuation'):
+                    erase = element
+                else:
+                    erase = Region(element.begin(), element.end() + 1)
+
+                view.erase(edit, erase)
+                point = next_element.end() - erase.size()
+                sel.append(point + 1)
+                view.insert(edit, point, ' ' + element_str)

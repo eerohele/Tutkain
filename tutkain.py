@@ -1043,6 +1043,16 @@ class TutkainPareditBackwardKillElementCommand(TextCommand):
         paredit.kill_element(self.view, edit, False)
 
 
+class TutkainPareditBackwardMoveElementCommand(TextCommand):
+    def run(self, edit):
+        paredit.backward_move_element(self.view, edit)
+
+
+class TutkainPareditForwardMoveElementCommand(TextCommand):
+    def run(self, edit):
+        paredit.forward_move_element(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
