@@ -397,19 +397,15 @@ def backward_move_form(view, edit):
         form = forms.find_adjacent(view, point)
 
         if form:
-            form_str = view.substr(form)
             previous_form = forms.find_previous(view, form.begin())
 
             if previous_form:
                 sel.append(previous_form.begin())
-
-                if view.match_selector(form.begin() - 1, 'punctuation'):
-                    erase = form
-                else:
-                    erase = Region(form.begin() - 1, form.end())
-
-                view.erase(edit, erase)
-                view.insert(edit, previous_form.begin(), form_str + ' ')
+                form_str = view.substr(form)
+                previous_form_str = view.substr(previous_form)
+                between = view.substr(Region(previous_form.end(), form.begin()))
+                view.erase(edit, Region(previous_form.begin(), form.end()))
+                view.insert(edit, previous_form.begin(), form_str + between + previous_form_str)
 
 
 def forward_move_form(view, edit):
@@ -417,19 +413,16 @@ def forward_move_form(view, edit):
         form = forms.find_adjacent(view, region.begin())
 
         if form:
-            form_str = view.substr(form)
             next_form = forms.find_next(view, form.end())
 
             if next_form:
-                if view.match_selector(form.end(), 'punctuation'):
-                    erase = form
-                else:
-                    erase = Region(form.begin(), form.end() + 1)
-
-                view.erase(edit, erase)
-                point = next_form.end() - erase.size()
-                sel.append(point + 1)
-                view.insert(edit, point, ' ' + form_str)
+                form_str = view.substr(form)
+                next_form_str = view.substr(next_form)
+                between = view.substr(Region(form.end(), next_form.begin()))
+                view.erase(edit, Region(form.begin(), next_form.end()))
+                before = next_form_str + between
+                view.insert(edit, form.begin(), before + form_str)
+                sel.append(form.begin() + len(before))
 
 
 def thread(view, edit, arrow):

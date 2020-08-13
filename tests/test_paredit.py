@@ -984,8 +984,36 @@ class TestParedit(ViewTestCase):
         self.assertEquals('(foo (bar) baz "qux" ::quux/quuz 1/2)', self.view_content())
         self.assertEquals([(21, 21)], self.selections())
         self.view.run_command('tutkain_paredit_forward_move_form')
-        self.set_view_content('(foo (bar) baz "qux" 1/2 ::quux/quuz)')
-        self.set_selections((25, 25))
+
+        # Newlines
+        self.set_view_content('(->\n  (foo)\n  (bar)\n  (baz))')
+        self.set_selections((22, 22))
+        self.view.run_command('tutkain_paredit_backward_move_form')
+        self.assertEquals('(->\n  (foo)\n  (baz)\n  (bar))', self.view_content())
+        self.assertEquals([(14, 14)], self.selections())
+        self.view.run_command('tutkain_paredit_backward_move_form')
+        self.assertEquals('(->\n  (baz)\n  (foo)\n  (bar))', self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
+        self.view.run_command('tutkain_paredit_backward_move_form')
+        self.assertEquals('((baz)\n  ->\n  (foo)\n  (bar))', self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
+        self.view.run_command('tutkain_paredit_backward_move_form')
+        self.assertEquals('((baz)\n  ->\n  (foo)\n  (bar))', self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
+
+        # Round trippin'
+        self.view.run_command('tutkain_paredit_forward_move_form')
+        self.assertEquals('(->\n  (baz)\n  (foo)\n  (bar))', self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
+        self.view.run_command('tutkain_paredit_forward_move_form')
+        self.assertEquals('(->\n  (foo)\n  (baz)\n  (bar))', self.view_content())
+        self.assertEquals([(14, 14)], self.selections())
+        self.view.run_command('tutkain_paredit_forward_move_form')
+        self.assertEquals('(->\n  (foo)\n  (bar)\n  (baz))', self.view_content())
+        self.assertEquals([(22, 22)], self.selections())
+        self.view.run_command('tutkain_paredit_forward_move_form')
+        self.assertEquals('(->\n  (foo)\n  (bar)\n  (baz))', self.view_content())
+        self.assertEquals([(22, 22)], self.selections())
 
     def test_thread_first(self):
         self.set_view_content('(inc (dec (* 2 (/ 4 10))))')
