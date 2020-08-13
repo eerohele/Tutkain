@@ -2768,3 +2768,19 @@
     [y]
     (fn [z]))
 ;           ^ -  invalid.illegal.stray-bracket-end.clojure
+
+  (fn
+    ()
+;    ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+    ([x] ,,,))
+;   ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+
+  (defn x
+    ()
+;    ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+    ([y] ,,,))
+;   ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+
+  (let)
+; ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;     ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure

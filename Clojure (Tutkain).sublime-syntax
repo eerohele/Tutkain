@@ -476,6 +476,7 @@ contexts:
         - include: list-tail
 
   let-tail:
+    - include: list-end
     - match: '\['
       scope: meta.sexp.begin.clojure punctuation.section.brackets.begin.clojure
       push:
@@ -580,6 +581,7 @@ contexts:
       scope: meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
       push:
         - meta_scope: meta.function-body.clojure
+        - include: list-end
         - include: comment
         - include: metadata
         - match: '\['
@@ -604,6 +606,7 @@ contexts:
       scope: meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
       push:
         - meta_scope: meta.function-body.clojure
+        - include: list-end
         - include: comment
         - include: metadata
         - match: '\['
@@ -623,7 +626,7 @@ contexts:
     - meta_content_scope: meta.function.clojure
     - match: '\)'
       scope: meta.sexp.end.clojure punctuation.section.parens.end.clojure
-      set: main
+      pop: true
     - include: metadata
     - include: comment
     - match: '{{symbol}}'
