@@ -414,32 +414,32 @@ def thread(view, edit, arrow):
 
         if not selectors.ignore(view, point):
             if region.empty():
-                element = forms.find_next(view, point)
+                form = forms.find_next(view, point)
             else:
-                element = region
+                form = region
 
             innermost = sexp.innermost(view, point, edge=False)
 
             def thread_unthreaded():
-                characters = '({} {} '.format(arrow, view.substr(element))
+                characters = '({} {} '.format(arrow, view.substr(form))
                 insert = view.insert(edit, innermost.open.begin(), characters)
-                begin = insert + element.begin()
+                begin = insert + form.begin()
                 view.insert(edit, innermost.close.end() + insert, ')')
 
-                erase = Region(begin - 1, begin + element.size())
+                erase = Region(begin - 1, begin + form.size())
                 view.erase(edit, erase)
 
-            # If the element is the first element in a sexp, abort.
-            if element and innermost and forms.find_previous(view, point):
+            # If the form is the first form in a sexp, abort.
+            if form and innermost and forms.find_previous(view, point):
                 sel.append(innermost.open.begin())
 
-                if view.match_selector(element.begin(), 'punctuation.section.parens.begin'):
-                    head = forms.find_next(view, element.begin() + 1)
+                if view.match_selector(form.begin(), 'punctuation.section.parens.begin'):
+                    head = forms.find_next(view, form.begin() + 1)
 
                     if view.substr(head) == arrow:
-                        element_str = view.substr(element)
-                        view.erase(edit, element)
-                        enclosing = sexp.innermost(view, element.begin(), edge=False).extent()
+                        element_str = view.substr(form)
+                        view.erase(edit, form)
+                        enclosing = sexp.innermost(view, form.begin(), edge=False).extent()
                         enclosing_str = view.substr(enclosing)
                         view.erase(edit, enclosing)
                         insert = element_str[:-1] + ' ' + indent.prune_string(enclosing_str + ')')
