@@ -32,7 +32,7 @@ def find_adjacent(view, point):
         return None
 
 
-SELECTOR = 'meta.reader-form | meta.metadata | meta.quoted | meta.deref'
+SELECTOR = 'meta.reader-form | meta.metadata | meta.quoted | meta.deref | meta.map.qualified'
 
 
 def find_next(view, point):

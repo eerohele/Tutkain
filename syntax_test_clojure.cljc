@@ -1048,10 +1048,16 @@
 ; ^^ keyword.operator.macro.clojure
 ;   ^- keyword.operator.macro.clojure
 
-  #:blah{}
+  #:foo{} #:bar/baz{:a 1} #::quux{:b 2} :end
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.definition.keyword.clojure
-;  ^^^^^ constant.other.keyword.unqualified.clojure
+;  ^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^ meta.map.qualified.clojure
+;        ^ - meta
+;         ^^^^^^^^^^^^^^^ meta.map.qualified.clojure
+;                        ^ - meta
+;                         ^^^^^^^^^^^^^ meta.map.qualified.clojure
+;                                      ^^^^^  - meta.map.qualified.clojure
 
   ##NaN ##Inf ##-Inf
 ; ^^ keyword.operator.macro.clojure

@@ -167,3 +167,18 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.set_selections((6, 6))
         self.expand()
         self.assertEquals('"b"', self.selection(0))
+
+    def test_qualified_map(self):
+        self.set_view_content('#:foo{:bar 1} #:foo/bar{:baz 1} #::foo{:bar 1}')
+        self.set_selections((0, 0))
+        self.expand()
+        self.assertEquals('#:foo{:bar 1}', self.selection(0))
+        self.set_selections((13, 13))
+        self.expand()
+        self.assertEquals('{:bar 1}', self.selection(0))
+        self.set_selections((14, 14))
+        self.expand()
+        self.assertEquals('#:foo/bar{:baz 1}', self.selection(0))
+        self.set_selections((32, 32))
+        self.expand()
+        self.assertEquals('#::foo{:bar 1}', self.selection(0))

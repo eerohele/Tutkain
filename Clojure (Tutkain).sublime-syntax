@@ -379,8 +379,13 @@ contexts:
   qualified-map:
     - match: '(#)(?=:)'
       captures:
-        1: keyword.operator.macro.clojure
-        2: punctuation.definition.keyword.clojure
+          1: keyword.operator.macro.clojure
+      push:
+        - meta_scope: meta.map.qualified.clojure
+        - include: keywords
+        - include: map
+        - match: ''
+          pop: true
 
   syntax-quote:
     - match: '(~@?){{whitespace}}'
