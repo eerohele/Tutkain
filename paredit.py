@@ -408,6 +408,7 @@ def forward_move_form(view, edit):
                 sel.append(form.begin() + len(before))
 
 
+# FIXME: This is awful. Also, it doesn't handle line breaks.
 def thread(view, edit, arrow):
     for region, sel in iterate(view):
         point = region.begin()
