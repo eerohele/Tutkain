@@ -291,11 +291,12 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
         if 'error' in response:
             for result in response['error']:
                 line = result['var-meta']['line'] - 1
-                point = self.view.text_point(line, 0)
+                column = result['var-meta']['column'] - 1
+                point = self.view.text_point(line, column)
 
                 results['error'][line] = {
                     'type': result['type'],
-                    'region': sublime.Region(point, point),
+                    'region': forms.find_next(self.view, point),
                     'expected': result['expected'],
                     'actual': result['actual']
                 }
@@ -339,7 +340,8 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
                     scope='region.orangish',
                     icon='circle',
                     annotation_color='orange',
-                    annotations=[self.annotation(e) for e in errors]
+                    annotations=[self.annotation(e) for e in errors],
+                    flags=sublime.DRAW_NO_FILL
                 )
 
     def run_tests(self, session, response):
