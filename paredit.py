@@ -312,23 +312,6 @@ def comment_dwim(view, edit):
         sel.append(line.end() + n)
 
 
-def kill(view, edit):
-    for region, _ in iterate(view):
-        # What should kill do with a non-empty selection?
-        point = region.begin()
-
-        innermost = sexp.innermost(view, point, edge=True)
-
-        if innermost:
-            # Cursive only deletes until newline, we delete the contents of the sexp regardless of
-            # newlines. Not sure which is right, but this is easier to implement and makes more
-            # sense to me.
-            if point == innermost.open.begin() or point == innermost.close.end():
-                view.erase(edit, innermost.extent())
-            elif point == innermost.open.end() or point == innermost.close.begin():
-                view.erase(edit, Region(innermost.open.end(), innermost.close.begin()))
-
-
 def semicolon(view, edit):
     for region, sel in iterate(view):
         point = region.begin()

@@ -1013,11 +1013,6 @@ class TutkainPareditCommentDwimCommand(TextCommand):
         paredit.comment_dwim(self.view, edit)
 
 
-class TutkainPareditKillCommand(TextCommand):
-    def run(self, edit):
-        paredit.kill(self.view, edit)
-
-
 class TutkainPareditSemicolonCommand(TextCommand):
     def run(self, edit):
         paredit.semicolon(self.view, edit)

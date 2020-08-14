@@ -813,33 +813,6 @@ class TestParedit(ViewTestCase):
         self.view.run_command('tutkain_paredit_comment_dwim')
         self.assertEquals('(a b ; \n c)', self.view_content())
 
-    def test_kill(self):
-        self.set_view_content('(a b c)')
-        self.set_selections((0, 0))
-        self.view.run_command('tutkain_paredit_kill')
-        self.assertEquals('', self.view_content())
-
-        self.set_view_content('(a b c)')
-        self.set_selections((1, 1))
-        self.view.run_command('tutkain_paredit_kill')
-        self.assertEquals('()', self.view_content())
-
-        self.set_view_content('(a b c)')
-        self.set_selections((7, 7))
-        self.view.run_command('tutkain_paredit_kill')
-        self.assertEquals('', self.view_content())
-
-        self.set_view_content('(foo "bar baz" quux)')
-        self.set_selections((6, 6))
-        self.view.run_command('tutkain_paredit_kill')
-        self.assertEquals('(foo "" quux)', self.view_content())
-
-        self.set_view_content('(a b c) (d e f)')
-        self.set_selections((1, 1), (9, 9))
-        self.view.run_command('tutkain_paredit_kill')
-        self.assertEquals('() ()', self.view_content())
-        self.assertEquals([(1, 1), (4, 4)], self.selections())
-
     def test_semicolon(self):
         self.set_view_content('(a b)')
         self.set_selections((0, 0))

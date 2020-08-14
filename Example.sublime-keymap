@@ -303,12 +303,6 @@
     },
 
     {
-        "keys": ["ctrl+k"],
-        "command": "tutkain_paredit_kill",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
-    },
-
-    {
         "keys": [";"],
         "command": "tutkain_paredit_semicolon",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
