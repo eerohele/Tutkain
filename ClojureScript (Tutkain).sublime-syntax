@@ -1,0 +1,10 @@
+%YAML 1.2
+---
+# https://www.sublimetext.com/docs/syntax.html
+name: ClojureScript (Tutkain)
+file_extensions: [cljs]
+scope: source.clojure.clojurescript
+
+contexts:
+  main:
+    - include: scope:source.clojure
