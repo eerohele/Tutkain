@@ -13,11 +13,8 @@ class TestCommands(ViewTestCase):
     @classmethod
     def setUpClass(self):
         super().setUpClass()
-
-        self.view.window().run_command(
-            'tutkain_connect',
-            {'host': 'localhost', 'port': 1234}
-        )
+        self.view.window().run_command('tutkain_connect', {'host': 'localhost', 'port': 1234})
+        time.sleep(2.5)
 
     def repl_view_content(self):
         if 'active_repl_view' in tutkain.state:
