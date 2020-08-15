@@ -32,8 +32,8 @@
         "command": "tutkain_evaluate_input"
     },
     {
-        "caption": "Tutkain: Clear Output Views",
-        "command": "tutkain_clear_output_views"
+        "caption": "Tutkain: Clear Output View",
+        "command": "tutkain_clear_output_view"
     },
     {
         "caption": "Tutkain: Expand Selection",
