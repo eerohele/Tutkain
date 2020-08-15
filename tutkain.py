@@ -225,7 +225,9 @@ class TutkainEvaluateViewCommand(TextCommand):
             session.output(response)
         elif response.get('status') == ['done']:
             if not session.is_denounced(response):
-                self.view.window().status_message('[Tutkain] View evaluated.')
+                window = self.view.window()
+                if window:
+                    window.status_message('[Tutkain] View evaluated.')
 
     def run(self, edit):
         window = self.view.window()
@@ -527,11 +529,7 @@ class TutkainConnectCommand(WindowCommand):
     def initialize(self, sessions):
         session = sessions['sideloader']
 
-        if (
-            int(sublime.version()) >= 4073 and
-            session.supports('sideloader-start') and
-            session.supports('add-middleware')
-        ):
+        if session.supports('sideloader-start') and session.supports('add-middleware'):
             def update_session_info(response):
                 if response.get('status') == ['done']:
                     sessions['plugin'].output({'value': ':tutkain/ready\n'})
@@ -753,23 +751,27 @@ class TutkainNewScratchViewCommand(WindowCommand):
         self.window.focus_view(view)
 
 
-COMPLETION_KINDS = {
-    'function': sublime.KIND_FUNCTION,
-    'var': sublime.KIND_VARIABLE,
-    'macro': (sublime.KIND_ID_FUNCTION, 'm', 'macro'),
-    'namespace': sublime.KIND_NAMESPACE,
-    'class': sublime.KIND_TYPE,
-    'special-form': (sublime.KIND_ID_FUNCTION, 's', 'special form'),
-    'method': sublime.KIND_FUNCTION,
-    'static-method': sublime.KIND_FUNCTION
-}
+def completion_kinds():
+    if int(sublime.version()) >= 4050:
+        return {
+            'function': sublime.KIND_FUNCTION,
+            'var': sublime.KIND_VARIABLE,
+            'macro': (sublime.KIND_ID_FUNCTION, 'm', 'macro'),
+            'namespace': sublime.KIND_NAMESPACE,
+            'class': sublime.KIND_TYPE,
+            'special-form': (sublime.KIND_ID_FUNCTION, 's', 'special form'),
+            'method': sublime.KIND_FUNCTION,
+            'static-method': sublime.KIND_FUNCTION
+        }
+    else:
+        return {}
 
 
 class TutkainViewEventListener(ViewEventListener):
     def completion_item(self, item):
         return sublime.CompletionItem(
             item.get('candidate'),
-            kind=COMPLETION_KINDS.get(item.get('type'), sublime.KIND_AMBIGUOUS)
+            kind=completion_kinds().get(item.get('type'), sublime.KIND_AMBIGUOUS)
         )
 
     def handle_completions(self, completion_list, response):
@@ -777,8 +779,7 @@ class TutkainViewEventListener(ViewEventListener):
         completion_list.set_completions(completions)
 
     def on_query_completions(self, prefix, locations):
-        # CompletionList requires Sublime Text >= 4050, hence the try/except.
-        try:
+        if int(sublime.version()) >= 4050:
             point = locations[0] - 1
 
             if self.view.match_selector(point, 'meta.symbol.clojure - meta.function.parameters'):
@@ -802,8 +803,6 @@ class TutkainViewEventListener(ViewEventListener):
                     )
 
                     return completion_list
-        except NameError:
-            pass
 
 
 def lookup(view, point, handler):

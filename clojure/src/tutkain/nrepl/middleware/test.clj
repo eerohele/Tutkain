@@ -68,7 +68,7 @@
                                              (test/inc-report-counter :error)
                                              (add-result results :error
                                                (-> event pprint-expected (update :actual #(with-out-str (stacktrace/print-stack-trace %))) (assoc :var-meta @var-meta))))
-                                    :summary (swap! results assoc :summary (-> event (dissoc :type :file) str))
+                                    :summary (swap! results assoc :summary (-> event (dissoc :file) str))
                                     nil)))]
           (test/run-tests (symbol ns)))
         (transport/send transport (response-for message @results))

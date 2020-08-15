@@ -146,7 +146,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(
             self.repl_view_content().splitlines()[-1],
-            '''{:test 2, :pass 1, :fail 1, :error 0}'''
+            '''{:test 2, :pass 1, :fail 1, :error 0, :type :summary}'''
         )
 
     def test_run_test_in_current_namespace_with_error(self):
@@ -161,7 +161,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEquals(
             self.repl_view_content().splitlines()[-1],
-            '''{:test 1, :pass 0, :fail 0, :error 1}'''
+            '''{:test 1, :pass 0, :fail 0, :error 1, :type :summary}'''
         )
 
     # TODO: Figure out how to test EvaluateInputCommand
