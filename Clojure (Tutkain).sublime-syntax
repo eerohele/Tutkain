@@ -1,8 +1,8 @@
 %YAML 1.2
 ---
-# http://www.sublimetext.com/docs/syntax.html
+# https://www.sublimetext.com/docs/syntax.html
 name: Clojure (Tutkain)
-file_extensions: [clj, cljs, cljx, boot, repl]
+file_extensions: [clj, cljc]
 scope: source.clojure
 
 variables:
