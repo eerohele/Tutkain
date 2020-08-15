@@ -1,19 +1,17 @@
 from itertools import groupby
-
 import sublime
-from sublime_plugin import EventListener, TextCommand
 
-
+MAX_HISTORY_ITEMS = 100
 index = None
 
 
 def get(window):
     global index
 
-    project_data = window.project_data()
+    settings = window.settings()
 
-    if project_data:
-        history = project_data.get('repl_history')
+    if settings:
+        history = settings.get('repl_history')
 
         if history and index is not None and index < len(history):
             return history[index]
@@ -21,21 +19,43 @@ def get(window):
     return ''
 
 
-MAX_HISTORY_ITEMS = 100
-
-
 def update(window, code):
-    project_data = window.project_data() or {}
-    history = project_data.get('repl_history')
+    settings = window.settings()
+    history = settings.get('repl_history')
 
     if history:
         history.append(code)
 
         if len(history) > MAX_HISTORY_ITEMS:
-            project_data['repl_history'] = history[-MAX_HISTORY_ITEMS:]
+            history = history[-MAX_HISTORY_ITEMS:]
 
-        project_data['repl_history'] = [item[0] for item in groupby(history)]
+        history = [item[0] for item in groupby(history)]
     else:
-        project_data['repl_history'] = [code]
+        history = [code]
 
-    window.set_project_data(project_data)
+    settings.set('repl_history', history)
+    window.set_settings(settings)
+
+
+def navigate(view, edit, forward=False):
+    global index
+
+    settings = view.window().settings()
+
+    if settings:
+        history = settings.get('repl_history')
+
+        if history:
+            if index is None:
+                # If this is the first time the user requests a history item, set the index to
+                # the last history item.
+                index = len(history) - 1
+            elif not forward and index > 0:
+                index -= 1
+            elif forward and index < len(history):
+                index += 1
+
+    view.erase(edit, sublime.Region(0, view.size()))
+
+    if index is not None and index < len(history):
+        view.insert(edit, 0, history[index])
