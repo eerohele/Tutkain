@@ -568,9 +568,9 @@ class TutkainConnectCommand(WindowCommand):
             if {'value', 'nrepl.middleware.caught/throwable', 'in', 'versions', 'summary'} & item.keys():
                 append_to_view(view, formatter.format(item))
             elif 'status' in item and 'interrupted' in item['status']:
-                append_to_view(view, ':interrupted\n')
+                append_to_view(view, ':tutkain/interrupted\n')
             elif 'status' in item and 'session-idle' in item['status']:
-                append_to_view(view, ':nothing-to-interrupt\n')
+                append_to_view(view, ':tutkain/nothing-to-interrupt\n')
             elif 'status' in item and 'namespace-not-found' in item['status']:
                 append_to_view(view, ':tutkain/namespace-not-found\n')
             else:
