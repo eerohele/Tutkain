@@ -35,6 +35,9 @@ class TestCommands(ViewTestCase):
         super().setUp()
         self.view.window().run_command('tutkain_clear_output_view')
 
+    def test_host(self):
+        self.assertEquals('nrepl', HOST)
+
     def test_evaluate_form(self):
         content = '(+ 1 2)'
         self.set_view_content(content)

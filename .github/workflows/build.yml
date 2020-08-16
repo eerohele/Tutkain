@@ -18,6 +18,7 @@ jobs:
       - run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
       - run: |
           PATH="$HOME/.local/bin:$PATH"
+          NREPL_HOST="nrepl"
           sh github.sh bootstrap
           sh github.sh install_package_control
           sh github.sh run_tests
