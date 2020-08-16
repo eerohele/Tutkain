@@ -9,26 +9,27 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     container: sublimetext/unittesting
-    services:
-      nrepl:
-        image: flowthing/nrepl
     steps:
       - uses: actions/checkout@v1
-      - name: Ensure connectivity
-        uses: docker://instrumentisto/nmap
-        with:
-          entrypoint: nping
-          args: --tcp -c 1 -p 1234 nrepl
       - name: Start display server
         run: sh -e /etc/init.d/xvfb start
       - name: Configure Sublime Text
         run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
+      - name: Install Clojure
+        run: |
+          apt update
+          apt install openjdk-11-jdk
+          curl -O https://download.clojure.org/install/linux-install-1.10.1.561.sh
+          chmod +x linux-install-1.10.1.561.sh
+          ./linux-install-1.10.1.561.sh
+      - name: Start nREPL server
+        run: |
+          cd tests/fixtures
+          clojure -A:nrepl/server:test &
+          sleep 5
       - name: Run unit tests
         run: |
           PATH="$HOME/.local/bin:$PATH"
-          NREPL_HOST="nrepl"
           sh github.sh bootstrap
           sh github.sh install_package_control
           sh github.sh run_tests
-        env:
-          NREPL_HOST: nrepl
