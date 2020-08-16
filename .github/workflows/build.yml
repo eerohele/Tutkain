@@ -14,9 +14,12 @@ jobs:
         image: flowthing/nrepl
     steps:
       - uses: actions/checkout@v1
-      - run: sh -e /etc/init.d/xvfb start
-      - run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
-      - run: |
+      - name: Start display server
+        run: sh -e /etc/init.d/xvfb start
+      - name: Configure Sublime Text
+        run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
+      - name: Run unit tests
+        run: |
           PATH="$HOME/.local/bin:$PATH"
           NREPL_HOST="nrepl"
           sh github.sh bootstrap
