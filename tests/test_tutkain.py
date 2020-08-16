@@ -1,10 +1,14 @@
 from inspect import cleandoc
 import sublime
+import os
 import time
 
 from unittest import skip
 from .util import ViewTestCase
 from tutkain import tutkain
+
+
+HOST = os.getenv('NREPL_HOST', 'localhost')
 
 
 class TestCommands(ViewTestCase):
@@ -13,7 +17,7 @@ class TestCommands(ViewTestCase):
     @classmethod
     def setUpClass(self):
         super().setUpClass()
-        self.view.window().run_command('tutkain_connect', {'host': 'localhost', 'port': 1234})
+        self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
         time.sleep(2.5)
 
     def repl_view_content(self):
@@ -196,7 +200,7 @@ class TestMultipleReplViews(ViewTestCase):
             window.run_command('tutkain_disconnect')
 
     def test_evaluate(self):
-        self.view.window().run_command('tutkain_connect', {'host': 'localhost', 'port': 1234})
+        self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
         repl_view_1 = tutkain.get_active_repl_view()
 
         content = cleandoc('''
@@ -231,7 +235,7 @@ nREPL 0.8.0
 app.core=> (square 2)
 4\n''', self.content(repl_view_1))
 
-        self.view.window().run_command('tutkain_connect', {'host': 'localhost', 'port': 1234})
+        self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
         time.sleep(self.delay)
         repl_view_2 = tutkain.get_active_repl_view()
 
