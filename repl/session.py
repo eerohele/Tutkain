@@ -17,9 +17,6 @@ class Session():
     def supports(self, key):
         return 'ops' in self.info and key in self.info['ops']
 
-    def set_info(self, info):
-        self.info = info
-
     def op_id(self):
         with self.lock:
             self.op_count += 1

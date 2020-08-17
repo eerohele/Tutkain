@@ -1,4 +1,5 @@
 import base64
+import collections
 import glob
 import json
 import os
@@ -26,11 +27,12 @@ from . import namespace
 from .repl import info
 from .repl import history
 from .repl.client import Client
+from .repl.session import Session
 
 from .log import log, start_logging, stop_logging
 
 
-state = {'sessions_by_view': {}}
+state = {'sessions_by_view': collections.defaultdict(dict)}
 
 
 def make_color_scheme(cache_dir):
@@ -526,21 +528,48 @@ class TutkainConnectCommand(WindowCommand):
 
         session.send(op, handler=lambda _: None)
 
-    def initialize(self, sessions):
-        session = sessions['sideloader']
-
+    def initialize(self, session, view):
         if session.supports('sideloader-start') and session.supports('add-middleware'):
-            def update_session_info(response):
+            def finalize(response):
                 if response.get('status') == ['done']:
-                    sessions['plugin'].output({'value': ':tutkain/ready\n'})
+                    info = response
+                    session.info = info
+                    session.output(response)
+                    state['sessions_by_view'][view.id()]['sideloader'] = session
 
-                    for session in sessions.values():
-                        session.set_info(response)
+                    def register_session(owner, response):
+                        if response.get('status') == ['done']:
+                            new_session_id = response['new-session']
+                            new_session = Session(new_session_id, session.client, view)
+                            new_session.info = info
+                            session.client.sessions[new_session_id] = new_session
+                            state['sessions_by_view'][view.id()][owner] = new_session
+
+                    session.send(
+                        {'op': 'clone', 'session': session.id},
+                        handler=lambda response: register_session('plugin', response)
+                    )
+
+                    def register_user_session(response):
+                        if response.get('status') == ['done']:
+                            register_session('user', response)
+
+                            sessions = state['sessions_by_view'][view.id()]
+
+                            view.settings().set(
+                                'tutkain_session_ids',
+                                list(map(lambda session: session.id, sessions.values()))
+                            )
+
+                    session.send(
+                        {'op': 'clone', 'session': session.id},
+                        handler=lambda response: register_user_session(response)
+                    )
 
             def add_tap(response):
                 if response.get('status') == ['done']:
                     session.send({'op': 'tutkain/add-tap'})
-                    session.send({'op': 'describe'}, handler=update_session_info)
+                    session.send({'op': 'describe'}, handler=finalize)
 
             def add_middleware(response):
                 if response.get('status') == ['done']:
@@ -667,19 +696,7 @@ class TutkainConnectCommand(WindowCommand):
             self.create_tap_panel()
             view = self.create_output_view(host, port)
 
-            sessions_by_owner = {
-                'sideloader': client.clone_session(view),
-                'plugin': client.clone_session(view),
-                'user': client.clone_session(view)
-            }
-
-            state['sessions_by_view'][view.id()] = sessions_by_owner
-            state['active_repl_view'] = view
-
-            view.settings().set(
-                'tutkain_session_ids',
-                list(map(lambda session: session.id, sessions_by_owner.values()))
-            )
+            session = client.clone_session(view)
 
             # Start a worker thread that reads items from a queue and prints
             # them into an output panel.
@@ -693,12 +710,11 @@ class TutkainConnectCommand(WindowCommand):
             print_loop.start()
 
             def handler(response):
-                session = sessions_by_owner['sideloader']
-                session.output(response)
-                session.set_info(response)
-                self.initialize(sessions_by_owner)
+                if response.get('status') == ['done']:
+                    session.info = response
+                    self.initialize(session, view)
 
-            sessions_by_owner['sideloader'].send({'op': 'describe'}, handler=handler)
+            session.send({'op': 'describe'}, handler=handler)
         except ConnectionRefusedError:
             window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)
