@@ -231,7 +231,6 @@ class TestMultipleReplViews(ViewTestCase):
 
         self.assertEquals('''Clojure 1.10.1
 nREPL 0.8.0
-:tutkain/ready
 app.core=> (square 2)
 4\n''', self.content(repl_view_1))
 
@@ -246,14 +245,12 @@ app.core=> (square 2)
 
         self.assertEquals('''Clojure 1.10.1
 nREPL 0.8.0
-:tutkain/ready
 app.core=> (square 4)
 16\n''', self.content(repl_view_2))
 
         # REPL view 1 content remains the same
         self.assertEquals('''Clojure 1.10.1
 nREPL 0.8.0
-:tutkain/ready
 app.core=> (square 2)
 4\n''', self.content(repl_view_1))
 
@@ -275,7 +272,6 @@ app.core=> (square 2)
 
         self.assertEquals('''Clojure 1.10.1
 nREPL 0.8.0
-:tutkain/ready
 app.core=> (square 4)
 16
 app.core=> (tap> (square 8))
@@ -283,7 +279,6 @@ true\n''', self.content(repl_view_2))
 
         self.assertEquals('''Clojure 1.10.1
 nREPL 0.8.0
-:tutkain/ready
 app.core=> (square 2)
 4
 app.core=> (square 4)
