@@ -52,6 +52,10 @@ class TestForms(ViewTestCase):
         self.assertEquals(forms.find_next(self.view, 7), None)
         self.set_view_content('"a b"')
         self.assertEquals(forms.find_next(self.view, 1), Region(1, 2))
+        self.set_view_content(''''(foo (bar) baz)''')
+        self.assertEquals(forms.find_next(self.view, 11), Region(12, 15))
+        self.set_view_content('''^{:foo 1}''')
+        self.assertEquals(forms.find_next(self.view, 6), Region(7, 8))
 
     def test_find_previous(self):
         self.set_view_content('a')
@@ -100,3 +104,7 @@ class TestForms(ViewTestCase):
         self.assertEquals(forms.find_previous(self.view, 7), None)
         self.set_view_content('"a b"')
         self.assertEquals(forms.find_previous(self.view, 3), Region(1, 2))
+        self.set_view_content(''''(foo (bar) baz)''')
+        self.assertEquals(forms.find_previous(self.view, 12), Region(6, 11))
+        self.set_view_content('''^{:foo 1}''')
+        self.assertEquals(forms.find_previous(self.view, 6), Region(2, 6))

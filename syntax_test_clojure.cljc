@@ -1052,12 +1052,12 @@
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.definition.keyword.clojure
 ;  ^^^^ constant.other.keyword.unqualified.clojure
-; ^^^^^^^ meta.map.qualified.clojure
+; ^^^^^^^ meta.reader-form.clojure
 ;        ^ - meta
-;         ^^^^^^^^^^^^^^^ meta.map.qualified.clojure
+;         ^^^^^^^^^^^^^^^ meta.reader-form.clojure
 ;                        ^ - meta
-;                         ^^^^^^^^^^^^^ meta.map.qualified.clojure
-;                                      ^^^^^  - meta.map.qualified.clojure
+;                         ^^^^^^^^^^^^^ meta.reader-form.clojure
+;                                      ^ - meta
 
   ##NaN ##Inf ##-Inf
 ; ^^ keyword.operator.macro.clojure
@@ -1347,7 +1347,6 @@
   ^File
 ; ^ keyword.operator.macro.clojure
 ;  ^^^^^- keyword.operator.macro.clojure
-; ^^^^^ meta.metadata.clojure
 
   ^File blah
 ; ^ keyword.operator.macro.clojure
@@ -1363,7 +1362,6 @@
 ;   ^^^^^^^^ constant.other.keyword.unqualified.clojure
 ;            ^^^^ constant.language.clojure
 ;                ^ punctuation.section.braces.end.clojure
-; ^^^^^^^^^^^^^^^^ meta.metadata.clojure
 
   ; Consequent metadata is merged
   ^:private ^:dynamic blah
@@ -2155,7 +2153,8 @@
     Foo
     (bar ^:quux [_])
   ;  ^^^ entity.name.function.clojure
-  ;      ^^^^^^ meta.metadata.clojure
+  ;      ^ keyword.operator.macro.clojure
+  ;       ^^^^^ constant.other.keyword.unqualified.clojure
     Bar
     (baz [_]))
 ;    ^^^ entity.name.function.clojure
@@ -2265,7 +2264,8 @@
     Foo
     (bar ^:baz [_])
 ;    ^^^ entity.name.function.clojure
-;        ^^^^^ meta.metadata.clojure
+;        ^ keyword.operator.macro.clojure
+;         ^^^^ constant.other.keyword.unqualified.clojure
     Quux
     (zot [_]))
 ;    ^^^ entity.name.function.clojure
@@ -2391,16 +2391,22 @@
 ;     ^^^^^^^ entity.name.namespace.clojure
 
   (ns ^:baz foo.bar)
-;     ^^^^^ meta.metadata.clojure
 ;     ^^^^^ - entity.name.namespace.clojure
+;     ^ keyword.operator.macro.clojure
+;      ^^^^ constant.other.keyword.unqualified.clojure
 ;           ^^^^^^^ entity.name.namespace.clojure
 
   (ns ^{:baz true} foo.bar)
-;     ^^^^^^^^^^^^ meta.metadata.clojure
+;     ^ keyword.operator.macro.clojure
+;       ^^^^ constant.other.keyword.unqualified.clojure
+;            ^^^^ constant.language.clojure
 ;                  ^^^^^^^ entity.name.namespace.clojure
 
   (ns ^{:config '{:some-keyword some-symbol}} foo.bar)
-;     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.metadata.clojure
+;     ^ keyword.operator.macro.clojure
+;       ^^^^^^^ constant.other.keyword.unqualified.clojure
+;               ^ keyword.operator.macro.clojure
+;                               ^^^^^^^^^^^ meta.symbol.clojure
 ;                                             ^^^^^^^ entity.name.namespace.clojure
 
   (ns foo.bar "baz")
@@ -2487,36 +2493,38 @@
 ; # Quoted
 
   '100
-; ^^^^ meta.quoted.clojure
-
-  foo 'bar baz
-; ^^^ - meta.quoted.clojure
-;     ^^^^ meta.quoted.clojure
-;          ^^^ - meta.quoted.clojure
+; ^ keyword.operator.macro.clojure
 
   ' foo
-; ^^^^^ meta.quoted.clojure
+; ^ keyword.operator.macro.clojure
 
   '(1 2 3)
-; ^^^^^^^^ meta.quoted.clojure
+; ^ keyword.operator.macro.clojure
 
   `foo
-; ^^^^ meta.quoted.syntax.clojure
+; ^ keyword.operator.macro.clojure
+;  ^^^ meta.symbol.clojure - keyword
 
   ~foo
-; ^^^^ meta.unquoted.clojure
+; ^ keyword.operator.macro.clojure
+;  ^^^ meta.symbol.clojure - keyword
 
   `(foo ~bar)
-; ^^^^^^^^^^^ meta.quoted.syntax.clojure
-;       ^^^^ meta.unquoted.clojure
+; ^ keyword.operator.macro.clojure
+;   ^^^ variable.function.clojure
+;       ^ keyword.operator.macro.clojure
+;        ^^^ meta.symbol.clojure - keyword
 
   ~@foo ~[1 2 3]
-; ^^^^^ meta.unquoted.clojure
-;      ^ - meta.unquoted.clojure
-;       ^^^^^^^^ meta.unquoted.clojure
+; ^^ keyword.operator.macro.clojure
+;   ^^^ meta.symbol.clojure - keyword
+;       ^ keyword.operator.macro.clojure
+;        ^ meta.sexp.begin.clojure
+;              ^ meta.sexp.end.clojure
 
   #'foo.bar/baz
-; ^^^^^^^^^^^^^ meta.quoted.var.clojure
+; ^^ keyword.operator.macro.clojure
+;          ^ punctuation.accessor.clojure
 
 
 ; # Reader conditionals
@@ -2531,19 +2539,19 @@
 ; # S-expression prefixes
 
   #(inc 1)
-; ^ meta.sexp.prefix.clojure
+; ^ keyword.operator.macro
 
   @(atom foo)
-; ^ meta.sexp.prefix.clojure
+; ^ keyword.operator.macro
 
   #{1 2 3}
-; ^ meta.sexp.prefix.clojure
+; ^ keyword.operator.macro
 
   #_(1 2 3)
-; ^^ meta.sexp.prefix.clojure
+; ^^ keyword.operator.macro
 
   #?@(:default (+ 1 2 3))
-; ^^^ meta.sexp.prefix.clojure
+; ^^^ keyword.operator.macro
 
 
 ; # Reader forms
@@ -2595,9 +2603,9 @@
 ; ## Macro characters
 
   'foo 'bar
-; ^^^^ meta.quoted.clojure
+; ^ keyword.operator.macro.clojure
 ;     ^ - meta
-;      ^^^^ meta.quoted.clojure
+;      ^ keyword.operator.macro.clojure
 
   \newline \space
 ; ^^^^^^^^ meta.reader-form.clojure
@@ -2605,20 +2613,13 @@
 ;          ^^^^^^ meta.reader-form.clojure
 
   @foo @bar
-; ^^^^ meta.reader-form.clojure
+; ^ keyword.operator.macro.clojure
+;  ^^^ meta.reader-form.clojure
 ;     ^ - meta
-;      ^^^^ meta.reader-form.clojure
+;      ^ keyword.operator.macro.clojure
+;       ^^^ meta.reader-form.clojure
 
-  ^foo ^bar.Baz ^:quux ^{:qux :zot} ^"foo"
-; ^^^^ meta.metadata.clojure
-;     ^ - meta
-;      ^^^^^^^^ meta.metadata.clojure
-;              ^ - meta
-;                ^^^^^ meta.metadata.clojure
-;                     ^ - meta
-;                      ^^^^^^^^^^^^ meta.metadata.clojure
-;                                  ^ - meta
-;                                   ^^^^^^ meta.metadata.clojure
+
 
 ; ## Dispatch macro
 
@@ -2626,13 +2627,6 @@
 ; ^^^^^ meta.reader-form.clojure
 ;      ^ - meta
 ;       ^^^^^^^^ meta.reader-form.clojure
-
-  #'foo #'bar.baz/quux #'qux
-; ^^^^^ meta.quoted.var.clojure
-;      ^ - meta
-;       ^^^^^^^^^^^^^^ meta.quoted.var.clojure
-;                     ^ - meta
-;                      ^^^^^ meta.quoted.var.clojure
 
   #inst "2018-03-28T10:48:00.000" #uuid "3b8a31ed-fd89-4f1b-a00f-42e3d60cf5ce"
 ; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.clojure
@@ -2643,12 +2637,6 @@
 ; ^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.clojure
 ;                        ^ - meta.reader-form.clojure
 
-  ~foo ~@bar `baz
-; ^^^^ meta.unquoted.clojure
-;     ^ - meta
-;      ^^^^^ meta.unquoted.clojure
-;           ^ - meta
-;            ^^^^ meta.quoted.syntax.clojure
 
 
 ; # S-expressions
@@ -2659,12 +2647,11 @@
 ;        ^ - meta
 
   '(1 2) '(3 4)
+; ^ keyword.operator.macro.clojure
 ;  ^ meta.sexp.begin.clojure
-; ^^^^^^ meta.quoted.clojure
 ;      ^ meta.sexp.end.clojure
 ;       ^ - meta
-;        ^ meta.quoted.begin.clojure
-;        ^^^^^^ meta.quoted.clojure
+;        ^ keyword.operator.macro.clojure
 
   [1 2] [3 4]
 ; ^ meta.sexp.begin.clojure
@@ -2677,16 +2664,15 @@
 ;       ^ - meta
 
   #{1 2} #{3 4}
-; ^ meta.sexp.prefix.clojure keyword.operator.macro
+; ^ keyword.operator.macro.clojure
 ;  ^ meta.sexp.begin.clojure
 ;      ^ meta.sexp.end.clojure
 ;       ^ - meta
 
   #_(1 2) (3 4)
-; ^^ meta.sexp.prefix.clojure punctuation.definition.comment.clojure
+; ^^ keyword.operator.macro.clojure punctuation.definition.comment.clojure
 ;   ^ meta.sexp.begin.clojure
 ;       ^ meta.sexp.end.clojure
-;   ^^^^^ meta.discarded.clojure
 ;        ^ - meta
 ;         ^^^^^ - meta.discarded.clojure
 

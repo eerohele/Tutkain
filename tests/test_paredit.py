@@ -575,6 +575,12 @@ class TestParedit(ViewTestCase):
         self.assertEquals('#((foo bar))', self.view_content())
         self.assertEquals([(2, 2)], self.selections())
 
+        self.set_view_content('''(foo '[bar :baz quux])''')
+        self.set_selections((16, 16))
+        self.view.run_command('tutkain_paredit_wrap_round')
+        self.assertEquals('''(foo '[bar :baz (quux)])''', self.view_content())
+        self.assertEquals([(17, 17)], self.selections())
+
     def test_wrap_square(self):
         self.set_view_content('(foo bar baz)')
         self.set_selections((5, 5))

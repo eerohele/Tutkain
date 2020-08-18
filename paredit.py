@@ -225,7 +225,7 @@ def wrap_bracket(view, edit, open_bracket):
         if (
             form and
             view.match_selector(point - 1, 'keyword.operator.macro') and
-            view.match_selector(point, 'punctuation.section.parens.begin')
+            view.match_selector(point, 'meta.sexp.begin')
         ):
             form = Region(form.begin() + 1, form.end())
 

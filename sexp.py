@@ -29,13 +29,13 @@ class Sexp():
 
         if self.view.match_selector(
             begin - 1,
-            'meta.sexp.prefix | meta.quoted.begin | meta.metadata.begin'
+            'keyword.operator.macro'
         ):
             # Find the first point that contains a character other than a macro character
             boundary = selectors.find(
                 self.view,
                 begin - 1,
-                '(- meta.sexp.prefix & - meta.quoted.begin & - meta.metadata.begin)',
+                '- keyword.operator.macro',
                 forward=False
             ) + 1
 
@@ -94,10 +94,7 @@ def find_close(view, start_point, close=None):
 def move_inside(view, point, edge):
     if not edge or selectors.inside_string(view, point):
         return point
-    elif view.match_selector(
-        point,
-        'meta.sexp.begin | meta.sexp.prefix | meta.quoted.begin | meta.metadata.begin'
-    ):
+    elif view.match_selector(point, 'meta.sexp.begin | keyword.operator.macro'):
         return view.find(r'[\(\[\{\"]', point).end()
     elif view.match_selector(point - 1, 'meta.sexp.end'):
         return point - 1

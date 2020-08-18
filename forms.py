@@ -32,9 +32,6 @@ def find_adjacent(view, point):
         return None
 
 
-SELECTOR = 'meta.reader-form | meta.metadata | meta.quoted | meta.deref | meta.map.qualified'
-
-
 def find_next(view, point):
     max_point = view.size()
 
@@ -44,12 +41,32 @@ def find_next(view, point):
         while point <= max_point:
             if view.match_selector(point, 'meta.sexp.end'):
                 return None
-            elif view.match_selector(point, 'meta.sexp.begin | meta.sexp.prefix'):
+            elif view.match_selector(point, 'meta.sexp.begin'):
                 return sexp.innermost(view, point).extent()
-            elif view.match_selector(point, SELECTOR):
-                return selectors.expand_by_selector(view, point, SELECTOR)
+            elif view.match_selector(point, 'keyword.operator.macro'):
+                begin = selectors.find(view, point, 'meta.sexp.begin | meta.reader-form')
+                dispatch = Region(point, point + 1)
+
+                if view.match_selector(begin, 'meta.sexp.begin'):
+                    innermost = sexp.innermost(view, begin).extent()
+                    return innermost.cover(dispatch)
+                else:
+                    form = selectors.expand_by_selector(view, begin, 'meta.reader-form')
+                    return form.cover(dispatch)
+            elif view.match_selector(point, 'meta.reader-form'):
+                return selectors.expand_by_selector(view, point, 'meta.reader-form')
             else:
                 point += 1
+
+
+def absorb_macro_characters(view, region):
+    '''Given a region, if the region is preceded by a macro character, expand the region to cover
+    all macro characters preceding the region.'''
+    if view.match_selector(region.begin() - 1, 'keyword.operator.macro'):
+        keywords = selectors.expand_by_selector(view, region.begin() - 1, 'keyword.operator.macro')
+        return keywords.cover(region)
+    else:
+        return region
 
 
 def find_previous(view, point):
@@ -57,11 +74,13 @@ def find_previous(view, point):
         return view.word(view.find_by_class(point, False, CLASS_WORD_START))
     else:
         while point > 0:
-            if view.match_selector(point - 1, 'meta.sexp.begin | meta.sexp.prefix'):
+            if view.match_selector(point - 1, 'meta.sexp.begin'):
                 return None
             elif view.match_selector(point - 1, 'meta.sexp.end'):
-                return sexp.innermost(view, point).extent()
-            elif view.match_selector(point - 1, SELECTOR):
-                return selectors.expand_by_selector(view, point - 1, SELECTOR)
+                innermost = sexp.innermost(view, point).extent()
+                return absorb_macro_characters(view, innermost)
+            elif view.match_selector(point - 1, 'meta.reader-form'):
+                form = selectors.expand_by_selector(view, point - 1, 'meta.reader-form')
+                return absorb_macro_characters(view, form)
             else:
                 point -= 1
