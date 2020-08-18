@@ -639,7 +639,7 @@ contexts:
     - match: '{{qualified_symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
       push:
-        - match: '(?=[^\s|(,)])'
+        - match: '(?=\S)'
           set:
           - include: forms
           - match: ''
