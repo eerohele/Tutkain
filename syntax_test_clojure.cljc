@@ -1035,6 +1035,7 @@
   #(list % %1)
 ; ^ keyword.operator.macro.clojure
 ;  ^- keyword.operator.macro.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
 
   #[]
 ; ^ -keyword.operator.macro.clojure
@@ -1192,7 +1193,7 @@
   '(blah blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.clojure
-;   ^^^^ variable.function.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
 
   '(quote blah)
 ; ^ keyword.operator.macro.clojure
@@ -1218,14 +1219,14 @@
   `(blah ~blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.clojure
-;   ^^^^ variable.function.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^^- keyword.operator.macro.clojure
 
   `(blah ~100)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.clojure
-;   ^^^^ variable.function.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^ constant.numeric
 
@@ -1243,14 +1244,14 @@
   `(blah ~@blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.clojure
-;   ^^^^ variable.function.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;        ^^ keyword.operator.macro.clojure
 ;          ^^^^- keyword.operator.macro.clojure
 
   `(blah ~@[10 20 30])
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.clojure
-;   ^^^^ variable.function.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;        ^^ keyword.operator.macro.clojure
 ;          ^ punctuation.section.brackets.begin.clojure
 ;           ^^ constant.numeric
@@ -1304,7 +1305,7 @@
   @(atom blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.clojure
-;   ^^^^ variable.function.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
 
   @@@blah
 ; ^^^ keyword.operator.macro.clojure
@@ -1526,7 +1527,7 @@
 
   (blah blah true 10 "" [10 20])
 ; ^ punctuation.section.parens.begin.clojure
-;  ^^^^ variable.function.clojure
+;  ^^^^ meta.function-call.clojure variable.function.clojure
 ;      ^^^^^^^^^^^^^^^^^^^^^^^^- variable.function.clojure
 ;            ^^^^ constant.language.clojure
 ;                 ^^ constant.numeric
@@ -1541,7 +1542,7 @@
   #(blah blah true 10 "" [10 20])
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.clojure
-;   ^^^^ variable.function.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;       ^^^^^^^^^^^^^^^^^^^^^^^^^- variable.function.clojure
 ;             ^^^^ constant.language.clojure
 ;                  ^^ constant.numeric
@@ -1565,19 +1566,19 @@
 ;  ^^^^^ constant.other.keyword.unqualified.clojure
 
   (/ a b)
-;  ^ variable.function.clojure
+;  ^ meta.function-call.clojure variable.function.clojure
 ;    ^ - variable.function.clojure
 
   (+ a b)
-;  ^ variable.function.clojure
+;  ^ meta.function-call.clojure variable.function.clojure
 ;    ^ - variable.function.clojure
 
   (- a b)
-;  ^ variable.function.clojure
+;  ^ meta.function-call.clojure variable.function.clojure
 ;    ^ - variable.function.clojure
 
   (. a b)
-;  ^ variable.function.clojure
+;  ^ meta.function-call.clojure variable.function.clojure
 ;    ^ - variable.function.clojure
 
   #(true blah 10)
@@ -1589,7 +1590,7 @@
   (
 ; ^ punctuation.section.parens.begin.clojure
     blah
-;   ^^^^ variable.function.clojure
+;   ^^^^ meta.function-call.clojure variable.function.clojure
     ; ---
 ;   ^ comment.line.clojure punctuation.definition.comment
     blah
@@ -1811,12 +1812,12 @@
 ;         ^^^^^^^^^^^^^- entity
 
   (-def dont-declare)
-;  ^^^^ variable.function.clojure
+;  ^^^^ meta.function-call.clojure variable.function.clojure
 ;      ^^^^^^^^^^^^^- storage
 ;      ^^^^^^^^^^^^^- entity
 
   (-def def dont-declare)
-;  ^^^^ variable.function.clojure
+;  ^^^^ meta.function-call.clojure variable.function.clojure
 ;      ^^^^^^^^^^^^^^^^^- storage
 ;      ^^^^^^^^^^^^^^^^^- entity
 
@@ -1908,7 +1909,7 @@
 ;                     ^^^^^- storage
 ;                     ^^^^^- entity
 ;                             ^^^^ constant.other.keyword.unqualified.clojure
-;                                    ^^^^ variable.function.clojure
+;                                    ^^^^ meta.function-call.clojure variable.function.clojure
     value)
 ;   ^^^^^- storage
 ;   ^^^^^- entity
@@ -2195,7 +2196,7 @@
             (get (set! inner (assoc inner key (make inner key))) key))))))
   (valAt [this key fallback] (get @this key fallback))
 ;  ^^^^^ entity.name.function.clojure
-;                             ^^^ variable.function.clojure
+;                             ^^^ meta.function-call.clojure variable.function.clojure
 
   Seqable
   (seq [this] (seq @this))
@@ -2321,7 +2322,7 @@
 ; # reify
 
   (reify
-;  ^^^^^ variable.function.clojure
+;  ^^^^^ meta.function-call.clojure variable.function.clojure
     clojure.lang.IDeref
 ;   ^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
     (deref [_] nil)
@@ -2338,7 +2339,7 @@
 ; # proxy
 
   (proxy [clojure.lang.IDeref clojure.lang.Seqable] []
-;  ^^^^^ variable.function.clojure
+;  ^^^^^ meta.function-call.clojure variable.function.clojure
 ;         ^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
 ;                             ^^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
 ;         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^- storage
@@ -2356,7 +2357,7 @@
 
   (extend-protocol clojure.lang.IDeref
 ;                  ^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
-;  ^^^^^^^^^^^^^^^ variable.function.clojure
+;  ^^^^^^^^^^^^^^^ meta.function-call.clojure variable.function.clojure
     String
 ;   ^^^^^^ entity.other.inherited-class.clojure
     (deref [this] this)
@@ -2372,7 +2373,7 @@
 
   (extend-type String
 ;              ^^^^^^ entity.other.inherited-class.clojure
-;  ^^^^^^^^^^^ variable.function.clojure
+;  ^^^^^^^^^^^ meta.function-call.clojure variable.function.clojure
     clojure.lang.IDeref
 ;   ^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
     (deref [this] this)
@@ -2424,6 +2425,19 @@
     (:import
 ;    ^^^^^^^ meta.statement.import.clojure
      (java.time LocalDate)))
+;    ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;     ^^^^^^^^^ - meta.function-call.clojure
+;     ^^^^^^^^^ - variable.function.clojure
+;                        ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+  (ns foo.bar
+    (:require
+;    ^^^^^^^ meta.statement.require.clojure
+     (foo.bar :as [foo])))
+;    ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;     ^^^^^^^ - meta.function-call.clojure
+;     ^^^^^^^ - variable.function.clojure
+;             ^^^ constant.other.keyword.unqualified.clojure
+;                      ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
 
   (ns foo.bar (:import :require))
 ;              ^^^^^^^ meta.statement.import.clojure
@@ -2511,7 +2525,7 @@
 
   `(foo ~bar)
 ; ^ keyword.operator.macro.clojure
-;   ^^^ variable.function.clojure
+;   ^^^ meta.function-call.clojure variable.function.clojure
 ;       ^ keyword.operator.macro.clojure
 ;        ^^^ meta.symbol.clojure - keyword
 

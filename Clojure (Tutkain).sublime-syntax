@@ -452,7 +452,7 @@ contexts:
         1: keyword.declaration.function.clojure
       set: deftest-tail
     - match: '(?:reify|proxy|extend-protocol|extend-type){{end}}'
-      scope: variable.function.clojure
+      scope: meta.function-call.clojure variable.function.clojure
       set: class-specs
     - match: '(?=\S)'
       set:
@@ -463,7 +463,7 @@ contexts:
           captures:
             1: meta.namespace.clojure
             2: punctuation.accessor.clojure
-          scope: meta.reader-form.clojure meta.symbol.clojure variable.function.clojure
+          scope: meta.reader-form.clojure meta.symbol.clojure meta.function-call.clojure variable.function.clojure
           set: list-tail
         - match: (?=\S)
           set: list-tail
@@ -524,6 +524,16 @@ contexts:
       scope: meta.special-form.clojure keyword.other.clojure
       set: list-tail
 
+  require-list:
+    - match: '\('
+      scope: meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+      push:
+        - include: list-end
+        - include: metadata
+        - include: comment
+        - include: symbol
+        - include: keywords
+
   ns-tail:
     - match: '\('
       scope: meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
@@ -531,10 +541,20 @@ contexts:
       - include: list-end
       - match: ':require{{end}}'
         scope: meta.reader-form.clojure meta.statement.require.clojure constant.other.keyword.unqualified.clojure
-        set: list-tail
+        set:
+          - include: list-end
+          - include: metadata
+          - include: comment
+          - include: vector
+          - include: require-list
       - match: ':import{{end}}'
         scope: meta.reader-form.clojure meta.statement.import.clojure constant.other.keyword.unqualified.clojure
-        set: list-tail
+        set:
+          - include: list-end
+          - include: metadata
+          - include: comment
+          - include: vector
+          - include: require-list
       - include: list-tail
     - include: list-tail
 
