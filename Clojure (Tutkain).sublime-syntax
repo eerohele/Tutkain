@@ -594,7 +594,6 @@ contexts:
     - match: '\('
       scope: meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
       push:
-        - meta_scope: meta.function-body.clojure
         - include: list-end
         - include: comment
         - include: metadata
@@ -637,7 +636,6 @@ contexts:
             - include: main
 
   fn-tail:
-    - meta_content_scope: meta.function.clojure
     - match: '\)'
       scope: meta.sexp.end.clojure punctuation.section.parens.end.clojure
       pop: true
