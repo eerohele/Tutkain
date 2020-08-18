@@ -417,42 +417,42 @@ contexts:
     - include: comment
     - include: special-forms
     - match: '(ns|in-ns){{end}}'
-      scope: keyword.declaration.namespace.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.namespace.clojure
       set:
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.namespace.clojure
           set: ns-tail
         - include: list-tail
     - match: 'defmulti{{end}}'
-      scope: keyword.declaration.function.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.function.clojure
       set: defmulti-tail
     - match: 'defmethod{{end}}'
-      scope: keyword.declaration.function.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.function.clojure
       set: defmethod-tail
     - match: '(defrecord|deftype){{end}}'
-      scope: storage.type.class.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure storage.type.class.clojure
       set: classdef-tail
     - match: '(defprotocol|definterface){{end}}'
-      scope: storage.type.interface.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure storage.type.interface.clojure
       set: typedef-tail
     - match: 'declare{{end}}'
-      scope: keyword.declaration.variable.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.variable.clojure
       set: declare-tail
     - match: 'defonce{{end}}'
-      scope: keyword.declaration.variable.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.variable.clojure
       set: def-tail
     - match: 'defn(-?){{end}}'
-      scope: keyword.declaration.function.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.function.clojure
       set: fn-tail
     - match: 'defmacro{{end}}'
-      scope: keyword.declaration.macro.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.macro.clojure
       set: fn-tail
     - match: '((?:.+?/)?deftest){{end}}'
       captures:
-        1: keyword.declaration.function.clojure
+        1: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.function.clojure
       set: deftest-tail
     - match: '(?:reify|proxy|extend-protocol|extend-type){{end}}'
-      scope: meta.function-call.clojure variable.function.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.function-call.clojure variable.function.clojure
       set: class-specs
     - match: '(?=\S)'
       set:
@@ -482,46 +482,46 @@ contexts:
 
   special-forms:
     - match: 'def{{end}}'
-      scope: meta.special-form.clojure keyword.declaration.variable.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.declaration.variable.clojure
       set: def-tail
     - match: 'if{{end}}'
-      scope: meta.special-form.clojure keyword.control.conditional.if.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.control.conditional.if.clojure
       set: list-tail
     - match: 'do{{end}}'
-      scope: meta.special-form.clojure keyword.other.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.other.clojure
       set: list-tail
     - match: 'let\*?{{end}}'
-      scope: meta.special-form.clojure keyword.declaration.variable.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.declaration.variable.clojure
       push: let-tail
     - match: 'quote{{end}}'
-      scope: meta.special-form.clojure keyword.other.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.other.clojure
       set: list-tail
     - match: 'var{{end}}'
-      scope: meta.special-form.clojure keyword.other.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.other.clojure
       set: list-tail
     - match: 'fn\*?{{end}}'
-      scope: meta.special-form.clojure keyword.declaration.function.inline.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.declaration.function.inline.clojure
       set: fn-tail
     - match: 'loop{{end}}'
-      scope: meta.special-form.clojure keyword.control.loop.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.control.loop.clojure
       set: list-tail
     - match: 'recur{{end}}'
-      scope: meta.special-form.clojure keyword.control.flow.recur.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.control.flow.recur.clojure
       set: list-tail
     - match: 'throw{{end}}'
-      scope: meta.special-form.clojure keyword.control.flow.throw.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.control.flow.throw.clojure
       set: list-tail
     - match: 'try{{end}}'
-      scope: meta.special-form.clojure keyword.control.exception.try.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.control.exception.try.clojure
       set: list-tail
     - match: 'catch{{end}}'
-      scope: keyword.control.exception.catch.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.control.exception.catch.clojure
       set: list-tail
     - match: 'finally{{end}}'
-      scope: keyword.control.exception.finally.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.control.exception.finally.clojure
       set: list-tail
     - match: '(monitor-enter|monitor-exit){{end}}'
-      scope: meta.special-form.clojure keyword.other.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.other.clojure
       set: list-tail
 
   require-list:

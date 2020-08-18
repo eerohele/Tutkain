@@ -182,3 +182,15 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.set_selections((32, 32))
         self.expand()
         self.assertEquals('#::foo{:bar 1}', self.selection(0))
+
+    def test_list_head(self):
+        self.set_view_content('(ns foo.bar)')
+        self.set_selections((1, 1))
+        self.expand()
+        self.assertEquals('ns', self.selection(0))
+
+    def test_special_form(self):
+        self.set_view_content('(fn [foo])')
+        self.set_selections((1, 1))
+        self.expand()
+        self.assertEquals('fn', self.selection(0))
