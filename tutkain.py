@@ -507,26 +507,27 @@ class TutkainEvaluateInputCommand(WindowCommand):
 
 class TutkainConnectCommand(WindowCommand):
     def sideloader_provide(self, session, response):
-        name = response['name']
+        if 'name' in response:
+            name = response['name']
 
-        op = {
-            'id': response['id'],
-            'op': 'sideloader-provide',
-            'type': response['type'],
-            'name': name
-        }
+            op = {
+                'id': response['id'],
+                'op': 'sideloader-provide',
+                'type': response['type'],
+                'name': name
+            }
 
-        path = os.path.join(sublime.packages_path(), 'tutkain/clojure/src', name)
+            path = os.path.join(sublime.packages_path(), 'tutkain/clojure/src', name)
 
-        if os.path.isfile(path):
-            log.debug({'event': 'sideloader/provide', 'path': path})
+            if os.path.isfile(path):
+                log.debug({'event': 'sideloader/provide', 'path': path})
 
-            with open(path, 'rb') as file:
-                op['content'] = base64.b64encode(file.read()).decode('utf-8')
-        else:
-            op['content'] = ''
+                with open(path, 'rb') as file:
+                    op['content'] = base64.b64encode(file.read()).decode('utf-8')
+            else:
+                op['content'] = ''
 
-        session.send(op, handler=lambda _: None)
+            session.send(op, handler=lambda _: None)
 
     def initialize(self, session, view):
         if session.supports('sideloader-start') and session.supports('add-middleware'):
