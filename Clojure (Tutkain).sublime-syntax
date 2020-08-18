@@ -643,6 +643,8 @@ contexts:
       pop: true
     - include: metadata
     - include: comment
+    - include: quote
+    - include: syntax-quote
     - match: '{{symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
       push: arglists-3

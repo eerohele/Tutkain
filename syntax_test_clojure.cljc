@@ -1639,7 +1639,12 @@
 ;                    ^^^^- storage
 ;                    ^^^^- entity
 
-
+(defmacro bound-fn
+  [& fntail]
+  `(bound-fn* (fn ~@fntail)))
+;                 ^^ keyword.operator.macro.clojure
+;                   ^^^^^^ meta.reader-form.clojure meta.symbol.clojure
+;                         ^^^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
 
 ; # defs
 
