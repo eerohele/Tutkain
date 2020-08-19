@@ -810,12 +810,18 @@ class TutkainViewEventListener(ViewEventListener):
 
                     completion_list = sublime.CompletionList()
 
+                    ns = namespace.find_declaration(self.view)
+
+                    op = {
+                        'op': 'completions',
+                        'prefix': prefix
+                    }
+
+                    if ns:
+                        op['ns'] = ns
+
                     session.send(
-                        {
-                            'op': 'completions',
-                            'prefix': prefix,
-                            'ns': namespace.find_declaration(self.view)
-                        },
+                        op,
                         handler=lambda response: self.handle_completions(completion_list, response)
                     )
 
