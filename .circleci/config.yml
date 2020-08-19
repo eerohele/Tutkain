@@ -30,7 +30,7 @@ jobs:
             export PATH="$HOME/.local/bin:$PATH"
             sh circleci.sh bootstrap
             sh circleci.sh install_package_control
-            sh circleci.sh run_syntax_tests
+            sh circleci.sh run_tests
 
 workflows:
   version: 2
