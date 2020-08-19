@@ -342,3 +342,20 @@ class TestIndentRegionCommand(ViewTestCase):
             ''',
             selections=[(11, 11), (30, 30)]
         )
+
+    def test_control_keywords(self):
+        self.becomes(
+            '''
+            (try
+            (/ 4 0)
+            (catch Throwable t
+            (println "")))
+            ''',
+            '''
+            (try
+              (/ 4 0)
+              (catch Throwable t
+                (println "")))
+            ''',
+            selections=[(0, 0)]
+        )

@@ -11,7 +11,7 @@ def symbol_in_head_position(view, open_bracket):
 
     # This is probably not 100% correct. Also, it is tied to the syntax
     # definition. Is that a problem?
-    return view.match_selector(region.begin(), 'meta.special-form | variable | keyword.declaration')
+    return view.match_selector(region.begin(), 'meta.special-form | variable | keyword.declaration | keyword.control')
 
 
 def determine_indentation(view, open_bracket):
