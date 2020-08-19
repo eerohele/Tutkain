@@ -611,6 +611,9 @@ contexts:
             - include: main
 
   arglists-3:
+    - match: '\)'
+      scope: meta.sexp.end.clojure punctuation.section.parens.end.clojure
+      pop: 2
     - include: comment
     - include: string
     - include: map
@@ -636,9 +639,7 @@ contexts:
             - include: main
 
   fn-tail:
-    - match: '\)'
-      scope: meta.sexp.end.clojure punctuation.section.parens.end.clojure
-      pop: true
+    - include: list-end
     - include: metadata
     - include: comment
     - include: quote

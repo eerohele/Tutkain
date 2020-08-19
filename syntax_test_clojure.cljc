@@ -1931,6 +1931,9 @@
 ;           ^^^^^ meta.function.parameters.clojure
 ;                 ^^^^^ - meta.function.parameters.clojure
 
+  (defn foo)
+;          ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+
   (def !bang (atom 1))
 ;      ^^^^^ entity.name.constant.clojure
 
