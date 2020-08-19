@@ -479,6 +479,7 @@ contexts:
         scope: meta.sexp.end.clojure punctuation.section.brackets.end.clojure
         pop: 2
       - include: forms
+    - include: main
 
   special-forms:
     - match: 'def{{end}}'

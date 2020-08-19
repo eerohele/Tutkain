@@ -2798,3 +2798,12 @@
   (let)
 ; ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
 ;     ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+
+  (let (foo)) (inc 1)
+;      ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;       ^^^ meta.function-call.clojure variable.function.clojure
+;          ^^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+;             ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;              ^^^ meta.function-call.clojure variable.function.clojure
+;                  ^ constant.numeric.integer.decimal.clojure
+;                   ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
