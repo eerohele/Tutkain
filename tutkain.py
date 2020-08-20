@@ -223,16 +223,14 @@ class TutkainEvaluateFormCommand(TextCommand):
 class TutkainEvaluateViewCommand(TextCommand):
     def handler(self, session, response):
         if 'err' in response:
+            session.output({'value': ':tutkain/failed\n'})
             session.output(response)
-            self.view.window().status_message('[Tutkain] View evaluation failed.')
             session.denounce(response)
         elif 'nrepl.middleware.caught/throwable' in response:
             session.output(response)
         elif response.get('status') == ['done']:
             if not session.is_denounced(response):
-                window = self.view.window()
-                if window:
-                    window.status_message('[Tutkain] View evaluated.')
+                session.output({'value': ':tutkain/loaded\n'})
 
     def run(self, edit):
         window = self.view.window()
