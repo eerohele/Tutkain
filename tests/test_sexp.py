@@ -118,13 +118,6 @@ class TestSexp(ViewTestCase):
         self.set_view_content(form)
         self.assertEquals(sexp.outermost(self.view, len(form)).extent(), Region(0, len(form)))
 
-    @skip('not implemented -- unnecessary?')
-    def test_outermost_inside_string(self):
-        form = '"a"'
-        self.set_view_content(form)
-        self.assertEquals(sexp.outermost(self.view, 1).extent(), Region(0, len(form)))
-        self.assertEquals(sexp.outermost(self.view, 2).extent(), Region(0, len(form)))
-
     def test_outermost_adjacent_parens(self):
         form = '((resolving-require \'clojure.test/run-tests))'
         self.set_view_content(form)
