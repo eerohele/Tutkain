@@ -21,7 +21,7 @@ class TestCommands(ViewTestCase):
         super().setUpClass()
         self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
 
-        if not wait_until_equals('''Clojure 1.10.1\nnREPL 0.8.0\n''', repl_view_content, delay=1):
+        if not wait_until_equals('''Clojure 1.10.1\nnREPL 0.8.0\n''', repl_view_content, delay=5):
             raise AssertionError('REPL did not respond in time.')
 
     @classmethod
