@@ -2,8 +2,6 @@ from threading import Lock
 
 
 class Session():
-    handlers = dict()
-    errors = dict()
     namespace = 'user'
 
     def __init__(self, id, client, view):
@@ -13,6 +11,8 @@ class Session():
         self.op_count = 0
         self.lock = Lock()
         self.info = {}
+        self.handlers = {}
+        self.errors = {}
 
     def supports(self, key):
         return 'ops' in self.info and key in self.info['ops']

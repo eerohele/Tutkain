@@ -60,6 +60,15 @@ class Client(object):
         self.sessions[session.id] = session
         return session
 
+    def deregister_session(self, session_id, on_last):
+        log.debug({'event': 'session/deregister', 'session': session_id})
+
+        self.sessions.pop(session_id, None)
+
+        if not self.sessions:
+            on_last()
+            self.halt()
+
     def go(self):
         self.connect()
 
@@ -103,11 +112,6 @@ class Client(object):
         try:
             while not self.stop_event.is_set():
                 item = bencode.read(self.buffer)
-
-                # nREPL session closed, break loop
-                if item.get('status') == ['done', 'session-closed']:
-                    break
-
                 log.debug({'event': 'socket/recv', 'item': item})
                 self.handle(item)
         except OSError as e:
@@ -127,8 +131,7 @@ class Client(object):
             self.disconnect()
 
     def halt(self):
-        # Close nREPL session
-        self.sendq.put({'op': 'close'})
+        log.debug({'event': 'client/halt'})
 
         # Feed poison pill to input queue.
         self.sendq.put(None)

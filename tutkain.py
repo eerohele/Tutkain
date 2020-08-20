@@ -138,9 +138,12 @@ def get_active_repl_view():
     return state.get('active_repl_view')
 
 
-def get_active_view_sessions():
-    view = get_active_repl_view()
+def get_view_sessions(view):
     return view and state['sessions_by_view'].get(view.id())
+
+
+def get_active_view_sessions():
+    return get_view_sessions(get_active_repl_view())
 
 
 def get_session_by_owner(owner):
@@ -732,31 +735,12 @@ class TutkainDisconnectCommand(WindowCommand):
         ]
 
     def run(self):
-        window = self.window
-        active_view = window.active_view()
-        session = get_session_by_owner('plugin')
+        view = get_active_repl_view()
 
-        if session:
-            session.client.halt()
-            session.view.close()
-            state['sessions_by_view'].pop(session.view.id(), None)
-
-        if active_view:
-            active_view.run_command('tutkain_clear_test_markers')
-            window.focus_view(active_view)
-
-        # If this is the final REPL view, restore layout to single.
-        if not state['sessions_by_view']:
-            window.set_layout({
-                'cells': [[0, 0, 1, 1]],
-                'cols': [0.0, 1.0],
-                'rows': [0.0, 1.0]
-            })
-
-            # Destroy tap panel
-            self.window.destroy_output_panel('tutkain')
-
-        window.status_message('[Tutkain] REPL disconnected.')
+        if view:
+            view.close()
+        else:
+            on_close_last_session(self.window)
 
 
 class TutkainNewScratchViewCommand(WindowCommand):
@@ -870,6 +854,20 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
         )
 
 
+def on_close_last_session(window):
+    # If this is the final REPL view, restore layout to single.
+    window.set_layout({
+        'cells': [[0, 0, 1, 1]],
+        'cols': [0.0, 1.0],
+        'rows': [0.0, 1.0]
+    })
+
+    # Destroy tap panel
+    window.destroy_output_panel('tutkain')
+
+    window.status_message('[Tutkain] REPL disconnected.')
+
+
 class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if view.settings().get('tutkain_repl_output_view'):
@@ -879,11 +877,31 @@ class TutkainEventListener(EventListener):
         lookup(view, point, lambda response: info.show_popup(view, point, response))
 
     def on_pre_close(self, view):
-        if view.settings().get('tutkain_repl_output_view'):
-            session = get_session_by_owner('plugin')
+        if view and view.settings().get('tutkain_repl_output_view'):
+            window = view.window()
+            sessions = get_view_sessions(view)
 
-            if session:
-                session.client.halt()
+            if not sessions:
+                on_close_last_session(window)
+            else:
+                del state['sessions_by_view'][view.id()]
+
+                def handler(response):
+                    if 'status' in response and 'done' in response['status']:
+                        session.client.deregister_session(
+                            response['session'],
+                            lambda: on_close_last_session(window)
+                        )
+
+                for session in sessions.values():
+                    session.send({'op': 'close'}, handler=handler)
+
+            if window:
+                active_view = window.active_view()
+
+                if active_view:
+                    active_view.run_command('tutkain_clear_test_markers')
+                    window.focus_view(active_view)
 
 
 class TutkainExpandSelectionCommand(TextCommand):
