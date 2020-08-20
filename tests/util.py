@@ -1,5 +1,33 @@
+import re
 import sublime
+import time
+
 from unittest import TestCase
+
+
+def wait_until(pred, delay=0.25, retries=50):
+    retries_left = retries
+
+    while retries_left >= 0:
+        if pred():
+            return True
+        else:
+            time.sleep(delay)
+            retries_left -= 1
+
+    return False
+
+
+def wait_until_equals(a, b, delay=0.25, retries=50):
+    return wait_until(lambda: a == b(), delay, retries)
+
+
+def wait_until_matches(a, b, delay=0.25, retries=50):
+    return wait_until(lambda: re.search(a, b()), delay, retries)
+
+
+def wait_until_contains(a, b, delay=0.25, retries=50):
+    return wait_until(lambda: a in b(), delay, retries)
 
 
 class ViewTestCase(TestCase):
@@ -41,3 +69,15 @@ class ViewTestCase(TestCase):
 
     def selection(self, i):
         return self.view.substr(self.view.sel()[i])
+
+    def assertEqualsEventually(self, a, b):
+        if not wait_until_equals(a, b):
+            raise AssertionError("'{}' != '{}'".format(a, b()))
+
+    def assertMatchesEventually(self, a, b):
+        if not wait_until_matches(a, b):
+            raise AssertionError("'{}' does not match '{}'".format(a, b()))
+
+    def assertContainsEventually(self, a, b):
+        if not wait_until_contains(a, b):
+            raise AssertionError("'{}' does not contain '{}'".format(a, b()))
