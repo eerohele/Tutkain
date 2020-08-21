@@ -32,7 +32,10 @@ from .repl.session import Session
 from .log import log, start_logging, stop_logging
 
 
-state = {'sessions_by_view': collections.defaultdict(dict)}
+state = {
+    'active_repl_view': collections.defaultdict(dict),
+    'sessions_by_view': collections.defaultdict(dict)
+}
 
 
 def make_color_scheme(cache_dir):
@@ -134,20 +137,20 @@ def test_region_key(view, result_type):
     return '{}:{}'.format(view.file_name(), result_type)
 
 
-def get_active_repl_view():
-    return state.get('active_repl_view')
+def get_active_repl_view(window):
+    return state.get('active_repl_view').get(window.id())
 
 
 def get_view_sessions(view):
     return view and state['sessions_by_view'].get(view.id())
 
 
-def get_active_view_sessions():
-    return get_view_sessions(get_active_repl_view())
+def get_active_view_sessions(window):
+    return get_view_sessions(get_active_repl_view(window))
 
 
-def get_session_by_owner(owner):
-    sessions = get_active_view_sessions()
+def get_session_by_owner(window, owner):
+    sessions = get_active_view_sessions(window)
     return sessions and sessions.get(owner)
 
 
@@ -160,7 +163,7 @@ class TutkainClearOutputViewCommand(WindowCommand):
             view.set_read_only(True)
 
     def run(self):
-        session = get_session_by_owner('plugin')
+        session = get_session_by_owner(self.window, 'plugin')
 
         if session:
             self.clear_view(session.view)
@@ -188,7 +191,7 @@ def get_eval_region(view, region, scope='outermost'):
 
 class TutkainEvaluateFormCommand(TextCommand):
     def run(self, edit, scope='outermost'):
-        session = get_session_by_owner('user')
+        session = get_session_by_owner(self.view.window(), 'user')
 
         if session is None:
             self.view.window().status_message('ERR: Not connected to a REPL.')
@@ -234,7 +237,7 @@ class TutkainEvaluateViewCommand(TextCommand):
 
     def run(self, edit):
         window = self.view.window()
-        session = get_session_by_owner('user')
+        session = get_session_by_owner(window, 'user')
 
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
@@ -385,7 +388,7 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
 
     def run(self, edit):
         window = self.view.window()
-        session = get_session_by_owner('plugin')
+        session = get_session_by_owner(window, 'plugin')
 
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
@@ -489,7 +492,7 @@ class TutkainEvaluateInputCommand(WindowCommand):
         pass
 
     def run(self):
-        session = get_session_by_owner('user')
+        session = get_session_by_owner(self.window, 'user')
 
         if session is None:
             self.window.status_message('ERR: Not connected to a REPL.')
@@ -630,7 +633,7 @@ class TutkainConnectCommand(WindowCommand):
 
             if session:
                 if 'tap' in item and 'session' in item:
-                    view = get_active_repl_view()
+                    view = get_active_repl_view(self.window)
                     session_ids = view.settings().get('tutkain_session_ids')
 
                     if view and item['session'] in session_ids:
@@ -728,7 +731,7 @@ class TutkainConnectCommand(WindowCommand):
 
 class TutkainDisconnectCommand(WindowCommand):
     def run(self):
-        view = get_active_repl_view()
+        view = get_active_repl_view(self.window)
 
         if view:
             view.close()
@@ -777,7 +780,7 @@ class TutkainViewEventListener(ViewEventListener):
             point = locations[0] - 1
 
             if self.view.match_selector(point, 'meta.symbol.clojure - meta.function.parameters'):
-                session = get_session_by_owner('plugin')
+                session = get_session_by_owner(self.view.window(), 'plugin')
 
                 if session and session.supports('completions'):
                     scope = selectors.expand_by_selector(self.view, point, 'meta.symbol.clojure')
@@ -812,7 +815,7 @@ def lookup(view, point, handler):
         symbol = selectors.expand_by_selector(view, point, 'meta.symbol.clojure')
 
         if symbol:
-            session = get_session_by_owner('plugin')
+            session = get_session_by_owner(view.window(), 'plugin')
 
             # TODO: Cache lookup results?
             if session and session.supports('lookup'):
@@ -864,7 +867,7 @@ def on_close_last_session(window):
 class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if view.settings().get('tutkain_repl_output_view'):
-            state['active_repl_view'] = view
+            state['active_repl_view'][view.window().id()] = view
 
     def on_hover(self, view, point, hover_zone):
         lookup(view, point, lambda response: info.show_popup(view, point, response))
@@ -912,7 +915,7 @@ class TutkainExpandSelectionCommand(TextCommand):
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
     def run(self):
-        session = get_session_by_owner('user')
+        session = get_session_by_owner(self.window, 'user')
 
         if session is None:
             self.window.status_message('ERR: Not connected to a REPL.')
