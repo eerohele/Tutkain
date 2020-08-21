@@ -727,11 +727,6 @@ class TutkainConnectCommand(WindowCommand):
 
 
 class TutkainDisconnectCommand(WindowCommand):
-    def output_views(self):
-        return [
-            v for v in self.window.views() if v.settings().get('tutkain_repl_output_view')
-        ]
-
     def run(self):
         view = get_active_repl_view()
 
