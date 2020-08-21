@@ -91,10 +91,46 @@ def find_close(view, start_point, close=None):
             point += 1
 
 
+def matches_selector_pattern(view, start_point, patterns):
+    point = start_point
+    i = 0
+
+    while i < len(patterns):
+        if not view.match_selector(point + i, patterns[i]):
+            return False
+
+        i += 1
+
+    return True
+
+
+def has_macro_character_attached_to_sexp(view, point):
+    patterns = [
+        ['keyword.operator.macro',
+         'meta.sexp.begin'],
+        ['keyword.operator.macro',
+         'keyword.operator.macro',
+         'meta.sexp.begin'],
+        ['keyword.operator.macro',
+         'keyword.operator.macro',
+         'keyword.operator.macro',
+         'meta.sexp.begin']
+    ]
+
+    for pattern in patterns:
+        if matches_selector_pattern(view, point, pattern):
+            return True
+
+    return False
+
+
 def move_inside(view, point, edge):
     if not edge or selectors.inside_string(view, point):
         return point
-    elif view.match_selector(point, 'meta.sexp.begin | keyword.operator.macro'):
+    elif (
+        view.match_selector(point, 'meta.sexp.begin') or
+        has_macro_character_attached_to_sexp(view, point)
+    ):
         return view.find(r'[\(\[\{\"]', point).end()
     elif view.match_selector(point - 1, 'meta.sexp.end'):
         return point - 1

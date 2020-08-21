@@ -155,6 +155,13 @@ class TestSexp(ViewTestCase):
         for n in range(len(form)):
             self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, 7))
 
+    def test_outermost_macro_character_interference(self):
+        form = '(def ^:foo bar 1)'
+        self.set_view_content(form)
+
+        for n in range(len(form)):
+            self.assertEquals(sexp.outermost(self.view, n).extent(), Region(0, 17))
+
     def test_cycle_collection_type(self):
         content = '(a b)'
         self.set_view_content(content)
