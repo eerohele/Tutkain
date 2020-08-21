@@ -172,8 +172,8 @@ def innermost(view, start_point, edge=True):
             return Sexp(view, open_region, close_region)
 
 
-def walk_outward(view, point):
-    sexp = innermost(view, point, edge=False)
+def walk_outward(view, point, edge=True):
+    sexp = innermost(view, point, edge=edge)
 
     while sexp:
         yield sexp

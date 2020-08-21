@@ -4,24 +4,29 @@ import os
 
 from .util import ViewTestCase, wait_until_equals
 from tutkain import tutkain
+from tutkain import test
 
 
 HOST = os.getenv('NREPL_HOST', 'localhost')
 
 
-def repl_view_content():
-    if 'active_repl_view' in tutkain.state:
-        view = tutkain.get_active_repl_view()
-        return view.substr(sublime.Region(0, view.size()))
-
-
 class TestCommands(ViewTestCase):
+    @classmethod
+    def repl_view_content(self):
+        if 'active_repl_view' in tutkain.state:
+            view = tutkain.get_active_repl_view(self.view.window())
+            return view.substr(sublime.Region(0, view.size()))
+
     @classmethod
     def setUpClass(self):
         super().setUpClass()
         self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
 
-        if not wait_until_equals('''Clojure 1.10.1\nnREPL 0.8.0\n''', repl_view_content, delay=5):
+        if not wait_until_equals(
+            '''Clojure 1.10.1\nnREPL 0.8.0\n''',
+            self.repl_view_content,
+            delay=5
+        ):
             raise AssertionError('REPL did not respond in time.')
 
     @classmethod
@@ -39,21 +44,21 @@ class TestCommands(ViewTestCase):
         self.set_view_content(content)
         self.set_selections((0, 0))
         self.view.run_command('tutkain_evaluate_form')
-        self.assertEqualsEventually('''user=> (+ 1 2)\n3\n''', repl_view_content)
+        self.assertEqualsEventually('''user=> (+ 1 2)\n3\n''', self.repl_view_content)
 
     def test_evaluate_view(self):
         content = '''(ns app.core) (defn square [x] (* x x)) (comment (square 2))'''
         self.set_view_content(content)
         self.view.run_command('tutkain_evaluate_view')
 
-        self.assertEqualsEventually(':tutkain/loaded\n', repl_view_content)
+        self.assertEqualsEventually(':tutkain/loaded\n', self.repl_view_content)
 
         self.set_selections((49, 59))
         self.view.run_command('tutkain_evaluate_form')
 
         self.assertEqualsEventually(
             ''':tutkain/loaded\napp.core=> (square 2)\n4\n''',
-            repl_view_content
+            self.repl_view_content
         )
 
     def test_evaluate_form_before_view(self):
@@ -64,21 +69,21 @@ class TestCommands(ViewTestCase):
 
         self.assertEqualsEventually(
             '''foo.bar=> (square 2)\n:tutkain/namespace-not-found\n''',
-            repl_view_content
+            self.repl_view_content
         )
 
     def test_evaluate_form_switch_views(self):
         view_1 = '''(ns baz.quux) (defn plus [x y] (+ x y)) (comment (plus 1 2))'''
         self.set_view_content(view_1)
         self.view.run_command('tutkain_evaluate_view')
-        self.assertContainsEventually(':tutkain/loaded\n', repl_view_content)
+        self.assertContainsEventually(':tutkain/loaded\n', self.repl_view_content)
 
         self.set_selections((49, 59))
         self.view.run_command('tutkain_evaluate_form')
 
         self.assertEqualsEventually(
             ''':tutkain/loaded\nbaz.quux=> (plus 1 2)\n3\n''',
-            repl_view_content
+            self.repl_view_content
         )
 
         self.view.window().run_command('tutkain_clear_output_view')
@@ -86,14 +91,14 @@ class TestCommands(ViewTestCase):
         view_2 = '''(ns qux.zot) (defn minus [x y] (- x y)) (comment (minus 4 3))'''
         self.set_view_content(view_2)
         self.view.run_command('tutkain_evaluate_view')
-        self.assertContainsEventually(':tutkain/loaded\n', repl_view_content)
+        self.assertContainsEventually(':tutkain/loaded\n', self.repl_view_content)
 
         self.set_selections((49, 60))
         self.view.run_command('tutkain_evaluate_form')
 
         self.assertEqualsEventually(
             ''':tutkain/loaded\nqux.zot=> (minus 4 3)\n1\n''',
-            repl_view_content
+            self.repl_view_content
         )
 
         self.view.window().run_command('tutkain_clear_output_view')
@@ -105,7 +110,7 @@ class TestCommands(ViewTestCase):
 
         self.assertEqualsEventually(
             '''baz.quux=> (plus 1 2)\n3\n''',
-            repl_view_content
+            self.repl_view_content
         )
 
     def test_evaluate_view_with_error(self):
@@ -115,28 +120,32 @@ class TestCommands(ViewTestCase):
 
         self.assertMatchesEventually(
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*',
-            repl_view_content
+            self.repl_view_content
         )
 
         self.assertMatchesEventually(
             r'.*class java.lang.String cannot be cast to class java.lang.Number.*',
-            repl_view_content
+            self.repl_view_content
         )
 
     def test_run_test_in_current_namespace(self):
         content = '''(ns mytest.core-test
-        (:require [clojure.test :refer [deftest is]]))
+  (:require [clojure.test :refer [deftest is]]))
 
-        (deftest ok (is (=  2 (+ 1 1))))
-        (deftest nok (is (=  3 (+ 1 1))))
+(deftest ok (is (=  2 (+ 1 1))))
+(deftest nok (is (=  3 (+ 1 1))))
         '''
         self.set_view_content(content)
         self.view.run_command('tutkain_run_tests_in_current_namespace')
 
         self.assertContainsEventually(
             '''{:test 2, :pass 1, :fail 1, :error 0, :type :summary}''',
-            repl_view_content
+            self.repl_view_content
         )
+
+        self.assertEquals([sublime.Region(71, 71)], test.regions(self.view, 'passes'))
+        self.assertEquals([sublime.Region(104, 104)], test.regions(self.view, 'failures'))
+        self.assertEquals([], test.regions(self.view, 'errors'))
 
     def test_run_test_in_current_namespace_with_error(self):
         content = '''(ns error.core-test
@@ -149,8 +158,38 @@ class TestCommands(ViewTestCase):
 
         self.assertContainsEventually(
             '''{:test 1, :pass 0, :fail 0, :error 1, :type :summary}''',
-            repl_view_content
+            self.repl_view_content
         )
+
+    def test_run_test_under_cursor(self):
+        content = '''(ns mytest.core-test
+  (:require [clojure.test :refer [deftest is]]))
+
+(deftest ok (is (=  2 (+ 1 1))))
+(deftest nok (is (=  3 (+ 1 1))))
+        '''
+        self.set_view_content(content)
+        self.set_selections((71, 71))
+        self.view.run_command('tutkain_run_test_under_cursor')
+
+        self.assertEqualsEventually(
+            [sublime.Region(71, 71)],
+            lambda: test.regions(self.view, 'passes')
+        )
+
+        self.assertEquals([], test.regions(self.view, 'failures'))
+        self.assertEquals([], test.regions(self.view, 'errors'))
+
+        self.set_selections((104, 104))
+        self.view.run_command('tutkain_run_test_under_cursor')
+
+        self.assertEqualsEventually(
+            [sublime.Region(104, 104)],
+            lambda: test.regions(self.view, 'failures')
+        )
+
+        self.assertEquals([], test.regions(self.view, 'passes'))
+        self.assertEquals([], test.regions(self.view, 'errors'))
 
     # TODO: Figure out how to test EvaluateInputCommand
 
@@ -162,38 +201,42 @@ class TestCommands(ViewTestCase):
 
         self.assertEqualsEventually(
             '''user=> (do (Thread/sleep 10000) (println "Boom!"))\n''',
-            repl_view_content
+            self.repl_view_content
         )
 
         self.view.window().run_command('tutkain_interrupt_evaluation')
 
         self.assertMatchesEventually(
             r'.*Execution error .*InterruptedException\).*',
-            repl_view_content
+            self.repl_view_content
         )
 
 
 class TestMultipleReplViews(ViewTestCase):
+    repl_views = []
+
+    @classmethod
     def content(self, view):
         return view.substr(sublime.Region(0, view.size()))
 
     @classmethod
+    def connect(self):
+        self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
+        view = tutkain.get_active_repl_view(self.view.window())
+        self.repl_views.append(view)
+
+        if not wait_until_equals(
+            '''Clojure 1.10.1\nnREPL 0.8.0\n''',
+            lambda: self.content(view),
+            delay=1
+        ):
+            raise AssertionError('REPL did not respond in time.')
+
+    @classmethod
     def setUpClass(self):
         super().setUpClass()
-
-        self.repl_views = []
-
-        self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
-        if not wait_until_equals('''Clojure 1.10.1\nnREPL 0.8.0\n''', repl_view_content, delay=1):
-            raise AssertionError('REPL did not respond in time.')
-
-        self.repl_views.append(tutkain.get_active_repl_view())
-
-        self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
-        if not wait_until_equals('''Clojure 1.10.1\nnREPL 0.8.0\n''', repl_view_content, delay=1):
-            raise AssertionError('REPL did not respond in time.')
-
-        self.repl_views.append(tutkain.get_active_repl_view())
+        self.connect()
+        self.connect()
 
     @classmethod
     def tearDownClass(self):

@@ -24,6 +24,7 @@ from . import formatter
 from . import indent
 from . import paredit
 from . import namespace
+from . import test
 from .repl import info
 from .repl import history
 from .repl.client import Client
@@ -131,10 +132,6 @@ def append_to_view(view, characters):
         print_characters(view, characters)
         view.set_read_only(True)
         view.run_command('move_to', {'to': 'eof'})
-
-
-def test_region_key(view, result_type):
-    return '{}:{}'.format(view.file_name(), result_type)
 
 
 def get_active_repl_view(window):
@@ -255,152 +252,20 @@ class TutkainEvaluateViewCommand(TextCommand):
 
 
 class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
-    def evaluate_view(self, session, response):
-        if response.get('status') == ['done']:
-            session.send(
-                {'op': 'eval',
-                 'code': self.view.substr(sublime.Region(0, self.view.size())),
-                 'file': self.view.file_name()},
-                handler=lambda response: self.run_tests(session, response)
-            )
-
-    def annotation(self, response):
-        args = {
-            'reference': response['expected'],
-            'actual': response['actual']
-        }
-
-        return '''
-        <a style="font-size: 0.8rem"
-           href='{}'>{}</a>
-        '''.format(
-            sublime.command_url('tutkain_open_diff_window', args=args),
-            'diff' if response.get('type', 'fail') == 'fail' else 'show'
-        )
-
-    def add_markers(self, session, response):
-        if 'status' not in response:
-            self.view.run_command('tutkain_clear_test_markers')
-
-        results = {'fail': {}, 'error': {}, 'pass': {}}
-
-        if 'fail' in response:
-            for result in response['fail']:
-                line = result['line'] - 1
-                point = self.view.text_point(line, 0)
-
-                results['fail'][line] = {
-                    'type': result['type'],
-                    'region': sublime.Region(point, point),
-                    'expected': result['expected'],
-                    'actual': result['actual']
-                }
-
-        if 'error' in response:
-            for result in response['error']:
-                line = result['var-meta']['line'] - 1
-                column = result['var-meta']['column'] - 1
-                point = self.view.text_point(line, column)
-
-                results['error'][line] = {
-                    'type': result['type'],
-                    'region': forms.find_next(self.view, point),
-                    'expected': result['expected'],
-                    'actual': result['actual']
-                }
-
-        if 'pass' in response:
-            for result in response['pass']:
-                line = result['line'] - 1
-                point = self.view.text_point(line, 0)
-
-                # Only add pass for line if there's no fail for the same line.
-                if line not in results['fail']:
-                    results['pass'][line] = {
-                        'type': result['type'],
-                        'region': sublime.Region(point, point)
-                    }
-
-            passes = results['pass'].values()
-            if passes:
-                self.view.add_regions(
-                    test_region_key(self.view, 'passes'),
-                    [p['region'] for p in passes],
-                    scope='region.greenish',
-                    icon='circle'
-                )
-
-            failures = results['fail'].values()
-            if failures:
-                self.view.add_regions(
-                    test_region_key(self.view, 'failures'),
-                    [f['region'] for f in failures],
-                    scope='region.redish',
-                    icon='circle',
-                    annotations=[self.annotation(f) for f in failures]
-                )
-
-            errors = results['error'].values()
-            if errors:
-                self.view.add_regions(
-                    test_region_key(self.view, 'errors'),
-                    [e['region'] for e in errors],
-                    scope='region.orangish',
-                    icon='circle',
-                    annotation_color='orange',
-                    annotations=[self.annotation(e) for e in errors],
-                    flags=sublime.DRAW_NO_FILL
-                )
-
-    def run_tests(self, session, response):
-        if response.get('status') == ['eval-error']:
-            session.denounce(response)
-        elif response.get('status') == ['done']:
-            if not session.is_denounced(response):
-                file_name = self.view.file_name()
-                base_name = os.path.basename(file_name) if file_name else 'NO_SOURCE_FILE'
-
-                if int(sublime.version()) >= 4073 and session.supports('tutkain/test'):
-                    def handler(response):
-                        session.output(response)
-                        self.add_markers(session, response)
-
-                    session.send({
-                        'op': 'tutkain/test',
-                        'ns': namespace.find_declaration(self.view),
-                        'file': base_name
-                    }, handler=handler)
-                else:
-                    # For nREPL < 0.8 compatibility
-                    session.send(
-                        {'op': 'eval',
-                         'code': '''
-    (let [report clojure.test/report]
-      (with-redefs [clojure.test/report (fn [event] (report (assoc event :file "%s")))]
-        ((requiring-resolve \'clojure.test/run-tests))))
-                         ''' % base_name,
-                         'file': file_name}
-                    )
-        elif response.get('value'):
-            pass
-        else:
-            session.output(response)
-
     def run(self, edit):
-        window = self.view.window()
-        session = get_session_by_owner(window, 'plugin')
+        session = get_session_by_owner(self.view.window(), 'plugin')
+        test.run(self.view, session)
 
-        if session is None:
-            window.status_message('ERR: Not connected to a REPL.')
-        else:
-            session.send(
-                {'op': 'eval',
-                 'code': '''(->> (ns-publics *ns*)
-                                 (filter (fn [[_ v]] (-> v meta :test)))
-                                 (run! (fn [[sym _]] (ns-unmap *ns* sym))))''',
-                 'file': self.view.file_name()},
-                handler=lambda response: self.evaluate_view(session, response)
-            )
+
+class TutkainRunTestUnderCursorCommand(TextCommand):
+    def run(self, edit):
+        region = self.view.sel()[0]
+        point = region.begin()
+        test_var = test.current(self.view, point)
+
+        if test_var:
+            session = get_session_by_owner(self.view.window(), 'plugin')
+            test.run(self.view, session, test_vars=[test_var])
 
 
 class HostInputHandler(TextInputHandler):
@@ -1114,9 +979,9 @@ class TutkainNavigateReplHistoryCommand(TextCommand):
 
 class TutkainClearTestMarkersCommand(TextCommand):
     def run(self, edit):
-        self.view.erase_regions(test_region_key(self.view, 'passes'))
-        self.view.erase_regions(test_region_key(self.view, 'failures'))
-        self.view.erase_regions(test_region_key(self.view, 'errors'))
+        self.view.erase_regions(test.region_key(self.view, 'passes'))
+        self.view.erase_regions(test.region_key(self.view, 'failures'))
+        self.view.erase_regions(test.region_key(self.view, 'errors'))
 
 
 class TutkainOpenDiffWindowCommand(TextCommand):
@@ -1153,8 +1018,8 @@ class TutkainShowUnsuccessfulTestsCommand(TextCommand):
 
     def run(self, args):
         view = self.view
-        failures = view.get_regions(test_region_key(view, 'failures'))
-        errors = view.get_regions(test_region_key(view, 'errors'))
+        failures = test.regions(view, 'failures')
+        errors = test.regions(view, 'errors')
         regions = failures + errors
 
         if regions:

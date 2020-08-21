@@ -84,3 +84,15 @@ def find_previous(view, point):
                 return absorb_macro_characters(view, form)
             else:
                 point -= 1
+
+
+def seek_forward(view, start_point, pred):
+    point = start_point
+
+    while point <= view.size():
+        form = find_next(view, point)
+
+        if pred(form):
+            return form
+        else:
+            point = form.end()

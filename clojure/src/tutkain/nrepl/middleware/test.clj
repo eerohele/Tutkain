@@ -47,7 +47,7 @@
 
 (defn wrap-test
   [handler]
-  (fn [{:keys [op transport ns file] :as message}]
+  (fn [{:keys [op transport ns file vars] :as message}]
     (case op
       "tutkain/test"
       (let [results (atom {:fail [] :pass [] :error []})
@@ -70,7 +70,9 @@
                                                (-> event pprint-expected (update :actual #(with-out-str (stacktrace/print-stack-trace %))) (assoc :var-meta @var-meta))))
                                     :summary (swap! results assoc :summary (-> event (dissoc :file) str))
                                     nil)))]
-          (test/run-tests (symbol ns)))
+          (if (seq vars)
+            (test/test-vars (map #(resolve (symbol ns %)) vars))
+            (test/run-tests (symbol ns))))
         (transport/send transport (response-for message @results))
         (transport/send transport (response-for message {:status :done})))
       (handler message))))
@@ -81,7 +83,8 @@
    :expects #{}
    :handles {"tutkain/test" {:doc "Tutkain clojure.test integration middleware."
                              :requires {"ns" "The name of the namespace with the tests."}
-                             :optional {"file" "The path to the Clojure source file with the tests."}
+                             :optional {"file" "The path to the Clojure source file with the tests."
+                                        "vars" "A list of test var names to test."}
                              :returns {"status" "'done' when all tests have been run and results have been delivered to the client."
                                        "fail" "Test failures."
                                        "errors" "Test errors."

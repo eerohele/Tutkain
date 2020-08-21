@@ -119,7 +119,7 @@ def find_slurp_barf_targets(view, point, finder):
     form = None
     innermost = None
 
-    for s in sexp.walk_outward(view, point):
+    for s in sexp.walk_outward(view, point, edge=False):
         form = finder(s)
 
         if form:

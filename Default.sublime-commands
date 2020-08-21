@@ -44,6 +44,10 @@
         "command": "tutkain_run_tests_in_current_namespace"
     },
     {
+        "caption": "Tutkain: Run Test Under Cursor",
+        "command": "tutkain_run_test_under_cursor"
+    },
+    {
         "caption": "Tutkain: New Scratch View",
         "command": "tutkain_new_scratch_view"
     },
