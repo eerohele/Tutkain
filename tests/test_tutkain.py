@@ -62,13 +62,26 @@ class TestCommands(ViewTestCase):
         )
 
     def test_evaluate_form_before_view(self):
-        content = '''(remove-ns 'foo.bar) (ns foo.bar) (defn square [x] (* x x)) (comment (square 2))'''
+        content = '''(ns my.ns (:require [clojure.set :as set]))
+
+(defn x [y z] (set/subset? y z))
+
+(x #{1} #{1 2})'''
+
         self.set_view_content(content)
-        self.set_selections((69, 79))
+        self.set_selections((45, 45))
         self.view.run_command('tutkain_evaluate_form')
 
         self.assertEqualsEventually(
-            '''foo.bar=> (square 2)\n:tutkain/namespace-not-found\n''',
+            '''my.ns=> (defn x [y z] (set/subset? y z))\n#'my.ns/x\n''',
+            self.repl_view_content
+        )
+
+        self.set_selections((79, 79))
+        self.view.run_command('tutkain_evaluate_form')
+
+        self.assertEqualsEventually(
+            '''my.ns=> (defn x [y z] (set/subset? y z))\n#'my.ns/x\nmy.ns=> (x #{1} #{1 2})\ntrue\n''',
             self.repl_view_content
         )
 

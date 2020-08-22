@@ -187,6 +187,29 @@ def get_eval_region(view, region, scope='outermost'):
 
 
 class TutkainEvaluateFormCommand(TextCommand):
+    def handler(self, session, file, ns, code, response):
+        def retry(ns, response):
+            if response.get('status') == ['done']:
+                session.send(
+                    {'op': 'eval',
+                     'code': code,
+                     'file': file,
+                     'ns': ns}
+                )
+
+        if 'status' in response and 'namespace-not-found' in response['status']:
+            ns_region = namespace.find_last(self.view)
+            ns_form = sexp.outermost(self.view, ns_region.begin())
+
+            if ns_form:
+                session.send({
+                    'op': 'eval',
+                    'code': self.view.substr(ns_form.extent()),
+                    'file': file},
+                    handler=lambda response: retry(ns, response))
+        else:
+            session.output(response)
+
     def run(self, edit, scope='outermost'):
         session = get_session_by_owner(self.view.window(), 'user')
 
@@ -199,6 +222,7 @@ class TutkainEvaluateFormCommand(TextCommand):
                 if eval_region:
                     code = self.view.substr(eval_region)
                     ns = namespace.find_declaration(self.view) or 'user'
+                    file = self.view.file_name()
 
                     session.output({
                         'in': code,
@@ -209,14 +233,16 @@ class TutkainEvaluateFormCommand(TextCommand):
                         'event': 'send',
                         'scope': 'form',
                         'code': code,
+                        'file': file,
                         'ns': ns
                     })
 
                     session.send(
                         {'op': 'eval',
-                         'code': self.view.substr(eval_region),
-                         'file': self.view.file_name(),
-                         'ns': ns}
+                         'code': code,
+                         'file': file,
+                         'ns': ns},
+                        handler=lambda response: self.handler(session, file, ns, code, response)
                     )
 
 
