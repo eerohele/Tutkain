@@ -507,6 +507,9 @@ class TutkainConnectCommand(WindowCommand):
                         append_to_view(panel, item['tap'])
                 else:
                     self.print(session.view, item)
+            else:
+                view = get_active_repl_view(self.window)
+                self.print(view, item)
 
         log.debug({'event': 'thread/exit'})
 

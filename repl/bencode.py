@@ -74,7 +74,12 @@ def read(b):
     """Read bencodes values from a BufferedReader into Python values."""
     first_byte = b.read(1)
 
-    if first_byte == b'e':
+    # If the first byte is empty, the most likely reason is that the TCP server has died.
+    #
+    # If we don't take that into account here, our receive loop will keep flooding the system with
+    # recvfrom syscalls until the parent process dies. Eventually, the parent process ends up taking
+    # 100% of CPU time.
+    if not first_byte or first_byte == b'e':
         return None
     elif first_byte == b'd':
         return read_dict(b)

@@ -112,6 +112,11 @@ class Client(object):
         try:
             while not self.stop_event.is_set():
                 item = bencode.read(self.buffer)
+
+                if item is None:
+                    self.recvq.put({'value': ':tutkain/disconnected\n'})
+                    break
+
                 log.debug({'event': 'socket/recv', 'item': item})
                 self.handle(item)
         except OSError as e:
