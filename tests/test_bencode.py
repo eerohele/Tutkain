@@ -41,6 +41,7 @@ class TestBencode(TestCase):
     @classmethod
     def tearDownClass(self):
         if self.client:
+            self.client.shutdown(socket.SHUT_RDWR)
             self.client.close()
 
         if self.server:
