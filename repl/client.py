@@ -40,6 +40,7 @@ class Client(object):
     def disconnect(self):
         if self.socket is not None:
             try:
+                self.buffer.close()
                 self.socket.shutdown(socket.SHUT_RDWR)
                 self.socket.close()
                 log.debug({'event': 'socket/disconnect'})
