@@ -1,5 +1,6 @@
 import queue
 import socket
+import uuid
 from threading import Thread, Event
 
 from . import bencode
@@ -21,8 +22,6 @@ class Client(object):
     the socket connection. Client is a context manager, so you can use it
     with the `with` statement.
     '''
-
-    sessions = {}
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -48,27 +47,22 @@ class Client(object):
                 log.debug({'event': 'error', 'exception': e})
 
     def __init__(self, host, port):
+        self.uuid = str(uuid.uuid4())
         self.host = host
         self.port = port
         self.sendq = queue.Queue()
         self.recvq = queue.Queue()
         self.stop_event = Event()
+        self.sessions = {}
+        self.sessions_by_owner = {}
 
-    def clone_session(self, view):
-        self.sendq.put({'op': 'clone'})
-        id = self.recvq.get().get('new-session')
-        session = Session(id, self, view)
+    def id(self):
+        return self.uuid
+
+    def register_session(self, owner, session):
         self.sessions[session.id] = session
+        self.sessions_by_owner[owner] = session
         return session
-
-    def deregister_session(self, session_id, on_last):
-        log.debug({'event': 'session/deregister', 'session': session_id})
-
-        self.sessions.pop(session_id, None)
-
-        if not self.sessions:
-            on_last()
-            self.halt()
 
     def go(self):
         self.connect()
@@ -109,26 +103,30 @@ class Client(object):
         else:
             self.recvq.put(response)
 
+    def send_disconnect_notification(self):
+        session = self.sessions_by_owner.get('plugin')
+        session and session.output({'value': ':tutkain/disconnected\n'})
+
     def recv_loop(self):
         try:
             while not self.stop_event.is_set():
                 item = bencode.read(self.buffer)
 
                 if item is None:
-                    self.recvq.put({'value': ':tutkain/disconnected\n'})
+                    self.send_disconnect_notification()
                     break
 
                 log.debug({'event': 'socket/recv', 'item': item})
                 self.handle(item)
-        except OSError as e:
-            log.error({
-                'event': 'error',
-                'exception': e
-            })
+        except OSError as error:
+            log.error({'event': 'error', 'error': error})
         finally:
             # If we receive a stop event, put a None into the queue to tell
             # consumers to stop reading it.
             self.recvq.put(None)
+
+            # Feed poison pill to input queue.
+            self.sendq.put(None)
 
             log.debug({'event': 'thread/exit'})
 
@@ -139,12 +137,13 @@ class Client(object):
     def halt(self):
         log.debug({'event': 'client/halt'})
 
-        # Feed poison pill to input queue.
-        self.sendq.put(None)
+        def handler(response):
+            if 'status' in response and 'done' in response['status']:
+                self.stop_event.set()
 
-        # Trigger the kill switch to tell background threads to stop reading
-        # from the socket.
-        self.stop_event.set()
+        self.sessions_by_owner['user'].send({'op': 'close'})
+        self.sessions_by_owner['plugin'].send({'op': 'close'})
+        self.sessions_by_owner['sideloader'].send({'op': 'close'}, handler=handler)
 
     def __exit__(self, type, value, traceback):
         self.halt()

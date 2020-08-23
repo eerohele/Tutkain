@@ -2,9 +2,10 @@ from inspect import cleandoc
 import sublime
 import os
 
-from .util import ViewTestCase, wait_until_equals
-from tutkain import tutkain
+from .util import ViewTestCase, wait_until_contains
+from tutkain.repl import tap
 from tutkain import test
+from tutkain import tutkain
 
 
 HOST = os.getenv('NREPL_HOST', 'localhost')
@@ -12,28 +13,36 @@ HOST = os.getenv('NREPL_HOST', 'localhost')
 
 class TestCommands(ViewTestCase):
     @classmethod
+    def content(self, view):
+        return view and view.substr(sublime.Region(0, view.size()))
+
+    @classmethod
     def repl_view_content(self):
         if 'active_repl_view' in tutkain.state:
             view = tutkain.get_active_repl_view(self.view.window())
             return view.substr(sublime.Region(0, view.size()))
 
     @classmethod
-    def setUpClass(self):
-        super().setUpClass()
+    def connect(self):
         self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
 
-        if not wait_until_equals(
+        if not wait_until_contains(
             '''Clojure 1.10.1\nnREPL 0.8.0\n''',
-            self.repl_view_content,
-            delay=5
+            lambda: self.content(tutkain.get_active_repl_view(self.view.window())),
+            delay=1
         ):
             raise AssertionError('REPL did not respond in time.')
 
     @classmethod
+    def setUpClass(self):
+        super().setUpClass()
+        self.connect()
+
+    @classmethod
     def tearDownClass(self):
-        if self.view:
-            self.view.window().run_command('tutkain_disconnect')
-            self.view.window().run_command('close_file')
+        view = tutkain.get_active_repl_view(self.view.window())
+        view and view.close()
+        super().tearDownClass()
 
     def setUp(self):
         super().setUp()
@@ -224,44 +233,9 @@ class TestCommands(ViewTestCase):
             self.repl_view_content
         )
 
+    def test_multiple_repl_views(self):
+        initial_repl_view = tutkain.get_active_repl_view(self.view.window())
 
-class TestMultipleReplViews(ViewTestCase):
-    repl_views = []
-
-    @classmethod
-    def content(self, view):
-        return view.substr(sublime.Region(0, view.size()))
-
-    @classmethod
-    def connect(self):
-        self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1234})
-        view = tutkain.get_active_repl_view(self.view.window())
-        self.repl_views.append(view)
-
-        if not wait_until_equals(
-            '''Clojure 1.10.1\nnREPL 0.8.0\n''',
-            lambda: self.content(view),
-            delay=1
-        ):
-            raise AssertionError('REPL did not respond in time.')
-
-    @classmethod
-    def setUpClass(self):
-        super().setUpClass()
-        self.connect()
-        self.connect()
-
-    @classmethod
-    def tearDownClass(self):
-        super().tearDownClass()
-
-        for view in self.repl_views:
-            view.close()
-
-    def setUp(self):
-        super().setUp()
-
-    def test_evaluate(self):
         content = cleandoc('''
         (remove-ns 'app.core)
 
@@ -280,50 +254,48 @@ class TestMultipleReplViews(ViewTestCase):
 
         self.set_view_content(content)
 
-        self.view.window().focus_view(self.repl_views[0])
-
         self.view.run_command('tutkain_evaluate_view')
+
         self.assertContainsEventually(
             ':tutkain/loaded\n',
-            lambda: self.content(self.repl_views[0])
+            lambda: self.content(initial_repl_view)
         )
 
         self.set_selections((80, 90))
 
         self.view.run_command('tutkain_evaluate_form')
 
-        self.assertEqualsEventually('''Clojure 1.10.1
-nREPL 0.8.0
-:tutkain/loaded
+        self.assertEqualsEventually(''':tutkain/loaded
 app.core=> (square 2)
-4\n''', lambda: self.content(self.repl_views[0]))
+4\n''', lambda: self.content(initial_repl_view))
 
-        self.view.window().focus_view(self.repl_views[1])
+        self.connect()
+        other_repl_view = tutkain.get_active_repl_view(self.view.window())
+
         self.set_selections((93, 103))
         self.view.run_command('tutkain_evaluate_form')
 
-        self.assertEqualsEventually('''Clojure 1.10.1
+        self.assertContainsEventually('''Clojure 1.10.1
 nREPL 0.8.0
 app.core=> (square 4)
-16\n''', lambda: self.content(self.repl_views[1]))
+16\n''', lambda: self.content(other_repl_view))
 
-        # REPL view 1 content remains the same
-        self.assertEqualsEventually('''Clojure 1.10.1
-nREPL 0.8.0
-:tutkain/loaded
+        # Initial REPL view content remains the same
+        self.assertContainsEventually(''':tutkain/loaded
 app.core=> (square 2)
-4\n''', lambda: self.content(self.repl_views[0]))
+4\n''', lambda: self.content(initial_repl_view))
 
         # Evaluate (tap> ,,,)
         self.set_selections((106, 123))
         self.view.run_command('tutkain_evaluate_form')
 
-        panel = self.view.window().find_output_panel('tutkain')
+        client = tutkain.state['client_by_view'][initial_repl_view.id()]
+        panel = tap.find_panel(self.view.window(), client)
 
         # Tap is in the tap panel only once
         self.assertEqualsEventually('64\n', lambda: self.content(panel))
 
-        self.view.window().focus_view(self.repl_views[0])
+        self.view.window().focus_view(initial_repl_view)
         self.view.window().focus_view(self.view)
         self.set_selections((93, 103))
         self.view.run_command('tutkain_evaluate_form')
@@ -333,12 +305,10 @@ nREPL 0.8.0
 app.core=> (square 4)
 16
 app.core=> (tap> (square 8))
-true\n''', lambda: self.content(self.repl_views[1]))
+true\n''', lambda: self.content(other_repl_view))
 
-        self.assertEqualsEventually('''Clojure 1.10.1
-nREPL 0.8.0
-:tutkain/loaded
+        self.assertEqualsEventually(''':tutkain/loaded
 app.core=> (square 2)
 4
 app.core=> (square 4)
-16\n''', lambda: self.content(self.repl_views[0]))
+16\n''', lambda: self.content(initial_repl_view))

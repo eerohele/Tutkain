@@ -27,6 +27,7 @@ from . import namespace
 from . import test
 from .repl import info
 from .repl import history
+from .repl import tap
 from .repl.client import Client
 from .repl.session import Session
 
@@ -35,7 +36,7 @@ from .log import log, start_logging, stop_logging
 
 state = {
     'active_repl_view': collections.defaultdict(dict),
-    'sessions_by_view': collections.defaultdict(dict)
+    'client_by_view': collections.defaultdict(dict)
 }
 
 
@@ -138,17 +139,27 @@ def get_active_repl_view(window):
     return state.get('active_repl_view').get(window.id())
 
 
-def get_view_sessions(view):
-    return view and state['sessions_by_view'].get(view.id())
+def get_view_client(view):
+    return view and state['client_by_view'].get(view.id())
+
+
+def get_active_view_client(window):
+    return get_view_client(get_active_repl_view(window))
 
 
 def get_active_view_sessions(window):
-    return get_view_sessions(get_active_repl_view(window))
+    client = get_active_view_client(window)
+    return client and client.sessions_by_owner
 
 
 def get_session_by_owner(window, owner):
     sessions = get_active_view_sessions(window)
     return sessions and sessions.get(owner)
+
+
+def forget_repl_view(view):
+    if view and view.id() in state['client_by_view']:
+        del state['client_by_view'][view.id()]
 
 
 class TutkainClearOutputViewCommand(WindowCommand):
@@ -165,7 +176,9 @@ class TutkainClearOutputViewCommand(WindowCommand):
         if session:
             self.clear_view(session.view)
 
-        self.clear_view(self.window.find_output_panel('tutkain'))
+        client = get_active_view_client(self.window)
+        panel = tap.find_panel(self.window, client)
+        panel and self.clear_view(panel)
 
 
 def get_eval_region(view, region, scope='outermost'):
@@ -265,6 +278,7 @@ class TutkainEvaluateViewCommand(TextCommand):
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
+            print('QWEQWEQWEQWEQWEQW')
             op = {'op': 'load-file',
                   'file': self.view.substr(sublime.Region(0, self.view.size()))}
 
@@ -424,52 +438,42 @@ class TutkainConnectCommand(WindowCommand):
 
             session.send(op, handler=lambda _: None)
 
-    def initialize(self, session, view):
-        if session.supports('sideloader-start') and session.supports('add-middleware'):
-            def finalize(response):
+    def create_sessions(self, client, sideloader, view, response):
+        if response.get('status') == ['done']:
+            info = response
+            sideloader.info = info
+            sideloader.output(response)
+
+            def create_session(owner, response):
                 if response.get('status') == ['done']:
-                    info = response
-                    session.info = info
-                    session.output(response)
-                    state['sessions_by_view'][view.id()]['sideloader'] = session
+                    new_session_id = response['new-session']
+                    new_session = Session(new_session_id, client, view)
+                    new_session.info = info
+                    client.register_session(owner, new_session)
 
-                    def register_session(owner, response):
-                        if response.get('status') == ['done']:
-                            new_session_id = response['new-session']
-                            new_session = Session(new_session_id, session.client, view)
-                            new_session.info = info
-                            session.client.sessions[new_session_id] = new_session
-                            state['sessions_by_view'][view.id()][owner] = new_session
+            sideloader.send(
+                {'op': 'clone', 'session': sideloader.id},
+                handler=lambda response: create_session('plugin', response)
+            )
 
-                    session.send(
-                        {'op': 'clone', 'session': session.id},
-                        handler=lambda response: register_session('plugin', response)
-                    )
+            sideloader.send(
+                {'op': 'clone', 'session': sideloader.id},
+                handler=lambda response: create_session('user', response)
+                )
 
-                    def register_user_session(response):
-                        if response.get('status') == ['done']:
-                            register_session('user', response)
-
-                            sessions = state['sessions_by_view'][view.id()]
-
-                            view.settings().set(
-                                'tutkain_session_ids',
-                                list(map(lambda session: session.id, sessions.values()))
-                            )
-
-                    session.send(
-                        {'op': 'clone', 'session': session.id},
-                        handler=lambda response: register_user_session(response)
-                    )
-
+    def initialize(self, client, sideloader, view):
+        if sideloader.supports('sideloader-start') and sideloader.supports('add-middleware'):
             def add_tap(response):
                 if response.get('status') == ['done']:
-                    session.send({'op': 'tutkain/add-tap'})
-                    session.send({'op': 'describe'}, handler=finalize)
+                    sideloader.send({'op': 'tutkain/add-tap'})
+
+                    sideloader.send({
+                        'op': 'describe'
+                    }, handler=lambda response: self.create_sessions(client, sideloader, view, response))
 
             def add_middleware(response):
                 if response.get('status') == ['done']:
-                    session.send({
+                    sideloader.send({
                         'op': 'add-middleware',
                         'middleware': [
                             'tutkain.nrepl.middleware.test/wrap-test',
@@ -477,11 +481,11 @@ class TutkainConnectCommand(WindowCommand):
                         ]
                     }, handler=add_tap)
 
-            session.send({
+            sideloader.send({
                 'op': 'sideloader-start'
-            }, handler=lambda response: self.sideloader_provide(session, response))
+            }, handler=lambda response: self.sideloader_provide(sideloader, response))
 
-            session.send({
+            sideloader.send({
                 'op': 'eval',
                 'code': '''(require 'tutkain.nrepl.util.pprint)'''
                 # We use a noop handler, to prevent the printer printing the nil response of this
@@ -512,32 +516,28 @@ class TutkainConnectCommand(WindowCommand):
                     view.add_regions(key, regions, scope=scope, flags=sublime.DRAW_NO_OUTLINE)
 
     def print_loop(self, client):
-        while True:
-            item = client.recvq.get()
+        try:
+            while True:
+                item = client.recvq.get()
 
-            if item is None:
-                break
+                if item is None:
+                    break
 
-            log.debug({'event': 'printer/recv', 'data': item})
+                log.debug({'event': 'printer/recv', 'data': item})
 
-            session = client.sessions.get(item.get('session'))
+                session = client.sessions.get(item.get('session'))
 
-            if session:
-                if 'tap' in item and 'session' in item:
-                    view = get_active_repl_view(self.window)
-                    session_ids = view.settings().get('tutkain_session_ids')
-
-                    if view and item['session'] in session_ids:
-                        panel = self.window.find_output_panel('tutkain')
-                        self.window.run_command('show_panel', {'panel': 'output.tutkain'})
-                        append_to_view(panel, item['tap'])
-                else:
+                if 'tap' in item:
+                    tap.show_panel(self.window, client)
+                    append_to_view(tap.find_panel(self.window, client), item['tap'])
+                elif session:
                     self.print(session.view, item)
-            else:
-                view = get_active_repl_view(self.window)
-                self.print(view, item)
-
-        log.debug({'event': 'thread/exit'})
+                else:
+                    view = get_active_repl_view(self.window)
+                    self.print(view, item)
+        finally:
+            log.debug({'event': 'thread/exit'})
+            forget_repl_view(get_active_repl_view(self.window))
 
     def create_output_view(self, host, port):
         # Set up a two-row layout.
@@ -577,9 +577,10 @@ class TutkainConnectCommand(WindowCommand):
 
         return view
 
-    def create_tap_panel(self):
-        if not self.window.find_output_panel('tutkain'):
-            panel = self.window.create_output_panel('tutkain')
+    def create_tap_panel(self, client):
+        if not tap.find_panel(self.window, client):
+            panel_name = tap.panel_name(self.window, client)
+            panel = self.window.create_output_panel(panel_name)
             panel.settings().set('line_numbers', False)
             panel.settings().set('gutter', False)
             panel.settings().set('is_widget', True)
@@ -592,10 +593,14 @@ class TutkainConnectCommand(WindowCommand):
         try:
             client = Client(host, int(port)).go()
 
-            self.create_tap_panel()
+            self.create_tap_panel(client)
             view = self.create_output_view(host, port)
+            state['client_by_view'][view.id()] = client
 
-            session = client.clone_session(view)
+            client.sendq.put({'op': 'clone'})
+            session_id = client.recvq.get().get('new-session')
+            sideloader = Session(session_id, client, view)
+            client.register_session('sideloader', sideloader)
 
             # Start a worker thread that reads items from a queue and prints
             # them into an output panel.
@@ -610,10 +615,10 @@ class TutkainConnectCommand(WindowCommand):
 
             def handler(response):
                 if response.get('status') == ['done']:
-                    session.info = response
-                    self.initialize(session, view)
+                    sideloader.info = response
+                    self.initialize(client, sideloader, view)
 
-            session.send({'op': 'describe'}, handler=handler)
+            sideloader.send({'op': 'describe'}, handler=handler)
         except ConnectionRefusedError:
             window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)
@@ -626,11 +631,7 @@ class TutkainConnectCommand(WindowCommand):
 class TutkainDisconnectCommand(WindowCommand):
     def run(self):
         view = get_active_repl_view(self.window)
-
-        if view:
-            view.close()
-        else:
-            on_close_last_session(self.window)
+        view and view.close()
 
 
 class TutkainNewScratchViewCommand(WindowCommand):
@@ -744,20 +745,6 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
         )
 
 
-def on_close_last_session(window):
-    # If this is the final REPL view, restore layout to single.
-    window.set_layout({
-        'cells': [[0, 0, 1, 1]],
-        'cols': [0.0, 1.0],
-        'rows': [0.0, 1.0]
-    })
-
-    # Destroy tap panel
-    window.destroy_output_panel('tutkain')
-
-    window.status_message('[Tutkain] REPL disconnected.')
-
-
 class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if view.settings().get('tutkain_repl_output_view'):
@@ -769,22 +756,21 @@ class TutkainEventListener(EventListener):
     def on_pre_close(self, view):
         if view and view.settings().get('tutkain_repl_output_view'):
             window = view.window()
-            sessions = get_view_sessions(view)
+            client = get_view_client(view)
 
-            if not sessions:
-                on_close_last_session(window)
-            else:
-                del state['sessions_by_view'][view.id()]
+            if client:
+                client.halt()
+                forget_repl_view(view)
 
-                def handler(response):
-                    if 'status' in response and 'done' in response['status']:
-                        session.client.deregister_session(
-                            response['session'],
-                            lambda: on_close_last_session(window)
-                        )
+                # TODO: This sometimes crashes ST.
+                #
+                # window.set_layout({
+                #     'cells': [[0, 0, 1, 1]],
+                #     'cols': [0.0, 1.0],
+                #     'rows': [0.0, 1.0]
+                # })
 
-                for session in sessions.values():
-                    session.send({'op': 'close'}, handler=handler)
+                window.destroy_output_panel(tap.panel_name(window, client))
 
             if window:
                 active_view = window.active_view()
