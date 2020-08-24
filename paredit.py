@@ -218,23 +218,27 @@ def wrap_bracket(view, edit, open_bracket):
     close_bracket = sexp.OPEN[open_bracket]
 
     for region, sel in iterate(view):
-        point = region.begin()
-        form = forms.find_adjacent(view, point)
+        if not region.empty():
+            view.insert(edit, region.end(), close_bracket)
+            view.insert(edit, region.begin(), open_bracket)
+        else:
+            point = region.begin()
+            form = forms.find_adjacent(view, point)
 
-        # cursor is in between the dispatch macro and an open paren
-        if (
-            form and
-            view.match_selector(point - 1, 'keyword.operator.macro') and
-            view.match_selector(point, 'meta.sexp.begin')
-        ):
-            form = Region(form.begin() + 1, form.end())
+            # cursor is in between the dispatch macro and an open paren
+            if (
+                form and
+                view.match_selector(point - 1, 'keyword.operator.macro') and
+                view.match_selector(point, 'meta.sexp.begin')
+            ):
+                form = Region(form.begin() + 1, form.end())
 
-        if not form:
-            form = Region(point, point)
-            sel.append(Region(point + 1, point + 1))
+            if not form:
+                form = Region(point, point)
+                sel.append(Region(point + 1, point + 1))
 
-        view.insert(edit, form.end(), close_bracket)
-        view.insert(edit, form.begin(), open_bracket)
+            view.insert(edit, form.end(), close_bracket)
+            view.insert(edit, form.begin(), open_bracket)
 
 
 def forward_delete(view, edit):
