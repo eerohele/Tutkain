@@ -924,6 +924,11 @@ class TestParedit(ViewTestCase):
         self.view.run_command('tutkain_paredit_backward_kill_form')
         self.assertEquals('; foo  baz', self.view_content())
         self.assertEquals([(6, 6)], self.selections())
+        self.set_view_content('(foo ::bar baz)')
+        self.set_selections((15, 0))
+        self.view.run_command('tutkain_paredit_backward_kill_form')
+        self.assertEquals('', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
 
     def test_forward_kill_form(self):
         self.set_view_content('(foo ::bar baz)')
@@ -941,6 +946,11 @@ class TestParedit(ViewTestCase):
         self.view.run_command('tutkain_paredit_forward_kill_form')
         self.assertEquals('; foo  baz', self.view_content())
         self.assertEquals([(6, 6)], self.selections())
+        self.set_view_content('(foo ::bar baz)')
+        self.set_selections((0, 15))
+        self.view.run_command('tutkain_paredit_forward_kill_form')
+        self.assertEquals('', self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
 
     def test_move_form(self):
         self.set_view_content('(foo (bar) baz "qux" 1/2 ::quux/quuz)')

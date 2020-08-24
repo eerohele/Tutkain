@@ -360,7 +360,9 @@ def kill_form(view, edit, forward):
     for region, sel in iterate(view):
         point = region.begin()
 
-        if selectors.ignore(view, point):
+        if not region.empty():
+            view.erase(edit, region)
+        elif selectors.ignore(view, point):
             word = view.word(point)
 
             if word:
