@@ -14,7 +14,10 @@ def show(view, line, column):
     if view.is_loading():
         sublime.set_timeout(lambda: show(view, line, column), 100)
     else:
-        view.set_viewport_position(view.text_to_layout(view.text_point(line, column)))
+        point = view.text_point(line, column)
+        view.set_viewport_position(view.text_to_layout(point))
+        view.sel().clear()
+        view.sel().add(point)
 
 
 def goto(window, location):
