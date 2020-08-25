@@ -5,7 +5,6 @@ from threading import Thread, Event
 
 from . import bencode
 from ..log import log
-from .session import Session
 
 
 class Client(object):
