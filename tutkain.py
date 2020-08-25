@@ -537,7 +537,6 @@ class TutkainConnectCommand(WindowCommand):
                     self.print(view, item)
         finally:
             log.debug({'event': 'thread/exit'})
-            forget_repl_view(get_active_repl_view(self.window))
 
     def create_output_view(self, host, port):
         # Set up a two-row layout.
