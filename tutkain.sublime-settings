@@ -1,3 +1,11 @@
 {
-  "debug": false
+  // Enable debug logging in Sublime Text console
+  "debug": false,
+
+  // The window layout Tutkain uses after connecting to a REPL.
+  //
+  // Valid options:
+  // - "horizontal"
+  // - "vertical"
+  "layout": "horizontal"
 }

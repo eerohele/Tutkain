@@ -92,10 +92,12 @@ def make_color_scheme(cache_dir):
                     )
 
 
-def plugin_loaded():
-    settings = sublime.load_settings('tutkain.sublime-settings')
+def settings():
+    return sublime.load_settings('tutkain.sublime-settings')
 
-    start_logging(settings.get('debug', False))
+
+def plugin_loaded():
+    start_logging(settings().get('debug', False))
 
     preferences = sublime.load_settings('Preferences.sublime-settings')
 
@@ -538,17 +540,29 @@ class TutkainConnectCommand(WindowCommand):
         finally:
             log.debug({'event': 'thread/exit'})
 
-    def create_output_view(self, host, port):
+    def set_layout(self):
         # Set up a two-row layout.
         #
         # TODO: Make configurable? This will clobber pre-existing layouts —
         # maybe add a setting for toggling this bit?
-        self.window.set_layout({
-            'cells': [[0, 0, 1, 1], [0, 1, 1, 2]],
-            'cols': [0.0, 1.0],
-            'rows': [0.0, 0.75, 1.0]
-        })
 
+        if settings().get('layout') == 'vertical':
+            layout = {
+                'cells': [[0, 0, 1, 1], [1, 0, 2, 1]],
+                'cols': [0.0, 0.5, 1.0],
+                'rows': [0.0, 1.0]
+            }
+        else:
+            layout = {
+                'cells': [[0, 0, 1, 1], [0, 1, 1, 2]],
+                'cols': [0.0, 1.0],
+                'rows': [0.0, 0.75, 1.0]
+            }
+
+        self.window.set_layout(layout)
+
+    def create_output_view(self, host, port):
+        self.set_layout()
         active_view = self.window.active_view()
 
         view_count = len(self.window.views_in_group(1))
