@@ -2006,6 +2006,12 @@
 ;  ^^^^^^^^^^^^^^^^^^^^^ entity.name.function.clojure
   [])
 
+  (do
+    (defmethod ^:foo print-method Foo
+      [bar out]
+      (print-method (.toString bar) out)))
+;                                       ^^ meta.sexp.end - invalid
+
 
 
 ; # defprotocol

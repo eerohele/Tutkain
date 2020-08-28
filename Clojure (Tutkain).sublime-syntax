@@ -658,6 +658,7 @@ contexts:
 
   defmethod-tail:
     - include: comment
+    - include: metadata
     - match: '{{qualified_symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
       push:
@@ -675,7 +676,7 @@ contexts:
                     set:
                       - match: '\)'
                         scope: meta.sexp.end.clojure punctuation.section.parens.end.clojure
-                        set: main
+                        pop: 3
                       - include: main
                   - include: main
 
