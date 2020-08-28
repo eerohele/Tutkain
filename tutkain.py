@@ -280,7 +280,6 @@ class TutkainEvaluateViewCommand(TextCommand):
         if session is None:
             window.status_message('ERR: Not connected to a REPL.')
         else:
-            print('QWEQWEQWEQWEQWEQW')
             op = {'op': 'load-file',
                   'file': self.view.substr(sublime.Region(0, self.view.size()))}
 
