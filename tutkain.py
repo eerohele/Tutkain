@@ -727,14 +727,13 @@ def lookup(view, point, handler):
 
             # TODO: Cache lookup results?
             if session and session.supports('lookup'):
-                session.send(
-                    {
-                        'op': 'lookup',
-                        'sym': view.substr(symbol),
-                        'ns': namespace.find_declaration(view)
-                    },
-                    handler=handler
-                )
+                op = {'op': 'lookup', 'sym': view.substr(symbol)}
+                ns = namespace.find_declaration(view)
+
+                if ns:
+                    op['ns'] = ns
+
+                session.send(op, handler=handler)
 
 
 class TutkainShowSymbolInformationCommand(TextCommand):
