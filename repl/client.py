@@ -140,9 +140,17 @@ class Client(object):
             if 'status' in response and 'done' in response['status']:
                 self.stop_event.set()
 
-        self.sessions_by_owner['user'].send({'op': 'close'})
-        self.sessions_by_owner['plugin'].send({'op': 'close'})
-        self.sessions_by_owner['sideloader'].send({'op': 'close'}, handler=handler)
+        sessions = self.sessions_by_owner
+
+        if sessions:
+            'user' in sessions and sessions['user'].send({'op': 'close'})
+            'plugin' in sessions and sessions['plugin'].send({'op': 'close'})
+
+            'sideloader' in sessions and sessions['sideloader'].send({
+                'op': 'close'
+            }, handler=handler)
+        else:
+            self.stop_event.set()
 
     def __exit__(self, type, value, traceback):
         self.halt()
