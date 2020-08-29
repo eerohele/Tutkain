@@ -4,6 +4,10 @@ import sublime
 from . import forms
 from . import namespace
 from . import sexp
+from .progress import ProgressBar
+
+
+progress = ProgressBar('[Tutkain] Running tests...')
 
 
 def current(view, point):
@@ -141,6 +145,7 @@ def evaluate_view(view, session, response, test_vars):
 
 def run_tests(view, session, response, file, file_path, test_vars):
     if response.get('status') == ['eval-error']:
+        progress.stop()
         session.denounce(response)
     elif response.get('status') == ['done']:
         if not session.is_denounced(response):
@@ -148,6 +153,7 @@ def run_tests(view, session, response, file, file_path, test_vars):
                 def handler(response):
                     session.output(response)
                     add_markers(view, session, response)
+                    progress.stop()
 
                 op = {
                     'op': 'tutkain/test',
@@ -188,3 +194,5 @@ def run(view, session, test_vars=[]):
              'file': view.file_name()},
             handler=lambda response: evaluate_view(view, session, response, test_vars)
         )
+
+        progress.start()
