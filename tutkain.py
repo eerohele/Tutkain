@@ -22,6 +22,7 @@ from . import sexp
 from . import forms
 from . import formatter
 from . import indent
+from . import inline
 from . import paredit
 from . import namespace
 from . import test
@@ -117,6 +118,9 @@ def plugin_unloaded():
     for window in sublime.windows():
         window.run_command('tutkain_disconnect')
 
+    view = sublime.active_window().active_view()
+    view and inline.clear(view)
+
     preferences = sublime.load_settings('Preferences.sublime-settings')
     preferences.clear_on_change('tutkain')
 
@@ -171,6 +175,7 @@ class TutkainClearOutputViewCommand(WindowCommand):
             view.run_command('select_all')
             view.run_command('right_delete')
             view.set_read_only(True)
+            inline.clear(self.window.active_view())
 
     def run(self):
         session = get_session_by_owner(self.window, 'plugin')
@@ -184,7 +189,7 @@ class TutkainClearOutputViewCommand(WindowCommand):
 
 
 class TutkainEvaluateFormCommand(TextCommand):
-    def handler(self, session, file, ns, code, response):
+    def handler(self, region, session, file, ns, code, response):
         def retry(ns, response):
             if response.get('status') == ['done']:
                 session.send(
@@ -204,8 +209,11 @@ class TutkainEvaluateFormCommand(TextCommand):
                     'code': self.view.substr(ns_form.extent()),
                     'file': file},
                     handler=lambda response: retry(ns, response))
-        else:
-            session.output(response)
+        elif settings().get('inline_evaluation_results') and 'value' in response:
+            inline.clear(self.view)
+            inline.show(self.view, region.end(), response['value'])
+
+        session.output(response)
 
     def get_eval_region(self, region, scope='outermost', ignore={}):
         assert scope in {'innermost', 'outermost'}
@@ -252,7 +260,7 @@ class TutkainEvaluateFormCommand(TextCommand):
                          'code': code,
                          'file': file,
                          'ns': ns},
-                        handler=lambda response: self.handler(session, file, ns, code, response)
+                        handler=lambda response: self.handler(eval_region, session, file, ns, code, response)
                     )
 
 
@@ -637,6 +645,7 @@ class TutkainConnectCommand(WindowCommand):
 
 class TutkainDisconnectCommand(WindowCommand):
     def run(self):
+        inline.clear(self.window.active_view())
         view = get_active_repl_view(self.window)
         view and view.close()
 
@@ -752,6 +761,9 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
 
 
 class TutkainEventListener(EventListener):
+    def on_modified_async(self, view):
+        inline.clear(view)
+
     def on_activated(self, view):
         if view.settings().get('tutkain_repl_output_view'):
             state['active_repl_view'][view.window().id()] = view
