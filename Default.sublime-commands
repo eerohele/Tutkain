@@ -20,7 +20,13 @@
         "command": "tutkain_disconnect"
     },
     {
-        "caption": "Tutkain: Evaluate Form",
+        "caption": "Tutkain: Evaluate Outermost Form",
+        "args": {"scope": "outermost"},
+        "command": "tutkain_evaluate_form"
+    },
+    {
+        "caption": "Tutkain: Evaluate Innermost Form",
+        "args": {"scope": "innermost"},
         "command": "tutkain_evaluate_form"
     },
     {

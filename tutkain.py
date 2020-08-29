@@ -183,24 +183,6 @@ class TutkainClearOutputViewCommand(WindowCommand):
         panel and self.clear_view(panel)
 
 
-def get_eval_region(view, region, scope='outermost'):
-    assert scope in {'innermost', 'outermost'}
-
-    if not region.empty():
-        return region
-    else:
-        if scope == 'outermost':
-            outermost = sexp.outermost(view, region.begin(), ignore={'comment'})
-
-            if outermost:
-                return outermost.extent()
-        elif scope == 'innermost':
-            innermost = sexp.innermost(view, region.begin(), edge=True)
-
-            if innermost:
-                return innermost.extent()
-
-
 class TutkainEvaluateFormCommand(TextCommand):
     def handler(self, session, file, ns, code, response):
         def retry(ns, response):
@@ -225,14 +207,27 @@ class TutkainEvaluateFormCommand(TextCommand):
         else:
             session.output(response)
 
-    def run(self, edit, scope='outermost'):
+    def get_eval_region(self, region, scope='outermost', ignore={}):
+        assert scope in {'innermost', 'outermost'}
+
+        if not region.empty():
+            return region
+        else:
+            if scope == 'outermost':
+                outermost = sexp.outermost(self.view, region.begin(), ignore=ignore)
+                return outermost and outermost.extent()
+            elif scope == 'innermost':
+                innermost = sexp.innermost(self.view, region.begin(), edge=True)
+                return innermost and innermost.extent()
+
+    def run(self, edit, scope='outermost', ignore={'comment'}):
         session = get_session_by_owner(self.view.window(), 'user')
 
         if session is None:
             self.view.window().status_message('ERR: Not connected to a REPL.')
         else:
             for region in self.view.sel():
-                eval_region = get_eval_region(self.view, region, scope=scope)
+                eval_region = self.get_eval_region(region, scope=scope, ignore=set(ignore))
 
                 if eval_region:
                     code = self.view.substr(eval_region)
