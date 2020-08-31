@@ -764,6 +764,9 @@ class TutkainEventListener(EventListener):
     def on_modified_async(self, view):
         inline.clear(view)
 
+    def on_deactivated_async(self, view):
+        inline.clear(view)
+
     def on_activated(self, view):
         if view.settings().get('tutkain_repl_output_view'):
             state['active_repl_view'][view.window().id()] = view
