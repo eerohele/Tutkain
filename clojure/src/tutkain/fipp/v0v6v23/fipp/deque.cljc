@@ -1,7 +1,7 @@
-(ns fipp.deque
+(ns tutkain.fipp.v0v6v23.fipp.deque
   "Double-sided queue built on rrb vectors."
   (:refer-clojure :exclude [empty concat])
-  (:require [clojure.core.rrb-vector :as rrb]))
+  (:require [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector :as rrb]))
 
 (def create vector)
 

@@ -1,6 +1,6 @@
-(ns fipp.ednize
+(ns tutkain.fipp.v0v6v23.fipp.ednize
   (:require [clojure.string :as s]
-            [fipp.util :refer [edn?]]))
+            [tutkain.fipp.v0v6v23.fipp.util :refer [edn?]]))
 
 (defprotocol IEdn
   "Perform a shallow conversion to an Edn data structure."

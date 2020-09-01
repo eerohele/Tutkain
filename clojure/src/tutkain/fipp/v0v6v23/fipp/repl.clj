@@ -1,6 +1,6 @@
-(ns fipp.repl
+(ns tutkain.fipp.v0v6v23.fipp.repl
   (:require [clojure.repl :as clj]
-            [fipp.edn :refer [pprint]]))
+            [tutkain.fipp.v0v6v23.fipp.edn :refer [pprint]]))
 
 (defn pst
   "Like clojure.repl/pst, but with ex-info fipp pretty-printing."

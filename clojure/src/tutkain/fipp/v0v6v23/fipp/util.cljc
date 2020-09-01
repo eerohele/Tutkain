@@ -1,4 +1,4 @@
-(ns fipp.util
+(ns tutkain.fipp.v0v6v23.fipp.util
   (:refer-clojure :exclude [boolean? char? regexp?]))
 
 ;;TODO: CLJ-1719 and CLJS-1241

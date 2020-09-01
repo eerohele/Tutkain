@@ -1,7 +1,7 @@
-(ns fipp.engine
+(ns tutkain.fipp.v0v6v23.fipp.engine
   "See: Oleg Kiselyov, Simon Peyton-Jones, and Amr Sabry
   Lazy v. Yield: Incremental, Linear Pretty-printing"
-  (:require [fipp.deque :as deque])
+  (:require [tutkain.fipp.v0v6v23.fipp.deque :as deque])
   #?(:clj (:import (java.io Writer))))
 
 

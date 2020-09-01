@@ -1,9 +1,9 @@
-(ns fipp.clojure
+(ns tutkain.fipp.v0v6v23.fipp.clojure
   "Provides a pretty document serializer and pprint fn for Clojure code.
   See fipp.edn for pretty printing Clojure/EDN data structures"
   (:require [clojure.walk :as walk]
-            [fipp.visit :as v :refer [visit]]
-            [fipp.edn :as edn]))
+            [tutkain.fipp.v0v6v23.fipp.visit :as v :refer [visit]]
+            [tutkain.fipp.v0v6v23.fipp.edn :as edn]))
 
 
 ;;; Helper functions

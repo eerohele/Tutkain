@@ -1,24 +1,24 @@
-(ns clojure.core.rrb-vector.rrbt
+(ns tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.rrbt
   (:refer-clojure :exclude [assert ->VecSeq])
-  (:require [clojure.core.rrb-vector.parameters :as p]
-            [clojure.core.rrb-vector.protocols
+  (:require [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.parameters :as p]
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.protocols
              :refer [PSliceableVector slicev
                      PSpliceableVector splicev
                      PTransientDebugAccess]]
-            [clojure.core.rrb-vector.nodes
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.nodes
              :refer [ranges overflow? last-range regular-ranges
                      first-child last-child remove-leftmost-child
                      replace-leftmost-child replace-rightmost-child
                      fold-tail new-path index-of-nil
                      object-am object-nm primitive-nm]]
-            [clojure.core.rrb-vector.transients :refer [transient-helper]]
-            [clojure.core.rrb-vector.fork-join :as fj]
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.transients :refer [transient-helper]]
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.fork-join :as fj]
             [clojure.core.protocols :refer [IKVReduce]]
             [clojure.core.reducers :as r :refer [CollFold coll-fold]])
   (:import (clojure.core ArrayManager Vec ArrayChunk)
            (clojure.lang RT Util Box PersistentVector
                          APersistentVector$SubVector)
-           (clojure.core.rrb_vector.nodes NodeManager)
+           (tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes NodeManager)
            (java.util.concurrent.atomic AtomicReference)))
 
 (set! *warn-on-reflection* true)

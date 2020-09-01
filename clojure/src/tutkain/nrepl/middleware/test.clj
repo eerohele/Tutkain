@@ -1,6 +1,6 @@
 (ns tutkain.nrepl.middleware.test
   (:require
-   [fipp.edn :as pprint]
+   [tutkain.fipp.v0v6v23.fipp.edn :as pprint]
    [clojure.stacktrace :as stacktrace]
    [clojure.string :as str]
    [clojure.test :as test]

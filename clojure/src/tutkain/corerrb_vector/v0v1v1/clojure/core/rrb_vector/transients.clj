@@ -1,8 +1,8 @@
-(ns clojure.core.rrb-vector.transients
-  (:require [clojure.core.rrb-vector.parameters :as p]
-            [clojure.core.rrb-vector.nodes :refer [ranges last-range
+(ns tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.transients
+  (:require [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.parameters :as p]
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.nodes :refer [ranges last-range
                                                    overflow?]])
-  (:import (clojure.core.rrb_vector.nodes NodeManager)
+  (:import (tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes NodeManager)
            (clojure.core ArrayManager)
            (java.util.concurrent.atomic AtomicReference)))
 
@@ -10,39 +10,39 @@
 (set! *unchecked-math* true) ;; :warn-on-boxed
 
 (definterface ITransientHelper
-  (editableRoot [^clojure.core.rrb_vector.nodes.NodeManager nm
+  (editableRoot [^tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes.NodeManager nm
                  ^clojure.core.ArrayManager am
                  root])
   (editableTail [^clojure.core.ArrayManager am
                  tail])
-  (ensureEditable [^clojure.core.rrb_vector.nodes.NodeManager nm
+  (ensureEditable [^tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes.NodeManager nm
                    root])
-  (ensureEditable [^clojure.core.rrb_vector.nodes.NodeManager nm
+  (ensureEditable [^tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes.NodeManager nm
                    ^clojure.core.ArrayManager am
                    ^java.util.concurrent.atomic.AtomicReference root-edit
                    current-node
                    ^int shift])
-  (pushTail [^clojure.core.rrb_vector.nodes.NodeManager nm
+  (pushTail [^tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes.NodeManager nm
              ^clojure.core.ArrayManager am
              ^int shift
              ^int cnt
              ^java.util.concurrent.atomic.AtomicReference root-edit
              current-node
              tail-node])
-  (popTail [^clojure.core.rrb_vector.nodes.NodeManager nm
+  (popTail [^tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes.NodeManager nm
             ^clojure.core.ArrayManager am
             ^int shift
             ^int cnt
             ^java.util.concurrent.atomic.AtomicReference root-edit
             current-node])
-  (doAssoc [^clojure.core.rrb_vector.nodes.NodeManager nm
+  (doAssoc [^tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes.NodeManager nm
             ^clojure.core.ArrayManager am
             ^int shift
             ^java.util.concurrent.atomic.AtomicReference root-edit
             current-node
             ^int i
             val])
-  (newPath [^clojure.core.rrb_vector.nodes.NodeManager nm
+  (newPath [^tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes.NodeManager nm
             ^clojure.core.ArrayManager am
             tail
             ^java.util.concurrent.atomic.AtomicReference edit

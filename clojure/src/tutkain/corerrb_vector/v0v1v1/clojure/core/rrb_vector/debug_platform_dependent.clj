@@ -1,17 +1,17 @@
-(ns clojure.core.rrb-vector.debug-platform-dependent
+(ns tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.debug-platform-dependent
   (:refer-clojure :exclude [format printf])
-  (:require [clojure.core.rrb-vector.parameters :as p]
-            clojure.core.rrb-vector.rrbt
-            [clojure.core.rrb-vector.nodes
+  (:require [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.parameters :as p]
+            tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.rrbt
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.nodes
              :refer [ranges object-nm primitive-nm object-am]]
-            [clojure.core.rrb-vector :as fv])
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector :as fv])
   (:import (clojure.lang PersistentVector PersistentVector$TransientVector
                          PersistentVector$Node APersistentVector$SubVector)
            (java.util.concurrent.atomic AtomicReference)
            (java.lang.reflect Field Method)
            (clojure.core Vec VecNode ArrayManager)
-           (clojure.core.rrb_vector.rrbt Vector Transient)
-           (clojure.core.rrb_vector.nodes NodeManager)))
+           (tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.rrbt Vector Transient)
+           (tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes NodeManager)))
 
 ;; Work around the fact that several fields of type
 ;; PersistentVector$TransientVector are private, but note that this is

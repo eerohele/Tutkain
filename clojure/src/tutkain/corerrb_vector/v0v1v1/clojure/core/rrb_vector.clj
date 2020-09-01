@@ -1,4 +1,4 @@
-(ns clojure.core.rrb-vector
+(ns tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector
 
   "An implementation of the confluently persistent vector data
   structure introduced in Bagwell, Rompf, \"RRB-Trees: Efficient
@@ -32,15 +32,15 @@
   {:author "Michał Marczyk"}
 
   (:refer-clojure :exclude [vector vector-of vec subvec])
-  (:require [clojure.core.rrb-vector.parameters :as p]
-            [clojure.core.rrb-vector.protocols :refer [slicev splicev]]
-            [clojure.core.rrb-vector.nodes
+  (:require [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.parameters :as p]
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.protocols :refer [slicev splicev]]
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.nodes
              :refer [ams object-am object-nm primitive-nm
                      empty-pv-node empty-gvec-node]]
-            [clojure.core.rrb-vector.rrbt :refer [as-rrbt]]
-            clojure.core.rrb-vector.interop)
-  (:import (clojure.core.rrb_vector.rrbt Vector)
-           (clojure.core.rrb_vector.nodes NodeManager)
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.rrbt :refer [as-rrbt]]
+            tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.interop)
+  (:import (tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.rrbt Vector)
+           (tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.nodes NodeManager)
            (clojure.core ArrayManager)))
 
 (set! *warn-on-reflection* true)

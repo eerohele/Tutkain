@@ -1,11 +1,11 @@
-(ns clojure.core.rrb-vector.interop
-  (:require [clojure.core.rrb-vector.protocols
+(ns tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.interop
+  (:require [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.protocols
              :refer [PSliceableVector slicev
                      PSpliceableVector splicev]]
-            [clojure.core.rrb-vector.rrbt :refer [as-rrbt]])
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.rrbt :refer [as-rrbt]])
   (:import (clojure.core Vec)
            (clojure.lang PersistentVector APersistentVector$SubVector)
-           (clojure.core.rrb_vector.rrbt Vector)))
+           (tutkain.corerrb_vector.v0v1v1.clojure.core.rrb_vector.rrbt Vector)))
 
 (extend-protocol PSliceableVector
   Vec

@@ -1,7 +1,7 @@
 (ns tutkain.nrepl.util.pprint
   (:require
    [clojure.datafy :refer [datafy]]
-   [fipp.edn :as fipp]))
+   [tutkain.fipp.v0v6v23.fipp.edn :as fipp]))
 
 (defn pprint
   [value writer options]

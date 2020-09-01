@@ -1,4 +1,4 @@
-(ns clojure.core.rrb-vector.parameters)
+(ns tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.parameters)
 
 ;; This namespace exists primarily so that the parameterized version
 ;; of this code, and the 'production' version of this code, can be

@@ -1,14 +1,14 @@
-(ns clojure.core.rrb-vector.debug
-  (:require [clojure.core.rrb-vector.parameters :as p]
-            [clojure.core.rrb-vector :as fv]
-            [clojure.core.rrb-vector.rrbt :as rrbt]
+(ns tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.debug
+  (:require [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.parameters :as p]
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector :as fv]
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.rrbt :as rrbt]
             ;; This page:
             ;; https://clojure.org/guides/reader_conditionals refers
             ;; to code that can go into common cljc files as platform
             ;; independent, and the code in the clj or cljs files as
             ;; platform dependent, so I will use that terminology
             ;; here, too.
-            [clojure.core.rrb-vector.debug-platform-dependent :as pd]))
+            [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.debug-platform-dependent :as pd]))
 
 ;; The intent is to keep this file as close to
 ;; src/main/cljs/clojure/core/rrb_vector/debug.cljs as possible, so
@@ -18,7 +18,7 @@
 
 
 ;; Functions expected to be defined in the appropriate
-;; clojure.core.rrb-vector.debug-platform-dependent namespace:
+;; tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.debug-platform-dependent namespace:
 
 ;; pd/internal-node?
 ;; pd/persistent-vector?
@@ -674,7 +674,7 @@
 ;; transient persistent!
 ;; seq rseq
 
-;; Functions in clojure.core.rrb-vector namespace, and internal
+;; Functions in tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector namespace, and internal
 ;; implementation functions/protocol-methods that they use:
 
 ;; defn fv/catvec
@@ -723,7 +723,7 @@
 
   Example call:
 
-    (require '[clojure.core.rrb-vector.debug :as d])
+    (require '[tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.debug :as d])
     (d/set-debug-opts! d/full-debug-opts)
 
   This call enables as thorough of extra verification checks as is
@@ -824,7 +824,7 @@
 
   A typical way of calling validating-pop is:
 
-      (require '[clojure.core.rrb-vector.debug :as d])
+      (require '[tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.debug :as d])
       (d/validating-pop clojure.core/pop \"pop\" coll)
 
   Most of the validating-* functions behave similarly.  This one
@@ -887,8 +887,8 @@
   "These two namespace aliases will be used later in this
   documentation:
 
-      (require '[clojure.core.rrb-vector.debug :as d])
-      (require '[clojure.core.rrb-vector.debug-platform-dependent :as pd])
+      (require '[tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.debug :as d])
+      (require '[tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.debug-platform-dependent :as pd])
 
   checking-pop passes its argument to clojure.core/pop, and if it
   returns, it returns whatever clojure.core/pop does.  If checking-pop
@@ -1040,7 +1040,7 @@
   "validating-splice-rrbts-main behaves the same as validating-pop, with
   the differences described here.  See validating-pop for details.
   
-      good example f: clojure.core.rrb-vector.rrbt/splice-rrbts-main
+      good example f: tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.rrbt/splice-rrbts-main
       opts map: (get @d/debug-opts :catvec)  ;; _not_ :splice-rrbts-main
 
   Given that splice-rrbts-main is an internal implementation detail of
@@ -1170,7 +1170,7 @@
   If no exception is thrown, the return value is (apply
   checking-catvec-impl vs)."
   [err-desc-str & vs]
-  (let [orig-fn checking-catvec-impl  ;; clojure.core.rrb-vector/catvec
+  (let [orig-fn checking-catvec-impl  ;; tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector/catvec
         vs-seqs (doall (map copying-seq vs))
         exp-ret-seq (apply concat vs-seqs)
         ret (apply orig-fn vs)
@@ -1211,7 +1211,7 @@
                           args)))
     (let [ret (if (:validate opts)
                 (apply validating-catvec err-desc-str args)
-                (apply checking-catvec-impl ;; clojure.core.rrb-vector/catvec
+                (apply checking-catvec-impl ;; tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector/catvec
                        args))]
       (sanity-check-vector-internals err-desc-str ret args opts)
       ret)))
@@ -1228,7 +1228,7 @@
   ([err-desc-str coll start end]
    (let [coll-seq (copying-seq coll)
          exp-ret-seq (take (- end start) (drop start coll-seq))
-         ret (clojure.core.rrb-vector.protocols/slicev
+         ret (tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.protocols/slicev
               coll start end)
          ret-seq (copying-seq ret)]
      (when (not= ret-seq exp-ret-seq)
@@ -1262,7 +1262,7 @@
                  "type=" (type v))))
     (let [ret (if (:validate opts)
                 (apply validating-slicev err-desc-str args)
-                (apply clojure.core.rrb-vector.protocols/slicev
+                (apply tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.protocols/slicev
                        args))]
       (sanity-check-vector-internals err-desc-str ret args opts)
       ret)))

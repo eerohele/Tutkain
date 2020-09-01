@@ -1,10 +1,10 @@
-(ns fipp.edn
+(ns tutkain.fipp.v0v6v23.fipp.edn
   "Provides a pretty document serializer and pprint fn for Clojure/EDN forms.
   See fipp.clojure for pretty printing Clojure code."
   (:require [clojure.string :as str]
-            [fipp.ednize :refer [edn record->tagged]]
-            [fipp.visit :refer [visit visit*]]
-            [fipp.engine :refer (pprint-document)]))
+            [tutkain.fipp.v0v6v23.fipp.ednize :refer [edn record->tagged]]
+            [tutkain.fipp.v0v6v23.fipp.visit :refer [visit visit*]]
+            [tutkain.fipp.v0v6v23.fipp.engine :refer (pprint-document)]))
 
 (defn pretty-coll [{:keys [print-level print-length] :as printer}
                    open xs sep close f]
@@ -21,7 +21,7 @@
 
 (defrecord EdnPrinter [symbols print-meta print-length print-level]
 
-  fipp.visit/IVisitor
+  tutkain.fipp.v0v6v23.fipp.visit/IVisitor
 
 
   (visit-unknown [this x]

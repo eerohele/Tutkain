@@ -1,7 +1,7 @@
-(ns fipp.visit
+(ns tutkain.fipp.v0v6v23.fipp.visit
   "Convert to and visit edn structures."
-  (:require [fipp.util :as util]
-            [fipp.ednize :refer [override?]]))
+  (:require [tutkain.fipp.v0v6v23.fipp.util :as util]
+            [tutkain.fipp.v0v6v23.fipp.ednize :refer [override?]]))
 
 ;;;TODO Stablize public interface
 

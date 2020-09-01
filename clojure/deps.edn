@@ -1,0 +1,5 @@
+{:deps {org.clojure/tools.namespace {:mvn/version "1.0.0"}
+        leiningen/leiningen {:mvn/version "2.9.4"}
+        thomasa/mranderson {:mvn/version "0.5.1"}}
+ :aliases {:nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.8.0"}}
+                   :main-opts ["--main" "nrepl.cmdline"]}}}

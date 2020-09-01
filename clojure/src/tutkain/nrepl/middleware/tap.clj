@@ -1,6 +1,6 @@
 (ns tutkain.nrepl.middleware.tap
   (:require
-   [fipp.edn :as pprint]
+   [tutkain.fipp.v0v6v23.fipp.edn :as pprint]
    [nrepl.middleware :as middleware]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]))

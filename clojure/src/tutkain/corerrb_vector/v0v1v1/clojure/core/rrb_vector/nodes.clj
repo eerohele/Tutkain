@@ -1,5 +1,5 @@
-(ns clojure.core.rrb-vector.nodes
-  (:require [clojure.core.rrb-vector.parameters :as p])
+(ns tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.nodes
+  (:require [tutkain.corerrb-vector.v0v1v1.clojure.core.rrb-vector.parameters :as p])
   (:import (clojure.core VecNode ArrayManager)
            (clojure.lang PersistentVector PersistentVector$Node)
            (java.util.concurrent.atomic AtomicReference)))
