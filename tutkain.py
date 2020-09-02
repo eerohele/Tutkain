@@ -189,7 +189,7 @@ class TutkainClearOutputViewCommand(WindowCommand):
 
 
 class TutkainEvaluateFormCommand(TextCommand):
-    def handler(self, region, session, file, ns, code, response):
+    def handler(self, region, session, file, ns, code, response, inline_result):
         def retry(ns, response):
             if response.get('status') == ['done']:
                 session.send(
@@ -209,7 +209,7 @@ class TutkainEvaluateFormCommand(TextCommand):
                     'code': self.view.substr(ns_form.extent()),
                     'file': file},
                     handler=lambda response: retry(ns, response))
-        elif settings().get('inline_evaluation_results') and 'value' in response:
+        elif inline_result and 'value' in response:
             inline.clear(self.view)
             inline.show(self.view, region.end(), response['value'])
 
@@ -228,7 +228,7 @@ class TutkainEvaluateFormCommand(TextCommand):
                 innermost = sexp.innermost(self.view, region.begin(), edge=True)
                 return innermost and innermost.extent()
 
-    def run(self, edit, scope='outermost', ignore={'comment'}):
+    def run(self, edit, scope='outermost', ignore={'comment'}, inline_result=False):
         session = get_session_by_owner(self.view.window(), 'user')
 
         if session is None:
@@ -255,12 +255,15 @@ class TutkainEvaluateFormCommand(TextCommand):
                         'ns': ns
                     })
 
+                    def handler(response):
+                        self.handler(eval_region, session, file, ns, code, response, inline_result)
+
                     session.send(
                         {'op': 'eval',
                          'code': code,
                          'file': file,
                          'ns': ns},
-                        handler=lambda response: self.handler(eval_region, session, file, ns, code, response)
+                        handler=handler
                     )
 
 

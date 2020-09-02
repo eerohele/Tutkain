@@ -49,6 +49,15 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // Evaluate current selections or the outermost form and show the result both in the REPL view
+    // and inline, right after the evaluated form
+    {
+        "keys": ["ctrl+c", "ctrl+a"],
+        "command": "tutkain_evaluate_form",
+        "args": {"scope": "outermost", "inline_result": true},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
     // Evaluate current selections or the innermost form.
     {
         "keys": ["ctrl+c", "ctrl+e"],

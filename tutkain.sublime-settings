@@ -8,12 +8,4 @@
   // - "horizontal"
   // - "vertical"
   "layout": "horizontal",
-
-  // Toggle whether form evaluation commands show evaluation results inline.
-  //
-  // When true, when you evaluate a form, Tutkain prints the evaluation result both inline and in
-  // the REPL view.
-  //
-  // When false, only show evaluation results in the REPL view.
-  "inline_evaluation_results": true,
 }
