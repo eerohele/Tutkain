@@ -15,7 +15,7 @@ def show(view, line, column):
         sublime.set_timeout(lambda: show(view, line, column), 100)
     else:
         point = view.text_point(line, column)
-        view.set_viewport_position(view.text_to_layout(point))
+        view.show(point)
         view.sel().clear()
         view.sel().add(point)
 
