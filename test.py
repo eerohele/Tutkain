@@ -123,26 +123,6 @@ def add_markers(view, session, response):
             )
 
 
-def evaluate_view(view, session, response, test_vars):
-    if response.get('status') == ['done']:
-        op = {'op': 'load-file',
-              'file': view.substr(sublime.Region(0, view.size()))}
-
-        file_path = view.file_name()
-
-        if file_path:
-            file = os.path.basename(file_path)
-            op['file-name'] = file
-            op['file-path'] = file_path
-        else:
-            file = 'NO_SOURCE_FILE'
-
-        session.send(
-            op,
-            handler=lambda response: run_tests(view, session, response, file, file_path, test_vars)
-        )
-
-
 def run_tests(view, session, response, file, file_path, test_vars):
     if response.get('status') == ['eval-error']:
         progress.stop()
@@ -180,6 +160,26 @@ def run_tests(view, session, response, file, file_path, test_vars):
         pass
     else:
         session.output(response)
+
+
+def evaluate_view(view, session, response, test_vars):
+    if response.get('status') == ['done']:
+        op = {'op': 'load-file',
+              'file': view.substr(sublime.Region(0, view.size()))}
+
+        file_path = view.file_name()
+
+        if file_path:
+            file = os.path.basename(file_path)
+            op['file-name'] = file
+            op['file-path'] = file_path
+        else:
+            file = 'NO_SOURCE_FILE'
+
+        session.send(
+            op,
+            handler=lambda response: run_tests(view, session, response, file, file_path, test_vars)
+        )
 
 
 def run(view, session, test_vars=[]):
