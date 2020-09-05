@@ -3,69 +3,69 @@
 ; # Comments and whitespace
 
   ;blah
-; ^ comment.line.clojure punctuation.definition.comment
-;  ^^^^ comment.line.clojure
+; ^ comment.line.edn punctuation.definition.comment
+;  ^^^^ comment.line.edn
 
   ;;; blah
-; ^^^ comment.line.clojure punctuation.definition.comment
-;    ^^^^^ comment.line.clojure
+; ^^^ comment.line.edn punctuation.definition.comment
+;    ^^^^^ comment.line.edn
 
   blah;blah;blah
 ; ^^^^- comment
-;     ^ comment.line.clojure
+;     ^ comment.line.edn
 
   #!blah
-; ^^ comment.line.clojure punctuation.definition.comment
-;   ^^^^^ comment.line.clojure
+; ^^ comment.line.edn punctuation.definition.comment
+;   ^^^^^ comment.line.edn
   #! blah
-; ^^ comment.line.clojure punctuation.definition.comment
-;   ^^^^^^ comment.line.clojure
+; ^^ comment.line.edn punctuation.definition.comment
+;   ^^^^^^ comment.line.edn
   #!#!#! blah
-; ^^ comment.line.clojure punctuation.definition.comment
-;   ^^^^^^^^^^ comment.line.clojure
+; ^^ comment.line.edn punctuation.definition.comment
+;   ^^^^^^^^^^ comment.line.edn
 
   blah,blah, blah
-;     ^ punctuation.comma.clojure
-;     ^ comment.punctuation.comma.clojure
+;     ^ punctuation.comma.edn
+;     ^ comment.punctuation.comma.edn
 ;      ^- comment
-;          ^ punctuation.comma.clojure
-;          ^ comment.punctuation.comma.clojure
+;          ^ punctuation.comma.edn
+;          ^ comment.punctuation.comma.edn
 ;           ^- comment
 
 ; ## Include end-of-line
 
 ; ; blah
-;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.line.clojure
+;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.line.edn
 
 
 
 ; # Constants
 
   true false nil
-; ^^^^ constant.language.clojure
+; ^^^^ constant.language.edn
 ;     ^ - constant
-;      ^^^^^ constant.language.clojure
+;      ^^^^^ constant.language.edn
 ;           ^ - constant
-;            ^^^ constant.language.clojure
+;            ^^^ constant.language.edn
 
 ; ## Breaks
 
   true,false,nil
-; ^^^^ constant.language.clojure
-;     ^ comment.punctuation.comma.clojure
-;      ^^^^^ constant.language.clojure
+; ^^^^ constant.language.edn
+;     ^ comment.punctuation.comma.edn
+;      ^^^^^ constant.language.edn
   true;false;nil
-; ^^^^ constant.language.clojure
-;     ^ comment.line.clojure punctuation.definition.comment
+; ^^^^ constant.language.edn
+;     ^ comment.line.edn punctuation.definition.comment
 
 ; ## Unaffected
 
   'nil (true) (nil)
 ; ^ keyword.operator.macro.clojure
-;  ^^^ constant.language.clojure
-;      ^ punctuation.section.parens.begin.clojure
-;       ^^^^ constant.language.clojure
-;           ^ punctuation.section.parens.end.clojure
+;  ^^^ constant.language.edn
+;      ^ punctuation.section.parens.begin.edn
+;       ^^^^ constant.language.edn
+;           ^ punctuation.section.parens.end.edn
 
 ; ## No highlighting
 
@@ -77,321 +77,321 @@
 ; # Numbers
 
   1234 1234N +1234 +1234N -1234 -1234N
-; ^^^^ constant.numeric.integer.decimal.clojure
+; ^^^^ constant.numeric.integer.decimal.edn
 ;     ^ - constant
-;      ^^^^^ constant.numeric.integer.decimal.clojure
-;          ^ storage.type.numeric.clojure
+;      ^^^^^ constant.numeric.integer.decimal.edn
+;          ^ storage.type.numeric.edn
 ;           ^ - constant
-;            ^ punctuation.definition.numeric.sign.clojure
-;            ^^^^^ constant.numeric.integer.decimal.clojure
+;            ^ punctuation.definition.numeric.sign.edn
+;            ^^^^^ constant.numeric.integer.decimal.edn
 ;                 ^ - constant
-;                  ^ punctuation.definition.numeric.sign.clojure
-;                  ^^^^^^ constant.numeric.integer.decimal.clojure
-;                       ^ storage.type.numeric.clojure
+;                  ^ punctuation.definition.numeric.sign.edn
+;                  ^^^^^^ constant.numeric.integer.decimal.edn
+;                       ^ storage.type.numeric.edn
 ;                        ^ - constant
-;                         ^ punctuation.definition.numeric.sign.clojure
-;                         ^^^^^ constant.numeric.integer.decimal.clojure
+;                         ^ punctuation.definition.numeric.sign.edn
+;                         ^^^^^ constant.numeric.integer.decimal.edn
 ;                              ^ - constant
-;                               ^ punctuation.definition.numeric.sign.clojure
-;                               ^^^^^^ constant.numeric.integer.decimal.clojure
-;                                    ^ storage.type.numeric.clojure
+;                               ^ punctuation.definition.numeric.sign.edn
+;                               ^^^^^^ constant.numeric.integer.decimal.edn
+;                                    ^ storage.type.numeric.edn
   0x1234af 0x1234afN 0X1234AF 0X1234AFN
-; ^^ punctuation.definition.numeric.base.clojure
-; ^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
+; ^^ punctuation.definition.numeric.base.edn
+; ^^^^^^^^ constant.numeric.integer.hexadecimal.edn
 ;         ^ - constant
-;          ^^ punctuation.definition.numeric.base.clojure
-;          ^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
-;                  ^ storage.type.numeric.clojure
+;          ^^ punctuation.definition.numeric.base.edn
+;          ^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
+;                  ^ storage.type.numeric.edn
 ;                   ^ - constant
-;                    ^^ punctuation.definition.numeric.base.clojure
-;                    ^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
+;                    ^^ punctuation.definition.numeric.base.edn
+;                    ^^^^^^^^ constant.numeric.integer.hexadecimal.edn
 ;                            ^ - constant
-;                             ^^ punctuation.definition.numeric.base.clojure
-;                             ^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
-;                                     ^ storage.type.numeric.clojure
+;                             ^^ punctuation.definition.numeric.base.edn
+;                             ^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
+;                                     ^ storage.type.numeric.edn
   +0x1234af +0x1234afN +0X1234AF +0X1234AFN
-; ^ punctuation.definition.numeric.sign.clojure
-;  ^^ punctuation.definition.numeric.base.clojure
-; ^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
+; ^ punctuation.definition.numeric.sign.edn
+;  ^^ punctuation.definition.numeric.base.edn
+; ^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
 ;          ^ - constant
-;           ^ punctuation.definition.numeric.sign.clojure
-;            ^^ punctuation.definition.numeric.base.clojure
-;           ^^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
-;                    ^ storage.type.numeric.clojure
+;           ^ punctuation.definition.numeric.sign.edn
+;            ^^ punctuation.definition.numeric.base.edn
+;           ^^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
+;                    ^ storage.type.numeric.edn
 ;                     ^ - constant
-;                      ^ punctuation.definition.numeric.sign.clojure
-;                       ^^ punctuation.definition.numeric.base.clojure
-;                       ^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
+;                      ^ punctuation.definition.numeric.sign.edn
+;                       ^^ punctuation.definition.numeric.base.edn
+;                       ^^^^^^^^ constant.numeric.integer.hexadecimal.edn
 ;                               ^ - constant
-;                                ^ punctuation.definition.numeric.sign.clojure
-;                                 ^^ punctuation.definition.numeric.base.clojure
-;                                ^^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
-;                                         ^ storage.type.numeric.clojure
+;                                ^ punctuation.definition.numeric.sign.edn
+;                                 ^^ punctuation.definition.numeric.base.edn
+;                                ^^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
+;                                         ^ storage.type.numeric.edn
   -0x1234af -0x1234afN -0X1234AF -0X1234AFN
-; ^ punctuation.definition.numeric.sign.clojure
-;  ^^ punctuation.definition.numeric.base.clojure
-; ^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
+; ^ punctuation.definition.numeric.sign.edn
+;  ^^ punctuation.definition.numeric.base.edn
+; ^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
 ;          ^ - constant
-;           ^ punctuation.definition.numeric.sign.clojure
-;            ^^ punctuation.definition.numeric.base.clojure
-;           ^^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
-;                    ^ storage.type.numeric.clojure
+;           ^ punctuation.definition.numeric.sign.edn
+;            ^^ punctuation.definition.numeric.base.edn
+;           ^^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
+;                    ^ storage.type.numeric.edn
 ;                     ^ - constant
-;                      ^ punctuation.definition.numeric.sign.clojure
-;                       ^^ punctuation.definition.numeric.base.clojure
-;                      ^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
+;                      ^ punctuation.definition.numeric.sign.edn
+;                       ^^ punctuation.definition.numeric.base.edn
+;                      ^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
 ;                               ^ - constant
-;                                ^ punctuation.definition.numeric.sign.clojure
-;                                 ^^ punctuation.definition.numeric.base.clojure
-;                                ^^^^^^^^^^ constant.numeric.integer.hexadecimal.clojure
-;                                         ^ storage.type.numeric.clojure
+;                                ^ punctuation.definition.numeric.sign.edn
+;                                 ^^ punctuation.definition.numeric.base.edn
+;                                ^^^^^^^^^^ constant.numeric.integer.hexadecimal.edn
+;                                         ^ storage.type.numeric.edn
   2r1010 16r1234af 32r1234az 2R1010 16R1234AF 32R1234AZ
-; ^^ punctuation.definition.numeric.base.clojure
-; ^^^^^^ constant.numeric.integer.other.clojure
+; ^^ punctuation.definition.numeric.base.edn
+; ^^^^^^ constant.numeric.integer.other.edn
 ;       ^ - constant
-;        ^^^ punctuation.definition.numeric.base.clojure
-;        ^^^^^^^^^ constant.numeric.integer.other.clojure
+;        ^^^ punctuation.definition.numeric.base.edn
+;        ^^^^^^^^^ constant.numeric.integer.other.edn
 ;                 ^ - constant
-;                  ^^^ punctuation.definition.numeric.base.clojure
-;                  ^^^^^^^^^ constant.numeric.integer.other.clojure
+;                  ^^^ punctuation.definition.numeric.base.edn
+;                  ^^^^^^^^^ constant.numeric.integer.other.edn
 ;                           ^ - constant
-;                            ^^ punctuation.definition.numeric.base.clojure
-;                            ^^^^^^ constant.numeric.integer.other.clojure
+;                            ^^ punctuation.definition.numeric.base.edn
+;                            ^^^^^^ constant.numeric.integer.other.edn
 ;                                  ^ - constant
-;                                   ^^^ punctuation.definition.numeric.base.clojure
-;                                   ^^^^^^^^^ constant.numeric.integer.other.clojure
+;                                   ^^^ punctuation.definition.numeric.base.edn
+;                                   ^^^^^^^^^ constant.numeric.integer.other.edn
 ;                                            ^ - constant
-;                                             ^^^ punctuation.definition.numeric.base.clojure
-;                                             ^^^^^^^^^ constant.numeric.integer.other.clojure
+;                                             ^^^ punctuation.definition.numeric.base.edn
+;                                             ^^^^^^^^^ constant.numeric.integer.other.edn
   +2r1010 +16r1234af +32r1234az +2R1010 +16R1234AF +32R1234AZ
-; ^ punctuation.definition.numeric.sign.clojure
-;  ^^ punctuation.definition.numeric.base.clojure
-; ^^^^^^^ constant.numeric.integer.other.clojure
+; ^ punctuation.definition.numeric.sign.edn
+;  ^^ punctuation.definition.numeric.base.edn
+; ^^^^^^^ constant.numeric.integer.other.edn
 ;        ^ - constant
-;         ^ punctuation.definition.numeric.sign.clojure
-;          ^^^ punctuation.definition.numeric.base.clojure
-;         ^^^^^^^^^^ constant.numeric.integer.other.clojure
+;         ^ punctuation.definition.numeric.sign.edn
+;          ^^^ punctuation.definition.numeric.base.edn
+;         ^^^^^^^^^^ constant.numeric.integer.other.edn
 ;                   ^ - constant
-;                    ^ punctuation.definition.numeric.sign.clojure
-;                     ^^^ punctuation.definition.numeric.base.clojure
-;                    ^^^^^^^^^^ constant.numeric.integer.other.clojure
+;                    ^ punctuation.definition.numeric.sign.edn
+;                     ^^^ punctuation.definition.numeric.base.edn
+;                    ^^^^^^^^^^ constant.numeric.integer.other.edn
 ;                              ^ - constant
-;                               ^ punctuation.definition.numeric.sign.clojure
-;                                ^^ punctuation.definition.numeric.base.clojure
-;                               ^^^^^^^ constant.numeric.integer.other.clojure
+;                               ^ punctuation.definition.numeric.sign.edn
+;                                ^^ punctuation.definition.numeric.base.edn
+;                               ^^^^^^^ constant.numeric.integer.other.edn
 ;                                      ^ - constant
-;                                       ^ punctuation.definition.numeric.sign.clojure
-;                                        ^^^ punctuation.definition.numeric.base.clojure
-;                                        ^^^^^^^^^ constant.numeric.integer.other.clojure
+;                                       ^ punctuation.definition.numeric.sign.edn
+;                                        ^^^ punctuation.definition.numeric.base.edn
+;                                        ^^^^^^^^^ constant.numeric.integer.other.edn
 ;                                                 ^ - constant
-;                                                  ^ punctuation.definition.numeric.sign.clojure
-;                                                   ^^^ punctuation.definition.numeric.base.clojure
-;                                                  ^^^^^^^^^^ constant.numeric.integer.other.clojure
+;                                                  ^ punctuation.definition.numeric.sign.edn
+;                                                   ^^^ punctuation.definition.numeric.base.edn
+;                                                  ^^^^^^^^^^ constant.numeric.integer.other.edn
   -2r1010 -16r1234af -32r1234az -2R1010 -16R1234AF -32R1234AZ
-; ^ punctuation.definition.numeric.sign.clojure
-;  ^^ punctuation.definition.numeric.base.clojure
-; ^^^^^^^ constant.numeric.integer.other.clojure
+; ^ punctuation.definition.numeric.sign.edn
+;  ^^ punctuation.definition.numeric.base.edn
+; ^^^^^^^ constant.numeric.integer.other.edn
 ;        ^ - constant
-;         ^ punctuation.definition.numeric.sign.clojure
-;          ^^^ punctuation.definition.numeric.base.clojure
-;          ^^^^^^^^^ constant.numeric.integer.other.clojure
+;         ^ punctuation.definition.numeric.sign.edn
+;          ^^^ punctuation.definition.numeric.base.edn
+;          ^^^^^^^^^ constant.numeric.integer.other.edn
 ;                   ^ - constant
-;                    ^ punctuation.definition.numeric.sign.clojure
-;                     ^^^ punctuation.definition.numeric.base.clojure
-;                    ^^^^^^^^^^ constant.numeric.integer.other.clojure
+;                    ^ punctuation.definition.numeric.sign.edn
+;                     ^^^ punctuation.definition.numeric.base.edn
+;                    ^^^^^^^^^^ constant.numeric.integer.other.edn
 ;                              ^ - constant
-;                               ^ punctuation.definition.numeric.sign.clojure
-;                                ^^ punctuation.definition.numeric.base.clojure
-;                               ^^^^^^^ constant.numeric.integer.other.clojure
+;                               ^ punctuation.definition.numeric.sign.edn
+;                                ^^ punctuation.definition.numeric.base.edn
+;                               ^^^^^^^ constant.numeric.integer.other.edn
 ;                                      ^ - constant
-;                                       ^ punctuation.definition.numeric.sign.clojure
-;                                        ^^^ punctuation.definition.numeric.base.clojure
-;                                       ^^^^^^^^^^ constant.numeric.integer.other.clojure
+;                                       ^ punctuation.definition.numeric.sign.edn
+;                                        ^^^ punctuation.definition.numeric.base.edn
+;                                       ^^^^^^^^^^ constant.numeric.integer.other.edn
 ;                                                 ^ - constant
-;                                                  ^ punctuation.definition.numeric.sign.clojure
-;                                                   ^^^ punctuation.definition.numeric.base.clojure
-;                                                  ^^^^^^^^^^ constant.numeric.integer.other.clojure
+;                                                  ^ punctuation.definition.numeric.sign.edn
+;                                                   ^^^ punctuation.definition.numeric.base.edn
+;                                                  ^^^^^^^^^^ constant.numeric.integer.other.edn
   0/10 10/20 30/0
-; ^^^^ constant.numeric.rational.decimal.clojure
-;  ^ punctuation.separator.rational.clojure
+; ^^^^ constant.numeric.rational.decimal.edn
+;  ^ punctuation.separator.rational.edn
 ;     ^ - constant
-;      ^^^^^ constant.numeric.rational.decimal.clojure
-;        ^ punctuation.separator.rational.clojure
+;      ^^^^^ constant.numeric.rational.decimal.edn
+;        ^ punctuation.separator.rational.edn
 ;           ^ - constant
-;            ^^^^ constant.numeric.rational.decimal.clojure
-;              ^ punctuation.separator.rational.clojure
+;            ^^^^ constant.numeric.rational.decimal.edn
+;              ^ punctuation.separator.rational.edn
   +0/10 +10/20 +30/0
-; ^^^^^ constant.numeric.rational.decimal.clojure
-; ^ punctuation.definition.numeric.sign.clojure
-;   ^ punctuation.separator.rational.clojure
+; ^^^^^ constant.numeric.rational.decimal.edn
+; ^ punctuation.definition.numeric.sign.edn
+;   ^ punctuation.separator.rational.edn
 ;      ^ - constant
-;       ^^^^^^ constant.numeric.rational.decimal.clojure
-;       ^ punctuation.definition.numeric.sign.clojure
-;          ^ punctuation.separator.rational.clojure
+;       ^^^^^^ constant.numeric.rational.decimal.edn
+;       ^ punctuation.definition.numeric.sign.edn
+;          ^ punctuation.separator.rational.edn
 ;             ^ - constant
-;              ^^^^^ constant.numeric.rational.decimal.clojure
-;              ^ punctuation.definition.numeric.sign.clojure
-;                 ^ punctuation.separator.rational.clojure
+;              ^^^^^ constant.numeric.rational.decimal.edn
+;              ^ punctuation.definition.numeric.sign.edn
+;                 ^ punctuation.separator.rational.edn
   -0/10 -10/20 -30/0
-; ^^^^^ constant.numeric.rational.decimal.clojure
-; ^ punctuation.definition.numeric.sign.clojure
-;   ^ punctuation.separator.rational.clojure
+; ^^^^^ constant.numeric.rational.decimal.edn
+; ^ punctuation.definition.numeric.sign.edn
+;   ^ punctuation.separator.rational.edn
 ;      ^ - constant
-;       ^^^^^^ constant.numeric.rational.decimal.clojure
-;       ^ punctuation.definition.numeric.sign.clojure
-;          ^ punctuation.separator.rational.clojure
+;       ^^^^^^ constant.numeric.rational.decimal.edn
+;       ^ punctuation.definition.numeric.sign.edn
+;          ^ punctuation.separator.rational.edn
 ;             ^ - constant
-;              ^^^^^ constant.numeric.rational.decimal.clojure
-;              ^ punctuation.definition.numeric.sign.clojure
-;                 ^ punctuation.separator.rational.clojure
+;              ^^^^^ constant.numeric.rational.decimal.edn
+;              ^ punctuation.definition.numeric.sign.edn
+;                 ^ punctuation.separator.rational.edn
   1234M 1234.0M 1234.1234M
-; ^^^^^ constant.numeric.float.decimal.clojure
-;     ^ storage.type.numeric.clojure
+; ^^^^^ constant.numeric.float.decimal.edn
+;     ^ storage.type.numeric.edn
 ;      ^ - constant
-;       ^^^^^^^ constant.numeric.float.decimal.clojure
-;           ^ punctuation.separator.decimal.clojure
-;             ^ storage.type.numeric.clojure
+;       ^^^^^^^ constant.numeric.float.decimal.edn
+;           ^ punctuation.separator.decimal.edn
+;             ^ storage.type.numeric.edn
 ;              ^ - constant
-;               ^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                   ^ punctuation.separator.decimal.clojure
-;                        ^ storage.type.numeric.clojure
+;               ^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                   ^ punctuation.separator.decimal.edn
+;                        ^ storage.type.numeric.edn
   +1234M +1234.0M +1234.1234M
-; ^^^^^^ constant.numeric.float.decimal.clojure
-; ^ punctuation.definition.numeric.sign.clojure
-;      ^ storage.type.numeric.clojure
+; ^^^^^^ constant.numeric.float.decimal.edn
+; ^ punctuation.definition.numeric.sign.edn
+;      ^ storage.type.numeric.edn
 ;       ^ - constant
-;        ^^^^^^^^ constant.numeric.float.decimal.clojure
-;        ^ punctuation.definition.numeric.sign.clojure
-;             ^ punctuation.separator.decimal.clojure
-;               ^ storage.type.numeric.clojure
+;        ^^^^^^^^ constant.numeric.float.decimal.edn
+;        ^ punctuation.definition.numeric.sign.edn
+;             ^ punctuation.separator.decimal.edn
+;               ^ storage.type.numeric.edn
 ;                ^ - constant
-;                 ^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                 ^ punctuation.definition.numeric.sign.clojure
-;                      ^ punctuation.separator.decimal.clojure
-;                           ^ storage.type.numeric.clojure
+;                 ^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                 ^ punctuation.definition.numeric.sign.edn
+;                      ^ punctuation.separator.decimal.edn
+;                           ^ storage.type.numeric.edn
   -1234M -1234.0M -1234.1234M
-; ^^^^^^ constant.numeric.float.decimal.clojure
-; ^ punctuation.definition.numeric.sign.clojure
-;      ^ storage.type.numeric.clojure
+; ^^^^^^ constant.numeric.float.decimal.edn
+; ^ punctuation.definition.numeric.sign.edn
+;      ^ storage.type.numeric.edn
 ;       ^ - constant
-;        ^^^^^^^^ constant.numeric.float.decimal.clojure
-;        ^ punctuation.definition.numeric.sign.clojure
-;             ^ punctuation.separator.decimal.clojure
-;               ^ storage.type.numeric.clojure
+;        ^^^^^^^^ constant.numeric.float.decimal.edn
+;        ^ punctuation.definition.numeric.sign.edn
+;             ^ punctuation.separator.decimal.edn
+;               ^ storage.type.numeric.edn
 ;                ^ - constant
-;                 ^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                 ^ punctuation.definition.numeric.sign.clojure
-;                      ^ punctuation.separator.decimal.clojure
-;                           ^ storage.type.numeric.clojure
+;                 ^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                 ^ punctuation.definition.numeric.sign.edn
+;                      ^ punctuation.separator.decimal.edn
+;                           ^ storage.type.numeric.edn
   1234e10 1234E10M 1234.1234e10M 1234.1234E10M
-; ^^^^^^^ constant.numeric.float.decimal.clojure
+; ^^^^^^^ constant.numeric.float.decimal.edn
 ;        ^ - constant
-;         ^^^^^^^ constant.numeric.float.decimal.clojure
-;                ^ storage.type.numeric.clojure
+;         ^^^^^^^ constant.numeric.float.decimal.edn
+;                ^ storage.type.numeric.edn
 ;                 ^ - constant
-;                  ^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                      ^ punctuation.separator.decimal.clojure
-;                              ^ storage.type.numeric.clojure
+;                  ^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                      ^ punctuation.separator.decimal.edn
+;                              ^ storage.type.numeric.edn
 ;                               ^ - constant
-;                                ^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                    ^ punctuation.separator.decimal.clojure
-;                                            ^ storage.type.numeric.clojure
+;                                ^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                    ^ punctuation.separator.decimal.edn
+;                                            ^ storage.type.numeric.edn
   +1234e10 +1234E10M +1234.1234e10M +1234.1234E10M
-; ^^^^^^^^ constant.numeric.float.decimal.clojure
-; ^ punctuation.definition.numeric.sign.clojure
+; ^^^^^^^^ constant.numeric.float.decimal.edn
+; ^ punctuation.definition.numeric.sign.edn
 ;         ^ - constant
-;          ^^^^^^^^^ constant.numeric.float.decimal.clojure
-;          ^ punctuation.definition.numeric.sign.clojure
-;                  ^ storage.type.numeric.clojure
+;          ^^^^^^^^^ constant.numeric.float.decimal.edn
+;          ^ punctuation.definition.numeric.sign.edn
+;                  ^ storage.type.numeric.edn
 ;                   ^ - constant
-;                    ^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                    ^ punctuation.definition.numeric.sign.clojure
-;                         ^ punctuation.separator.decimal.clojure
-;                                 ^ storage.type.numeric.clojure
+;                    ^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                    ^ punctuation.definition.numeric.sign.edn
+;                         ^ punctuation.separator.decimal.edn
+;                                 ^ storage.type.numeric.edn
 ;                                  ^ - constant
-;                                   ^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                   ^ punctuation.definition.numeric.sign.clojure
-;                                        ^ punctuation.separator.decimal.clojure
-;                                                ^ storage.type.numeric.clojure
+;                                   ^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                   ^ punctuation.definition.numeric.sign.edn
+;                                        ^ punctuation.separator.decimal.edn
+;                                                ^ storage.type.numeric.edn
   -1234e10 -1234E10M -1234.1234e10M -1234.1234E10M
-; ^^^^^^^^ constant.numeric.float.decimal.clojure
-; ^ punctuation.definition.numeric.sign.clojure
+; ^^^^^^^^ constant.numeric.float.decimal.edn
+; ^ punctuation.definition.numeric.sign.edn
 ;         ^ - constant
-;          ^^^^^^^^^ constant.numeric.float.decimal.clojure
-;          ^ punctuation.definition.numeric.sign.clojure
-;                  ^ storage.type.numeric.clojure
+;          ^^^^^^^^^ constant.numeric.float.decimal.edn
+;          ^ punctuation.definition.numeric.sign.edn
+;                  ^ storage.type.numeric.edn
 ;                   ^ - constant
-;                    ^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                    ^ punctuation.definition.numeric.sign.clojure
-;                         ^ punctuation.separator.decimal.clojure
-;                                 ^ storage.type.numeric.clojure
+;                    ^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                    ^ punctuation.definition.numeric.sign.edn
+;                         ^ punctuation.separator.decimal.edn
+;                                 ^ storage.type.numeric.edn
 ;                                  ^ - constant
-;                                   ^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                   ^ punctuation.definition.numeric.sign.clojure
-;                                        ^ punctuation.separator.decimal.clojure
-;                                                ^ storage.type.numeric.clojure
+;                                   ^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                   ^ punctuation.definition.numeric.sign.edn
+;                                        ^ punctuation.separator.decimal.edn
+;                                                ^ storage.type.numeric.edn
   1234.1234e+10 1234.1234E+10 1234.1234e-10 1234.1234E-10
-; ^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;     ^ punctuation.separator.decimal.clojure
+; ^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;     ^ punctuation.separator.decimal.edn
 ;              ^ - constant
-;               ^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                   ^ punctuation.separator.decimal.clojure
+;               ^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                   ^ punctuation.separator.decimal.edn
 ;                            ^ - constant
-;                             ^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                 ^ punctuation.separator.decimal.clojure
+;                             ^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                 ^ punctuation.separator.decimal.edn
 ;                                          ^ - constant
-;                                           ^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                               ^ punctuation.separator.decimal.clojure
+;                                           ^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                               ^ punctuation.separator.decimal.edn
   +1234.1234e+10M +1234.1234E+10M +1234.1234e-10M +1234.1234E-10M
-; ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-; ^ punctuation.definition.numeric.sign.clojure
-;      ^ punctuation.separator.decimal.clojure
-;               ^ storage.type.numeric.clojure
+; ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+; ^ punctuation.definition.numeric.sign.edn
+;      ^ punctuation.separator.decimal.edn
+;               ^ storage.type.numeric.edn
 ;                ^ - constant
-;                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                 ^ punctuation.definition.numeric.sign.clojure
-;                      ^ punctuation.separator.decimal.clojure
-;                               ^ storage.type.numeric.clojure
+;                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                 ^ punctuation.definition.numeric.sign.edn
+;                      ^ punctuation.separator.decimal.edn
+;                               ^ storage.type.numeric.edn
 ;                                ^ - constant
-;                                 ^ punctuation.definition.numeric.sign.clojure
-;                                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                      ^ punctuation.separator.decimal.clojure
-;                                               ^ storage.type.numeric.clojure
+;                                 ^ punctuation.definition.numeric.sign.edn
+;                                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                      ^ punctuation.separator.decimal.edn
+;                                               ^ storage.type.numeric.edn
 ;                                                ^ - constant
-;                                                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                                 ^ punctuation.definition.numeric.sign.clojure
-;                                                      ^ punctuation.separator.decimal.clojure
-;                                                               ^ storage.type.numeric.clojure
+;                                                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                                 ^ punctuation.definition.numeric.sign.edn
+;                                                      ^ punctuation.separator.decimal.edn
+;                                                               ^ storage.type.numeric.edn
   -1234.1234e+10M -1234.1234E+10M -1234.1234e-10M -1234.1234E-10M
-; ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-; ^ punctuation.definition.numeric.sign.clojure
-;      ^ punctuation.separator.decimal.clojure
-;               ^ storage.type.numeric.clojure
+; ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+; ^ punctuation.definition.numeric.sign.edn
+;      ^ punctuation.separator.decimal.edn
+;               ^ storage.type.numeric.edn
 ;                ^ - constant
-;                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                 ^ punctuation.definition.numeric.sign.clojure
-;                      ^ punctuation.separator.decimal.clojure
-;                               ^ storage.type.numeric.clojure
+;                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                 ^ punctuation.definition.numeric.sign.edn
+;                      ^ punctuation.separator.decimal.edn
+;                               ^ storage.type.numeric.edn
 ;                                ^ - constant
-;                                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                 ^ punctuation.definition.numeric.sign.clojure
-;                                      ^ punctuation.separator.decimal.clojure
-;                                               ^ storage.type.numeric.clojure
+;                                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                 ^ punctuation.definition.numeric.sign.edn
+;                                      ^ punctuation.separator.decimal.edn
+;                                               ^ storage.type.numeric.edn
 ;                                                ^ - constant
-;                                                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.clojure
-;                                                 ^ punctuation.definition.numeric.sign.clojure
-;                                                      ^ punctuation.separator.decimal.clojure
-;                                                               ^ storage.type.numeric.clojure
+;                                                 ^^^^^^^^^^^^^^^ constant.numeric.float.decimal.edn
+;                                                 ^ punctuation.definition.numeric.sign.edn
+;                                                      ^ punctuation.separator.decimal.edn
+;                                                               ^ storage.type.numeric.edn
 
 ; ## Breaks
 
   10,20,30
 ; ^^ constant.numeric
-;   ^ comment.punctuation.comma.clojure
+;   ^ comment.punctuation.comma.edn
 ;    ^^ constant.numeric
   10;20;30
 ; ^^ constant.numeric
-;   ^ comment.line.clojure punctuation.definition.comment
+;   ^ comment.line.edn punctuation.definition.comment
   10'20'30
 ; ^^ constant.numeric
 ;   ^ keyword.operator.macro.clojure
@@ -409,71 +409,71 @@
 ;  ^^^^ constant.numeric
 
   (10 20 30) [10 20 30]
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;  ^^ constant.numeric
-;            ^ punctuation.section.brackets.begin.clojure
+;            ^ punctuation.section.brackets.begin.edn
 ;             ^^ constant.numeric
 
   ([100 200])
-; ^ punctuation.section.parens.begin.clojure
-;  ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.parens.begin.edn
+;  ^ punctuation.section.brackets.begin.edn
 ;   ^^^ constant.numeric
 ;       ^^^ constant.numeric
-;          ^ punctuation.section.brackets.end.clojure
-;           ^ punctuation.section.parens.end.clojure
+;          ^ punctuation.section.brackets.end.edn
+;           ^ punctuation.section.parens.end.edn
   ([0x10 0x20])
-; ^ punctuation.section.parens.begin.clojure
-;  ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.parens.begin.edn
+;  ^ punctuation.section.brackets.begin.edn
 ;   ^^^^ constant.numeric
 ;        ^^^^ constant.numeric
-;            ^ punctuation.section.brackets.end.clojure
-;             ^ punctuation.section.parens.end.clojure
+;            ^ punctuation.section.brackets.end.edn
+;             ^ punctuation.section.parens.end.edn
   ([2r100 16r200])
-; ^ punctuation.section.parens.begin.clojure
-;  ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.parens.begin.edn
+;  ^ punctuation.section.brackets.begin.edn
 ;   ^^^^^ constant.numeric
 ;         ^^^^^^ constant.numeric
-;               ^ punctuation.section.brackets.end.clojure
-;                ^ punctuation.section.parens.end.clojure
+;               ^ punctuation.section.brackets.end.edn
+;                ^ punctuation.section.parens.end.edn
   ([10/20 30/40])
-; ^ punctuation.section.parens.begin.clojure
-;  ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.parens.begin.edn
+;  ^ punctuation.section.brackets.begin.edn
 ;   ^^^^^ constant.numeric
 ;         ^^^^^ constant.numeric
-;              ^ punctuation.section.brackets.end.clojure
-;               ^ punctuation.section.parens.end.clojure
+;              ^ punctuation.section.brackets.end.edn
+;               ^ punctuation.section.parens.end.edn
   ([100.100 200.200])
-; ^ punctuation.section.parens.begin.clojure
-;  ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.parens.begin.edn
+;  ^ punctuation.section.brackets.begin.edn
 ;   ^^^^^^^ constant.numeric
 ;           ^^^^^^^ constant.numeric
-;                  ^ punctuation.section.brackets.end.clojure
-;                   ^ punctuation.section.parens.end.clojure
+;                  ^ punctuation.section.brackets.end.edn
+;                   ^ punctuation.section.parens.end.edn
   ([1e+10 2e-20])
-; ^ punctuation.section.parens.begin.clojure
-;  ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.parens.begin.edn
+;  ^ punctuation.section.brackets.begin.edn
 ;   ^^^^^ constant.numeric
 ;         ^^^^^ constant.numeric
-;              ^ punctuation.section.brackets.end.clojure
-;               ^ punctuation.section.parens.end.clojure
+;              ^ punctuation.section.brackets.end.edn
+;               ^ punctuation.section.parens.end.edn
 
 ; ## Invalid numbers
 
   01234 +01234 -01234 '01234
-; ^^^^^ invalid.deprecated.clojure
+; ^^^^^ invalid.deprecated.edn
 ;      ^- invalid
-;       ^^^^^^ invalid.deprecated.clojure
-;              ^^^^^^ invalid.deprecated.clojure
+;       ^^^^^^ invalid.deprecated.edn
+;              ^^^^^^ invalid.deprecated.edn
 ;                     ^ keyword.operator.macro.clojure
-;                      ^^^^^ invalid.deprecated.clojure
+;                      ^^^^^ invalid.deprecated.edn
   01234N +01234N -01234N '01234N
-; ^^^^^^ invalid.deprecated.clojure
+; ^^^^^^ invalid.deprecated.edn
 ;       ^- invalid
-;        ^^^^^^^ invalid.deprecated.clojure
-;                ^^^^^^^ invalid.deprecated.clojure
+;        ^^^^^^^ invalid.deprecated.edn
+;                ^^^^^^^ invalid.deprecated.edn
 ;                        ^ keyword.operator.macro.clojure
-  10-20 10+20 1234n 1234m 1234. 1234.M
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ - constant
+  10-20 10+20 1234n 1234m
+; ^^^^^^^^^^^^^^^^^^^^^^^ - constant
   10.0/20 10/20.0 10/+20 10/-20
 ; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ - constant
   10:20:30
@@ -511,9 +511,9 @@
 ; ## Breaks
 
   blah,blah,blah
-;     ^ comment.punctuation.comma.clojure
+;     ^ comment.punctuation.comma.edn
   blah;blah;blah
-;     ^ comment.line.clojure punctuation.definition.comment
+;     ^ comment.line.edn punctuation.definition.comment
   blah`blah
 ;     ^ keyword.operator.macro.clojure
   blah~blah
@@ -523,7 +523,7 @@
   blah^blah
 ;     ^ keyword.operator.macro.clojure
   blah\blah
-;     ^ constant.character.clojure
+;     ^ - constant.character.clojure
 
 ; ## Unaffected
 
@@ -546,118 +546,118 @@
 
 ; Basic structure
   :blah
-; ^ punctuation.definition.keyword.clojure
-; ^^^^^ constant.other.keyword.unqualified.clojure
+; ^ punctuation.definition.keyword.edn
+; ^^^^^ constant.other.keyword.unqualified.edn
 
   :! :$ :% :& :* :- :_ := :+ :| :< :> :. :/ :?
-; ^^ constant.other.keyword.unqualified.clojure
+; ^^ constant.other.keyword.unqualified.edn
 ;   ^ - constant
-;    ^^ constant.other.keyword.unqualified.clojure
-;       ^^ constant.other.keyword.unqualified.clojure
-;          ^^ constant.other.keyword.unqualified.clojure
-;             ^^ constant.other.keyword.unqualified.clojure
-;                ^^ constant.other.keyword.unqualified.clojure
-;                   ^^ constant.other.keyword.unqualified.clojure
-;                      ^^ constant.other.keyword.unqualified.clojure
-;                         ^^ constant.other.keyword.unqualified.clojure
-;                            ^^ constant.other.keyword.unqualified.clojure
-;                               ^^ constant.other.keyword.unqualified.clojure
-;                                  ^^ constant.other.keyword.unqualified.clojure
-;                                     ^^ constant.other.keyword.unqualified.clojure
-;                                        ^^ constant.other.keyword.unqualified.clojure
-;                                           ^^ constant.other.keyword.unqualified.clojure
+;    ^^ constant.other.keyword.unqualified.edn
+;       ^^ constant.other.keyword.unqualified.edn
+;          ^^ constant.other.keyword.unqualified.edn
+;             ^^ constant.other.keyword.unqualified.edn
+;                ^^ constant.other.keyword.unqualified.edn
+;                   ^^ constant.other.keyword.unqualified.edn
+;                      ^^ constant.other.keyword.unqualified.edn
+;                         ^^ constant.other.keyword.unqualified.edn
+;                            ^^ constant.other.keyword.unqualified.edn
+;                               ^^ constant.other.keyword.unqualified.edn
+;                                  ^^ constant.other.keyword.unqualified.edn
+;                                     ^^ constant.other.keyword.unqualified.edn
+;                                        ^^ constant.other.keyword.unqualified.edn
+;                                           ^^ constant.other.keyword.unqualified.edn
   :++ :--
-; ^^^ constant.other.keyword.unqualified.clojure
+; ^^^ constant.other.keyword.unqualified.edn
 ;    ^ - constant
-;     ^^^ constant.other.keyword.unqualified.clojure
+;     ^^^ constant.other.keyword.unqualified.edn
   :blah
-; ^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^ constant.other.keyword.unqualified.edn
   :blah/blah
-; ^^^^^^^^^^ constant.other.keyword.qualified.clojure
-;      ^ punctuation.definition.constant.namespace.clojure
+; ^^^^^^^^^^ constant.other.keyword.qualified.edn
+;      ^ punctuation.definition.constant.namespace.edn
   :blah.blah
-; ^^^^^^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^^^^ constant.other.keyword.unqualified.edn
   :blah.blah/blah
-;  ^^^^^^^^^ meta.namespace.clojure
-;           ^ punctuation.definition.constant.namespace.clojure
-; ^^^^^^^^^^^^^^^ constant.other.keyword.qualified.clojure
+;  ^^^^^^^^^ meta.namespace.edn
+;           ^ punctuation.definition.constant.namespace.edn
+; ^^^^^^^^^^^^^^^ constant.other.keyword.qualified.edn
   :blah.blah/blah.blah
-;  ^^^^^^^^^ meta.namespace.clojure
-; ^^^^^^^^^^^^^^^^^^^^ constant.other.keyword.qualified.clojure
+;  ^^^^^^^^^ meta.namespace.edn
+; ^^^^^^^^^^^^^^^^^^^^ constant.other.keyword.qualified.edn
   :blah/blah/blah
-;  ^^^^ meta.namespace.clojure
-; ^^^^^^^^^^^^^^^ constant.other.keyword.qualified.clojure
+;  ^^^^ meta.namespace.edn
+; ^^^^^^^^^^^^^^^ constant.other.keyword.qualified.edn
   :blah1000
-; ^^^^^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^^^ constant.other.keyword.unqualified.edn
   :blah1000.blah1000
-; ^^^^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.edn
   :*blah*
-; ^^^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^ constant.other.keyword.unqualified.edn
   :blah'blah'
-; ^^^^^^^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^^^^^ constant.other.keyword.unqualified.edn
   :blah'''blah'''
-; ^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.edn
   :blah:blah:blah
-; ^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.edn
   :blah#blah#
-; ^^^^^^^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^^^^^^^ constant.other.keyword.unqualified.edn
   ::blah///blah
 ; ^^ punctuation.definition.keyword.clojure
 ;   ^^^^ meta.namespace.clojure
 ;       ^ punctuation.definition.constant.namespace.clojure
 ; ^^^^^^^^^^^^^ constant.other.keyword.auto-qualified.clojure
   ://blah
-; ^^^^^^^ constant.other.keyword.qualified.clojure
-;  ^ punctuation.definition.constant.namespace.clojure
+; ^^^^^^^ constant.other.keyword.qualified.edn
+;  ^ punctuation.definition.constant.namespace.edn
   :///
-; ^^^^ constant.other.keyword.qualified.clojure
-;  ^ punctuation.definition.constant.namespace.clojure
+; ^^^^ constant.other.keyword.qualified.edn
+;  ^ punctuation.definition.constant.namespace.edn
   :/blah/blah
-; ^^^^^^^^^^^ constant.other.keyword.qualified.clojure
-;  ^ punctuation.definition.constant.namespace.clojure
+; ^^^^^^^^^^^ constant.other.keyword.qualified.edn
+;  ^ punctuation.definition.constant.namespace.edn
   :blah//
-;  ^^^^ meta.namespace.clojure
-; ^^^^^^^ constant.other.keyword.qualified.clojure
-;      ^ punctuation.definition.constant.namespace.clojure
+;  ^^^^ meta.namespace.edn
+; ^^^^^^^ constant.other.keyword.qualified.edn
+;      ^ punctuation.definition.constant.namespace.edn
 
 ; ## These are valid, unlike symbols
 
   :' :# :### :10 :10.20
-; ^^ constant.other.keyword.unqualified.clojure
+; ^^ constant.other.keyword.unqualified.edn
 ;   ^ - constant
-;    ^^ constant.other.keyword.unqualified.clojure
-;       ^^^^ constant.other.keyword.unqualified.clojure
-;            ^^^ constant.other.keyword.unqualified.clojure
-;                ^^^^^^ constant.other.keyword.unqualified.clojure
+;    ^^ constant.other.keyword.unqualified.edn
+;       ^^^^ constant.other.keyword.unqualified.edn
+;            ^^^ constant.other.keyword.unqualified.edn
+;                ^^^^^^ constant.other.keyword.unqualified.edn
 
 ; ## Breaks
 
   :,blah
 ; ^ - constant
-;  ^ comment.punctuation.comma.clojure
+;  ^ comment.punctuation.comma.edn
   :;blah
 ; ^ - constant
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
   :blah,:blah,:blah
-; ^^^^^ constant.other.keyword.unqualified.clojure
-;      ^ comment.punctuation.comma.clojure
-;       ^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^ constant.other.keyword.unqualified.edn
+;      ^ comment.punctuation.comma.edn
+;       ^^^^^ constant.other.keyword.unqualified.edn
   :blah;:blah;:blah
-; ^^^^^ constant.other.keyword.unqualified.clojure
-;      ^ comment.line.clojure punctuation.definition.comment
+; ^^^^^ constant.other.keyword.unqualified.edn
+;      ^ comment.line.edn punctuation.definition.comment
   :blah`blah
-; ^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^ constant.other.keyword.unqualified.edn
 ;      ^ keyword.operator.macro.clojure
   :blah~blah
-; ^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^ - constant.other.keyword.unqualified.edn
   :blah@blah
 ;      ^ keyword.operator.macro.clojure
   :blah^blah
-; ^^^^^ constant.other.keyword.unqualified.clojure
+; ^^^^^ - constant.other.keyword.unqualified.edn
 ;      ^ keyword.operator.macro.clojure
   :blah\blah
-; ^^^^^ constant.other.keyword.unqualified.clojure
-;      ^^ constant.character.clojure
+; ^^^^^ - constant.other.keyword.unqualified.edn
+;      ^^ - constant.character.clojure
 
 ; ## These are invalid, but I couldn't get the regex right
 
@@ -679,174 +679,168 @@
 ; # Chars
 
   \0 \; \,
-; ^^ constant.character.clojure
-;   ^ - constant.character.clojure
-;    ^^ constant.character.clojure
-;      ^ - constant.character.clojure
-;       ^^ constant.character.clojure
-; ^^ constant.character.clojure
+; ^^ constant.character.edn
+;   ^ - constant.character.edn
+;    ^^ constant.character.edn
+;      ^ - constant.character.edn
+;       ^^ constant.character.edn
+; ^^ constant.character.edn
   \newline
-; ^^^^^^^^ constant.character.clojure
+; ^^^^^^^^ constant.character.edn
   blah \c blah \c
-;      ^^ constant.character.clojure
-;        ^ - constant.character.clojure
-;              ^^ constant.character.clojure
+;      ^^ constant.character.edn
+;        ^ - constant.character.edn
+;              ^^ constant.character.edn
 
 ; ## Invalid but highlight anyway
 
   \blah100
-; ^^ constant.character.clojure
-;   ^^^^^^ - constant.character.clojure
+; ^^^^^^^^ constant.character.edn invalid.illegal.character.edn
 
 ; ## Capture exactly one char
 
   \;;;;
-; ^^ constant.character.clojure
-;   ^^^ comment.line.clojure punctuation.definition.comment
+; ^^ constant.character.edn
+;   ^^^ comment.line.edn punctuation.definition.comment
   \,,
-; ^^ constant.character.clojure
-;   ^ comment.punctuation.comma.clojure
+; ^^ constant.character.edn
+;   ^ comment.punctuation.comma.edn
   \``blah
-; ^^ constant.character.clojure
-;   ^ keyword.operator.macro.clojure
+; ^^^^^^^ constant.character.edn invalid.illegal.character.edn
   \''blah
-; ^^ constant.character.clojure
-;   ^ keyword.operator.macro.clojure
+; ^^^^^^^ constant.character.edn invalid.illegal.character.edn
   \~~blah
-; ^^ constant.character.clojure
-;   ^ keyword.operator.macro.clojure
+; ^^^^^^^ constant.character.edn invalid.illegal.character.edn
   \@@blah
-; ^^ constant.character.clojure
-;   ^ keyword.operator.macro.clojure
+; ^^^^^^^ constant.character.edn invalid.illegal.character.edn
   \~@~@blah
-; ^^ constant.character.clojure
-;   ^^^ keyword.operator.macro.clojure
+; ^^^^^^^ constant.character.edn invalid.illegal.character.edn
   \##{}
-; ^^ constant.character.clojure
-;   ^^ punctuation.section.braces.begin.clojure
+; ^^ constant.character.edn
+;    ^ punctuation.section.braces.begin.edn
+;     ^ punctuation.section.braces.end.edn
   \^^blah
-; ^^ constant.character.clojure
-;   ^ keyword.operator.macro.clojure
+; ^^^^^^^ constant.character.edn invalid.illegal.character.edn
 
 ; ## Breaks
 
   \a,\b,\c
-; ^^ constant.character.clojure
-;   ^ comment.punctuation.comma.clojure
-;    ^^ constant.character.clojure
+; ^^ constant.character.edn
+;   ^ comment.punctuation.comma.edn
+;    ^^ constant.character.edn
   \a;\b;\c
-; ^^ constant.character.clojure
-;   ^ comment.line.clojure punctuation.definition.comment
+; ^^ constant.character.edn
+;   ^ comment.line.edn punctuation.definition.comment
 
 ; ## Unaffected
 
   \c (\c) ( \c ) [\c] [ \c ]
-; ^^ constant.character.clojure
-;    ^ punctuation.section.parens.begin.clojure
-;     ^^ constant.character.clojure
-;       ^ punctuation.section.parens.end.clojure
-;         ^ punctuation.section.parens.begin.clojure
-;           ^^ constant.character.clojure
-;             ^ - constant.character.clojure
-;              ^ punctuation.section.parens.end.clojure
+; ^^ constant.character.edn
+;    ^ punctuation.section.parens.begin.edn
+;     ^^ constant.character.edn
+;       ^ punctuation.section.parens.end.edn
+;         ^ punctuation.section.parens.begin.edn
+;           ^^ constant.character.edn
+;             ^ - constant.character.edn
+;              ^ punctuation.section.parens.end.edn
 
 
 
 ; # Strings
 
   "blah"
-; ^^^^^^ string.quoted.double.clojure
-; ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
-;      ^ string.quoted.double.clojure punctuation.definition.string.end.clojure
+; ^^^^^^ string.quoted.double.edn
+; ^ string.quoted.double.edn punctuation.definition.string.begin.edn
+;      ^ string.quoted.double.edn punctuation.definition.string.end.edn
 
   "blah \" blah"
-; ^^^^^^^^^^^^^^ string.quoted.double.clojure
-; ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
-;       ^^ string.quoted.double.clojure constant.character.escape.clojure
-;         ^^^^^ string.quoted.double.clojure
-;              ^ string.quoted.double.clojure punctuation.definition.string.end.clojure
+; ^^^^^^^^^^^^^^ string.quoted.double.edn
+; ^ string.quoted.double.edn punctuation.definition.string.begin.edn
+;       ^^ string.quoted.double.edn constant.character.escape.edn
+;         ^^^^^ string.quoted.double.edn
+;              ^ string.quoted.double.edn punctuation.definition.string.end.edn
 
   "
-; ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.clojure
+; ^ string.quoted.double.edn punctuation.definition.string.begin.edn
+; ^^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.edn
   blah () [] {} ::blah
-; ^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.clojure
+; ^^^^^^^^^^^^^^^^^^^^^ string.quoted.double.edn
   "
-; ^ string.quoted.double.clojure punctuation.definition.string.end.clojure
+; ^ string.quoted.double.edn punctuation.definition.string.end.edn
 
   "
-; ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
+; ^ string.quoted.double.edn punctuation.definition.string.begin.edn
   (unclosed paren ->
-; ^^^^^^^^^^^^^^^^^^^ string.quoted.double.clojure
+; ^^^^^^^^^^^^^^^^^^^ string.quoted.double.edn
   "
-; ^ string.quoted.double.clojure punctuation.definition.string.end.clojure
+; ^ string.quoted.double.edn punctuation.definition.string.end.edn
 
 ; ## Breaks
 
   "blah","blah","blah"
-; ^^^^^^ string.quoted.double.clojure
-;       ^ comment.punctuation.comma.clojure
-;        ^^^^^^ string.quoted.double.clojure
-;              ^ comment.punctuation.comma.clojure
-;               ^^^^^^ string.quoted.double.clojure
+; ^^^^^^ string.quoted.double.edn
+;       ^ comment.punctuation.comma.edn
+;        ^^^^^^ string.quoted.double.edn
+;              ^ comment.punctuation.comma.edn
+;               ^^^^^^ string.quoted.double.edn
 
   "blah";"blah";"blah"
-; ^^^^^^ string.quoted.double.clojure
-;       ^ comment.line.clojure punctuation.definition.comment
+; ^^^^^^ string.quoted.double.edn
+;       ^ comment.line.edn punctuation.definition.comment
 
 ; ## Unaffected
 
   '"blah" ("blah") ( "blah" ) ["blah"]
 ; ^ keyword.operator.macro.clojure
-;  ^^^^^^ string.quoted.double.clojure
-;         ^ punctuation.section.parens.begin.clojure
-;          ^^^^^^ string.quoted.double.clojure
-;                ^ punctuation.section.parens.end.clojure
-;                  ^ punctuation.section.parens.begin.clojure
-;                    ^^^^^^ string.quoted.double.clojure
-;                          ^- string.quoted.double.clojure
-;                           ^ punctuation.section.parens.end.clojure
+;  ^^^^^^ string.quoted.double.edn
+;         ^ punctuation.section.parens.begin.edn
+;          ^^^^^^ string.quoted.double.edn
+;                ^ punctuation.section.parens.end.edn
+;                  ^ punctuation.section.parens.begin.edn
+;                    ^^^^^^ string.quoted.double.edn
+;                          ^- string.quoted.double.edn
+;                           ^ punctuation.section.parens.end.edn
 
 
 ; # Regex
 
   #""
-; ^ keyword.operator.macro.clojure
-;  ^^ string.regexp.clojure
-;  ^ string.regexp.clojure punctuation.definition.string.begin.clojure
-;   ^ string.regexp.clojure punctuation.definition.string.end.clojure
+; ^ keyword.operator.macro.edn
+;  ^^ string.regexp.edn
+;  ^ string.regexp.edn punctuation.definition.string.begin.edn
+;   ^ string.regexp.edn punctuation.definition.string.end.edn
 
   #" blah "
-; ^ keyword.operator.macro.clojure
-;  ^^^^^^^^ string.regexp.clojure
-;  ^ string.regexp.clojure punctuation.definition.string.begin.clojure
-;         ^ string.regexp.clojure punctuation.definition.string.end.clojure
+; ^ keyword.operator.macro.edn
+;  ^^^^^^^^ string.regexp.edn
+;  ^ string.regexp.edn punctuation.definition.string.begin.edn
+;         ^ string.regexp.edn punctuation.definition.string.end.edn
 
   #"blah{1}"
-; ^ keyword.operator.macro.clojure
-;  ^^^^^^^^^ string.regexp.clojure
-;  ^ string.regexp.clojure punctuation.definition.string.begin.clojure
-;       ^^^ string.regexp.clojure keyword.operator.quantifier.regexp
-;          ^ string.regexp.clojure punctuation.definition.string.end.clojure
+; ^ keyword.operator.macro.edn
+;  ^^^^^^^^^ string.regexp.edn
+;  ^ string.regexp.edn punctuation.definition.string.begin.edn
+;       ^^^ string.regexp.edn keyword.operator.quantifier.regexp
+;          ^ string.regexp.edn punctuation.definition.string.end.edn
 
   #"
-; ^ keyword.operator.macro.clojure
-;  ^ string.regexp.clojure punctuation.definition.string.begin.clojure
+; ^ keyword.operator.macro.edn
+;  ^ string.regexp.edn punctuation.definition.string.begin.edn
   blah{1}
-; ^^^^ string.regexp.clojure
-;     ^^^ string.regexp.clojure keyword.operator.quantifier.regexp
+; ^^^^ string.regexp.edn
+;     ^^^ string.regexp.edn keyword.operator.quantifier.regexp
   "
-; ^ string.regexp.clojure punctuation.definition.string.end.clojure
+; ^ string.regexp.edn punctuation.definition.string.end.edn
 
   #"
-; ^ keyword.operator.macro.clojure
-;  ^ string.regexp.clojure punctuation.definition.string.begin.clojure
+; ^ keyword.operator.macro.edn
+;  ^ string.regexp.edn punctuation.definition.string.begin.edn
   \"
-; ^^ string.regexp.clojure constant.character.escape.regexp
+; ^^ string.regexp.edn constant.character.escape.regexp
   (unclosed paren ->
-; ^ string.regexp.clojure
+; ^ string.regexp.edn
   "
-; ^ string.regexp.clojure punctuation.definition.string.end.clojure
+; ^ string.regexp.edn punctuation.definition.string.end.edn
 
 ; ## Tonsky
   #""
@@ -988,38 +982,38 @@
 
   # ""
 ; ^ - keyword.operator.macro.clojure
-;  ^^^- string.regexp.clojure
+;  ^^^- string.regexp.edn
 
 
 
 ; # Dispatch
 
   #inst"0000"
-; ^^^^^ keyword.operator.macro.clojure
+; ^^^^^ keyword.operator.macro.edn
 
   #blah blah
-; ^^^^^ keyword.operator.macro.clojure
-;      ^^^^^^- keyword.operator.macro.clojure
+; ^^^^^ keyword.operator.macro.edn
+;      ^^^^^^- keyword.operator.macro.edn
 
   #blah1000.blah1000/blah1000 blah
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ keyword.operator.macro.clojure
-;                            ^^^^^^- keyword.operator.macro.clojure
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ keyword.operator.macro.edn
+;                            ^^^^^^- keyword.operator.macro.edn
 
   #blah:blah blah
-; ^^^^^^^^^^ keyword.operator.macro.clojure
-;           ^^^^^^- keyword.operator.macro.clojure
+; ^^^^^^^^^^ keyword.operator.macro.edn
+;           ^^^^^^- keyword.operator.macro.edn
 
   # inst "0000"
-; ^ keyword.operator.macro.clojure
-;   ^^^^ keyword.operator.macro.clojure
-;       ^- keyword.operator.macro.clojure
-;        ^^^^^^ string.quoted.double.clojure
+; ^ keyword.operator.macro.edn
+;   ^^^^ keyword.operator.macro.edn
+;       ^- keyword.operator.macro.edn
+;        ^^^^^^ string.quoted.double.edn
 
   #
 ; ^ - keyword.operator.macro.clojure
     inst
     "0000"
-;   ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
+;   ^ string.quoted.double.edn punctuation.definition.string.begin.edn
 
   #'blah
 ; ^^ keyword.operator.macro.clojure
@@ -1028,7 +1022,7 @@
   #'
 ; ^^ keyword.operator.macro.clojure
   ; blah
-; ^^^^^^^ comment.line.clojure
+; ^^^^^^^ comment.line.edn
   blah
 ; ^^^^^- keyword.operator.macro.clojure
 
@@ -1042,86 +1036,86 @@
 ;  ^- keyword.operator.macro.clojure
 
   #_[]
-; ^^ comment.block.clojure punctuation.definition.comment.clojure
-;   ^- keyword.operator.macro.clojure
+; ^^ comment.block.edn punctuation.definition.comment.edn
+;   ^- keyword.operator.macro.edn
 
   #?[]
 ; ^^ keyword.operator.macro.clojure
 ;   ^- keyword.operator.macro.clojure
 
   #:foo{} #:bar/baz{:a 1} #::quux{:b 2} :end
-; ^ keyword.operator.macro.clojure
-;  ^ punctuation.definition.keyword.clojure
-;  ^^^^ constant.other.keyword.unqualified.clojure
-; ^^^^^^^ meta.reader-form.clojure
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn
+;  ^^^^ constant.other.keyword.unqualified.edn
+; ^^^^^^^ meta.reader-form.edn
 ;        ^ - meta
-;         ^^^^^^^^^^^^^^^ meta.reader-form.clojure
+;         ^^^^^^^^^^^^^^^ meta.reader-form.edn
 ;                        ^ - meta
-;                         ^^^^^^^^^^^^^ meta.reader-form.clojure
+;                         ^^^^^^^^^^^^^ meta.reader-form.edn
 ;                                      ^ - meta
 
   ##NaN ##Inf ##-Inf
-; ^^ keyword.operator.macro.clojure
-;   ^^^ constant.other.symbolic.clojure
-;       ^^ keyword.operator.macro.clojure
-;         ^^^ constant.other.symbolic.clojure
-;             ^^ keyword.operator.macro.clojure
-;               ^^^^ constant.other.symbolic.clojure
+; ^^ keyword.operator.macro.edn
+;   ^^^ constant.other.symbolic.edn
+;       ^^ keyword.operator.macro.edn
+;         ^^^ constant.other.symbolic.edn
+;             ^^ keyword.operator.macro.edn
+;               ^^^^ constant.other.symbolic.edn
 
   ##
 ; ^^ - keyword.operator.macro.clojure
   ; blah
-; ^^^^^^^ comment.line.clojure
+; ^^^^^^^ comment.line.edn
   ##NaN
-; ^^ keyword.operator.macro.clojure
-;   ^^^ constant.other.symbolic.clojure
+; ^^ keyword.operator.macro.edn
+;   ^^^ constant.other.symbolic.edn
 
 ; ## Breaks
 
   #blah\newline
 ; ^^^^^ - keyword.operator.macro.clojure
-;      ^^^^^^^^ constant.character.clojure
+;      ^^^^^^^^ - constant.character.clojure
 
   #blah`blah
 ; ^^^^^ - keyword.operator.macro.clojure
 ;       ^^^^^- keyword.operator.macro.clojure
 
   #_0.000692025M
-; ^^ punctuation.definition.comment.clojure
+; ^^ punctuation.definition.comment.edn
 ;   ^^^^^^^^^^^^ constant.numeric
 
   #_ 0.000692025M
-; ^^ punctuation.definition.comment.clojure
+; ^^ punctuation.definition.comment.edn
 ;    ^^^^^^^^^^^^ constant.numeric
 
   #_blah
-; ^^ punctuation.definition.comment.clojure
-;   ^^^^- punctuation.definition.comment.clojure
+; ^^ punctuation.definition.comment.edn
+;   ^^^^- punctuation.definition.comment.edn
 
 ; ## Unaffected
 
   '#'blah (#'blah blah)
 ; ^^ keyword.operator.macro.clojure
 ;    ^^^^^- keyword.operator.macro.clojure
-;         ^ punctuation.section.parens.begin.clojure
+;         ^ punctuation.section.parens.begin.edn
 ;          ^^ keyword.operator.macro.clojure
 ;            ^^^^^^^^^- keyword.operator.macro.clojure
-;                     ^ punctuation.section.parens.end.clojure
+;                     ^ punctuation.section.parens.end.edn
   '#inst"0000" (#inst"0000" blah)
-;  ^^^^^ keyword.operator.macro.clojure
-;       ^^^^^^ string.quoted.double.clojure
-;              ^ punctuation.section.parens.begin.clojure
-;               ^^^^^ keyword.operator.macro.clojure
-;                    ^^^^^^ string.quoted.double.clojure
+;  ^^^^^ keyword.operator.macro.edn
+;       ^^^^^^ string.quoted.double.edn
+;              ^ punctuation.section.parens.begin.edn
+;               ^^^^^ keyword.operator.macro.edn
+;                    ^^^^^^ string.quoted.double.edn
 
   # :blah{}
 ; ^ - keyword.operator.macro.clojure
-;   ^^^^^ constant.other.keyword.unqualified.clojure
+;   ^^^^^ constant.other.keyword.unqualified.edn
 
   # ' blah
 ; ^ - keyword.operator.macro.clojure
 ;   ^ keyword.operator.macro.clojure
-;          ^ comment.line.clojure punctuation.definition.comment
+;          ^ comment.line.edn punctuation.definition.comment
 
 ; ## Invalid
 
@@ -1130,16 +1124,16 @@
 ;  ^^^ - constant.numeric
   (blah #) )
 ;       ^ - keyword.operator.macro.clojure
-;          ^ invalid.illegal.stray-bracket-end.clojure
+;          ^ invalid.illegal.stray-bracket-end.edn
 
   # #NaN
-; ^ - keyword.operator.macro.clojure
-;   ^^^^ keyword.operator.macro.clojure
+; ^ - keyword.operator.macro.edn
+;   ^^^^ keyword.operator.macro.edn
 
 ; ## Ignore
 
   #{}
-; ^^ punctuation.section.braces.begin.clojure
+; ^^ punctuation.section.braces.begin.edn
 
 
 
@@ -1153,11 +1147,11 @@
 
   'true
 ; ^ keyword.operator.macro.clojure
-;  ^^^^ constant.language.clojure
+;  ^^^^ constant.language.edn
 
   ':blah
 ; ^ keyword.operator.macro.clojure
-;  ^^^^^ constant.other.keyword.unqualified.clojure
+;  ^^^^^ constant.other.keyword.unqualified.edn
 
   'blah
 ; ^ keyword.operator.macro.clojure
@@ -1187,17 +1181,17 @@
 
   '(10 20 30)
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^ constant.numeric
 
   '(blah blah)
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
 
   '(quote blah)
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^^^^ keyword.other.clojure
 
 ; ## Backquote
@@ -1218,14 +1212,14 @@
 
   `(blah ~blah)
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^^- keyword.operator.macro.clojure
 
   `(blah ~100)
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^ constant.numeric
@@ -1238,49 +1232,49 @@
 
   ~@[10 20 30]
 ; ^^ keyword.operator.macro.clojure
-;   ^ punctuation.section.brackets.begin.clojure
+;   ^ punctuation.section.brackets.begin.edn
 ;    ^^ constant.numeric
 
   `(blah ~@blah)
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;        ^^ keyword.operator.macro.clojure
 ;          ^^^^- keyword.operator.macro.clojure
 
   `(blah ~@[10 20 30])
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;        ^^ keyword.operator.macro.clojure
-;          ^ punctuation.section.brackets.begin.clojure
+;          ^ punctuation.section.brackets.begin.edn
 ;           ^^ constant.numeric
 
 ; ## Invalid
 
   ( ') )
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;   ^ keyword.operator.macro.clojure
-;      ^ invalid.illegal.stray-bracket-end.clojure
-;    ^ punctuation.section.parens.end.clojure
+;      ^ invalid.illegal.stray-bracket-end.edn
+;    ^ punctuation.section.parens.end.edn
 
   ( `) )
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;   ^ keyword.operator.macro.clojure
-;      ^ invalid.illegal.stray-bracket-end.clojure
-;    ^ punctuation.section.parens.end.clojure
+;      ^ invalid.illegal.stray-bracket-end.edn
+;    ^ punctuation.section.parens.end.edn
 
   ( `) )
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;   ^ keyword.operator.macro.clojure
-;      ^ invalid.illegal.stray-bracket-end.clojure
-;    ^ punctuation.section.parens.end.clojure
+;      ^ invalid.illegal.stray-bracket-end.edn
+;    ^ punctuation.section.parens.end.edn
 
   ( ~@) )
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;   ^^ keyword.operator.macro.clojure
-;       ^ invalid.illegal.stray-bracket-end.clojure
-;     ^ punctuation.section.parens.end.clojure
+;       ^ invalid.illegal.stray-bracket-end.edn
+;     ^ punctuation.section.parens.end.edn
 
 
 
@@ -1292,7 +1286,7 @@
 
   @true
 ; ^ keyword.operator.macro.clojure
-;  ^^^^ constant.language.clojure
+;  ^^^^ constant.language.edn
 
   @blah
 ; ^ keyword.operator.macro.clojure
@@ -1300,11 +1294,11 @@
 
   @:blah
 ; ^ keyword.operator.macro.clojure
-;  ^^^^^ constant.other.keyword.unqualified.clojure
+;  ^^^^^ constant.other.keyword.unqualified.edn
 
   @(atom blah)
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
 
   @@@blah
@@ -1320,7 +1314,8 @@
 ;  ^ keyword.operator.macro.clojure
 
   @#blah[]
-; ^^^^^^ keyword.operator.macro.clojure
+; ^ keyword.operator.macro.clojure
+;  ^^^^^ keyword.operator.macro.edn
 
 ; ## Breaks
 
@@ -1336,10 +1331,10 @@
 ; ## Invalid
 
   ( @) )
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;   ^ keyword.operator.macro.clojure
-;      ^ invalid.illegal.stray-bracket-end.clojure
-;    ^ punctuation.section.parens.end.clojure
+;      ^ invalid.illegal.stray-bracket-end.edn
+;    ^ punctuation.section.parens.end.edn
 
 
 
@@ -1355,36 +1350,36 @@
 
   ^:private blah
 ; ^ keyword.operator.macro.clojure
-;  ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;  ^^^^^^^^ constant.other.keyword.unqualified.edn
 
   ^{:private true} blah
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.braces.begin.clojure
-;   ^^^^^^^^ constant.other.keyword.unqualified.clojure
-;            ^^^^ constant.language.clojure
-;                ^ punctuation.section.braces.end.clojure
+;  ^ punctuation.section.braces.begin.edn
+;   ^^^^^^^^ constant.other.keyword.unqualified.edn
+;            ^^^^ constant.language.edn
+;                ^ punctuation.section.braces.end.edn
 
   ; Consequent metadata is merged
   ^:private ^:dynamic blah
 ; ^ keyword.operator.macro.clojure
-;  ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;  ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;           ^ keyword.operator.macro.clojure
-;            ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;            ^^^^^^^^ constant.other.keyword.unqualified.edn
 
   ; Useless but accepted by Clojure reader
   ^^^{10 20}{30 40}{:tag File} blah
 ; ^^^ keyword.operator.macro.clojure
 ;    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^- keyword.operator.macro.clojure
-;    ^ punctuation.section.braces.begin.clojure
+;    ^ punctuation.section.braces.begin.edn
 ;     ^^ constant.numeric
 ;        ^^ constant.numeric
-;          ^ punctuation.section.braces.end.clojure
-;           ^ punctuation.section.braces.begin.clojure
+;          ^ punctuation.section.braces.end.edn
+;           ^ punctuation.section.braces.begin.edn
 ;            ^^ constant.numeric
 ;               ^^ constant.numeric
-;                 ^ punctuation.section.braces.end.clojure
-;                  ^ punctuation.section.braces.begin.clojure
-;                   ^^^^ constant.other.keyword.unqualified.clojure
+;                 ^ punctuation.section.braces.end.edn
+;                  ^ punctuation.section.braces.begin.edn
+;                   ^^^^ constant.other.keyword.unqualified.edn
 
 ; ## Breaks
 
@@ -1400,170 +1395,170 @@
 ; ## Invalid
 
   ( ^) )
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;   ^ keyword.operator.macro.clojure
-;      ^ invalid.illegal.stray-bracket-end.clojure
-;    ^ punctuation.section.parens.end.clojure
+;      ^ invalid.illegal.stray-bracket-end.edn
+;    ^ punctuation.section.parens.end.edn
 
 
 
 ; # Brackets
 
   []
-; ^ punctuation.section.brackets.begin.clojure
-;  ^ punctuation.section.brackets.end.clojure
+; ^ punctuation.section.brackets.begin.edn
+;  ^ punctuation.section.brackets.end.edn
 
   [10, 20, 30]
-; ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.brackets.begin.edn
 ;  ^^ constant.numeric
-;    ^ comment.punctuation.comma.clojure
+;    ^ comment.punctuation.comma.edn
 ;      ^^ constant.numeric
-;        ^ comment.punctuation.comma.clojure
+;        ^ comment.punctuation.comma.edn
 ;          ^^ constant.numeric
-;            ^ punctuation.section.brackets.end.clojure
+;            ^ punctuation.section.brackets.end.edn
 
   [10
-; ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.brackets.begin.edn
 ;  ^^ constant.numeric
    ; ---
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
    blah
    #inst"0000"
-;  ^^^^^ keyword.operator.macro.clojure
-;       ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
+;  ^^^^^ keyword.operator.macro.edn
+;       ^ string.quoted.double.edn punctuation.definition.string.begin.edn
    [20]]
-;  ^ punctuation.section.brackets.begin.clojure
+;  ^ punctuation.section.brackets.begin.edn
 ;   ^^ constant.numeric
-;     ^^ punctuation.section.brackets.end.clojure
+;     ^^ punctuation.section.brackets.end.edn
 
 ; ## Invalid
 
   [ ] ]
-; ^ punctuation.section.brackets.begin.clojure
-;   ^ punctuation.section.brackets.end.clojure
-;     ^ invalid.illegal.stray-bracket-end.clojure
+; ^ punctuation.section.brackets.begin.edn
+;   ^ punctuation.section.brackets.end.edn
+;     ^ invalid.illegal.stray-bracket-end.edn
 
 
 
 ; # Braces
 
   #{} }
-; ^^ punctuation.section.braces.begin.clojure
-;   ^ punctuation.section.braces.end.clojure
-;     ^ invalid.illegal.stray-bracket-end.clojure
+; ^^ punctuation.section.braces.begin.edn
+;   ^ punctuation.section.braces.end.edn
+;     ^ invalid.illegal.stray-bracket-end.edn
 
   #{10, 20, 30}
-; ^^ punctuation.section.braces.begin.clojure
+; ^^ punctuation.section.braces.begin.edn
 ;   ^^ constant.numeric
-;     ^ comment.punctuation.comma.clojure
+;     ^ comment.punctuation.comma.edn
 ;       ^^ constant.numeric
-;         ^ comment.punctuation.comma.clojure
+;         ^ comment.punctuation.comma.edn
 ;           ^^ constant.numeric
-;             ^ punctuation.section.braces.end.clojure
+;             ^ punctuation.section.braces.end.edn
 
   #{10
-; ^^ punctuation.section.braces.begin.clojure
+; ^^ punctuation.section.braces.begin.edn
 ;   ^^ constant.numeric
     ; ---
-;   ^ comment.line.clojure punctuation.definition.comment
+;   ^ comment.line.edn punctuation.definition.comment
     blah
     #inst"0000"
-;   ^^^^^ keyword.operator.macro.clojure
-;        ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
+;   ^^^^^ keyword.operator.macro.edn
+;        ^ string.quoted.double.edn punctuation.definition.string.begin.edn
     {20}}
-;   ^ punctuation.section.braces.begin.clojure
+;   ^ punctuation.section.braces.begin.edn
 ;    ^^ constant.numeric
-;      ^^ punctuation.section.braces.end.clojure
+;      ^^ punctuation.section.braces.end.edn
 
   {10 20, 30 40}
-; ^ punctuation.section.braces.begin.clojure
+; ^ punctuation.section.braces.begin.edn
 ;  ^^ constant.numeric
 ;     ^^ constant.numeric
-;       ^ comment.punctuation.comma.clojure
+;       ^ comment.punctuation.comma.edn
 ;         ^^ constant.numeric
 ;            ^^ constant.numeric
-;              ^ punctuation.section.braces.end.clojure
+;              ^ punctuation.section.braces.end.edn
 
   {:blah [10 20 30]
-; ^ punctuation.section.braces.begin.clojure
-;  ^^^^^ constant.other.keyword.unqualified.clojure
-;        ^ punctuation.section.brackets.begin.clojure
+; ^ punctuation.section.braces.begin.edn
+;  ^^^^^ constant.other.keyword.unqualified.edn
+;        ^ punctuation.section.brackets.begin.edn
 ;         ^^ constant.numeric
 ;            ^^ constant.numeric
 ;               ^^ constant.numeric
-;                 ^ punctuation.section.brackets.end.clojure
+;                 ^ punctuation.section.brackets.end.edn
    ; ---
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
    :blahblah #{10 20 30}}
-;  ^^^^^^^^^ constant.other.keyword.unqualified.clojure
-;            ^^ punctuation.section.braces.begin.clojure
+;  ^^^^^^^^^ constant.other.keyword.unqualified.edn
+;            ^^ punctuation.section.braces.begin.edn
 ;              ^^ constant.numeric
 ;                 ^^ constant.numeric
 ;                    ^^ constant.numeric
-;                      ^^ punctuation.section.braces.end.clojure
+;                      ^^ punctuation.section.braces.end.edn
 
 ; ## Invalid
 
   #{ } }
-; ^^ punctuation.section.braces.begin.clojure
-;    ^ punctuation.section.braces.end.clojure
-;      ^ invalid.illegal.stray-bracket-end.clojure
+; ^^ punctuation.section.braces.begin.edn
+;    ^ punctuation.section.braces.end.edn
+;      ^ invalid.illegal.stray-bracket-end.edn
 
   { } }
-; ^ punctuation.section.braces.begin.clojure
-;   ^ punctuation.section.braces.end.clojure
-;     ^ invalid.illegal.stray-bracket-end.clojure
+; ^ punctuation.section.braces.begin.edn
+;   ^ punctuation.section.braces.end.edn
+;     ^ invalid.illegal.stray-bracket-end.edn
 
 
 
 ; # Parens
 
   ()
-; ^ punctuation.section.parens.begin.clojure
-;  ^ punctuation.section.parens.end.clojure
+; ^ punctuation.section.parens.begin.edn
+;  ^ punctuation.section.parens.end.edn
 
 
 ; ## Highlight one symbol in operator position
 
   (blah blah true 10 "" [10 20])
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;  ^^^^ meta.function-call.clojure variable.function.clojure
 ;      ^^^^^^^^^^^^^^^^^^^^^^^^- variable.function.clojure
-;            ^^^^ constant.language.clojure
+;            ^^^^ constant.language.edn
 ;                 ^^ constant.numeric
-;                    ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
-;                     ^ string.quoted.double.clojure punctuation.definition.string.end.clojure
-;                       ^ punctuation.section.brackets.begin.clojure
+;                    ^ string.quoted.double.edn punctuation.definition.string.begin.edn
+;                     ^ string.quoted.double.edn punctuation.definition.string.end.edn
+;                       ^ punctuation.section.brackets.begin.edn
 ;                        ^^ constant.numeric
 ;                           ^^ constant.numeric
-;                             ^ punctuation.section.brackets.end.clojure
-;                              ^ punctuation.section.parens.end.clojure
+;                             ^ punctuation.section.brackets.end.edn
+;                              ^ punctuation.section.parens.end.edn
 
   #(blah blah true 10 "" [10 20])
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
 ;       ^^^^^^^^^^^^^^^^^^^^^^^^^- variable.function.clojure
-;             ^^^^ constant.language.clojure
+;             ^^^^ constant.language.edn
 ;                  ^^ constant.numeric
-;                               ^ punctuation.section.parens.end.clojure
+;                               ^ punctuation.section.parens.end.edn
 
 ; ## Ignore operator
 
   (true blah :blah)
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;       ^^^^ - variable.function.clojure
-;  ^^^^ constant.language.clojure
+;  ^^^^ constant.language.edn
 
   (10 blah :blah)
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;     ^^^^ - variable.function.clojure
 ;  ^^ constant.numeric
 
   (:blah blah 10)
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;        ^^^^ - variable.function.clojure
-;  ^^^^^ constant.other.keyword.unqualified.clojure
+;  ^^^^^ constant.other.keyword.unqualified.edn
 
   (/ a b)
 ;  ^ meta.function-call.clojure variable.function.clojure
@@ -1583,28 +1578,28 @@
 
   #(true blah 10)
 ; ^ keyword.operator.macro.clojure
-;  ^ punctuation.section.parens.begin.clojure
+;  ^ punctuation.section.parens.begin.edn
 
 ; ## Whitespace
 
   (
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
     blah
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
     ; ---
-;   ^ comment.line.clojure punctuation.definition.comment
+;   ^ comment.line.edn punctuation.definition.comment
     blah
     :blah
-;   ^^^^^ constant.other.keyword.unqualified.clojure
+;   ^^^^^ constant.other.keyword.unqualified.edn
    )
-;  ^ punctuation.section.parens.end.clojure
+;  ^ punctuation.section.parens.end.edn
 
 ; ## Invalid
 
   ( ) )
-; ^ punctuation.section.parens.begin.clojure
-;   ^ punctuation.section.parens.end.clojure
-;     ^ invalid.illegal.stray-bracket-end.clojure
+; ^ punctuation.section.parens.begin.edn
+;   ^ punctuation.section.parens.end.edn
+;     ^ invalid.illegal.stray-bracket-end.edn
 
 
 
@@ -1612,9 +1607,9 @@
 
   (fn [])
 ;  ^^ keyword.declaration.function.inline.clojure
-;     ^ punctuation.section.brackets.begin.clojure
-;      ^ punctuation.section.brackets.end.clojure
-;       ^ punctuation.section.parens.end.clojure
+;     ^ punctuation.section.brackets.begin.edn
+;      ^ punctuation.section.brackets.end.edn
+;       ^ punctuation.section.parens.end.edn
 
   (fn declare-noindex [] blah)
 ;  ^^ keyword.declaration.function.inline.clojure
@@ -1630,7 +1625,7 @@
 ;    ^^ meta.function.parameters.clojure
     ([_] blah))
 ;    ^^^ meta.function.parameters.clojure
-;             ^ - invalid.illegal.stray-bracket-end.clojure
+;             ^ - invalid.illegal.stray-bracket-end.edn
 
   ; Invalid but take care anyway
   (fn declare-noindex dont-declare [])
@@ -1643,8 +1638,8 @@
   [& fntail]
   `(bound-fn* (fn ~@fntail)))
 ;                 ^^ keyword.operator.macro.clojure
-;                   ^^^^^^ meta.reader-form.clojure meta.symbol.clojure
-;                         ^^^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+;                   ^^^^^^ meta.reader-form.edn meta.symbol.edn
+;                         ^^^ meta.sexp.end.edn punctuation.section.parens.end.edn
 
 ; # defs
 
@@ -1655,7 +1650,7 @@
 ;      ^^^^^^^^^^^ entity.name.constant.clojure
 
   (def declare-def dont-declare)
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^^^^^^^^^^^ entity.name.constant.clojure
 ;                 ^^^^^^^^^^^^- storage
@@ -1664,25 +1659,25 @@
   (def λ nil)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ entity.name.constant.clojure
-;        ^^^ constant.language.clojure
+;        ^^^ constant.language.edn
 
   (def 👽 nil)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ entity.name.constant.clojure
-;        ^^^ constant.language.clojure
+;        ^^^ constant.language.edn
 
   (def def nil)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^^^ entity.name.constant.clojure
-;          ^^^ constant.language.clojure
+;          ^^^ constant.language.edn
 
   (
    ; ---
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
    def
 ;  ^^^ keyword.declaration.variable.clojure
    ; ---
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
    declare-def
 ;  ^^^^^^^^^^^ entity.name.constant.clojure
    dont-declare
@@ -1699,14 +1694,14 @@
   (def ^:private declare-def nil)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ keyword.operator.macro.clojure
-;       ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;       ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                ^^^^^^^^^^^ entity.name.constant.clojure
-;                            ^^^ constant.language.clojure
+;                            ^^^ constant.language.edn
 
   (def ^:private declare-def dont-declare)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ keyword.operator.macro.clojure
-;       ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;       ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                ^^^^^^^^^^^ entity.name.constant.clojure
 ;                           ^^^^^^^^^^^^^- storage
 ;                           ^^^^^^^^^^^^^- entity
@@ -1716,18 +1711,18 @@
   (def ^:private ^:dynamic declare-def nil)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ keyword.operator.macro.clojure
-;       ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;       ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                ^ keyword.operator.macro.clojure
-;                 ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;                 ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                          ^^^^^^^^^^^ entity.name.constant.clojure
-;                                      ^^^ constant.language.clojure
+;                                      ^^^ constant.language.edn
 
   (def ^:private ^:dynamic declare-def dont-declare)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ keyword.operator.macro.clojure
-;       ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;       ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                ^ keyword.operator.macro.clojure
-;                 ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;                 ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                          ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                     ^^^^^^^^^^^^^- storage
 ;                                     ^^^^^^^^^^^^^- entity
@@ -1740,12 +1735,12 @@
 ;  ^ keyword.operator.macro.clojure
    ; ---
    {:private
-;  ^ punctuation.section.braces.begin.clojure
-;   ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;  ^ punctuation.section.braces.begin.edn
+;   ^^^^^^^^ constant.other.keyword.unqualified.edn
    ; ---
     true}
-;   ^^^^ constant.language.clojure
-;       ^ punctuation.section.braces.end.clojure
+;   ^^^^ constant.language.edn
+;       ^ punctuation.section.braces.end.edn
    ; ---
    declare-def
 ;  ^^^^^^^^^^^ entity.name.constant.clojure
@@ -1756,23 +1751,23 @@
    )
 
   (defonce ^:private declare-defonce nil)
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;  ^^^^^^^ keyword.declaration.variable.clojure
 ;          ^ keyword.operator.macro.clojure
-;           ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;           ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                    ^^^^^^^^^^^^^^^ entity.name.constant.clojure
-;                                    ^^^ constant.language.clojure
+;                                    ^^^ constant.language.edn
 
   ; Useless but accepted by Clojure reader
   (^{10 20} def ^:private declare-def dont-declare)
 ;  ^ keyword.operator.macro.clojure
-;   ^ punctuation.section.braces.begin.clojure
+;   ^ punctuation.section.braces.begin.edn
 ;    ^^ constant.numeric
 ;       ^^ constant.numeric
-;         ^ punctuation.section.braces.end.clojure
+;         ^ punctuation.section.braces.end.edn
 ;           ^^^ keyword.declaration.variable.clojure
 ;               ^ keyword.operator.macro.clojure
-;                ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;                ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                         ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                    ^^^^^^^^^^^^^- storage
 ;                                    ^^^^^^^^^^^^^- entity
@@ -1781,18 +1776,18 @@
   (def ^^^{10 20}{30 40}{:private true} declare-def dont-declare)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^^^ keyword.operator.macro.clojure
-;         ^ punctuation.section.braces.begin.clojure
+;         ^ punctuation.section.braces.begin.edn
 ;          ^^ constant.numeric
 ;             ^^ constant.numeric
-;               ^ punctuation.section.braces.end.clojure
-;                ^ punctuation.section.braces.begin.clojure
+;               ^ punctuation.section.braces.end.edn
+;                ^ punctuation.section.braces.begin.edn
 ;                 ^^ constant.numeric
 ;                    ^^ constant.numeric
-;                      ^ punctuation.section.braces.end.clojure
-;                       ^ punctuation.section.braces.begin.clojure
-;                        ^^^^^^^^ constant.other.keyword.unqualified.clojure
-;                                 ^^^^ constant.language.clojure
-;                                     ^ punctuation.section.braces.end.clojure
+;                      ^ punctuation.section.braces.end.edn
+;                       ^ punctuation.section.braces.begin.edn
+;                        ^^^^^^^^ constant.other.keyword.unqualified.edn
+;                                 ^^^^ constant.language.edn
+;                                     ^ punctuation.section.braces.end.edn
 ;                                       ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                                  ^^^^^^^^^^^^^- storage
 ;                                                  ^^^^^^^^^^^^^- entity
@@ -1812,7 +1807,7 @@
 
   (def nil dont-declare)
 ;  ^^^ keyword.declaration.variable.clojure
-;      ^^^ constant.language.clojure
+;      ^^^ constant.language.edn
 ;         ^^^^^^^^^^^^^- storage
 ;         ^^^^^^^^^^^^^- entity
 
@@ -1831,8 +1826,8 @@
   (def ^ ) )
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ keyword.operator.macro.clojure
-;          ^ invalid.illegal.stray-bracket-end.clojure
-;        ^ punctuation.section.parens.end.clojure
+;          ^ invalid.illegal.stray-bracket-end.edn
+;        ^ punctuation.section.parens.end.edn
 
 
 
@@ -1854,7 +1849,7 @@
   (defn ^:private declare-defn [arg & args] dont-declare)
 ;  ^^^^ keyword.declaration.function.clojure
 ;       ^ keyword.operator.macro.clojure
-;        ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;        ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                 ^^^^^^^^^^^^ entity.name.function.clojure
 ;                              ^^^^^^^^^^^^^^^^^^^^^^^^^- storage
 ;                              ^^^^^^^^^^^^^^^^^^^^^^^^^- entity
@@ -1863,7 +1858,7 @@
 ;  ^^^^ keyword.declaration.function.clojure
 ;       ^^^^^^^^^^^^ entity.name.function.clojure
     "docstring"
-;   ^^^^^^^^^^^ string.quoted.double.clojure
+;   ^^^^^^^^^^^ string.quoted.double.edn
     [arg & args]
 ;   ^^^^^^^^^^^^- storage
 ;   ^^^^^^^^^^^^- entity
@@ -1875,11 +1870,11 @@
 ;  ^^^^ keyword.declaration.function.clojure
     ^:private
 ;   ^ keyword.operator.macro.clojure
-;    ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;    ^^^^^^^^ constant.other.keyword.unqualified.edn
     declare-defn
 ;   ^^^^^^^^^^^^ entity.name.function.clojure
     "docstring"
-;   ^^^^^^^^^^^ string.quoted.double.clojure
+;   ^^^^^^^^^^^ string.quoted.double.edn
     ([] dont-declare)
 ;    ^^ meta.function.parameters.clojure
 ;   ^^^^^^^^^^^^^^^^^- storage
@@ -1895,10 +1890,10 @@
    declare-defn
 ;  ^^^^^^^^^^^^ entity.name.function.clojure
    "docstring"
-;  ^^^^^^^^^^^ string.quoted.double.clojure
+;  ^^^^^^^^^^^ string.quoted.double.edn
    {:private true}
-;   ^^^^^^^^ constant.other.keyword.unqualified.clojure
-;            ^^^^ constant.language.clojure
+;   ^^^^^^^^ constant.other.keyword.unqualified.edn
+;            ^^^^ constant.language.edn
    ([] dont-declare)
 ;   ^^ meta.function.parameters.clojure
 ;  ^^^^^^^^^^^^^^^^^- storage
@@ -1913,7 +1908,7 @@
 ;       ^^^^^^^^^^^^ entity.name.function.clojure
 ;                     ^^^^^- storage
 ;                     ^^^^^- entity
-;                             ^^^^ constant.other.keyword.unqualified.clojure
+;                             ^^^^ constant.other.keyword.unqualified.edn
 ;                                    ^^^^ meta.function-call.clojure variable.function.clojure
     value)
 ;   ^^^^^- storage
@@ -1932,7 +1927,7 @@
 ;                 ^^^^^ - meta.function.parameters.clojure
 
   (defn foo)
-;          ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+;          ^ meta.sexp.end.edn punctuation.section.parens.end.edn
 
   (def !bang (atom 1))
 ;      ^^^^^ entity.name.constant.clojure
@@ -1962,7 +1957,7 @@
   (defmulti ^:private declare-multi-fn dont-declare-dispatch-fn)
 ;  ^^^^^^^^ keyword.declaration.function.clojure
 ;           ^ keyword.operator.macro.clojure
-;            ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;            ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                     ^^^^^^^^^^^^^^^^ entity.name.function.clojure
 ;                                     ^^^^^^^^^^^^^^^^^^^^^^^^^- storage
 ;                                     ^^^^^^^^^^^^^^^^^^^^^^^^^- entity
@@ -1983,10 +1978,10 @@
   (defmulti declare-multi-fn nil)
 ;  ^^^^^^^^ keyword.declaration.function.clojure
 ;           ^^^^^^^^^^^^^^^^ entity.name.function.clojure
-;                            ^^^ constant.language.clojure
+;                            ^^^ constant.language.edn
 
   (defmethod dont-declare-multi-fn :dispatch-value [arg & args] [arg] ...)
-;                                  ^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.clojure
+;                                  ^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                                                  ^^^^^^^^^^^^ meta.function.parameters.clojure
 ;                                                               ^^^^^ - meta.function.parameters.clojure
 
@@ -2023,40 +2018,40 @@
   (defprotocol ^:private DeclareProtocol)
 ;  ^^^^^^^^^^^ storage.type.interface.clojure
 ;              ^ keyword.operator.macro.clojure
-;               ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;               ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                        ^^^^^^^^^^^^^^^ entity.name.type.clojure
 
   (defprotocol ^:private ^:blah DeclareProtocol)
 ;  ^^^^^^^^^^^ storage.type.interface.clojure
 ;              ^ keyword.operator.macro.clojure
-;               ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;               ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                        ^ keyword.operator.macro.clojure
-;                         ^^^^^ constant.other.keyword.unqualified.clojure
+;                         ^^^^^ constant.other.keyword.unqualified.edn
 ;                               ^^^^^^^^^^^^^^^ entity.name.type.clojure
 
   (
    ; ---
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
    defprotocol
 ;  ^^^^^^^^^^^ storage.type.interface.clojure
    ; ---
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
    ^:private
 ;  ^ keyword.operator.macro.clojure
-;   ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;   ^^^^^^^^ constant.other.keyword.unqualified.edn
    ; ---
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
    DeclareProtocol
 ;  ^^^^^^^^^^^^^^^ entity.name.type.clojure
    ; ---
-;  ^ comment.line.clojure punctuation.definition.comment
+;  ^ comment.line.edn punctuation.definition.comment
    "docstring"
-;  ^ string.quoted.double.clojure punctuation.definition.string.begin.clojure
+;  ^ string.quoted.double.edn punctuation.definition.string.begin.edn
   )
 
   ; Invalid but take care anyway
   (defprotocol DeclareProtocol dont-declare)
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;  ^^^^^^^^^^^ storage.type.interface.clojure
 ;              ^^^^^^^^^^^^^^^ entity.name.type.clojure
 ;                             ^^^^^^^^^^^^^- storage
@@ -2096,7 +2091,7 @@
   (definterface ^:private DeclareInterface)
 ;  ^^^^^^^^^^^^ storage.type.interface.clojure
 ;               ^ keyword.operator.macro.clojure
-;                ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;                ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                         ^^^^^^^^^^^^^^^^ entity.name.type.clojure
 
   (
@@ -2107,7 +2102,7 @@
    DeclareInterface
 ;  ^^^^^^^^^^^^^^^^ entity.name.type.clojure
    "docstring"
-;  ^^^^^^^^^^^ string.quoted.double.clojure
+;  ^^^^^^^^^^^ string.quoted.double.edn
   )
 
   ; Interface methods should have the same visual style as other function
@@ -2121,7 +2116,7 @@
 
   ; Invalid but take care anyway
   (definterface DeclareInterface dont-declare)
-; ^ punctuation.section.parens.begin.clojure
+; ^ punctuation.section.parens.begin.edn
 ;  ^^^^^^^^^^^^ storage.type.interface.clojure
 ;               ^^^^^^^^^^^^^^^^ entity.name.type.clojure
 ;                               ^^^^^^^^^^^^^- storage
@@ -2140,7 +2135,7 @@
   (deftype ^:private DeclareType [])
 ;  ^^^^^^^ storage.type.class.clojure
 ;          ^ keyword.operator.macro.clojure
-;           ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;           ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                    ^^^^^^^^^^^ entity.name.type.clojure
 ;                                ^^ meta.function.parameters.clojure
 
@@ -2154,7 +2149,7 @@
    ; ---
    ^:blah
 ;  ^ keyword.operator.macro.clojure
-;   ^^^^^ constant.other.keyword.unqualified.clojure
+;   ^^^^^ constant.other.keyword.unqualified.edn
    ; ---
    DeclareType
 ;  ^^^^^^^^^^^ entity.name.type.clojure
@@ -2169,7 +2164,7 @@
     (bar ^:quux [_])
   ;  ^^^ entity.name.function.clojure
   ;      ^ keyword.operator.macro.clojure
-  ;       ^^^^^ constant.other.keyword.unqualified.clojure
+  ;       ^^^^^ constant.other.keyword.unqualified.edn
     Bar
     (baz [_]))
 ;    ^^^ entity.name.function.clojure
@@ -2191,9 +2186,9 @@
 (deftype GrowingMap [^IFn make ^:unsynchronized-mutable inner]
 ;^^^^^^^ storage.type.class.clojure
 ;        ^^^^^^^^^^ entity.name.type.clojure
-;                   ^ punctuation.section.brackets.begin.clojure
+;                   ^ punctuation.section.brackets.begin.edn
 ;                    ^ keyword.operator.macro.clojure
-;                               ^^^^^^^^^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.clojure
+;                               ^^^^^^^^^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.edn
   ILookup
   (valAt [this key]
 ;  ^^^^^ entity.name.function.clojure
@@ -2254,7 +2249,7 @@
   (defrecord ^:private DeclareRecord [])
 ;  ^^^^^^^^^ storage.type.class.clojure
 ;            ^ keyword.operator.macro.clojure
-;             ^^^^^^^^ constant.other.keyword.unqualified.clojure
+;             ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                      ^^^^^^^^^^^^^ entity.name.type.clojure
 
   (
@@ -2280,7 +2275,7 @@
     (bar ^:baz [_])
 ;    ^^^ entity.name.function.clojure
 ;        ^ keyword.operator.macro.clojure
-;         ^^^^ constant.other.keyword.unqualified.clojure
+;         ^^^^ constant.other.keyword.unqualified.edn
     Quux
     (zot [_]))
 ;    ^^^ entity.name.function.clojure
@@ -2341,12 +2336,12 @@
 ;   ^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
     (deref [_] nil)
 ;    ^^^^^ entity.name.function.clojure
-;              ^^^ constant.language.clojure
+;              ^^^ constant.language.edn
     clojure.lang.Seqable
 ;   ^^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
     (seq [_] nil))
 ;    ^^^ entity.name.function.clojure
-;            ^^^ constant.language.clojure
+;            ^^^ constant.language.edn
 
 
 
@@ -2360,10 +2355,10 @@
 ;         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^- variable
     (deref [] nil)
 ;    ^^^^^ entity.name.function.clojure
-;             ^^^ constant.language.clojure
+;             ^^^ constant.language.edn
     (seq [] nil))
 ;    ^^^ entity.name.function.clojure
-;           ^^^ constant.language.clojure
+;           ^^^ constant.language.edn
 
 
 
@@ -2379,7 +2374,7 @@
     Srv
     (deref [_] nil))
 ;    ^^^^^ entity.name.function.clojure
-;              ^^^ constant.language.clojure
+;              ^^^ constant.language.edn
 
 
 
@@ -2395,7 +2390,7 @@
     clojure.lang.IFn
     (invoke [this] nil))
 ;    ^^^^^^ entity.name.function.clojure
-;                  ^^^ constant.language.clojure
+;                  ^^^ constant.language.edn
 
 
 
@@ -2408,24 +2403,24 @@
   (ns ^:baz foo.bar)
 ;     ^^^^^ - entity.name.namespace.clojure
 ;     ^ keyword.operator.macro.clojure
-;      ^^^^ constant.other.keyword.unqualified.clojure
+;      ^^^^ constant.other.keyword.unqualified.edn
 ;           ^^^^^^^ entity.name.namespace.clojure
 
   (ns ^{:baz true} foo.bar)
 ;     ^ keyword.operator.macro.clojure
-;       ^^^^ constant.other.keyword.unqualified.clojure
-;            ^^^^ constant.language.clojure
+;       ^^^^ constant.other.keyword.unqualified.edn
+;            ^^^^ constant.language.edn
 ;                  ^^^^^^^ entity.name.namespace.clojure
 
   (ns ^{:config '{:some-keyword some-symbol}} foo.bar)
 ;     ^ keyword.operator.macro.clojure
-;       ^^^^^^^ constant.other.keyword.unqualified.clojure
+;       ^^^^^^^ constant.other.keyword.unqualified.edn
 ;               ^ keyword.operator.macro.clojure
-;                               ^^^^^^^^^^^ meta.symbol.clojure
+;                               ^^^^^^^^^^^ meta.symbol.edn
 ;                                             ^^^^^^^ entity.name.namespace.clojure
 
   (ns foo.bar "baz")
-;             ^^^^^ string.quoted.double.clojure
+;             ^^^^^ string.quoted.double.edn
 
   (ns foo.bar
     (:require
@@ -2439,19 +2434,19 @@
     (:import
 ;    ^^^^^^^ meta.statement.import.clojure
      (java.time LocalDate)))
-;    ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;    ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
 ;     ^^^^^^^^^ - meta.function-call.clojure
 ;     ^^^^^^^^^ - variable.function.clojure
-;                        ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+;                        ^ meta.sexp.end.edn punctuation.section.parens.end.edn
   (ns foo.bar
     (:require
 ;    ^^^^^^^ meta.statement.require.clojure
      (foo.bar :as [foo])))
-;    ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;    ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
 ;     ^^^^^^^ - meta.function-call.clojure
 ;     ^^^^^^^ - variable.function.clojure
-;             ^^^ constant.other.keyword.unqualified.clojure
-;                      ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+;             ^^^ constant.other.keyword.unqualified.edn
+;                      ^ meta.sexp.end.edn punctuation.section.parens.end.edn
 
   (ns foo.bar (:import :require))
 ;              ^^^^^^^ meta.statement.import.clojure
@@ -2476,32 +2471,32 @@
 ; # Qualified symbols
 
   foo.bar/
-; ^^^^^^^ meta.namespace.clojure
-;        ^ punctuation.accessor.clojure
+; ^^^^^^^ - meta.namespace.edn
+;        ^ - punctuation.accessor.edn
 
   foo.bar/baz
-; ^^^^^^^ meta.namespace.clojure
-;        ^ punctuation.accessor.clojure
-;        ^^^^ - meta.namespace.clojure
+; ^^^^^^^ meta.namespace.edn
+;        ^ punctuation.accessor.edn
+;        ^^^^ - meta.namespace.edn
 
 
 
 ; # Map namespace syntax
 
   #:blah/blah{}
-; ^ keyword.operator.macro.clojure
-;  ^ punctuation.definition.keyword.clojure
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn
 ;   ^^^^ meta.namespace
 ;       ^ punctuation.definition.constant.namespace
-;  ^^^^^^^^^^ constant.other.keyword.qualified.clojure
+;  ^^^^^^^^^^ constant.other.keyword.qualified.edn
 
   #::blah{}
-; ^ keyword.operator.macro.clojure
+; ^ keyword.operator.macro.edn
 ;  ^^ punctuation.definition.keyword.clojure
 ;  ^^^^^^ constant.other.keyword.auto-qualified.clojure
 
   #::blah/blah{}
-; ^ keyword.operator.macro.clojure
+; ^ keyword.operator.macro.edn
 ;  ^^ punctuation.definition.keyword.clojure
 ;        ^ punctuation.definition.constant.namespace
 ;  ^^^^^^ constant.other.keyword.auto-qualified.clojure
@@ -2511,10 +2506,10 @@
 ; # Tagged literals
 
  (foo #bar/baz [1 2 3] [4 5 6])
-;     ^^^^^^^^ keyword.operator.macro.clojure
-;         ^ punctuation.definition.symbol.namespace.clojure
-;     ^^^^^^^^^^^^^^^^ meta.reader-form.clojure
-;                     ^ - meta.reader-form.clojure
+;     ^^^^^^^^ keyword.operator.macro.edn
+;         ^ punctuation.definition.symbol.namespace.edn
+;     ^^^^^^^^^^^^^^^^ meta.reader-form.edn
+;                     ^ - meta.reader-form.edn
 
 
 
@@ -2531,36 +2526,36 @@
 
   `foo
 ; ^ keyword.operator.macro.clojure
-;  ^^^ meta.symbol.clojure - keyword
+;  ^^^ meta.symbol.edn - keyword
 
   ~foo
 ; ^ keyword.operator.macro.clojure
-;  ^^^ meta.symbol.clojure - keyword
+;  ^^^ meta.symbol.edn - keyword
 
   `(foo ~bar)
 ; ^ keyword.operator.macro.clojure
 ;   ^^^ meta.function-call.clojure variable.function.clojure
 ;       ^ keyword.operator.macro.clojure
-;        ^^^ meta.symbol.clojure - keyword
+;        ^^^ meta.symbol.edn - keyword
 
   ~@foo ~[1 2 3]
 ; ^^ keyword.operator.macro.clojure
-;   ^^^ meta.symbol.clojure - keyword
+;   ^^^ meta.symbol.edn - keyword
 ;       ^ keyword.operator.macro.clojure
-;        ^ meta.sexp.begin.clojure
-;              ^ meta.sexp.end.clojure
+;        ^ meta.sexp.begin.edn
+;              ^ meta.sexp.end.edn
 
   #'foo.bar/baz
 ; ^^ keyword.operator.macro.clojure
-;          ^ punctuation.accessor.clojure
+;          ^ punctuation.accessor.edn
 
 
 ; # Reader conditionals
 
   #?(:clj (def x 1))
 ; ^^ keyword.operator.macro
-;   ^ punctuation.section.parens.begin.clojure
-;    ^^^^ constant.other.keyword.unqualified.clojure
+;   ^ punctuation.section.parens.begin.edn
+;    ^^^^ constant.other.keyword.unqualified.edn
 
 
 
@@ -2587,42 +2582,42 @@
 ; ## Symbols
 
   a b
-; ^ meta.reader-form.clojure
+; ^ meta.reader-form.edn
 ;  ^ - meta
-;   ^ meta.reader-form.clojure
+;   ^ meta.reader-form.edn
 
 ; ## Strings
 
   "a" "b"
-; ^^^ meta.reader-form.clojure
+; ^^^ meta.reader-form.edn
 ;    ^ - meta
-;     ^^^ meta.reader-form.clojure
+;     ^^^ meta.reader-form.edn
 
 ; ## Numbers
 
   123 123N 1/2 1.2 1.2M +0x1234af -2r1010 +1234.1234E10M ##-Inf
-; ^^^ meta.reader-form.clojure
+; ^^^ meta.reader-form.edn
 ;    ^ - meta
-;     ^^^^ meta.reader-form.clojure
+;     ^^^^ meta.reader-form.edn
 ;         ^ - meta
-;          ^^^ meta.reader-form.clojure
+;          ^^^ meta.reader-form.edn
 ;                 ^ - meta
-;                  ^^^^ meta.reader-form.clojure
+;                  ^^^^ meta.reader-form.edn
 ;                      ^ - meta
-;                       ^^^^^^^^^ meta.reader-form.clojure
+;                       ^^^^^^^^^ meta.reader-form.edn
 ;                                ^ - meta
-;                                 ^^^^^^^ meta.reader-form.clojure
+;                                 ^^^^^^^ meta.reader-form.edn
 ;                                        ^ - meta
-;                                         ^^^^^^^^^^^^^^ meta.reader-form.clojure
+;                                         ^^^^^^^^^^^^^^ meta.reader-form.edn
 ;                                                       ^ - meta
-;                                                        ^^^^^^ meta.reader-form.clojure
+;                                                        ^^^^^^ meta.reader-form.edn
 
 ; ## Keywords
 
   :foo :foo/bar ::foo ::foo/bar
-; ^^^^ meta.reader-form.clojure
+; ^^^^ meta.reader-form.edn
 ;     ^ - meta
-;      ^^^^^^^^ meta.reader-form.clojure
+;      ^^^^^^^^ meta.reader-form.edn
 ;              ^ - meta
 ;               ^^^^^ meta.reader-form.clojure
 ;                    ^ - meta
@@ -2636,71 +2631,71 @@
 ;      ^ keyword.operator.macro.clojure
 
   \newline \space
-; ^^^^^^^^ meta.reader-form.clojure
+; ^^^^^^^^ meta.reader-form.edn
 ;         ^ - meta
-;          ^^^^^^ meta.reader-form.clojure
+;          ^^^^^^ meta.reader-form.edn
 
   @foo @bar
 ; ^ keyword.operator.macro.clojure
-;  ^^^ meta.reader-form.clojure
+;  ^^^ meta.reader-form.edn
 ;     ^ - meta
 ;      ^ keyword.operator.macro.clojure
-;       ^^^ meta.reader-form.clojure
+;       ^^^ meta.reader-form.edn
 
 
 
 ; ## Dispatch macro
 
   #"\s" #"[1-9]"
-; ^^^^^ meta.reader-form.clojure
+; ^^^^^ meta.reader-form.edn
 ;      ^ - meta
-;       ^^^^^^^^ meta.reader-form.clojure
+;       ^^^^^^^^ meta.reader-form.edn
 
   #inst "2018-03-28T10:48:00.000" #uuid "3b8a31ed-fd89-4f1b-a00f-42e3d60cf5ce"
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.clojure
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.edn
 ;                                ^ - meta
-;                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.clojure
+;                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.edn
 
   #foo/bar {:a {:b [:c]}} [1 2 3]
-; ^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.clojure
-;                        ^ - meta.reader-form.clojure
+; ^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.edn
+;                        ^ - meta.reader-form.edn
 
 
 
 ; # S-expressions
 
   (+ 1 2) (- 3 4)
-; ^ meta.sexp.begin.clojure
-;       ^ meta.sexp.end.clojure
+; ^ meta.sexp.begin.edn
+;       ^ meta.sexp.end.edn
 ;        ^ - meta
 
   '(1 2) '(3 4)
 ; ^ keyword.operator.macro.clojure
-;  ^ meta.sexp.begin.clojure
-;      ^ meta.sexp.end.clojure
+;  ^ meta.sexp.begin.edn
+;      ^ meta.sexp.end.edn
 ;       ^ - meta
 ;        ^ keyword.operator.macro.clojure
 
   [1 2] [3 4]
-; ^ meta.sexp.begin.clojure
-;     ^ meta.sexp.end.clojure
+; ^ meta.sexp.begin.edn
+;     ^ meta.sexp.end.edn
 ;      ^ - meta
 
   {:a 1} {:b 2}
-; ^ meta.sexp.begin.clojure
-;      ^ meta.sexp.end.clojure
+; ^ meta.sexp.begin.edn
+;      ^ meta.sexp.end.edn
 ;       ^ - meta
 
   #{1 2} #{3 4}
-; ^ keyword.operator.macro.clojure
-;  ^ meta.sexp.begin.clojure
-;      ^ meta.sexp.end.clojure
+; ^ keyword.operator.macro.edn
+;  ^ meta.sexp.begin.edn
+;      ^ meta.sexp.end.edn
 ;       ^ - meta
 
   #_(1 2) (3 4)
-; ^^ keyword.operator.macro.clojure punctuation.definition.comment.clojure
-;   ^ meta.sexp.begin.clojure
-;       ^ meta.sexp.end.clojure
+; ^^ keyword.operator.macro.edn punctuation.definition.comment.edn
+;   ^ meta.sexp.begin.edn
+;       ^ meta.sexp.end.edn
 ;        ^ - meta
 ;         ^^^^^ - meta.discarded.clojure
 
@@ -2754,62 +2749,62 @@
   (defn foo
     [[x y & xs :as bar] ys]
 ;   ^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters.clojure
-;              ^^^ constant.other.keyword.unqualified.clojure
+;              ^^^ constant.other.keyword.unqualified.edn
     ,,,)
 
   (defn configure
     [val & {:keys [debug verbose] :or {debug false, verbose false}}]
 ;   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters.clojure
-;           ^^^^^ constant.other.keyword.unqualified.clojure
-;                                 ^^^ constant.other.keyword.unqualified.clojure
-;                  ^^^^^ meta.symbol.clojure
-;                                            ^^^^^ constant.language.clojure
-;                                                 ^ comment.punctuation.comma.clojure
+;           ^^^^^ constant.other.keyword.unqualified.edn
+;                                 ^^^ constant.other.keyword.unqualified.edn
+;                  ^^^^^ meta.symbol.edn
+;                                            ^^^^^ constant.language.edn
+;                                                 ^ comment.punctuation.comma.edn
     ,,,)
 
   (fn foo
     [[x y & xs :as bar] ys]
 ;   ^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters.clojure
-;                         ^ - invalid.illegal.stray-bracket-end.clojure
-;              ^^^ constant.other.keyword.unqualified.clojure
+;                         ^ - invalid.illegal.stray-bracket-end.edn
+;              ^^^ constant.other.keyword.unqualified.edn
     ,,,)
 
     (fn configure
       [val & {:keys [debug verbose] :or {debug false, verbose false}}]
   ;   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function.parameters.clojure
-  ;           ^^^^^ constant.other.keyword.unqualified.clojure
-  ;                                 ^^^ constant.other.keyword.unqualified.clojure
-  ;                  ^^^^^ meta.symbol.clojure
-  ;                                            ^^^^^ constant.language.clojure
-  ;                                                 ^ comment.punctuation.comma.clojure
+  ;           ^^^^^ constant.other.keyword.unqualified.edn
+  ;                                 ^^^ constant.other.keyword.unqualified.edn
+  ;                  ^^^^^ meta.symbol.edn
+  ;                                            ^^^^^ constant.language.edn
+  ;                                                 ^ comment.punctuation.comma.edn
       ,,,)
 
   (defn x
     [y]
     (fn [z]))
-;           ^ -  invalid.illegal.stray-bracket-end.clojure
+;           ^ -  invalid.illegal.stray-bracket-end.edn
 
   (fn
     ()
-;    ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+;    ^ meta.sexp.end.edn punctuation.section.parens.end.edn
     ([x] ,,,))
-;   ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;   ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
 
   (defn x
     ()
-;    ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+;    ^ meta.sexp.end.edn punctuation.section.parens.end.edn
     ([y] ,,,))
-;   ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;   ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
 
   (let)
-; ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
-;     ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+; ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;     ^ meta.sexp.end.edn punctuation.section.parens.end.edn
 
   (let (foo)) (inc 1)
-;      ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;      ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
 ;       ^^^ meta.function-call.clojure variable.function.clojure
-;          ^^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
-;             ^ meta.sexp.begin.clojure punctuation.section.parens.begin.clojure
+;          ^^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;             ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
 ;              ^^^ meta.function-call.clojure variable.function.clojure
-;                  ^ constant.numeric.integer.decimal.clojure
-;                   ^ meta.sexp.end.clojure punctuation.section.parens.end.clojure
+;                  ^ constant.numeric.integer.decimal.edn
+;                   ^ meta.sexp.end.edn punctuation.section.parens.end.edn

@@ -693,11 +693,11 @@ class TutkainViewEventListener(ViewEventListener):
         if int(sublime.version()) >= 4050:
             point = locations[0] - 1
 
-            if self.view.match_selector(point, 'meta.symbol.clojure - meta.function.parameters'):
+            if self.view.match_selector(point, 'meta.symbol - meta.function.parameters'):
                 session = get_session_by_owner(self.view.window(), 'plugin')
 
                 if session and session.supports('completions'):
-                    scope = selectors.expand_by_selector(self.view, point, 'meta.symbol.clojure')
+                    scope = selectors.expand_by_selector(self.view, point, 'meta.symbol')
 
                     if scope:
                         prefix = self.view.substr(scope)
@@ -725,8 +725,8 @@ class TutkainViewEventListener(ViewEventListener):
 def lookup(view, point, handler):
     is_repl_output_view = view.settings().get('tutkain_repl_output_view')
 
-    if view.match_selector(point, 'meta.symbol.clojure') and not is_repl_output_view:
-        symbol = selectors.expand_by_selector(view, point, 'meta.symbol.clojure')
+    if view.match_selector(point, 'source.clojure & meta.symbol') and not is_repl_output_view:
+        symbol = selectors.expand_by_selector(view, point, 'meta.symbol')
 
         if symbol:
             session = get_session_by_owner(view.window(), 'plugin')
