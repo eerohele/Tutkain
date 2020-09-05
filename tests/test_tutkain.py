@@ -3,9 +3,9 @@ import sublime
 import os
 
 from .util import ViewTestCase, wait_until_contains
-from Tutkain.repl import tap
-from Tutkain import test
-from Tutkain import tutkain
+from Tutkain.lib.repl import tap
+from Tutkain.lib import test
+from Tutkain import package as tutkain
 
 
 HOST = os.getenv('NREPL_HOST', 'localhost')

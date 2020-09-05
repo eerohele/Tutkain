@@ -17,22 +17,22 @@ from sublime_plugin import (
 
 from threading import Thread
 
-from . import selectors
-from . import sexp
-from . import forms
-from . import formatter
-from . import indent
-from . import inline
-from . import paredit
-from . import namespace
-from . import test
-from .repl import info
-from .repl import history
-from .repl import tap
-from .repl.client import Client
-from .repl.session import Session
+from .lib import selectors
+from .lib import sexp
+from .lib import forms
+from .lib import formatter
+from .lib import indent
+from .lib import inline
+from .lib import paredit
+from .lib import namespace
+from .lib import test
+from .lib.repl import info
+from .lib.repl import history
+from .lib.repl import tap
+from .lib.repl.client import Client
+from .lib.repl.session import Session
 
-from .log import log, start_logging, stop_logging
+from .lib.log import log, start_logging, stop_logging
 
 
 state = {

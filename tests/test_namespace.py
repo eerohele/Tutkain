@@ -1,4 +1,4 @@
-from Tutkain import namespace
+from Tutkain.lib import namespace
 
 from .util import ViewTestCase
 

@@ -1,7 +1,6 @@
-
 from unittest import TestCase
 
-from Tutkain.formatter import format
+from Tutkain.lib.formatter import format
 
 
 class TestFormatter(TestCase):

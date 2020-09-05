@@ -5,7 +5,7 @@ Python values into bencoded bytes.
 
 Example:
 
-    import Tutkain.bencode as bencode
+    import Tutkain.lib.repl.bencode as bencode
 
     socket = socket.sockets(socket.AF_INET, socket.SOCK_STREAM)
     socket.connect(('localhost', 1234))
