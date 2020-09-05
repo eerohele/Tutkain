@@ -178,7 +178,7 @@ class TutkainClearOutputViewCommand(WindowCommand):
             inline.clear(self.window.active_view())
 
     def run(self):
-        session = get_session_by_owner(self.window, 'plugin')
+        session = get_session_by_owner(self.window, 'user')
 
         if session:
             self.clear_view(session.view)
@@ -476,35 +476,36 @@ class TutkainConnectCommand(WindowCommand):
                 )
 
     def initialize(self, client, sideloader, view):
-        if sideloader.supports('sideloader-start') and sideloader.supports('add-middleware'):
-            def add_tap(response):
-                if response.get('status') == ['done']:
-                    sideloader.send({'op': 'tutkain/add-tap'})
+        def add_tap(response):
+            if response.get('status') == ['done']:
+                sideloader.send({'op': 'tutkain/add-tap'})
 
-                    sideloader.send({
-                        'op': 'describe'
-                    }, handler=lambda response: self.create_sessions(client, sideloader, view, response))
+                sideloader.send({
+                    'op': 'describe'
+                }, handler=lambda response: self.create_sessions(
+                    client, sideloader, view, response
+                ))
 
-            def add_middleware(response):
-                if response.get('status') == ['done']:
-                    sideloader.send({
-                        'op': 'add-middleware',
-                        'middleware': [
-                            'tutkain.nrepl.middleware.test/wrap-test',
-                            'tutkain.nrepl.middleware.tap/wrap-tap',
-                        ]
-                    }, handler=add_tap)
+        def add_middleware(response):
+            if response.get('status') == ['done']:
+                sideloader.send({
+                    'op': 'add-middleware',
+                    'middleware': [
+                        'tutkain.nrepl.middleware.test/wrap-test',
+                        'tutkain.nrepl.middleware.tap/wrap-tap',
+                    ]
+                }, handler=add_tap)
 
-            sideloader.send({
-                'op': 'sideloader-start'
-            }, handler=lambda response: self.sideloader_provide(sideloader, response))
+        sideloader.send({
+            'op': 'sideloader-start'
+        }, handler=lambda response: self.sideloader_provide(sideloader, response))
 
-            sideloader.send({
-                'op': 'eval',
-                'code': '''(require 'tutkain.nrepl.util.pprint)'''
-                # We use a noop handler, to prevent the printer printing the nil response of this
-                # eval op.
-            }, pprint=False, handler=add_middleware)
+        sideloader.send({
+            'op': 'eval',
+            'code': '''(require 'tutkain.nrepl.util.pprint)'''
+            # We use a noop handler, to prevent the printer printing the nil response of this
+            # eval op.
+        }, pprint=False, handler=add_middleware)
 
     def print(self, view, item):
         if view:
@@ -514,8 +515,6 @@ class TutkainConnectCommand(WindowCommand):
                 append_to_view(view, ':tutkain/interrupted\n')
             elif 'status' in item and 'session-idle' in item['status']:
                 append_to_view(view, ':tutkain/nothing-to-interrupt\n')
-            elif 'status' in item and 'namespace-not-found' in item['status']:
-                append_to_view(view, ':tutkain/namespace-not-found\n')
             else:
                 characters = formatter.format(item)
 
@@ -546,6 +545,10 @@ class TutkainConnectCommand(WindowCommand):
                     append_to_view(tap.find_panel(self.window, client), item['tap'])
                 elif session:
                     self.print(session.view, item)
+
+                    # Babashka
+                    if not session.supports('sideloader-start') and 'status' in item and 'done' in item['status']:
+                        append_to_view(session.view, '\n')
                 else:
                     view = get_active_repl_view(self.window)
                     self.print(view, item)
@@ -622,10 +625,12 @@ class TutkainConnectCommand(WindowCommand):
             view = self.create_output_view(host, port)
             state['client_by_view'][view.id()] = client
 
+            client.sendq.put({'op': 'describe'})
+            capabilities = client.recvq.get()
+
             client.sendq.put({'op': 'clone'})
             session_id = client.recvq.get().get('new-session')
-            sideloader = Session(session_id, client, view)
-            client.register_session('sideloader', sideloader)
+            session = Session(session_id, client, view)
 
             # Start a worker thread that reads items from a queue and prints
             # them into an output panel.
@@ -638,12 +643,22 @@ class TutkainConnectCommand(WindowCommand):
             print_loop.name = 'tutkain.print_loop'
             print_loop.start()
 
-            def handler(response):
-                if response.get('status') == ['done']:
-                    sideloader.info = response
-                    self.initialize(client, sideloader, view)
+            if 'sideloader-start' in capabilities['ops']:
+                client.register_session('sideloader', session)
+                self.initialize(client, session, view)
+            else:
+                # Babashka
+                client.register_session('plugin', session)
+                session.info = capabilities
+                session.output(capabilities)
 
-            sideloader.send({'op': 'describe'}, handler=handler)
+                def handler(response):
+                    if response.get('status') == ['done']:
+                        session = Session(response['new-session'], client, view)
+                        session.info = capabilities
+                        client.register_session('user', session)
+
+                session.send({'op': 'clone', 'session': session.id}, handler=handler)
         except ConnectionRefusedError:
             window.status_message(
                 'ERR: connection to {}:{} refused.'.format(host, port)

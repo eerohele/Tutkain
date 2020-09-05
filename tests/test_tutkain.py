@@ -312,3 +312,48 @@ app.core=> (square 2)
 4
 app.core=> (square 4)
 16\n''', lambda: self.content(initial_repl_view))
+
+
+class TestBabashka(ViewTestCase):
+    @classmethod
+    def content(self, view):
+        return view and view.substr(sublime.Region(0, view.size()))
+
+    @classmethod
+    def repl_view_content(self):
+        if 'active_repl_view' in tutkain.state:
+            view = tutkain.get_active_repl_view(self.view.window())
+            return view.substr(sublime.Region(0, view.size()))
+
+    @classmethod
+    def connect(self):
+        self.view.window().run_command('tutkain_connect', {'host': HOST, 'port': 1667})
+
+        if not wait_until_contains(
+            '''Babashka 0.2.0\nbabashka.nrepl 0.0.4-SNAPSHOT\n''',
+            lambda: self.content(tutkain.get_active_repl_view(self.view.window())),
+            delay=1
+        ):
+            raise AssertionError('REPL did not respond in time.')
+
+    @classmethod
+    def setUpClass(self):
+        super().setUpClass()
+        self.connect()
+
+    @classmethod
+    def tearDownClass(self):
+        view = tutkain.get_active_repl_view(self.view.window())
+        view and view.close()
+        super().tearDownClass()
+
+    def setUp(self):
+        super().setUp()
+        self.view.window().run_command('tutkain_clear_output_view')
+
+    def test_evaluate_form(self):
+        content = '(+ 1 2)'
+        self.set_view_content(content)
+        self.set_selections((0, 0))
+        self.view.run_command('tutkain_evaluate_form')
+        self.assertEqualsEventually('''user=> (+ 1 2)\n3\n''', self.repl_view_content)

@@ -29,7 +29,7 @@ def format(message):
             )
         elif babashka_version:
             return (
-                '''Babashka {}\nbabashka.nrepl {}\n'''.format(
+                '''Babashka {}\nbabashka.nrepl {}'''.format(
                     babashka_version,
                     versions.get('babashka.nrepl')
                 )
