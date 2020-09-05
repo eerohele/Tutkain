@@ -422,6 +422,10 @@ class TutkainEvaluateInputCommand(WindowCommand):
 
 
 class TutkainConnectCommand(WindowCommand):
+    def handle_sideloader_provide_response(self, session, response):
+        if 'status' in response and 'unexpected-provide' in response['status']:
+            session.output({'err': 'unexpected provide: {}'.format(response['name'])})
+
     def sideloader_provide(self, session, response):
         if 'name' in response:
             name = response['name']
@@ -443,7 +447,10 @@ class TutkainConnectCommand(WindowCommand):
             else:
                 op['content'] = ''
 
-            session.send(op, handler=lambda _: None)
+            session.send(
+                op,
+                handler=lambda response: self.handle_sideloader_provide_response(session, response)
+            )
 
     def create_sessions(self, client, sideloader, view, response):
         if response.get('status') == ['done']:
