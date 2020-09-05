@@ -1,7 +1,7 @@
 
 from unittest import TestCase
 
-from tutkain.formatter import format
+from Tutkain.formatter import format
 
 
 class TestFormatter(TestCase):

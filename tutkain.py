@@ -94,7 +94,7 @@ def make_color_scheme(cache_dir):
 
 
 def settings():
-    return sublime.load_settings('tutkain.sublime-settings')
+    return sublime.load_settings('Tutkain.sublime-settings')
 
 
 def plugin_loaded():
@@ -102,14 +102,14 @@ def plugin_loaded():
 
     preferences = sublime.load_settings('Preferences.sublime-settings')
 
-    cache_dir = os.path.join(sublime.cache_path(), 'tutkain')
+    cache_dir = os.path.join(sublime.cache_path(), 'Tutkain')
 
     # Clean up any custom color schemes we've previously created.
     for filename in glob.glob('{}/*.sublime-color-scheme'.format(cache_dir)):
         os.remove(filename)
 
     make_color_scheme(cache_dir)
-    preferences.add_on_change('tutkain', lambda: make_color_scheme(cache_dir))
+    preferences.add_on_change('Tutkain', lambda: make_color_scheme(cache_dir))
 
 
 def plugin_unloaded():
@@ -122,7 +122,7 @@ def plugin_unloaded():
     view and inline.clear(view)
 
     preferences = sublime.load_settings('Preferences.sublime-settings')
-    preferences.clear_on_change('tutkain')
+    preferences.clear_on_change('Tutkain')
 
 
 def print_characters(view, characters):

@@ -2,7 +2,7 @@ import socket
 from threading import Event, Thread
 
 from unittest import TestCase
-from tutkain.repl import bencode
+from Tutkain.repl import bencode
 
 
 def echo_loop(server, stop_event):

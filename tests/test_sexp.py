@@ -1,8 +1,8 @@
 from sublime import Region
 from unittest import skip
 
-from tutkain import selectors
-from tutkain import sexp
+from Tutkain import selectors
+from Tutkain import sexp
 from .util import ViewTestCase
 
 

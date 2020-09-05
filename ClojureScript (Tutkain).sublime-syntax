@@ -4,4 +4,4 @@
 name: ClojureScript (Tutkain)
 file_extensions: [cljs]
 scope: source.clojure.clojurescript
-extends: Packages/tutkain/Clojure (Tutkain).sublime-syntax
+extends: Packages/Tutkain/Clojure (Tutkain).sublime-syntax

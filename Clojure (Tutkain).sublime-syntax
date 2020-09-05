@@ -4,7 +4,7 @@
 name: Clojure (Tutkain)
 file_extensions: [clj, cljc]
 scope: source.clojure
-extends: Packages/tutkain/EDN (Tutkain).sublime-syntax
+extends: Packages/Tutkain/EDN (Tutkain).sublime-syntax
 
 contexts:
   keywords:

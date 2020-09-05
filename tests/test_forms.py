@@ -1,6 +1,6 @@
 from sublime import Region
 
-from tutkain import forms
+from Tutkain import forms
 from .util import ViewTestCase
 
 
