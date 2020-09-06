@@ -145,6 +145,10 @@ def get_active_repl_view(window):
     return state.get('active_repl_view').get(window.id())
 
 
+def set_active_repl_view(view):
+    state['active_repl_view'][view.window().id()] = view
+
+
 def get_view_client(view):
     return view and state['client_by_view'].get(view.id())
 
@@ -794,7 +798,7 @@ class TutkainEventListener(EventListener):
 
     def on_activated(self, view):
         if view.settings().get('tutkain_repl_output_view'):
-            state['active_repl_view'][view.window().id()] = view
+            set_active_repl_view(view)
 
     def on_hover(self, view, point, hover_zone):
         lookup(view, point, lambda response: info.show_popup(view, point, response))
