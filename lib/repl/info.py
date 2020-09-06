@@ -6,7 +6,7 @@ from zipfile import ZipFile
 
 def doc_lines(doc):
     return [
-        '<p style="margin-top: 1rem 0;">{}</p>'.format(line) for line in doc.split('\n\n') if line
+        f'<p style="margin-top: 1rem 0;">{line}</p>' for line in doc.split('\n\n') if line
     ]
 
 
@@ -78,17 +78,16 @@ def show_popup(view, point, response):
             doc = ''.join(doc_lines(info.get('doc', '')))
 
             view.show_popup(
-                '''
+                f'''
                 <body id="tutkain-lookup" style="font-size: .9rem; width: 1024px;">
                     <p style="margin: 0;">
-                        <a href="{}"><code>{}/{}</code></a>
+                        <a href="{file}"><code>{ns}/{name}</code></a>
                     </p>
                     <p style="margin: 0;">
-                        <code style="color: grey;">{}</code>
+                        <code style="color: grey;">{arglists}</code>
                     </p>
-                    {}
-                </body>'''
-                .format(file, ns, name, arglists, doc),
+                    {doc}
+                </body>''',
                 location=point,
                 max_width=1280,
                 on_navigate=lambda href: goto(view.window(), location)

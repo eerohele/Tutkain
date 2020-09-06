@@ -73,7 +73,7 @@ def make_color_scheme(cache_dir):
         if color_scheme:
             (scheme_name, _) = os.path.splitext(os.path.basename(color_scheme))
 
-            scheme_path = os.path.join(cache_dir, '{}.sublime-color-scheme'.format(scheme_name))
+            scheme_path = os.path.join(cache_dir, f'{scheme_name}.sublime-color-scheme')
 
             if not os.path.isfile(scheme_path):
                 with open(scheme_path, 'w') as scheme_file:
@@ -105,7 +105,7 @@ def plugin_loaded():
     cache_dir = os.path.join(sublime.cache_path(), 'Tutkain')
 
     # Clean up any custom color schemes we've previously created.
-    for filename in glob.glob('{}/*.sublime-color-scheme'.format(cache_dir)):
+    for filename in glob.glob(f'{cache_dir}/*.sublime-color-scheme'):
         os.remove(filename)
 
     make_color_scheme(cache_dir)
@@ -391,7 +391,7 @@ class PortsInputHandler(ListInputHandler):
         return list(
             map(
                 lambda x: (
-                    '{} ({})'.format(x[1], self.contract_path(x[0])), x[1]
+                    f'{x[1]} ({self.contract_path(x[0])})', x[1]
                 ),
                 self.ports
             )
@@ -428,7 +428,8 @@ class TutkainEvaluateInputCommand(WindowCommand):
 class TutkainConnectCommand(WindowCommand):
     def handle_sideloader_provide_response(self, session, response):
         if 'status' in response and 'unexpected-provide' in response['status']:
-            session.output({'err': 'unexpected provide: {}'.format(response['name'])})
+            name = response['name']
+            session.output({'err': f'unexpected provide: {name}'})
 
     def sideloader_provide(self, session, response):
         if 'name' in response:
@@ -585,10 +586,10 @@ class TutkainConnectCommand(WindowCommand):
         active_view = self.window.active_view()
 
         view_count = len(self.window.views_in_group(1))
-        suffix = '' if view_count == 0 else ' ({})'.format(view_count)
+        suffix = '' if view_count == 0 else f' ({view_count})'
 
         view = self.window.new_file()
-        view.set_name('REPL | {}:{}{}'.format(host, port, suffix))
+        view.set_name(f'REPL | {host}:{port}{suffix}')
         view.settings().set('line_numbers', False)
         view.settings().set('gutter', False)
         view.settings().set('is_widget', True)
@@ -664,9 +665,7 @@ class TutkainConnectCommand(WindowCommand):
 
                 session.send({'op': 'clone', 'session': session.id}, handler=handler)
         except ConnectionRefusedError:
-            window.status_message(
-                'ERR: connection to {}:{} refused.'.format(host, port)
-            )
+            window.status_message(f'ERR: connection to {host}:{port} refused.')
 
     def input(self, args):
         return HostInputHandler(self.window)
@@ -1079,7 +1078,8 @@ class TutkainOpenDiffWindowCommand(TextCommand):
 class TutkainShowUnsuccessfulTestsCommand(TextCommand):
     def get_preview(self, region):
         line = self.view.rowcol(region.begin())[0] + 1
-        return '{}: {}'.format(line, self.view.substr(self.view.line(region)).lstrip())
+        preview = self.view.substr(self.view.line(region)).lstrip()
+        return f'{line}: {preview}'
 
     def run(self, args):
         view = self.view

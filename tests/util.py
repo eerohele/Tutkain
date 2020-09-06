@@ -72,12 +72,12 @@ class ViewTestCase(TestCase):
 
     def assertEqualsEventually(self, a, b):
         if not wait_until_equals(a, b):
-            raise AssertionError("'{}' != '{}'".format(a, b()))
+            raise AssertionError(f"'{a}' != '{b()}'")
 
     def assertMatchesEventually(self, a, b):
         if not wait_until_matches(a, b):
-            raise AssertionError("'{}' does not match '{}'".format(a, b()))
+            raise AssertionError(f"'{a}' does not match '{b()}'")
 
     def assertContainsEventually(self, a, b):
         if not wait_until_contains(a, b):
-            raise AssertionError("'{}' does not contain '{}'".format(a, b()))
+            raise AssertionError(f"'{a}' does not contain '{b()}'")

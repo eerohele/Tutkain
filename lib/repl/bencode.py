@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+'''
 Read bencoded bytes from a buffer and turn them into Python values or turn
 Python values into bencoded bytes.
 
@@ -25,16 +25,16 @@ Example:
 
 Has complete faith in the sending end. That is, does not try to recover from
 any errors.
-"""
+'''
 
 
 ENCODING = 'utf-8'
 
 
 def read_until(b, terminator):
-    """Read bytes until the given terminator byte.
+    '''Read bytes until the given terminator byte.
 
-    Return the bytes, excluding the terminator byte."""
+    Return the bytes, excluding the terminator byte.'''
     bs = bytearray()
     byte = b.read(1)
 
@@ -57,9 +57,9 @@ def read_list(b):
             items.append(item)
 
 
-def into_dict(l):
-    """Convert a list into a dict."""
-    return {l[i]: l[i + 1] for i in range(0, len(l), 2)}
+def into_dict(xs):
+    '''Convert a list into a dict.'''
+    return {xs[i]: xs[i + 1] for i in range(0, len(xs), 2)}
 
 
 def read_dict(b):
@@ -71,7 +71,7 @@ def read_int(b):
 
 
 def read(b):
-    """Read bencodes values from a BufferedReader into Python values."""
+    '''Read bencodes values from a BufferedReader into Python values.'''
     first_byte = b.read(1)
 
     # If the first byte is empty, the most likely reason is that the TCP server has died.
@@ -93,17 +93,18 @@ def read(b):
 
 
 def write_int(buf, i):
-    buf.write('i{}e'.format(i).encode(ENCODING))
+    buf.write(f'i{i}e'.encode(ENCODING))
 
 
 def write_str(buf, s):
-    buf.write('{}:{}'.format(len(s.encode(ENCODING)), s).encode(ENCODING))
+    length = len(s.encode(ENCODING))
+    buf.write(f'{length}:{s}'.encode(ENCODING))
 
 
-def write_list(buf, l):
+def write_list(buf, xs):
     buf.write(b'l')
 
-    for x in l:
+    for x in xs:
         write_value(buf, x)
 
     buf.write(b'e')
@@ -131,10 +132,10 @@ def write_value(buf, x):
     elif isinstance(x, dict):
         write_dict(buf, x)
     else:
-        raise ValueError("Can't write {} into bencode".format(x))
+        raise ValueError(f'''Can't write {x} into bencode''')
 
 
 def write(buf, x):
-    """Write a Python value into BufferedReader as bencode."""
+    '''Write a Python value into BufferedReader as bencode.'''
     write_value(buf, x)
     buf.flush()
