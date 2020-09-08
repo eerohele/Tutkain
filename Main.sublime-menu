@@ -21,8 +21,8 @@
                 "command": "edit_settings",
                 "args":
                 {
-                  "base_file": "${packages}/tutkain/tutkain.sublime-settings",
-                  "default": "// Settings in here override those in \"tutkain/Preferences.sublime-settings\",\n\n{\n\t$0\n}\n"
+                  "base_file": "${packages}/Tutkain/Tutkain.sublime-settings",
+                  "default": "// Settings in here override those in \"Tutkain/Preferences.sublime-settings\",\n\n{\n\t$0\n}\n"
                 }
               },
               {
@@ -30,7 +30,7 @@
                 "command": "edit_settings",
                 "args":
                 {
-                  "base_file": "${packages}/tutkain/Example.sublime-keymap",
+                  "base_file": "${packages}/Tutkain/Example.sublime-keymap",
                   "user_file": "${packages}/User/Default (${platform}).sublime-keymap"
                 }
               }
