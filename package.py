@@ -1063,6 +1063,7 @@ class TutkainOpenDiffWindowCommand(TextCommand):
         view.set_name('Tutkain: Diff')
         view.assign_syntax('Clojure (Tutkain).sublime-syntax')
         view.set_scratch(True)
+        view.set_read_only(True)
         view.set_reference_document(reference)
         view.run_command('append', {'characters': actual})
 
