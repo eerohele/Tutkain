@@ -19,7 +19,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -115,7 +114,6 @@ pom.xml
 pom.xml.asc
 *.jar
 *.class
-/lib/
 /classes/
 /target/
 /checkouts/
