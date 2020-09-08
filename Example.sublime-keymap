@@ -76,8 +76,7 @@
     // Clear the result view and the output view.
     {
         "keys": ["ctrl+c", "ctrl+z"],
-        "command": "tutkain_clear_output_view",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "command": "tutkain_clear_output_view"
     },
 
     // Evaluate the current view and run the clojure.test tests in the view.
