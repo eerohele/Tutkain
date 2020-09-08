@@ -1,7 +1,7 @@
 from inspect import cleandoc
 import sublime
 
-from Tutkain.lib import indent
+from Tutkain.src import indent
 
 
 from .util import ViewTestCase

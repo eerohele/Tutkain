@@ -1,6 +1,6 @@
 from functools import partial
 from .util import ViewTestCase
-from Tutkain.lib import test
+from Tutkain.src import test
 
 
 class TestTest(ViewTestCase):

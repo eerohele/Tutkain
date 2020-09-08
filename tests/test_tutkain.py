@@ -3,8 +3,8 @@ import sublime
 import os
 
 from .util import ViewTestCase, wait_until_contains
-from Tutkain.lib.repl import tap
-from Tutkain.lib import test
+from Tutkain.src.repl import tap
+from Tutkain.src import test
 from Tutkain import package as tutkain
 
 
