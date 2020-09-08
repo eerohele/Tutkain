@@ -8,11 +8,11 @@ from . import sexp
 
 
 def iterate(view):
-    '''
+    """
     Iterate over each region in all selections.
 
     After iteration, add all selections saved by consumers.
-    '''
+    """
     new_regions = []
     selections = view.sel()
 
@@ -65,8 +65,8 @@ def open_bracket(view, edit, open_bracket):
             # If the character that follows the close bracket we just inserted
             # is a whitespace character, the NUL character, or a close bracket,
             # don't insert a whitespace. Otherwise, do.
-            if re.match(r'[^\s\x00\)\]\}]', view.substr(new_end)):
-                view.insert(edit, new_end, ' ')
+            if re.match(r"[^\s\x00\)\]\}]", view.substr(new_end)):
+                view.insert(edit, new_end, " ")
 
 
 def close_bracket(view, edit, close_bracket):
@@ -132,9 +132,7 @@ def find_slurp_barf_targets(view, point, finder):
 def forward_slurp(view, edit):
     for region, sel in iterate(view):
         form, innermost = find_slurp_barf_targets(
-            view,
-            region.begin(),
-            lambda s: forms.find_next(view, s.close.end())
+            view, region.begin(), lambda s: forms.find_next(view, s.close.end())
         )
 
         if form:
@@ -148,16 +146,17 @@ def forward_slurp(view, edit):
             view.erase(edit, innermost.close)
             # If we slurped a sexp, indent it.
             indent.indent_region(
-                view, edit, sexp.innermost(view, region.begin(), edge=False).extent(), prune=True
+                view,
+                edit,
+                sexp.innermost(view, region.begin(), edge=False).extent(),
+                prune=True,
             )
 
 
 def backward_slurp(view, edit):
     for region, sel in iterate(view):
         form, innermost = find_slurp_barf_targets(
-            view,
-            region.begin(),
-            lambda s: forms.find_previous(view, s.open.begin())
+            view, region.begin(), lambda s: forms.find_previous(view, s.open.begin())
         )
 
         if form:
@@ -165,7 +164,9 @@ def backward_slurp(view, edit):
             chars = view.substr(innermost.open)
             view.erase(edit, innermost.open)
             view.insert(edit, form.begin(), chars)
-            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+            view.run_command(
+                "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
+            )
 
 
 def forward_barf(view, edit):
@@ -173,9 +174,7 @@ def forward_barf(view, edit):
         sel.append(region)
 
         form, innermost = find_slurp_barf_targets(
-            view,
-            region.begin(),
-            lambda s: forms.find_previous(view, s.close.begin())
+            view, region.begin(), lambda s: forms.find_previous(view, s.close.begin())
         )
 
         if innermost and form:
@@ -188,9 +187,11 @@ def forward_barf(view, edit):
             # If we inserted the close char next to the open char, add a
             # space after the new close char.
             if insert_point - 1 == innermost.open.begin():
-                view.insert(edit, insert_point + 1, ' ')
+                view.insert(edit, insert_point + 1, " ")
 
-            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+            view.run_command(
+                "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
+            )
 
 
 def backward_barf(view, edit):
@@ -198,9 +199,7 @@ def backward_barf(view, edit):
         sel.append(region)
 
         form, innermost = find_slurp_barf_targets(
-            view,
-            region.begin(),
-            lambda s: forms.find_next(view, s.open.end())
+            view, region.begin(), lambda s: forms.find_next(view, s.open.end())
         )
 
         if innermost and form:
@@ -209,9 +208,11 @@ def backward_barf(view, edit):
             view.erase(edit, innermost.open)
 
             if insert_point == innermost.close.begin():
-                view.insert(edit, insert_point - 1, ' ')
+                view.insert(edit, insert_point - 1, " ")
 
-            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+            view.run_command(
+                "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
+            )
 
 
 def wrap_bracket(view, edit, open_bracket):
@@ -227,9 +228,9 @@ def wrap_bracket(view, edit, open_bracket):
 
             # cursor is in between the dispatch macro and an open paren
             if (
-                form and
-                view.match_selector(point - 1, 'keyword.operator.macro') and
-                view.match_selector(point, 'meta.sexp.begin')
+                form
+                and view.match_selector(point - 1, "keyword.operator.macro")
+                and view.match_selector(point, "meta.sexp.begin")
             ):
                 form = Region(form.begin() + 1, form.end())
 
@@ -249,13 +250,13 @@ def forward_delete(view, edit):
             point = region.begin()
             innermost = sexp.innermost(view, point, edge=True)
 
-            if view.match_selector(point, 'constant.character.escape'):
+            if view.match_selector(point, "constant.character.escape"):
                 view.erase(edit, Region(point, point + 2))
             elif not innermost:
                 view.erase(edit, Region(point, point + 1))
             elif innermost.is_empty() and innermost.contains(point):
                 view.erase(edit, innermost.extent())
-            elif view.match_selector(point, 'meta.sexp.begin | meta.sexp.end'):
+            elif view.match_selector(point, "meta.sexp.begin | meta.sexp.end"):
                 sel.append(point + 1)
             else:
                 view.erase(edit, Region(point, point + 1))
@@ -269,13 +270,13 @@ def backward_delete(view, edit):
             point = region.begin()
             innermost = sexp.innermost(view, point, edge=True)
 
-            if view.match_selector(point - 1, 'constant.character.escape'):
+            if view.match_selector(point - 1, "constant.character.escape"):
                 view.erase(edit, Region(point - 2, point))
             elif not innermost:
                 view.erase(edit, Region(point - 1, point))
             elif innermost.is_empty() and innermost.contains(point):
                 view.erase(edit, innermost.extent())
-            elif view.match_selector(point - 1, 'meta.sexp.begin | meta.sexp.end'):
+            elif view.match_selector(point - 1, "meta.sexp.begin | meta.sexp.end"):
                 sel.append(point - 1)
             else:
                 view.erase(edit, Region(point - 1, point))
@@ -291,7 +292,9 @@ def raise_sexp(view, edit):
             if region.empty():
                 form = forms.find_next(view, point)
                 view.replace(edit, innermost.extent(), view.substr(form))
-                view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+                view.run_command(
+                    "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
+                )
             else:
                 view.replace(edit, innermost.extent(), view.substr(region))
 
@@ -306,13 +309,13 @@ def splice_sexp(view, edit):
         view.erase(edit, innermost.close)
         # Erase one or more open characters
         view.erase(edit, innermost.open)
-        view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+        view.run_command("tutkain_indent_sexp", {"scope": "innermost", "prune": True})
 
 
 def comment_dwim(view, edit):
     for region, sel in iterate(view):
         line = view.line(region.begin())
-        n = view.insert(edit, line.end(), ' ; ')
+        n = view.insert(edit, line.end(), " ; ")
         sel.append(line.end() + n)
 
 
@@ -321,17 +324,17 @@ def semicolon(view, edit):
         point = region.begin()
 
         if selectors.ignore(view, point):
-            view.insert(edit, point, ';')
+            view.insert(edit, point, ";")
         else:
             innermost = sexp.innermost(view, point, edge=False)
 
             if innermost and view.line(point).contains(innermost.close):
-                view.insert(edit, innermost.close.begin(), '\n')
+                view.insert(edit, innermost.close.begin(), "\n")
 
-            if not re.match(r'[\s\(\[\{\)\]\}]', view.substr(point - 1)):
-                n = view.insert(edit, point, ' ;')
+            if not re.match(r"[\s\(\[\{\)\]\}]", view.substr(point - 1)):
+                n = view.insert(edit, point, " ;")
             else:
-                n = view.insert(edit, point, ';')
+                n = view.insert(edit, point, ";")
 
             sel.append(point + n)
 
@@ -343,7 +346,9 @@ def splice_sexp_killing_forward(view, edit):
         if innermost:
             view.erase(edit, region.cover(innermost.close))
             view.erase(edit, innermost.open)
-            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+            view.run_command(
+                "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
+            )
 
 
 def splice_sexp_killing_backward(view, edit, forward=True):
@@ -353,7 +358,9 @@ def splice_sexp_killing_backward(view, edit, forward=True):
         if innermost:
             view.erase(edit, innermost.close)
             view.erase(edit, region.cover(innermost.open))
-            view.run_command('tutkain_indent_sexp', {'scope': 'innermost', 'prune': True})
+            view.run_command(
+                "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
+            )
 
 
 def kill_form(view, edit, forward):
@@ -394,7 +401,9 @@ def backward_move_form(view, edit):
                 previous_form_str = view.substr(previous_form)
                 between = view.substr(Region(previous_form.end(), form.begin()))
                 view.erase(edit, Region(previous_form.begin(), form.end()))
-                view.insert(edit, previous_form.begin(), form_str + between + previous_form_str)
+                view.insert(
+                    edit, previous_form.begin(), form_str + between + previous_form_str
+                )
 
 
 def forward_move_form(view, edit):
@@ -428,10 +437,10 @@ def thread(view, edit, arrow):
             innermost = sexp.innermost(view, point, edge=False)
 
             def thread_unthreaded():
-                characters = '({} {} '.format(arrow, view.substr(form))
+                characters = "({} {} ".format(arrow, view.substr(form))
                 insert = view.insert(edit, innermost.open.begin(), characters)
                 begin = insert + form.begin()
-                view.insert(edit, innermost.close.end() + insert, ')')
+                view.insert(edit, innermost.close.end() + insert, ")")
 
                 erase = Region(begin - 1, begin + form.size())
                 view.erase(edit, erase)
@@ -440,16 +449,24 @@ def thread(view, edit, arrow):
             if form and innermost and forms.find_previous(view, point):
                 sel.append(innermost.open.begin())
 
-                if view.match_selector(form.begin(), 'punctuation.section.parens.begin'):
+                if view.match_selector(
+                    form.begin(), "punctuation.section.parens.begin"
+                ):
                     head = forms.find_next(view, form.begin() + 1)
 
                     if view.substr(head) == arrow:
                         element_str = view.substr(form)
                         view.erase(edit, form)
-                        enclosing = sexp.innermost(view, form.begin(), edge=False).extent()
+                        enclosing = sexp.innermost(
+                            view, form.begin(), edge=False
+                        ).extent()
                         enclosing_str = view.substr(enclosing)
                         view.erase(edit, enclosing)
-                        insert = element_str[:-1] + ' ' + indent.prune_string(enclosing_str + ')')
+                        insert = (
+                            element_str[:-1]
+                            + " "
+                            + indent.prune_string(enclosing_str + ")")
+                        )
                         view.insert(edit, enclosing.begin(), insert)
 
                     else:
@@ -459,8 +476,8 @@ def thread(view, edit, arrow):
 
 
 def thread_first(view, edit):
-    thread(view, edit, '->')
+    thread(view, edit, "->")
 
 
 def thread_last(view, edit):
-    thread(view, edit, '->>')
+    thread(view, edit, "->>")

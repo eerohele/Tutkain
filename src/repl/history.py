@@ -11,17 +11,17 @@ def get(window):
     settings = window.settings()
 
     if settings:
-        history = settings.get('repl_history')
+        history = settings.get("repl_history")
 
         if history and index is not None and index < len(history):
             return history[index]
 
-    return ''
+    return ""
 
 
 def update(window, code):
     settings = window.settings()
-    history = settings.get('repl_history')
+    history = settings.get("repl_history")
 
     if history:
         history.append(code)
@@ -33,7 +33,7 @@ def update(window, code):
     else:
         history = [code]
 
-    settings.set('repl_history', history)
+    settings.set("repl_history", history)
     window.set_settings(settings)
 
 
@@ -43,7 +43,7 @@ def navigate(view, edit, forward=False):
     settings = view.window().settings()
 
     if settings:
-        history = settings.get('repl_history')
+        history = settings.get("repl_history")
 
         if history:
             if index is None:

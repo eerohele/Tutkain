@@ -8,7 +8,7 @@ from ..log import log
 
 
 class Client(object):
-    '''
+    """
     Here's how Client works:
 
     1. Open a socket connection to the given host and port.
@@ -20,18 +20,14 @@ class Client(object):
     Calling `halt()` on a Client will stop the background threads and close
     the socket connection. Client is a context manager, so you can use it
     with the `with` statement.
-    '''
+    """
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
-        self.buffer = self.socket.makefile(mode='rwb')
+        self.buffer = self.socket.makefile(mode="rwb")
 
-        log.debug({
-            'event': 'socket/connect',
-            'host': self.host,
-            'port': self.port
-        })
+        log.debug({"event": "socket/connect", "host": self.host, "port": self.port})
 
         return self
 
@@ -41,9 +37,9 @@ class Client(object):
                 self.buffer.close()
                 self.socket.shutdown(socket.SHUT_RDWR)
                 self.socket.close()
-                log.debug({'event': 'socket/disconnect'})
+                log.debug({"event": "socket/disconnect"})
             except OSError as e:
-                log.debug({'event': 'error', 'exception': e})
+                log.debug({"event": "error", "exception": e})
 
     def __init__(self, host, port):
         self.uuid = str(uuid.uuid4())
@@ -67,11 +63,11 @@ class Client(object):
         self.connect()
 
         send_loop = Thread(daemon=True, target=self.send_loop)
-        send_loop.name = 'tutkain.client.send_loop'
+        send_loop.name = "tutkain.client.send_loop"
         send_loop.start()
 
         recv_loop = Thread(daemon=True, target=self.recv_loop)
-        recv_loop.name = 'tutkain.client.recv_loop'
+        recv_loop.name = "tutkain.client.recv_loop"
         recv_loop.start()
 
         return self
@@ -87,14 +83,14 @@ class Client(object):
             if item is None:
                 break
 
-            log.debug({'event': 'socket/send', 'item': item})
+            log.debug({"event": "socket/send", "item": item})
 
             bencode.write(self.buffer, item)
 
-        log.debug({'event': 'thread/exit'})
+        log.debug({"event": "thread/exit"})
 
     def handle(self, response):
-        id = response.get('session')
+        id = response.get("session")
         session = self.sessions.get(id)
 
         if session:
@@ -103,8 +99,8 @@ class Client(object):
             self.recvq.put(response)
 
     def send_disconnect_notification(self):
-        session = self.sessions_by_owner.get('plugin')
-        session and session.output({'value': ':tutkain/disconnected\n'})
+        session = self.sessions_by_owner.get("plugin")
+        session and session.output({"value": ":tutkain/disconnected\n"})
 
     def recv_loop(self):
         try:
@@ -115,10 +111,10 @@ class Client(object):
                     self.send_disconnect_notification()
                     break
 
-                log.debug({'event': 'socket/recv', 'item': item})
+                log.debug({"event": "socket/recv", "item": item})
                 self.handle(item)
         except OSError as error:
-            log.error({'event': 'error', 'error': error})
+            log.error({"event": "error", "error": error})
         finally:
             # If we receive a stop event, put a None into the queue to tell
             # consumers to stop reading it.
@@ -127,28 +123,28 @@ class Client(object):
             # Feed poison pill to input queue.
             self.sendq.put(None)
 
-            log.debug({'event': 'thread/exit'})
+            log.debug({"event": "thread/exit"})
 
             # We've exited the loop that reads from the socket, so we can
             # close the connection to the socket.
             self.disconnect()
 
     def halt(self):
-        log.debug({'event': 'client/halt'})
+        log.debug({"event": "client/halt"})
 
         def handler(response):
-            if 'status' in response and 'done' in response['status']:
+            if "status" in response and "done" in response["status"]:
                 self.stop_event.set()
 
         sessions = self.sessions_by_owner
 
         if sessions:
-            'user' in sessions and sessions['user'].send({'op': 'close'})
-            'plugin' in sessions and sessions['plugin'].send({'op': 'close'})
+            "user" in sessions and sessions["user"].send({"op": "close"})
+            "plugin" in sessions and sessions["plugin"].send({"op": "close"})
 
-            'sideloader' in sessions and sessions['sideloader'].send({
-                'op': 'close'
-            }, handler=handler)
+            "sideloader" in sessions and sessions["sideloader"].send(
+                {"op": "close"}, handler=handler
+            )
         else:
             self.stop_event.set()
 

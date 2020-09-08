@@ -7,23 +7,23 @@ from . import sexp
 
 
 def symbol_in_head_position(view, open_bracket):
-    region = view.find(r'\S', open_bracket.end())
+    region = view.find(r"\S", open_bracket.end())
 
     # This is probably not 100% correct. Also, it is tied to the syntax
     # definition. Is that a problem?
     return view.match_selector(
         region.begin(),
-        'meta.special-form | variable | keyword.declaration | keyword.control'
+        "meta.special-form | variable | keyword.declaration | keyword.control",
     )
 
 
 def determine_indentation(view, open_bracket):
     end = open_bracket.end()
     line = view.line(end)
-    indentation = ' ' * (end - line.begin())
+    indentation = " " * (end - line.begin())
 
     if symbol_in_head_position(view, open_bracket):
-        return indentation + ' '
+        return indentation + " "
     else:
         return indentation
 
@@ -44,15 +44,15 @@ def insert_newline_and_indent(view, edit):
         point = region.begin()
 
         if selectors.inside_comment(view, point):
-            view.run_command('insert', {'characters': '\n;; '})
+            view.run_command("insert", {"characters": "\n;; "})
         else:
             _, open_bracket = sexp.find_open(view, point)
 
             if open_bracket is None:
-                view.run_command('insert', {'characters': '\n'})
+                view.run_command("insert", {"characters": "\n"})
             else:
                 end = region.end()
-                view.insert(edit, end, '\n')
+                view.insert(edit, end, "\n")
                 point_after_newline = end + 1
                 line = view.line(point_after_newline)
                 indentation = determine_indentation(view, open_bracket)
@@ -62,14 +62,16 @@ def insert_newline_and_indent(view, edit):
 
 
 def prune_string(string):
-    '''Prune a string.
+    """Prune a string.
 
     - Replace multiple consecutive spaces with a single space.
     - Remove spaces after open brackets.
     - Remove spaces before close brackets.
-    '''
+    """
     return re.sub(
-        r' +(?=[\)\]\}])', '', re.sub(r'(?<=[\(\[\{]) +', '', re.sub(r'  +', ' ', string))
+        r" +(?=[\)\]\}])",
+        "",
+        re.sub(r"(?<=[\(\[\{]) +", "", re.sub(r"  +", " ", string)),
     )
 
 
@@ -91,14 +93,14 @@ def fuse(lst):
 
 
 def classify_region(view, region):
-    '''Given a region, return a list of pairs where the first item of the pair indicates whether
-    the region in the other item should be pruned.'''
+    """Given a region, return a list of pairs where the first item of the pair indicates whether
+    the region in the other item should be pruned."""
     points = []
     point = region.begin()
     end = region.end()
 
     while point <= end:
-        prune = not view.match_selector(point, 'string | comment')
+        prune = not view.match_selector(point, "string | comment")
         points.append((prune, (point, min(point + 1, end))))
         point += 1
 
@@ -106,7 +108,7 @@ def classify_region(view, region):
 
 
 def prune_region(view, region):
-    '''Prune extraneous whitespace in the given region.'''
+    """Prune extraneous whitespace in the given region."""
     strings = []
     regions = classify_region(view, region)
 
@@ -114,7 +116,7 @@ def prune_region(view, region):
         string = view.substr(region)
         strings.append(prune_string(string) if prune else string)
 
-    return ''.join(strings)
+    return "".join(strings)
 
 
 def get_indented_string(view, region, prune=False):
@@ -124,12 +126,12 @@ def get_indented_string(view, region, prune=False):
 
     if open_bracket:
         indentation = determine_indentation(view, open_bracket)
-        return indentation + string.lstrip(' ')
+        return indentation + string.lstrip(" ")
     else:
         return string
 
 
-IGNORE_SELECTORS = 'punctuation.definition.string | string | comment.line'
+IGNORE_SELECTORS = "punctuation.definition.string | string | comment.line"
 
 
 def indent_region(view, edit, region, prune=False):

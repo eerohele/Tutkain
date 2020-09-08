@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Read bencoded bytes from a buffer and turn them into Python values or turn
 Python values into bencoded bytes.
 
@@ -25,16 +25,16 @@ Example:
 
 Has complete faith in the sending end. That is, does not try to recover from
 any errors.
-'''
+"""
 
 
-ENCODING = 'utf-8'
+ENCODING = "utf-8"
 
 
 def read_until(b, terminator):
-    '''Read bytes until the given terminator byte.
+    """Read bytes until the given terminator byte.
 
-    Return the bytes, excluding the terminator byte.'''
+    Return the bytes, excluding the terminator byte."""
     bs = bytearray()
     byte = b.read(1)
 
@@ -58,7 +58,7 @@ def read_list(b):
 
 
 def into_dict(xs):
-    '''Convert a list into a dict.'''
+    """Convert a list into a dict."""
     return {xs[i]: xs[i + 1] for i in range(0, len(xs), 2)}
 
 
@@ -67,11 +67,11 @@ def read_dict(b):
 
 
 def read_int(b):
-    return int(read_until(b, b'e'))
+    return int(read_until(b, b"e"))
 
 
 def read(b):
-    '''Read bencodes values from a BufferedReader into Python values.'''
+    """Read bencodes values from a BufferedReader into Python values."""
     first_byte = b.read(1)
 
     # If the first byte is empty, the most likely reason is that the TCP server has died.
@@ -79,39 +79,39 @@ def read(b):
     # If we don't take that into account here, our receive loop will keep flooding the system with
     # recvfrom syscalls until the parent process dies. Eventually, the parent process ends up taking
     # 100% of CPU time.
-    if not first_byte or first_byte == b'e':
+    if not first_byte or first_byte == b"e":
         return None
-    elif first_byte == b'd':
+    elif first_byte == b"d":
         return read_dict(b)
-    elif first_byte == b'l':
+    elif first_byte == b"l":
         return read_list(b)
-    elif first_byte == b'i':
+    elif first_byte == b"i":
         return read_int(b)
     else:
-        n = int(first_byte + read_until(b, b':'))
+        n = int(first_byte + read_until(b, b":"))
         return b.read(n).decode(ENCODING)
 
 
 def write_int(buf, i):
-    buf.write(f'i{i}e'.encode(ENCODING))
+    buf.write(f"i{i}e".encode(ENCODING))
 
 
 def write_str(buf, s):
     length = len(s.encode(ENCODING))
-    buf.write(f'{length}:{s}'.encode(ENCODING))
+    buf.write(f"{length}:{s}".encode(ENCODING))
 
 
 def write_list(buf, xs):
-    buf.write(b'l')
+    buf.write(b"l")
 
     for x in xs:
         write_value(buf, x)
 
-    buf.write(b'e')
+    buf.write(b"e")
 
 
 def write_dict(buf, d):
-    buf.write(b'd')
+    buf.write(b"d")
     ks = list(d.keys())
     ks.sort()
 
@@ -119,7 +119,7 @@ def write_dict(buf, d):
         write_value(buf, k)
         write_value(buf, d[k])
 
-    buf.write(b'e')
+    buf.write(b"e")
 
 
 def write_value(buf, x):
@@ -132,10 +132,10 @@ def write_value(buf, x):
     elif isinstance(x, dict):
         write_dict(buf, x)
     else:
-        raise ValueError(f'''Can't write {x} into bencode''')
+        raise ValueError(f"""Can't write {x} into bencode""")
 
 
 def write(buf, x):
-    '''Write a Python value into BufferedReader as bencode.'''
+    """Write a Python value into BufferedReader as bencode."""
     write_value(buf, x)
     buf.flush()

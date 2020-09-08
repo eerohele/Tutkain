@@ -1,5 +1,5 @@
 def find_last(view):
-    regions = view.find_by_selector('entity.name.namespace.clojure')
+    regions = view.find_by_selector("entity.name.namespace.clojure")
     return regions and regions[-1]
 
 

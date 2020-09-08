@@ -12,7 +12,7 @@ class ProgressBar:
         self.update()
 
     def stop(self):
-        sublime.status_message('')
+        sublime.status_message("")
         self.done = True
 
     def update(self, status=0):
@@ -21,5 +21,5 @@ class ProgressBar:
         status = status % (2 * self.width)
         before = min(status, (2 * self.width) - status)
         after = self.width - before
-        sublime.status_message('%s [%s=%s]' % (self.label, ' ' * before, ' ' * after))
+        sublime.status_message("%s [%s=%s]" % (self.label, " " * before, " " * after))
         sublime.set_timeout(lambda: self.update(status + 1), 100)

@@ -2,11 +2,11 @@ from . import selectors
 from sublime import CLASS_WORD_START, Region
 
 
-OPEN = {'(': ')', '[': ']', '{': '}'}
-CLOSE = {')': '(', ']': '[', '}': '{'}
+OPEN = {"(": ")", "[": "]", "{": "}"}
+CLOSE = {")": "(", "]": "[", "}": "{"}
 
 
-class Sexp():
+class Sexp:
     def __init__(self, view, open_region, close_region):
         self.view = view
         self.open = self.absorb_macro_characters(open_region)
@@ -27,17 +27,14 @@ class Sexp():
     def absorb_macro_characters(self, region):
         begin = region.begin()
 
-        if self.view.match_selector(
-            begin - 1,
-            'keyword.operator.macro'
-        ):
+        if self.view.match_selector(begin - 1, "keyword.operator.macro"):
             # Find the first point that contains a character other than a macro character
-            boundary = selectors.find(
-                self.view,
-                begin - 1,
-                '- keyword.operator.macro',
-                forward=False
-            ) + 1
+            boundary = (
+                selectors.find(
+                    self.view, begin - 1, "- keyword.operator.macro", forward=False
+                )
+                + 1
+            )
 
             begin = max(boundary, 0)
 
@@ -106,15 +103,14 @@ def matches_selector_pattern(view, start_point, patterns):
 
 def has_macro_character_attached_to_sexp(view, point):
     patterns = [
-        ['keyword.operator.macro',
-         'meta.sexp.begin'],
-        ['keyword.operator.macro',
-         'keyword.operator.macro',
-         'meta.sexp.begin'],
-        ['keyword.operator.macro',
-         'keyword.operator.macro',
-         'keyword.operator.macro',
-         'meta.sexp.begin']
+        ["keyword.operator.macro", "meta.sexp.begin"],
+        ["keyword.operator.macro", "keyword.operator.macro", "meta.sexp.begin"],
+        [
+            "keyword.operator.macro",
+            "keyword.operator.macro",
+            "keyword.operator.macro",
+            "meta.sexp.begin",
+        ],
     ]
 
     for pattern in patterns:
@@ -127,12 +123,11 @@ def has_macro_character_attached_to_sexp(view, point):
 def move_inside(view, point, edge):
     if not edge or selectors.inside_string(view, point):
         return point
-    elif (
-        view.match_selector(point, 'meta.sexp.begin') or
-        has_macro_character_attached_to_sexp(view, point)
-    ):
-        return view.find(r'[\(\[\{\"]', point).end()
-    elif view.match_selector(point - 1, 'meta.sexp.end'):
+    elif view.match_selector(
+        point, "meta.sexp.begin"
+    ) or has_macro_character_attached_to_sexp(view, point):
+        return view.find(r"[\(\[\{\"]", point).end()
+    elif view.match_selector(point - 1, "meta.sexp.end"):
         return point - 1
     else:
         return point
@@ -147,14 +142,12 @@ def innermost(view, start_point, edge=True):
         begin = selectors.find(
             view,
             point,
-            'punctuation.definition.string.begin - constant.character.escape',
-            forward=False
+            "punctuation.definition.string.begin - constant.character.escape",
+            forward=False,
         )
 
         end = selectors.find(
-            view,
-            point,
-            'punctuation.definition.string.end - constant.character.escape'
+            view, point, "punctuation.definition.string.end - constant.character.escape"
         )
 
         # TODO: Is a string a sexp?
@@ -163,11 +156,7 @@ def innermost(view, start_point, edge=True):
         char, open_region = find_open(view, point)
 
         if char:
-            close_region = find_close(
-                view,
-                open_region.end(),
-                close=OPEN.get(char)
-            )
+            close_region = find_close(view, open_region.end(), close=OPEN.get(char))
 
             return Sexp(view, open_region, close_region)
 
@@ -194,19 +183,16 @@ def outermost(view, point, edge=True, ignore={}):
             not current[0] or (ignore and head_word(view, current[1].begin()) in ignore)
         ):
             open_region = previous[1]
-            close_region = find_close(view, open_region.end(), close=OPEN.get(previous[0]))
+            close_region = find_close(
+                view, open_region.end(), close=OPEN.get(previous[0])
+            )
             return Sexp(view, open_region, close_region)
         else:
             point = previous[1].begin()
             previous = current
 
 
-CYCLE_ORDER = {
-    '(': '[',
-    '[': '{',
-    '{': '#{',
-    '#{': '('
-}
+CYCLE_ORDER = {"(": "[", "[": "{", "{": "#{", "#{": "("}
 
 
 def cycle_collection_type(view, edit):
@@ -214,7 +200,9 @@ def cycle_collection_type(view, edit):
         point = region.begin()
 
         if not selectors.ignore(view, point):
-            if view.match_selector(point, 'string') or view.match_selector(point - 1, 'string'):
+            if view.match_selector(point, "string") or view.match_selector(
+                point - 1, "string"
+            ):
                 edge = False
             else:
                 edge = True

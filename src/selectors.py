@@ -2,17 +2,16 @@ from sublime import Region
 
 
 def inside_string(view, point):
-    return view.match_selector(point, 'string - punctuation.definition.string.begin')
+    return view.match_selector(point, "string - punctuation.definition.string.begin")
 
 
 def inside_comment(view, point):
-    return view.match_selector(point, 'comment.line')
+    return view.match_selector(point, "comment.line")
 
 
 def ignore(view, point):
     return view.match_selector(
-        point,
-        'string - punctuation.definition.string.begin | comment.line'
+        point, "string - punctuation.definition.string.begin | comment.line"
     )
 
 
@@ -39,14 +38,18 @@ def expand_by_selector(view, start_point, selector):
     end = max_point
 
     while point > 0:
-        if view.match_selector(point, selector) and not view.match_selector(point - 1, selector):
+        if view.match_selector(point, selector) and not view.match_selector(
+            point - 1, selector
+        ):
             begin = point
             break
         else:
             point -= 1
 
     while point < max_point:
-        if view.match_selector(point - 1, selector) and not view.match_selector(point, selector):
+        if view.match_selector(point - 1, selector) and not view.match_selector(
+            point, selector
+        ):
             end = point
             break
         else:

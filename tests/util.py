@@ -37,12 +37,12 @@ class ViewTestCase(TestCase):
         self.view.set_scratch(True)
         self.view.sel().clear()
         self.view.window().focus_view(self.view)
-        self.view.assign_syntax('Clojure (Tutkain).sublime-syntax')
+        self.view.assign_syntax("Clojure (Tutkain).sublime-syntax")
 
     @classmethod
     def tearDownClass(self):
         if self.view:
-            self.view.window().run_command('close_file')
+            self.view.window().run_command("close_file")
 
     def setUp(self):
         self.clear_view()
@@ -51,12 +51,12 @@ class ViewTestCase(TestCase):
         return self.view.substr(sublime.Region(0, self.view.size()))
 
     def clear_view(self):
-        self.view.run_command('select_all')
-        self.view.run_command('right_delete')
+        self.view.run_command("select_all")
+        self.view.run_command("right_delete")
 
     def set_view_content(self, chars):
         self.clear_view()
-        self.view.run_command('append', {'characters': chars})
+        self.view.run_command("append", {"characters": chars})
 
     def set_selections(self, *pairs):
         self.view.sel().clear()
