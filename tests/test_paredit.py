@@ -54,6 +54,11 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_open_round")
         self.assertEquals("(a b () c d)", self.view_content())
         self.assertEquals(self.selections(), [(6, 6)])
+        self.set_view_content("\\")
+        self.set_selections((1, 1))
+        self.view.run_command("tutkain_paredit_open_round")
+        self.assertEquals("\\(", self.view_content())
+        self.assertEquals(self.selections(), [(2, 2)])
 
     def test_open_round_next_to_whitespace(self):
         self.set_view_content("(a b c d)")
