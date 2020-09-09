@@ -6,7 +6,7 @@
       {
         "key": "selector",
         "operator": "equal",
-        "operand": "source.clojure"
+        "operand": "source.edn | source.clojure"
       },
       {
         "key": "auto_complete_visible",

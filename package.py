@@ -892,24 +892,22 @@ class TutkainInterruptEvaluationCommand(WindowCommand):
 
 class TutkainInsertNewlineCommand(TextCommand):
     def run(self, edit):
-        if "Clojure" in self.view.settings().get("syntax"):
-            indent.insert_newline_and_indent(self.view, edit)
+        indent.insert_newline_and_indent(self.view, edit)
 
 
 class TutkainIndentSexpCommand(TextCommand):
     def run(self, edit, scope="outermost", prune=False):
-        if "Clojure" in self.view.settings().get("syntax"):
-            for region in self.view.sel():
-                if region.empty():
-                    if scope == "outermost":
-                        s = sexp.outermost(self.view, region.begin())
-                    elif scope == "innermost":
-                        s = sexp.innermost(self.view, region.begin())
+        for region in self.view.sel():
+            if region.empty():
+                if scope == "outermost":
+                    s = sexp.outermost(self.view, region.begin())
+                elif scope == "innermost":
+                    s = sexp.innermost(self.view, region.begin())
 
-                    if s:
-                        indent.indent_region(self.view, edit, s.extent(), prune=prune)
-                else:
-                    indent.indent_region(self.view, edit, region, prune=prune)
+                if s:
+                    indent.indent_region(self.view, edit, s.extent(), prune=prune)
+            else:
+                indent.indent_region(self.view, edit, region, prune=prune)
 
 
 class TutkainPareditForwardCommand(TextCommand):
