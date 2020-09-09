@@ -69,8 +69,7 @@
     // Prompt for input and evaluate it in the "user" namespace.
     {
         "keys": ["ctrl+c", "ctrl+i"],
-        "command": "tutkain_evaluate_input",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "command": "tutkain_evaluate_input"
     },
 
     // Clear the result view and the output view.
@@ -124,7 +123,7 @@
         "keys": ["super+e"],
         "command": "tutkain_expand_selection",
         "context": [
-            {"key": "selector", "operator": "equal", "operand": "source.clojure"}
+            {"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}
         ]
     },
 
@@ -133,7 +132,7 @@
         "keys": ["tab"],
         "command": "tutkain_indent_sexp",
         "context": [
-            {"key": "selector", "operator": "equal", "operand": "source.clojure"},
+            {"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
             {"key": "auto_complete_visible", "operand": false}
         ]
     },
@@ -159,7 +158,7 @@
     {
         "keys": ["ctrl+super+c"],
         "command": "tutkain_cycle_collection_type",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     // Show information about the symbol under the cursor.
@@ -188,168 +187,168 @@
     {
         "keys": ["ctrl+right"],
         "command": "tutkain_paredit_forward",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+left"],
         "command": "tutkain_paredit_backward",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["("],
         "command": "tutkain_paredit_open_round",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["["],
         "command": "tutkain_paredit_open_square",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["{"],
         "command": "tutkain_paredit_open_curly",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": [")"],
         "command": "tutkain_paredit_close_round",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["]"],
         "command": "tutkain_paredit_close_square",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["}"],
         "command": "tutkain_paredit_close_curly",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["\""],
         "command": "tutkain_paredit_double_quote",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+c", "ctrl+right", "ctrl+left"],
         "command": "tutkain_paredit_forward_slurp",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+c", "ctrl+left", "ctrl+right"],
         "command": "tutkain_paredit_backward_slurp",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+c", "ctrl+right", "ctrl+right"],
         "command": "tutkain_paredit_forward_barf",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+c", "ctrl+left", "ctrl+left"],
         "command": "tutkain_paredit_backward_barf",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["super+shift+9"],
         "command": "tutkain_paredit_wrap_round",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["super+shift+8"],
         "command": "tutkain_paredit_wrap_square",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["super+shift+0"],
         "command": "tutkain_paredit_wrap_curly",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["delete"],
         "command": "tutkain_paredit_forward_delete",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["backspace"],
         "command": "tutkain_paredit_backward_delete",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["alt+r"],
         "command": "tutkain_paredit_raise_sexp",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["alt+s"],
         "command": "tutkain_paredit_splice_sexp",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["alt+;"],
         "command": "tutkain_paredit_comment_dwim",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": [";"],
         "command": "tutkain_paredit_semicolon",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+s", "ctrl+left"],
         "command": "tutkain_paredit_splice_sexp_killing_backward",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+s", "ctrl+right"],
         "command": "tutkain_paredit_splice_sexp_killing_forward",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+backspace"],
         "command": "tutkain_paredit_backward_kill_form",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+delete"],
         "command": "tutkain_paredit_forward_kill_form",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+c", "ctrl+up"],
         "command": "tutkain_paredit_backward_move_form",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
     {
         "keys": ["ctrl+c", "ctrl+down"],
         "command": "tutkain_paredit_forward_move_form",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 ]
