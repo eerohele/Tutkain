@@ -1,9 +1,9 @@
 ; SYNTAX TEST "Packages/tutkain/EDN (Tutkain).sublime-syntax"
 ;; CONSTANTS
   nil true false
-; ^^^ constant.language.edn
-;     ^^^^ constant.language.edn
-;          ^^^^^ constant.language.edn
+; ^^^ meta.reader-form.edn constant.language.edn
+;     ^^^^ meta.reader-form.edn constant.language.edn
+;          ^^^^^ meta.reader-form.edn constant.language.edn
   Nil
 ; ^^^ -constant.language.edn
 

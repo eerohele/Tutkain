@@ -55,7 +55,7 @@ contexts:
 
   constant:
     - match: '{{constant}}'
-      scope: constant.language.edn
+      scope: meta.reader-form.edn constant.language.edn
 
   # Symbols
 
