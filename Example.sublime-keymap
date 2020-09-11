@@ -133,7 +133,8 @@
         "command": "tutkain_indent_sexp",
         "context": [
             {"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
-            {"key": "auto_complete_visible", "operand": false}
+            {"key": "auto_complete_visible", "operand": false},
+            {"key": "has_next_field", "operand": false}
         ]
     },
 
