@@ -153,3 +153,4 @@ def indent_region(view, edit, region, prune=False):
             if replacer:
                 view.replace(edit, replacee, replacer)
                 new_lines.append(view.full_line(replacee.begin()))
+                restore_cursors(view)

@@ -352,3 +352,26 @@ class TestIndentRegionCommand(ViewTestCase):
             """,
             selections=[(0, 0)],
         )
+
+    def test_control_reindent(self):
+        self.becomes(
+            """
+            (a
+
+              )
+
+            (b
+
+              )
+            """,
+            """
+            (a
+            \x20\x20
+              )
+
+            (b
+            \x20\x20
+              )
+            """,
+            selections=[(3, 3), (12, 12)],
+        )
