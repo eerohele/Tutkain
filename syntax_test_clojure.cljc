@@ -2109,8 +2109,9 @@
   ; and method declarations, but shouldn't be added to the symbol index,
   ; since they're not added to the namespace as functions
   (definterface DeclareInterface
-    (declare-noindex [_])
+    (declare-noindex [_] "foo")
 ;    ^^^^^^^^^^^^^^^ entity.name.function.clojure
+;                        ^^^^^ string.quoted.double.edn
     (declare-noindex [_]))
 ;    ^^^^^^^^^^^^^^^ entity.name.function.clojure
 

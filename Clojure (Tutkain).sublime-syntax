@@ -464,6 +464,8 @@ contexts:
               scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
               pop: true
               set:
+                - include: string
+                - include: comment
                 - match: '\)'
                   scope: meta.sexp.end.edn punctuation.section.parens.end.edn
                   set: interface-specs
