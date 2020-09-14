@@ -1,4 +1,4 @@
-; SYNTAX TEST "Packages/tutkain/Clojure (Tutkain).sublime-syntax"
+; SYNTAX TEST "Packages/Tutkain/Clojure (Tutkain).sublime-syntax"
 
 ; # Comments and whitespace
 
