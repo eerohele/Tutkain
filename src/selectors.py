@@ -11,7 +11,8 @@ def inside_comment(view, point):
 
 def ignore(view, point):
     return view.match_selector(
-        point, "string - punctuation.definition.string.begin | comment.line | constant.character"
+        point,
+        "string - punctuation.definition.string.begin | comment.line | constant.character",
     )
 
 

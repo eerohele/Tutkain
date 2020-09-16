@@ -32,12 +32,12 @@ class Sexp:
         if self.view.match_selector(begin - 1, self.absorb_selector):
             # Find the first point that contains a character other than a macro character or a
             # character that's part of a keyword
-            boundary = selectors.find(
-                self.view,
-                begin - 1,
-                f"- ({self.absorb_selector})",
-                forward=False
-            ) + 1
+            boundary = (
+                selectors.find(
+                    self.view, begin - 1, f"- ({self.absorb_selector})", forward=False
+                )
+                + 1
+            )
 
             print(boundary, begin, region.end())
 
