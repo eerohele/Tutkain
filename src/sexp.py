@@ -7,6 +7,8 @@ CLOSE = {")": "(", "]": "[", "}": "{"}
 
 
 class Sexp:
+    absorb_selector = "keyword.operator.macro | punctuation.definition.keyword | constant.other.keyword"
+
     def __init__(self, view, open_region, close_region):
         self.view = view
         self.open = self.absorb_macro_characters(open_region)
@@ -27,14 +29,17 @@ class Sexp:
     def absorb_macro_characters(self, region):
         begin = region.begin()
 
-        if self.view.match_selector(begin - 1, "keyword.operator.macro"):
-            # Find the first point that contains a character other than a macro character
-            boundary = (
-                selectors.find(
-                    self.view, begin - 1, "- keyword.operator.macro", forward=False
-                )
-                + 1
-            )
+        if self.view.match_selector(begin - 1, self.absorb_selector):
+            # Find the first point that contains a character other than a macro character or a
+            # character that's part of a keyword
+            boundary = selectors.find(
+                self.view,
+                begin - 1,
+                f"- ({self.absorb_selector})",
+                forward=False
+            ) + 1
+
+            print(boundary, begin, region.end())
 
             begin = max(boundary, 0)
 

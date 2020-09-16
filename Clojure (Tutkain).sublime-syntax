@@ -49,7 +49,7 @@ contexts:
 
   metadata:
     - match: '(\^){{whitespace}}'
-      scope: keyword.operator.macro.clojure
+      scope: keyword.operator.macro.clojure meta.macro-character.metadata.clojure
       push:
         - include: map
         - include: keywords

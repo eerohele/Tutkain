@@ -304,12 +304,6 @@ contexts:
     - match: '(#)(?=:)'
       captures:
           1: keyword.operator.macro.edn
-      push:
-        - meta_scope: meta.reader-form.edn
-        - include: keywords
-        - include: map
-        - match: ''
-          pop: true
 
   # S-expressions
 
