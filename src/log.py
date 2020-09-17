@@ -15,7 +15,7 @@ def start_logging(debug=False):
     handler.setFormatter(formatter)
     log.addHandler(handler)
 
-    log.setLevel(logging.DEBUG)
+    log.setLevel(logging.DEBUG if debug else logging.INFO)
 
 
 def stop_logging():
