@@ -9,12 +9,13 @@ from . import sexp
 def symbol_in_head_position(view, open_bracket):
     region = view.find(r"\S", open_bracket.end())
 
-    # This is probably not 100% correct. Also, it is tied to the syntax
-    # definition. Is that a problem?
-    return view.match_selector(
-        region.begin(),
-        "meta.special-form | variable | keyword.declaration | keyword.control",
-    )
+    selector = """meta.special-form |
+                  variable |
+                  keyword.declaration |
+                  keyword.control |
+                  punctuation.definition.string.begin"""
+
+    return view.match_selector(region.begin(), selector)
 
 
 def determine_indentation(view, open_bracket):

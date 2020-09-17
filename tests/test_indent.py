@@ -267,6 +267,18 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             selections=[(10, 10), (30, 30)],
         )
 
+    def test_string_coll_head(self):
+        self.becomes(
+            """
+            ["SELECT 1 FROM dual;"]
+            """,
+            """
+            ["SELECT 1\x20
+              FROM dual;"]
+            """,
+            selections=[(11, 11)],
+        )
+
 
 class TestIndentRegionCommand(ViewTestCase):
     def becomes(self, a, b, selections=[(0, 0), (1, 1)]):
