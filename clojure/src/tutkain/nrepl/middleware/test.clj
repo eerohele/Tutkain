@@ -60,14 +60,22 @@
                                     :end-test-var (reset! var-meta nil)
                                     :fail (do
                                             (test/inc-report-counter :fail)
-                                            (add-result results :fail (-> event pprint-expected pprint-actual (assoc :var-meta @var-meta))))
+                                            (add-result results :fail
+                                              (-> event
+                                                pprint-expected
+                                                pprint-actual
+                                                (assoc :var-meta @var-meta))))
                                     :pass (do
                                             (test/inc-report-counter :pass)
-                                            (add-result results :pass {:type :pass :line (line-number ns) :var-meta @var-meta}))
+                                            (add-result results :pass
+                                              {:type :pass :line (line-number ns) :var-meta @var-meta}))
                                     :error (do
                                              (test/inc-report-counter :error)
                                              (add-result results :error
-                                               (-> event pprint-expected (update :actual #(with-out-str (stacktrace/print-stack-trace %))) (assoc :var-meta @var-meta))))
+                                               (-> event
+                                                 pprint-expected
+                                                 (update :actual #(with-out-str (stacktrace/print-stack-trace %)))
+                                                 (assoc :var-meta @var-meta))))
                                     :summary (swap! results assoc :summary (-> event (dissoc :file) str))
                                     nil)))]
           (if (seq vars)
