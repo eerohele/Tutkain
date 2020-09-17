@@ -575,7 +575,7 @@ class TutkainConnectCommand(WindowCommand):
 
                 session = client.sessions.get(item.get("session"))
 
-                if "tap" in item:
+                if "tap" in item and settings().get("tap_panel"):
                     tap.show_panel(self.window, client)
                     append_to_view(tap.find_panel(self.window, client), item["tap"])
                 elif session:

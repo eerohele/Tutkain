@@ -8,4 +8,10 @@
   // - "horizontal"
   // - "vertical"
   "layout": "horizontal",
+
+  // Enable or disable tap panel.
+  //
+  // If the tap panel is enabled, calling clojure.core/tap> will pretty-print the the function
+  // argument in a Sublime Text output panel. Useful for debugging.
+  "tap_panel": false
 }
