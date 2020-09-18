@@ -492,14 +492,16 @@ class TutkainConnectCommand(WindowCommand):
     def initialize(self, client, sideloader, view):
         def add_tap(response):
             if response.get("status") == ["done"]:
-                sideloader.send({"op": "tutkain/add-tap"})
+                def handler(response):
+                    if response.get("status") == ["done"]:
+                        sideloader.send(
+                            {"op": "describe"},
+                            handler=lambda response: self.create_sessions(
+                                client, sideloader, view, response
+                            ),
+                        )
 
-                sideloader.send(
-                    {"op": "describe"},
-                    handler=lambda response: self.create_sessions(
-                        client, sideloader, view, response
-                    ),
-                )
+                sideloader.send({"op": "tutkain/add-tap"}, handler=handler)
 
         def add_middleware(response):
             if response.get("status") == ["done"]:

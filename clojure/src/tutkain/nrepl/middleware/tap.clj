@@ -11,11 +11,13 @@
   (fn [{:keys [op transport] :as message}]
     (case op
       "tutkain/add-tap"
-      (add-tap
-        (fn [value]
-          (let [tap (with-out-str (pprint/pprint value))
-                response (response-for message {:tap tap})]
-            (transport/send transport (dissoc response :id)))))
+      (do
+        (add-tap
+          (fn [value]
+            (let [tap (with-out-str (pprint/pprint value))
+                  response (response-for message {:tap tap})]
+              (transport/send transport (dissoc response :id)))))
+        (transport/send transport (response-for message {:status :done})))
       (handler message))))
 
 
