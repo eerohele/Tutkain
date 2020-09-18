@@ -250,8 +250,9 @@ def forward_delete(view, edit):
             point = region.begin()
             innermost = sexp.innermost(view, point, edge=True)
 
-            if view.match_selector(point, "constant.character.escape"):
-                view.erase(edit, Region(point, point + 2))
+            if view.match_selector(point, "constant.character"):
+                erase = selectors.expand_by_selector(view, point, "constant.character")
+                view.erase(edit, erase)
             elif not innermost:
                 view.erase(edit, Region(point, point + 1))
             elif innermost.is_empty() and innermost.contains(point):
@@ -270,8 +271,9 @@ def backward_delete(view, edit):
             point = region.begin()
             innermost = sexp.innermost(view, point, edge=True)
 
-            if view.match_selector(point - 1, "constant.character.escape"):
-                view.erase(edit, Region(point - 2, point))
+            if view.match_selector(point - 1, "constant.character"):
+                erase = selectors.expand_by_selector(view, point - 1, "constant.character")
+                view.erase(edit, erase)
             elif not innermost:
                 view.erase(edit, Region(point - 1, point))
             elif innermost.is_empty() and innermost.contains(point):
