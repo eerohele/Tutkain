@@ -78,7 +78,7 @@ def show_popup(view, point, response):
             location = parse_location(info)
             ns = info.get("ns", "")
             name = info.get("name", "")
-            arglists = info.get("arglists-str", "")
+            arglists = info.get("arglists", "")
             doc = "".join(doc_lines(info.get("doc", "")))
 
             view.show_popup(
