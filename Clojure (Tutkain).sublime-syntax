@@ -266,6 +266,7 @@ contexts:
           - include: comment
           - include: vector
           - include: require-list
+          - include: reader-conditional
       - match: ':import{{end}}'
         scope: meta.reader-form.clojure meta.statement.import.clojure constant.other.keyword.unqualified.clojure
         set:
@@ -274,6 +275,7 @@ contexts:
           - include: comment
           - include: vector
           - include: require-list
+          - include: reader-conditional
       - include: list-tail
     - include: list-tail
 
