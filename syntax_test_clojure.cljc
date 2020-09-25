@@ -2425,7 +2425,7 @@
 ;    ^^^^^^^^ meta.statement.require.clojure
      [baz.quux]
      qux.zot
-;    ^^^^^^^ - variable.function.clojure
+;    ^^^^^^^ meta.symbol.edn - variable.function.clojure
      ))
 
   (ns foo.bar
