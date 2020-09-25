@@ -1047,11 +1047,8 @@
 ; ^ keyword.operator.macro.edn
 ;  ^ punctuation.definition.keyword.edn
 ;  ^^^^ constant.other.keyword.unqualified.edn
-; ^^^^^^^ meta.reader-form.edn
 ;        ^ - meta
-;         ^^^^^^^^^^^^^^^ meta.reader-form.edn
 ;                        ^ - meta
-;                         ^^^^^^^^^^^^^ meta.reader-form.edn
 ;                                      ^ - meta
 
   ##NaN ##Inf ##-Inf
