@@ -267,7 +267,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             selections=[(10, 10), (30, 30)],
         )
 
-    def test_string_coll_head(self):
+    def test_string_coll_head_1(self):
         self.becomes(
             """
             ["SELECT 1 FROM dual;"]
@@ -277,6 +277,18 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
               FROM dual;"]
             """,
             selections=[(11, 11)],
+        )
+
+    def test_string_coll_head_2(self):
+        self.becomes(
+            """
+            ["/foo" {:bar 1}]
+            """,
+            """
+            ["/foo"
+             {:bar 1}]
+            """,
+            selections=[(7, 7)],
         )
 
 
@@ -386,4 +398,31 @@ class TestIndentRegionCommand(ViewTestCase):
               )
             """,
             selections=[(3, 3), (12, 12)],
+        )
+
+
+    def test_string_coll_head_1(self):
+        self.becomes(
+            """
+            ["SELECT 1
+            FROM dual;"]
+            """,
+            """
+            ["SELECT 1
+              FROM dual;"]
+            """,
+            selections=[(0, 0)],
+        )
+
+    def test_string_coll_head_2(self):
+        self.becomes(
+            """
+            ["/foo"
+            {:bar 1}]
+            """,
+            """
+            ["/foo"
+             {:bar 1}]
+            """,
+            selections=[(0, 0)],
         )

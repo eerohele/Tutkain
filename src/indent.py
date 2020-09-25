@@ -6,24 +6,22 @@ from . import selectors
 from . import sexp
 
 
-def symbol_in_head_position(view, open_bracket):
-    region = view.find(r"\S", open_bracket.end())
-
-    selector = """meta.special-form |
-                  variable |
-                  keyword.declaration |
-                  keyword.control |
-                  punctuation.definition.string.begin"""
-
-    return view.match_selector(region.begin(), selector)
-
-
-def determine_indentation(view, open_bracket):
+def determine_indentation(view, open_bracket, point):
     end = open_bracket.end()
     line = view.line(end)
     indentation = " " * (end - line.begin())
 
-    if symbol_in_head_position(view, open_bracket):
+    head_symbol = view.find(r"\S", open_bracket.end())
+
+    if view.match_selector(
+        head_symbol.begin(),
+        "meta.special-form | variable | keyword.declaration | keyword.control",
+    ) or (
+        view.match_selector(point, "string.quoted.double")
+        and view.match_selector(
+            head_symbol.begin(), "punctuation.definition.string.begin"
+        )
+    ):
         return indentation + " "
     else:
         return indentation
@@ -56,7 +54,7 @@ def insert_newline_and_indent(view, edit):
                 view.insert(edit, end, "\n")
                 point_after_newline = end + 1
                 line = view.line(point_after_newline)
-                indentation = determine_indentation(view, open_bracket)
+                indentation = determine_indentation(view, open_bracket, point)
                 new_line = indentation + view.substr(line).lstrip()
                 view.replace(edit, line, new_line)
                 restore_cursors(view)
@@ -126,7 +124,7 @@ def get_indented_string(view, region, prune=False):
     string = prune_region(view, region) if prune else view.substr(region)
 
     if open_bracket:
-        indentation = determine_indentation(view, open_bracket)
+        indentation = determine_indentation(view, open_bracket, region.begin())
         return indentation + string.lstrip(" ")
     else:
         return string
