@@ -1,8 +1,11 @@
 [
     // This is a set of example key bindings for Tutkain.
     //
-    // Tutkain comes with (almost) no key bindings enabled by default. To start using key bindings,
+    // Tutkain comes with very few bindings enabled by default. To start using key bindings,
     // copy the key binding definitions in this file into your own key binding settings.
+    //
+    // NOTE: This set of example key bindings is NOT guaranteed to be stable. They may change
+    // without notice.
 
     // The default binding for cancel_build is ctrl+c, which interferes with the key bindings
     // coming up next.
