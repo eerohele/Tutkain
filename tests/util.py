@@ -27,7 +27,11 @@ def wait_until_matches(a, b, delay=0.25, retries=50):
 
 
 def wait_until_contains(a, b, delay=0.25, retries=50):
-    return wait_until(lambda: a in b(), delay, retries)
+    def f():
+        x = b()
+        return x and a in x
+
+    return wait_until(f, delay, retries)
 
 
 class ViewTestCase(TestCase):

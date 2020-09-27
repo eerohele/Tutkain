@@ -276,7 +276,7 @@ app.core=> (square 2)
 
         self.assertContainsEventually(
             """Clojure 1.10.1
-nREPL 0.8.0
+nREPL 0.8.2
 app.core=> (square 4)
 16\n""",
             lambda: self.content(other_repl_view),
@@ -307,7 +307,7 @@ app.core=> (square 2)
 
         self.assertEqualsEventually(
             """Clojure 1.10.1
-nREPL 0.8.0
+nREPL 0.8.2
 app.core=> (square 4)
 16
 app.core=> (tap> (square 8))
@@ -341,7 +341,7 @@ class TestBabashka(ViewTestCase):
         self.view.window().run_command("tutkain_connect", {"host": HOST, "port": 1667})
 
         if not wait_until_contains(
-            """Babashka 0.2.0\nbabashka.nrepl 0.0.4-SNAPSHOT\n""",
+            """Babashka 0.2.1\nbabashka.nrepl 0.0.4-SNAPSHOT\n""",
             lambda: self.content(tutkain.get_active_repl_view(self.view.window())),
             delay=1,
         ):
