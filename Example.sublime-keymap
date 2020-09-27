@@ -198,48 +198,6 @@
     },
 
     {
-        "keys": ["("],
-        "command": "tutkain_paredit_open_round",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
-        "keys": ["["],
-        "command": "tutkain_paredit_open_square",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
-        "keys": ["{"],
-        "command": "tutkain_paredit_open_curly",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
-        "keys": [")"],
-        "command": "tutkain_paredit_close_round",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
-        "keys": ["]"],
-        "command": "tutkain_paredit_close_square",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
-        "keys": ["}"],
-        "command": "tutkain_paredit_close_curly",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
-        "keys": ["\""],
-        "command": "tutkain_paredit_double_quote",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
         "keys": ["ctrl+c", "ctrl+right", "ctrl+left"],
         "command": "tutkain_paredit_forward_slurp",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
@@ -282,18 +240,6 @@
     },
 
     {
-        "keys": ["delete"],
-        "command": "tutkain_paredit_forward_delete",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
-        "keys": ["backspace"],
-        "command": "tutkain_paredit_backward_delete",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
         "keys": ["alt+r"],
         "command": "tutkain_paredit_raise_sexp",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
@@ -308,12 +254,6 @@
     {
         "keys": ["alt+;"],
         "command": "tutkain_paredit_comment_dwim",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
-    },
-
-    {
-        "keys": [";"],
-        "command": "tutkain_paredit_semicolon",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
