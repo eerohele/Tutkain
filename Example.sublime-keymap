@@ -292,4 +292,16 @@
         "command": "tutkain_paredit_forward_move_form",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
+
+    {
+        "keys": ["ctrl+x", "ctrl+z"],
+        "command": "tutkain_paredit_thread_first",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+x", "ctrl+x"],
+        "command": "tutkain_paredit_thread_last",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
 ]
