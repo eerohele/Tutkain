@@ -54,9 +54,8 @@ def make_color_scheme(cache_dir):
 
     We therefore have to resort to this awful hack where every time the plugin is loaded or the
     color scheme changes, we generate a new color scheme in the Sublime Text cache directory. That
-    color scheme defines the tutkain.repl.standard-streams scope which has an almost-transparent
-    background color, creating the illusion that we're only setting the foreground color of the
-    text.
+    color scheme defines the tutkain.repl.stdout scope which has an almost-transparent background
+    color, creating the illusion that we're only setting the foreground color of the text.
 
     Yeah. So, please go give this issue a thumbs-up:
 
@@ -110,10 +109,6 @@ def plugin_loaded():
     preferences = sublime.load_settings("Preferences.sublime-settings")
 
     cache_dir = os.path.join(sublime.cache_path(), "Tutkain")
-
-    # Clean up any custom color schemes we've previously created.
-    for filename in glob.glob(f"{cache_dir}/*.sublime-color-scheme"):
-        os.remove(filename)
 
     make_color_scheme(cache_dir)
     preferences.add_on_change("Tutkain", lambda: make_color_scheme(cache_dir))
