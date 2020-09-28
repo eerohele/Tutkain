@@ -5,5 +5,6 @@
 
 (defn pprint
   [value writer options]
-  (binding [*out* writer]
-    (fipp/pprint (if (instance? Throwable value) (datafy value) value) options)))
+  (fipp/pprint
+    (if (instance? Throwable value) (datafy value) value)
+    (assoc options :writer writer)))
