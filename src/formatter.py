@@ -1,6 +1,6 @@
 def format(message):
     if "value" in message:
-        return message["value"]
+        return message["value"].replace("\r", "")
     if "summary" in message:
         return message["summary"] + "\n"
     if "tap" in message:

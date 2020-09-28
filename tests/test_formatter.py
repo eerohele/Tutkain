@@ -5,8 +5,7 @@ from Tutkain.src.formatter import format
 
 class TestFormatter(TestCase):
     def test_format(self):
-
-        self.assertEquals("2", format({"id": 1, "value": "2", "ns": "user"}))
+        self.assertEquals("2\n", format({"id": 1, "value": "2\r\n", "ns": "user"}))
 
         self.assertEquals("=> (+ 1 2)\n", format({"in": "(+ 1 2)"}))
 
