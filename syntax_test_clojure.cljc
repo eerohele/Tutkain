@@ -2721,6 +2721,9 @@
 ;      ^^^^^ meta.binding-vector.clojure
 ;            ^^^^^ - meta.binding-vector.clojure
 
+  [(let)]
+;       ^ meta.sexp.end.edn punctuation.section.brackets.end.edn - invalid
+
   (quote form)
 ;  ^^^^^ meta.special-form.clojure keyword.other.clojure
 
