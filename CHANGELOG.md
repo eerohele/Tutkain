@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+- Fix syntax definition error for reify/proxy/etc
+
 ## 0.5.2 - 2020-09-28
 - Fix `<0x0d>` showing up in evaluation results on Windows
 - Fix editing settings on Windows

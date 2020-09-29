@@ -404,9 +404,7 @@ contexts:
 
   class-specs:
     - include: comment
-    - match: '\)'
-      scope: meta.sexp.end.edn punctuation.section.parens.end.edn
-      set: main
+    - include: list-end
     - match: '{{qualified_symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.other.inherited-class.clojure
     - match: '\('
@@ -414,7 +412,7 @@ contexts:
       push:
         - match: '\)'
           scope: meta.sexp.end.edn punctuation.section.parens.end.edn
-          set: class-specs
+          pop: true
         - include: constant
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
@@ -428,7 +426,7 @@ contexts:
               set:
                 - match: '\)'
                   scope: meta.sexp.end.edn punctuation.section.parens.end.edn
-                  set: class-specs
+                  pop: 2
                 - include: forms
           - include: forms
 

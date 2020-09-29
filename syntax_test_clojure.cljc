@@ -2341,7 +2341,14 @@
 ;    ^^^ entity.name.function.clojure
 ;            ^^^ constant.language.edn
 
+  (do
+    (reify Foo
+      (bar [_] ,,,))
+;                  ^ meta.sexp.end.edn punctuation.section.parens.end.edn - invalid
 
+    (println "Hello, world!"))
+;            ^^^^^^^^^^^^^^^ string.quoted.double.edn
+;                            ^ meta.sexp.end.edn punctuation.section.parens.end.edn - invalid
 
 ; # proxy
 
