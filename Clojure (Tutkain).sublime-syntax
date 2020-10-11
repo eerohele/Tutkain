@@ -307,11 +307,11 @@ contexts:
           set:
             - match: '\)'
               scope: meta.sexp.end.edn punctuation.section.parens.end.edn
-              pop: 3
+              pop: 2
             - include: main
         - include: main
 
-  arglists-2:
+  anonymous-fn-body:
     - include: comment
     - include: string
     - include: map
@@ -335,33 +335,33 @@ contexts:
                 - include: main
             - include: main
 
-  arglists-3:
-    - match: '\)'
-      scope: meta.sexp.end.edn punctuation.section.parens.end.edn
-      pop: 2
+  fn-arity:
+    - meta_scope: meta.function-body.clojure
+    - include: list-end
+    - include: comment
+    - include: metadata
+    - match: '\['
+      scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+      push:
+        - meta_scope: meta.function.parameters.clojure
+        - match: '\]'
+          scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+          set:
+            - match: '\)'
+              scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+              pop: 2
+            - include: main
+        - include: main
+
+  named-fn-body:
+    - include: list-end
     - include: comment
     - include: string
     - include: map
-    - include: fn-params-3
     - match: '\('
       scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
-      push:
-        - meta_scope: meta.function-body.clojure
-        - include: list-end
-        - include: comment
-        - include: metadata
-        - match: '\['
-          scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
-          push:
-            - meta_scope: meta.function.parameters.clojure
-            - match: '\]'
-              scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
-              set:
-                - match: '\)'
-                  scope: meta.sexp.end.edn punctuation.section.parens.end.edn
-                  pop: 3
-                - include: main
-            - include: main
+      push: fn-arity
+    - include: fn-params-3
 
   fn-tail:
     - include: list-end
@@ -371,8 +371,8 @@ contexts:
     - include: syntax-quote
     - match: '{{symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
-      push: arglists-3
-    - include: arglists-2
+      set: named-fn-body
+    - include: anonymous-fn-body
 
   defmulti-tail:
     - match: '{{qualified_symbol}}'

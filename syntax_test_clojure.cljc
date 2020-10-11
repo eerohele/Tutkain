@@ -2787,6 +2787,14 @@
   ;                                                 ^ comment.punctuation.comma.edn
       ,,,)
 
+  (foo (fn bar [{:keys [db]} _]))
+;  ^^^ meta.function-call.clojure variable.function.clojure
+;       ^^ meta.special-form.clojure keyword.declaration.function.inline.clojure
+;          ^^^ entity.name.function.clojure
+;              ^^^^^^^^^^^^^^^^ meta.function.parameters.clojure
+;                              ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;                               ^ meta.sexp.end.edn punctuation.section.parens.end.edn - invalid.illegal.stray-bracket-edn.edn
+
   (defn x
     [y]
     (fn [z]))
