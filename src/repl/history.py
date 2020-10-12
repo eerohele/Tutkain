@@ -20,7 +20,7 @@ def get(window):
 
 
 def update(window, code):
-    settings = window.settings()
+    settings = window.settings().to_dict()
     history = settings.get("repl_history")
 
     if history:
@@ -33,8 +33,8 @@ def update(window, code):
     else:
         history = [code]
 
-    settings.set("repl_history", history)
-    window.set_settings(settings)
+    settings["repl_history"] = history
+    window.settings().update(settings)
 
 
 def navigate(view, edit, forward=False):

@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+- Fix Evaluate Input history support
+
 ## 0.5.5 - 2020-10-12
 - Fix qualified symbol auto-completion
 
