@@ -2476,8 +2476,8 @@
 ; # Qualified symbols
 
   foo.bar/
-; ^^^^^^^ - meta.namespace.edn
-;        ^ - punctuation.accessor.edn
+; ^^^^^^^ meta.namespace.edn
+;        ^ punctuation.accessor.edn
 
   foo.bar/baz
 ; ^^^^^^^ meta.namespace.edn

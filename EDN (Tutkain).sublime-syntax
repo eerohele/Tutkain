@@ -13,7 +13,7 @@ variables:
   non_symbol_chars: \s,;\(\)\[\]{}\"`~@\^\\\/
   symbol_head: '(?:\+(?!\d)|-(?!\d)|\.|[^{{non_symbol_chars}}:#''\d+-\.])'
   symbol: '(?:/|{{symbol_head}}[^{{non_symbol_chars}}]*)'
-  qualified_symbol: '(?:/|{{symbol}}|({{symbol}})(/)({{symbol}})+){{end}}'
+  qualified_symbol: '(?:/|{{symbol}}|({{symbol}})(/)({{symbol}})*){{end}}'
   keyword_namespace: '[^{{non_symbol_chars}}:/]*'
   keyword: '[[^{{non_symbol_chars}}:]|/][[^{{non_symbol_chars}}:]/:]*'
   constant: '(nil|true|false){{end}}'

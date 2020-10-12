@@ -120,7 +120,7 @@ string"
 ;                       ^ meta.symbol.edn
 ;                         ^ meta.symbol.edn
 ;                           ^ meta.symbol.edn
-  a1 a: a# a' -a +a .a k::v
+  a1 a: a# a' -a +a .a k::v a/
 ; ^^ meta.symbol.edn
 ;    ^^ meta.symbol.edn
 ;       ^^ meta.symbol.edn
@@ -129,6 +129,8 @@ string"
 ;                ^^ meta.symbol.edn
 ;                   ^^ meta.symbol.edn
 ;                      ^^^^ meta.symbol.edn
+;                           ^ meta.symbol.edn
+;                            ^ punctuation.accessor.edn
   a/b a1/b2 абв/где abc.def/uvw.xyz clojure.core//
 ; ^^^ meta.symbol.edn
 ;  ^  punctuation.accessor.edn
@@ -141,7 +143,7 @@ string"
 ;                                   ^^^^^^^^^^^^^^ meta.symbol.edn
 ;                                               ^ punctuation.accessor.edn
 ; NOT SYMBOLS
-  a/ /b 1a -1a +1a 'a
+  /b 1a -1a +1a 'a
 ; ^^^^^^^^^^^^^^^^^^^^^^^ -meta.symbol.edn
 
 ;; KEYWORDS
