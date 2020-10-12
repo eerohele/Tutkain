@@ -28,7 +28,7 @@ class TestCommands(ViewTestCase):
 
         if not wait_until_contains(
             """Clojure 1.10.1\nnREPL 0.8.2\n""",
-            lambda: self.content(tutkain.get_active_repl_view(self.view.window())),
+            self.repl_view_content,
             delay=1,
         ):
             raise AssertionError("REPL did not respond in time.")
