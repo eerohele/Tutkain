@@ -27,7 +27,7 @@ class TestCommands(ViewTestCase):
         self.view.window().run_command("tutkain_connect", {"host": HOST, "port": 1234})
 
         if not wait_until_contains(
-            """Clojure 1.10.1\nnREPL 0.8.0\n""",
+            """Clojure 1.10.1\nnREPL 0.8.2\n""",
             lambda: self.content(tutkain.get_active_repl_view(self.view.window())),
             delay=1,
         ):
@@ -341,7 +341,7 @@ class TestBabashka(ViewTestCase):
         self.view.window().run_command("tutkain_connect", {"host": HOST, "port": 1667})
 
         if not wait_until_contains(
-            """Babashka 0.2.1\nbabashka.nrepl 0.0.4-SNAPSHOT\n""",
+            """Babashka 0.2.2\nbabashka.nrepl 0.0.4-SNAPSHOT\n""",
             lambda: self.content(tutkain.get_active_repl_view(self.view.window())),
             delay=1,
         ):
