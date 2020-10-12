@@ -1,6 +1,6 @@
 {:deps {org.clojure/clojurescript {:mvn/version "1.10.773"}}
  :aliases {:nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.8.2"}
-                                cider/piggieback {:mvn/version "0.5.0"
+                                cider/piggieback {:mvn/version "0.5.1"
                                                   :exclusions [org.clojure/clojurescript]}}
                    :main-opts ["--main" "nrepl.cmdline" "--port" "1234"]}
            :test {:extra-paths ["test"]}}}
