@@ -1,8 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 0.5.6 - 2020-10-13
 - Fix Evaluate Input history support
+- Add support for setting port file in project data
 
 ## 0.5.5 - 2020-10-12
 - Fix qualified symbol auto-completion
