@@ -345,6 +345,11 @@ class HostInputHandler(TextInputHandler):
         yield os.path.join(folder, ".nrepl-port")
         yield os.path.join(folder, ".shadow-cljs", "nrepl.port")
 
+        project_port_file = self.window.project_data().get("tutkain", {}).get("nrepl_port_file")
+
+        if project_port_file:
+            yield os.path.join(folder, project_port_file)
+
     def discover_ports(self):
         return [
             self.read_port(port_file)
