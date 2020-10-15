@@ -2000,11 +2000,23 @@
 
   (do
     (defmethod ^:foo print-method Foo
-      [bar out]
+      ;; comment
+;     ^^^^^^^^^^ comment.line.edn
+      ^:baz [bar out]
+;     ^ keyword.operator.macro.clojure
+;      ^^^^ constant.other.keyword.unqualified.edn
       (print-method (.toString bar) out)))
 ;                                       ^^ meta.sexp.end - invalid
 
-
+  (defmethod event-handler :default
+    #?@(:clj  [[{:keys [event uid]}]
+;   ^^^ keyword.operator.macro.clojure
+;       ^^^^ constant.other.keyword.unqualified.edn
+;; Not sure how to retain the meta.function.parameters.clojure scope in this case...
+               (debugf "Unhandled event %s in session %s" event uid)]
+        :cljs [[{:keys [event]}]
+               (debugf "Unhandled event %s" event)]))
+;                                                   ^ meta.sexp.end - invalid
 
 ; # defprotocol
 
