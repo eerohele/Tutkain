@@ -2352,18 +2352,33 @@
 
 ; # proxy
 
-  (proxy [clojure.lang.IDeref clojure.lang.Seqable] []
+  (proxy ^:foo
 ;  ^^^^^ meta.function-call.clojure variable.function.clojure
+;        ^ keyword.operator.macro.clojure
+;         ^^^^ constant.other.keyword.unqualified.edn
+         [clojure.lang.IDeref
+;        ^ meta.sexp.begin.edn punctuation.section.brackets.begin.edn
 ;         ^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
-;                             ^^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
-;         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^- storage
-;         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^- variable
+;         ^^^^^^^^^^^^^^^^^^^^^ - storage
+;         ^^^^^^^^^^^^^^^^^^^^^ - variable
+          ;; comment
+;         ^^^^^^^^^^ comment.line.edn
+          clojure.lang.Seqable] [(foo)]
+;         ^^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
+;         ^^^^^^^^^^^^^^^^^^^^ - storage
+;         ^^^^^^^^^^^^^^^^^^^^ - variable
+;                             ^ meta.sexp.end.edn punctuation.section.brackets.end.edn
+;                               ^ meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+;                                ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;                                 ^^^ meta.function-call.clojure variable.function.clojure
+;                                    ^ meta.sexp.end.edn punctuation.section.parens.end.edn
     (deref [] nil)
 ;    ^^^^^ entity.name.function.clojure
 ;             ^^^ constant.language.edn
     (seq [] nil))
 ;    ^^^ entity.name.function.clojure
 ;           ^^^ constant.language.edn
+;               ^ meta.sexp.end.edn punctuation.section.parens.end.edn
 
 
 
