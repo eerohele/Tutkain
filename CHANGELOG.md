@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - Fix proxy syntax definition errors
 - Fix defmethod syntax definition errors
+- Fix Arcadia support #31
 
 ## 0.5.6 - 2020-10-13
 - Fix Evaluate Input history support

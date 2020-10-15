@@ -50,6 +50,7 @@ class Client(object):
         self.stop_event = Event()
         self.sessions = {}
         self.sessions_by_owner = {}
+        self.handlers = {}
 
     def id(self):
         return self.uuid
@@ -89,14 +90,25 @@ class Client(object):
 
         log.debug({"event": "thread/exit"})
 
+    def send(self, op, handler=None):
+        id = str(uuid.uuid4())
+        op["id"] = id
+
+        if handler is None:
+            handler = self.recvq.put
+
+        self.handlers[id] = handler
+        self.sendq.put(op)
+
     def handle(self, response):
-        id = response.get("session")
-        session = self.sessions.get(id)
+        id = response.get("id")
+        session_id = response.get("session")
+        session = self.sessions.get(session_id)
 
         if session:
             session.handle(response)
         else:
-            self.recvq.put(response)
+            self.handlers.get(id, self.recvq.put)(response)
 
     def send_disconnect_notification(self):
         session = self.sessions_by_owner.get("plugin")

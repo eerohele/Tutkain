@@ -345,7 +345,9 @@ class HostInputHandler(TextInputHandler):
         yield os.path.join(folder, ".nrepl-port")
         yield os.path.join(folder, ".shadow-cljs", "nrepl.port")
 
-        project_port_file = self.window.project_data().get("tutkain", {}).get("nrepl_port_file")
+        project_port_file = (
+            self.window.project_data().get("tutkain", {}).get("nrepl_port_file")
+        )
 
         if project_port_file:
             yield os.path.join(folder, project_port_file)
@@ -492,6 +494,7 @@ class TutkainConnectCommand(WindowCommand):
     def initialize(self, client, sideloader, view):
         def add_tap(response):
             if response.get("status") == ["done"]:
+
                 def handler(response):
                     if response.get("status") == ["done"]:
                         sideloader.send(
@@ -583,12 +586,10 @@ class TutkainConnectCommand(WindowCommand):
                 elif session:
                     self.print(session.view, item)
 
-                    # Babashka
-                    if (
-                        not session.supports("sideloader-start")
-                        and "status" in item
-                        and "done" in item["status"]
-                    ):
+                    view_size = session.view.size()
+                    last_char = session.view.substr(sublime.Region(view_size - 1, view_size))
+
+                    if "status" in item and "done" in item["status"] and not (last_char == "\n"):
                         append_to_view(session.view, "\n")
                 else:
                     view = get_active_repl_view(self.window)
@@ -656,21 +657,9 @@ class TutkainConnectCommand(WindowCommand):
             panel.settings().set("scroll_past_end", False)
             panel.assign_syntax("Clojure (Tutkain).sublime-syntax")
 
-    def run(self, host, port):
-        window = self.window
-
-        try:
-            client = Client(host, int(port)).go()
-
-            self.create_tap_panel(client)
-            view = self.create_output_view(host, port)
-            state["client_by_view"][view.id()] = client
-
-            client.sendq.put({"op": "describe"})
-            capabilities = client.recvq.get()
-
-            client.sendq.put({"op": "clone"})
-            session_id = client.recvq.get().get("new-session")
+    def clone_handler(self, client, view, capabilities, response):
+        if "done" in response.get("status", []):
+            session_id = response.get("new-session")
             session = Session(session_id, client, view)
 
             # Start a worker thread that reads items from a queue and prints
@@ -695,7 +684,35 @@ class TutkainConnectCommand(WindowCommand):
                         session.info = capabilities
                         client.register_session("user", session)
 
-                session.send({"op": "clone", "session": session.id}, handler=handler)
+                client.send({"op": "clone", "foo": "bar"}, handler=handler)
+
+    def clone(self, client, view, response):
+        if response.get("status") == ["done"]:
+            capabilities = response
+
+            client.send(
+                {"op": "clone"},
+                handler=lambda response: self.clone_handler(
+                    client, view, capabilities, response
+                ),
+            )
+
+    def describe(self, client, view):
+        client.send(
+            {"op": "describe"},
+            handler=lambda response: self.clone(client, view, response),
+        )
+
+    def run(self, host, port):
+        window = self.window
+
+        try:
+            client = Client(host, int(port)).go()
+
+            self.create_tap_panel(client)
+            view = self.create_output_view(host, port)
+            state["client_by_view"][view.id()] = client
+            self.describe(client, view)
         except ConnectionRefusedError:
             window.status_message(f"ERR: connection to {host}:{port} refused.")
 
