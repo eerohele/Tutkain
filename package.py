@@ -705,17 +705,14 @@ class TutkainConnectCommand(WindowCommand):
         )
 
     def run(self, host, port):
-        window = self.window
-
         try:
             client = Client(host, int(port), queue.Queue(), queue.Queue()).go()
-
             self.create_tap_panel(client)
             view = self.create_output_view(host, port)
             state["client_by_view"][view.id()] = client
             self.describe(client, view)
         except ConnectionRefusedError:
-            window.status_message(f"ERR: connection to {host}:{port} refused.")
+            self.window.status_message(f"ERR: connection to {host}:{port} refused.")
 
     def input(self, args):
         return HostInputHandler(self.window)
