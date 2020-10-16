@@ -8,20 +8,6 @@ from ..log import log
 
 
 class Client(object):
-    """
-    Here's how Client works:
-
-    1. Open a socket connection to the given host and port.
-    2. Start a worker that gets items from a queue and sends them over the
-       socket for evaluation.
-    3. Start a worker that reads bencode strings from the socket,
-       parses them, and puts them into a queue.
-
-    Calling `halt()` on a Client will stop the background threads and close
-    the socket connection. Client is a context manager, so you can use it
-    with the `with` statement.
-    """
-
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
@@ -41,12 +27,12 @@ class Client(object):
             except OSError as e:
                 log.debug({"event": "error", "exception": e})
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, sendq, recvq):
         self.uuid = str(uuid.uuid4())
         self.host = host
         self.port = port
-        self.sendq = queue.Queue()
-        self.recvq = queue.Queue()
+        self.sendq = sendq
+        self.recvq = recvq
         self.stop_event = Event()
         self.sessions = {}
         self.sessions_by_owner = {}

@@ -3,6 +3,7 @@ import collections
 import glob
 import json
 import os
+import queue
 import sublime
 import uuid
 
@@ -707,7 +708,7 @@ class TutkainConnectCommand(WindowCommand):
         window = self.window
 
         try:
-            client = Client(host, int(port)).go()
+            client = Client(host, int(port), queue.Queue(), queue.Queue()).go()
 
             self.create_tap_panel(client)
             view = self.create_output_view(host, port)
