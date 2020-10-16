@@ -685,7 +685,7 @@ class TutkainConnectCommand(WindowCommand):
                         session.info = capabilities
                         client.register_session("user", session)
 
-                client.send({"op": "clone", "foo": "bar"}, handler=handler)
+                client.send({"op": "clone"}, handler=handler)
 
     def clone(self, client, view, response):
         if response.get("status") == ["done"]:
