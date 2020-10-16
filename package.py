@@ -583,9 +583,15 @@ class TutkainConnectCommand(WindowCommand):
                     self.print(session.view, item)
 
                     view_size = session.view.size()
-                    last_char = session.view.substr(sublime.Region(view_size - 1, view_size))
+                    last_char = session.view.substr(
+                        sublime.Region(view_size - 1, view_size)
+                    )
 
-                    if "status" in item and "done" in item["status"] and not (last_char == "\n"):
+                    if (
+                        "status" in item
+                        and "done" in item["status"]
+                        and not (last_char == "\n")
+                    ):
                         append_to_view(session.view, "\n")
                 else:
                     view = get_active_repl_view(self.window)
