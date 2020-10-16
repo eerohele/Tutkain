@@ -526,12 +526,7 @@ class TutkainConnectCommand(WindowCommand):
         )
 
         sideloader.send(
-            {
-                "op": "eval",
-                "code": """(require 'tutkain.nrepl.util.pprint)"""
-                # We use a noop handler, to prevent the printer printing the nil response of this
-                # eval op.
-            },
+            {"op": "eval", "code": """(require 'tutkain.nrepl.util.pprint)"""},
             pprint=False,
             handler=add_middleware,
         )
