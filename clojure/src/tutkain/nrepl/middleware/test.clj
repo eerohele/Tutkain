@@ -59,6 +59,7 @@
                                     :begin-test-var (reset! var-meta (event-var-meta event))
                                     :end-test-var (reset! var-meta nil)
                                     :fail (do
+                                            (test/inc-report-counter :assert)
                                             (test/inc-report-counter :fail)
                                             (add-result results :fail
                                               (-> event
@@ -66,10 +67,12 @@
                                                 pprint-actual
                                                 (assoc :var-meta @var-meta))))
                                     :pass (do
+                                            (test/inc-report-counter :assert)
                                             (test/inc-report-counter :pass)
                                             (add-result results :pass
                                               {:type :pass :line (line-number ns) :var-meta @var-meta}))
                                     :error (do
+                                             (test/inc-report-counter :assert)
                                              (test/inc-report-counter :error)
                                              (add-result results :error
                                                (-> event
@@ -79,7 +82,9 @@
                                     :summary (swap! results assoc :summary (-> event (dissoc :file) str))
                                     nil)))]
           (if (seq vars)
-            (test/test-vars (map #(resolve (symbol ns %)) vars))
+            (binding [test/*report-counters* (ref test/*initial-report-counters*)]
+              (test/test-vars (map #(resolve (symbol ns %)) vars))
+              (swap! results assoc :summary (str (assoc @test/*report-counters* :type :summary))))
             (test/run-tests (symbol ns))))
         (transport/send transport (response-for message @results))
         (transport/send transport (response-for message {:status :done})))
