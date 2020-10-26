@@ -8,7 +8,7 @@ def start_logging(debug=False):
     handler = logging.StreamHandler()
 
     formatter = logging.Formatter(
-        fmt="[%(name)s] [%(threadName)s] %(asctime)s %(levelname)s %(message)s",
+        fmt="[%(name)s] [%(threadName)s] %(asctime)s.%(msecs)03d %(levelname)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
