@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from Tutkain.src.formatter import format
+from Tutkain.src.repl.formatter import format
 
 
 class TestFormatter(TestCase):
@@ -25,14 +25,14 @@ Boom!""",
         )
 
         self.assertEquals(
-            '#error {\n :cause "Boom!"\n :data {:a 1}\n}',
+            '#error {\n :cause "Boom!"\n :data {:a 1}\n}\n',
             format(
                 {
                     "ex": "class clojure.lang.ExceptionInfo",
                     "status": ["eval-error"],
                     "root-ex": "class clojure.lang.ExceptionInfo",
                     "id": 1,
-                    "nrepl.middleware.caught/throwable": '#error {\n :cause "Boom!"\n :data {:a 1}\n}',
+                    "nrepl.middleware.caught/throwable": '#error {\n :cause "Boom!"\n :data {:a 1}\n}\n',
                 }
             ),
         )

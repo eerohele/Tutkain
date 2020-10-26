@@ -129,8 +129,8 @@ def run_tests(view, session, response, file, file_path, test_vars):
             if int(sublime.version()) >= 4073 and session.supports("tutkain/test"):
 
                 def handler(response):
-                    session.output(response)
                     add_markers(view, session, response)
+                    session.output(response)
                     progress.stop()
 
                 op = {
@@ -191,9 +191,7 @@ def run(view, session, test_vars=[]):
         session.send(
             {
                 "op": "eval",
-                "code": """(->> (ns-publics *ns*)
-                             (filter (fn [[_ v]] (-> v meta :test)))
-                             (run! (fn [[sym _]] (ns-unmap *ns* sym))))""",
+                "code": """(->> (ns-publics *ns*) (filter (fn [[_ v]] (-> v meta :test))) (run! (fn [[sym _]] (ns-unmap *ns* sym))))""",
                 "file": view.file_name(),
             },
             handler=lambda response: evaluate_view(view, session, response, test_vars),

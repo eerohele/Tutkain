@@ -27,12 +27,12 @@ class Client(object):
             except OSError as e:
                 log.debug({"event": "error", "exception": e})
 
-    def __init__(self, host, port, sendq, recvq):
+    def __init__(self, host, port):
         self.uuid = str(uuid.uuid4())
         self.host = host
         self.port = port
-        self.sendq = sendq
-        self.recvq = recvq
+        self.sendq = queue.Queue()
+        self.recvq = queue.Queue()
         self.stop_event = Event()
         self.sessions = {}
         self.sessions_by_owner = {}
@@ -79,10 +79,6 @@ class Client(object):
     def send(self, op, handler=None):
         id = str(uuid.uuid4())
         op["id"] = id
-
-        if handler is None:
-            handler = self.recvq.put
-
         self.handlers[id] = handler
         self.sendq.put(op)
 
@@ -94,11 +90,11 @@ class Client(object):
         if session:
             session.handle(response)
         else:
-            self.handlers.get(id, self.recvq.put)(response)
-
-    def send_disconnect_notification(self):
-        session = self.sessions_by_owner.get("plugin")
-        session and session.output({"value": ":tutkain/disconnected\n"})
+            try:
+                handler = self.handlers.get(id, self.recvq.put)
+                handler.__call__(response)
+            finally:
+                self.handlers.pop(id, None)
 
     def recv_loop(self):
         try:
@@ -106,10 +102,11 @@ class Client(object):
                 item = bencode.read(self.buffer)
 
                 if item is None:
-                    self.send_disconnect_notification()
+                    self.recvq.put({"value": ":tutkain/disconnected"})
                     break
 
                 log.debug({"event": "socket/recv", "item": item})
+
                 self.handle(item)
         except OSError as error:
             log.error({"event": "error", "error": error})
@@ -127,21 +124,27 @@ class Client(object):
             # close the connection to the socket.
             self.disconnect()
 
+    def close_session(self, owner, handler=lambda _: None):
+        sessions = self.sessions_by_owner
+
+        if sessions and owner in sessions:
+            session = sessions[owner]
+
+            if session.supports("close"):
+                session.send({"op": "close"}, handler=handler)
+
     def halt(self):
         log.debug({"event": "client/halt"})
 
-        def handler(response):
-            if "status" in response and "done" in response["status"]:
-                self.stop_event.set()
+        if self.sessions_by_owner:
+            self.close_session("user")
+            self.close_session("plugin")
 
-        sessions = self.sessions_by_owner
-
-        if sessions:
-            "user" in sessions and sessions["user"].send({"op": "close"})
-            "plugin" in sessions and sessions["plugin"].send({"op": "close"})
-
-            "sideloader" in sessions and sessions["sideloader"].send(
-                {"op": "close"}, handler=handler
+            self.close_session(
+                "sideloader",
+                handler=lambda response: "status" in response
+                and "done" in response["status"]
+                and self.stop_event.set(),
             )
         else:
             self.stop_event.set()

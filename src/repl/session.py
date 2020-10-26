@@ -4,10 +4,9 @@ from threading import Lock
 class Session:
     namespace = "user"
 
-    def __init__(self, id, client, view):
+    def __init__(self, id, client):
         self.id = id
         self.client = client
-        self.view = view
         self.op_count = 0
         self.lock = Lock()
         self.info = {}

@@ -1,43 +1,16 @@
-import re
 import sublime
-import time
+
+from Tutkain.src.repl import Repl
 
 from unittest import TestCase
-
-
-def wait_until(pred, delay=0.25, retries=50):
-    retries_left = retries
-
-    while retries_left >= 0:
-        if pred():
-            return True
-        else:
-            time.sleep(delay)
-            retries_left -= 1
-
-    return False
-
-
-def wait_until_equals(a, b, delay=0.25, retries=50):
-    return wait_until(lambda: a == b(), delay, retries)
-
-
-def wait_until_matches(a, b, delay=0.25, retries=50):
-    return wait_until(lambda: re.search(a, b()), delay, retries)
-
-
-def wait_until_contains(a, b, delay=0.25, retries=50):
-    def f():
-        x = b()
-        return x and a in x
-
-    return wait_until(f, delay, retries)
 
 
 class ViewTestCase(TestCase):
     @classmethod
     def setUpClass(self):
+        sublime.run_command("new_window")
         self.view = sublime.active_window().new_file()
+        self.view.set_name("tutkain.clj")
         self.view.set_scratch(True)
         self.view.sel().clear()
         self.view.window().focus_view(self.view)
@@ -46,13 +19,16 @@ class ViewTestCase(TestCase):
     @classmethod
     def tearDownClass(self):
         if self.view:
-            self.view.window().run_command("close_file")
+            self.view.window().run_command("close_window")
 
     def setUp(self):
         self.clear_view()
 
+    def content(self, view):
+        return view and view.substr(sublime.Region(0, view.size()))
+
     def view_content(self):
-        return self.view.substr(sublime.Region(0, self.view.size()))
+        return self.content(self.view)
 
     def clear_view(self):
         self.view.run_command("select_all")
@@ -74,14 +50,18 @@ class ViewTestCase(TestCase):
     def selection(self, i):
         return self.view.substr(self.view.sel()[i])
 
-    def assertEqualsEventually(self, a, b):
-        if not wait_until_equals(a, b):
-            raise AssertionError(f"'{a}' != '{b()}'")
 
-    def assertMatchesEventually(self, a, b):
-        if not wait_until_matches(a, b):
-            raise AssertionError(f"'{a}' does not match '{b()}'")
+class TestRepl(Repl):
+    def take_print(self):
+        return self.printq.get(timeout=1)["printable"]
 
-    def assertContainsEventually(self, a, b):
-        if not wait_until_contains(a, b):
-            raise AssertionError(f"'{a}' does not contain '{b()}'")
+    def take_prints(self, n):
+        xs = []
+
+        for _ in range(n):
+            xs.append(self.take_print())
+
+        return xs
+
+    def take_tap(self):
+        return self.tapq.get(timeout=1)
