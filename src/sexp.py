@@ -39,8 +39,6 @@ class Sexp:
                 + 1
             )
 
-            print(boundary, begin, region.end())
-
             begin = max(boundary, 0)
 
         return Region(begin, region.end())
