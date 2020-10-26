@@ -451,6 +451,27 @@ contexts:
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
           push:
+          - match: '\)'
+            scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+            pop: 2
+          - match: '\('
+            scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+            push:
+              - include: list-end
+              - include: comment
+              - include: metadata
+              - match: '\['
+                scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+                push:
+                  - meta_scope: meta.function.parameters.clojure
+                  - match: '\]'
+                    scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+                    set:
+                      - match: '\)'
+                        scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+                        pop: 2
+                      - include: main
+                  - include: main
           - match: '\['
             scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
             set:
@@ -461,8 +482,9 @@ contexts:
                 - match: '\)'
                   scope: meta.sexp.end.edn punctuation.section.parens.end.edn
                   pop: 2
-                - include: forms
-          - include: forms
+                - include: main
+            - include: main
+          - include: main
 
   classdef-tail:
     - include: metadata

@@ -2355,8 +2355,12 @@
 
   (do
     (reify Foo
-      (bar [_] ,,,))
-;                  ^ meta.sexp.end.edn punctuation.section.parens.end.edn - invalid
+      (bar [{:keys [baz quux]}] ,,,))
+;            ^^^^^ constant.other.keyword.unqualified.edn
+;                  ^ meta.function.parameters.clojure meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+;                           ^ meta.function.parameters.clojure meta.sexp.end.edn punctuation.section.brackets.end.edn
+;                            ^ meta.function.parameters.clojure meta.sexp.end.edn punctuation.section.braces.end.edn
+;                                   ^ meta.sexp.end.edn punctuation.section.parens.end.edn - invalid
 
     (println "Hello, world!"))
 ;            ^^^^^^^^^^^^^^^ string.quoted.double.edn
@@ -2392,6 +2396,11 @@
 ;           ^^^ constant.language.edn
 ;               ^ meta.sexp.end.edn punctuation.section.parens.end.edn
 
+  (proxy [java.io.Writer] []
+    (write
+     ([x] ,,,)
+     ([x off len] ,,,)))
+;                     ^^ meta.sexp.end.edn - invalid
 
 
 ; # extend-protocol
