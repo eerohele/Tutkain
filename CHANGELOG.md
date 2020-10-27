@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+- Print summary after **Tutkain: Run Test Under Cursor**
+- Fix proxy & reify syntax definition errors
+
 ## 0.5.7 - 2020-10-15
 - Fix proxy syntax definition errors
 - Fix defmethod syntax definition errors
