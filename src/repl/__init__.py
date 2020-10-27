@@ -154,9 +154,7 @@ class Repl(object):
                 and self.create_session("user", capabilities, response),
             )
 
-    def clone(self, response):
-        capabilities = response
-
+    def clone(self, capabilities):
         self.client.send(
             {"op": "clone"},
             handler=lambda response: done(response)
