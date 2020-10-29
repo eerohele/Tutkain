@@ -384,6 +384,17 @@ class TutkainEvaluateInputCommand(WindowCommand):
             view.assign_syntax("Clojure (Tutkain).sublime-syntax")
 
 
+class TutkainEvaluateCommand(WindowCommand):
+    def run(self, code, ns="user"):
+        session = state.get_session_by_owner(self.window, "user")
+
+        if session is None:
+            self.window.status_message("ERR: Not connected to a REPL.")
+        else:
+            session.output({"in": code, "ns": ns})
+            session.send({"op": "eval", "code": code, "ns": ns})
+
+
 class TutkainConnectCommand(WindowCommand):
     tap_loop = None
 

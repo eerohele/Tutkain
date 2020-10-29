@@ -75,6 +75,13 @@
         "command": "tutkain_evaluate_input"
     },
 
+    // Evaluate the form given as an argument.
+    {
+        "keys": ["f19"],
+        "command": "tutkain_evaluate",
+        "args": {"ns": "user", "code": "(reset)"},
+    },
+
     // Clear the result view and the output view.
     {
         "keys": ["ctrl+c", "ctrl+z"],

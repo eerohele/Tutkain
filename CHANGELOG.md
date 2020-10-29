@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+- Add the **Tutkain: Evaluate** command. Example:
+
+    ```clojure
+    {
+        "keys": ["f19"],
+        "command": "tutkain_evaluate",
+        "args": {"ns": "user", "code": "(reset)"},
+    },
+    ```
+
 - Print summary after **Tutkain: Run Test Under Cursor**
 - Fix proxy & reify syntax definition errors
 
