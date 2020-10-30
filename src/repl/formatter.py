@@ -2,6 +2,8 @@ from ..log import log
 
 
 def format(response, settings={}):
+    if "status" in response and "namespace-not-found" in response["status"]:
+        return ":tutkain/namespace-not-found\n"
     if "status" in response and "session-idle" in response["status"]:
         return ":tutkain/nothing-to-interrupt\n"
     if "value" in response:

@@ -146,6 +146,8 @@ class TutkainEvaluateFormCommand(TextCommand):
         def retry(ns, response):
             if response.get("status") == ["done"]:
                 session.send({"op": "eval", "code": code, "file": file, "ns": ns})
+            else:
+                session.output(response)
 
         if "status" in response and "namespace-not-found" in response["status"]:
             ns_region = namespace.find_last(self.view)
