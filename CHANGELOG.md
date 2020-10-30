@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Print `:tutkain/namespace-not-found` when namespace is not found
 - Print summary after **Tutkain: Run Test Under Cursor**
 - Fix proxy & reify syntax definition errors
+- Improve goto definition behavior #29
 
 ## 0.5.7 - 2020-10-15
 - Fix proxy syntax definition errors

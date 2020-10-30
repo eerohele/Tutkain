@@ -13,13 +13,14 @@ def doc_lines(doc):
 
 
 def show(view, line, column):
-    if view.is_loading():
-        sublime.set_timeout(lambda: show(view, line, column), 100)
-    else:
-        point = view.text_point(line, column)
-        view.show(point)
-        view.sel().clear()
-        view.sel().add(point)
+    if view is not None:
+        if view.is_loading():
+            sublime.set_timeout(lambda: show(view, line, column), 100)
+        else:
+            view.sel().clear()
+            point = view.text_point(line, column)
+            view.show_at_center(point)
+            view.sel().add(point)
 
 
 def goto(window, location):
