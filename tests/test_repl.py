@@ -1139,6 +1139,54 @@ class TestDefault(ViewTestCase):
         finally:
             server.shutdown()
 
+    def test_namespace_not_found(self):
+        server = mock.Server()
+
+        try:
+            repl = TestRepl(self.view.window(), server.host, server.port).go()
+            plugin_session_id, user_session_id = self.make_sessions(server, repl)
+
+            self.view.window().run_command("tutkain_evaluate", {"ns": "not.found", "code": "(foo)"})
+
+            self.assertEquals(
+                {
+                    "op": "eval",
+                    "code": "(foo)",
+                    "ns": "not.found",
+                    "session": user_session_id,
+                    "id": 1,
+                },
+                select_keys(server.recv(), {"op", "code", "ns", "session", "id"}),
+            )
+
+            server.send(
+                {
+                    "id": 1,
+                    "ns": "not.found",
+                    "session": user_session_id,
+                    "status": ["namespace-not-found", "done", "error"],
+                }
+            )
+
+            server.send(
+                {
+                    "id": 1,
+                    "ns": "not.found",
+                    "session": user_session_id,
+                    "status": ["done"],
+                }
+            )
+
+            self.assertEquals(
+                [
+                    "not.found=> (foo)\n",
+                    ":tutkain/namespace-not-found\n",
+                ],
+                repl.take_prints(2),
+            )
+        finally:
+            server.shutdown()
+
     def test_evaluate_form_switch_views(self):
         server_1 = mock.Server()
         server_2 = mock.Server()
