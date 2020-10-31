@@ -17,8 +17,8 @@ def format(response, settings={}):
     if "out" in response:
         return response["out"]
     if "in" in response:
-        ns = response.get("ns") or ""
-        return "{}=> {}\n".format(ns, response["in"])
+        ns = response.get("ns", "")
+        return f"""{ns}=> {response["in"]}\n"""
     if "err" in response:
         return response.get("err")
     if "versions" in response:
