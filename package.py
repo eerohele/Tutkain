@@ -146,7 +146,7 @@ class TutkainEvaluateFormCommand(TextCommand):
         def retry(ns, response):
             if response.get("status") == ["done"]:
                 session.send({"op": "eval", "code": code, "file": file, "ns": ns})
-            else:
+            elif "status" in response and "namespace-not-found" in response["status"]:
                 session.output(response)
 
         if "status" in response and "namespace-not-found" in response["status"]:
