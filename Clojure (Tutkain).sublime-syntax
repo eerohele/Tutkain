@@ -547,7 +547,7 @@ contexts:
       scope: constant.language.edn
       set: list-tail
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.constant.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.variable.clojure
       set: list-tail
     - include: list-tail
 
