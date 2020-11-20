@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 0.6.0
 - Add the **Tutkain: Evaluate** command. Example:
 
     ```clojure
@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Print summary after **Tutkain: Run Test Under Cursor**
 - Fix proxy & reify syntax definition errors
 - Improve goto definition behavior #29
+- Use `entity.name.variable.clojure` as def scope
 
 ## 0.5.7 - 2020-10-15
 - Fix proxy syntax definition errors
