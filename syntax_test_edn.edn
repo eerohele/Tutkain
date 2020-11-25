@@ -147,13 +147,14 @@ string"
 ; ^^^^^^^^^^^^^^^^^^^^^^^ -meta.symbol.edn
 
 ;; KEYWORDS
-  :a :abc :абв
-; ^^ constant.other.keyword.unqualified.edn
-; ^  punctuation.definition.keyword.edn
-;  ^ -punctuation.definition.keyword.edn
-;   ^ -constant.other.keyword.unqualified.edn
-;    ^^^^ constant.other.keyword.unqualified.edn
-;         ^^^^ constant.other.keyword.unqualified.edn
+  :  :a :abc :абв
+; ^ constant.other.keyword.unqualified.edn punctuation.definition.keyword.edn
+;    ^  punctuation.definition.keyword.edn
+;    ^^ constant.other.keyword.unqualified.edn
+;     ^ -punctuation.definition.keyword.edn
+;      ^ -constant.other.keyword.unqualified.edn
+;       ^^^^ constant.other.keyword.unqualified.edn
+;            ^^^^ constant.other.keyword.unqualified.edn
   :. :* :+ :! :- :_ :? :$ :% :& := :< :> :# :1 :' :a: :k::v
 ; ^^ constant.other.keyword.unqualified.edn
 ;    ^^ constant.other.keyword.unqualified.edn

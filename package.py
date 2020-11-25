@@ -492,6 +492,7 @@ def completion_kinds():
             "special-form": (sublime.KIND_ID_FUNCTION, "s", "special form"),
             "method": sublime.KIND_FUNCTION,
             "static-method": sublime.KIND_FUNCTION,
+            "keyword": sublime.KIND_KEYWORD,
         }
     else:
         return {}
@@ -513,13 +514,14 @@ class TutkainViewEventListener(ViewEventListener):
             point = locations[0] - 1
 
             if self.view.match_selector(
-                point, "meta.symbol - meta.function.parameters"
+                point,
+                "(meta.symbol - meta.function.parameters) | constant.other.keyword",
             ):
                 session = state.get_session_by_owner(self.view.window(), "plugin")
 
                 if session and session.supports("completions"):
                     scope = selectors.expand_by_selector(
-                        self.view, point, "meta.symbol"
+                        self.view, point, "meta.symbol | constant.other.keyword"
                     )
 
                     if scope:
