@@ -564,7 +564,7 @@
 ;                               ^^ constant.other.keyword.unqualified.edn
 ;                                  ^^ constant.other.keyword.unqualified.edn
 ;                                     ^^ constant.other.keyword.unqualified.edn
-;                                        ^^ constant.other.keyword.unqualified.edn
+;                                        ^^ constant.other.keyword.qualified.edn
 ;                                           ^^ constant.other.keyword.unqualified.edn
   :++ :--
 ; ^^^ constant.other.keyword.unqualified.edn
@@ -667,6 +667,15 @@
 ; ^ constant.other.keyword.auto-qualified.clojure
   :::blah
 ; ^^^^^^^ - constant
+  :foo/
+; ^ punctuation.definition.keyword.edn
+;     ^ punctuation.definition.constant.namespace.edn
+; ^^^^^ constant.other.keyword.qualified.edn
+  ::foo/
+; ^^ punctuation.definition.keyword.clojure
+;      ^ punctuation.definition.constant.namespace.clojure
+; ^^^^^^ constant.other.keyword.auto-qualified.clojure
+
   ://
   :10/20
   :blah10/20

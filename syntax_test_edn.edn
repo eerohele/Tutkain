@@ -174,7 +174,7 @@ string"
 ;                                              ^^ constant.other.keyword.unqualified.edn
 ;                                                 ^^^ constant.other.keyword.unqualified.edn
 ;                                                     ^^^^^ constant.other.keyword.unqualified.edn
-  :a/b :1/2 :абв/где :abc.def/uvw.xyz
+  :a/b :1/2 :абв/где :abc.def/uvw.xyz :kv/
 ; ^^^^ constant.other.keyword.qualified.edn
 ; ^    punctuation.definition.keyword.edn
 ;   ^  punctuation.definition.constant.namespace.edn
@@ -185,9 +185,13 @@ string"
 ;               ^ punctuation.definition.constant.namespace.edn
 ;                    ^^^^^^^^^^^^^^^^ constant.other.keyword.qualified.edn
 ;                            ^ punctuation.definition.constant.namespace.edn
+;                                     ^ punctuation.definition.keyword.edn
+;                                      ^^ constant.other.keyword.qualified.edn
+;                                        ^ punctuation.definition.constant.namespace.edn
+;                                     ^^^^ constant.other.keyword.qualified.edn
 ;; NOT KEYWORDS
-  :kv/ ::kv :::kv
-; ^^^^^^^^^^^^^^^^^^^^ -constant.other.keyword
+  ::kv :::kv
+; ^^^^^^^^^^ -constant.other.keyword
 
 ;; :/kv is technically not a keyword, but coming up with a regex for that
 ;; shit gets way too difficult.

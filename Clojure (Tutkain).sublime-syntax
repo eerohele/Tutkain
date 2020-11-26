@@ -13,7 +13,7 @@ contexts:
     - include: unqualified_keyword
 
   auto_qualified_keyword:
-    - match: '(::)(?=[^:])({{keyword_namespace}})((/)({{keyword}}))?'
+    - match: '(::)(?=[^:])({{keyword_namespace}})((/)({{keyword}})?)?'
       scope: meta.reader-form.clojure constant.other.keyword.auto-qualified.clojure
       captures:
         1: punctuation.definition.keyword.clojure

@@ -153,7 +153,7 @@ contexts:
     - include: unqualified_keyword
 
   qualified_keyword:
-    - match: '(:)([^{{non_symbol_chars}}:]*)(/){{keyword}}{{end}}'
+    - match: '(:)([^{{non_symbol_chars}}:]*)(/)({{keyword}})?{{end}}'
       scope: meta.reader-form.edn constant.other.keyword.qualified.edn
       captures:
         1: punctuation.definition.keyword.edn
