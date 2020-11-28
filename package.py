@@ -515,7 +515,7 @@ class TutkainViewEventListener(ViewEventListener):
 
             if self.view.match_selector(
                 point,
-                "(meta.symbol - meta.function.parameters) | constant.other.keyword",
+                "(meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation)",
             ):
                 session = state.get_session_by_owner(self.view.window(), "plugin")
 

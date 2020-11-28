@@ -633,10 +633,10 @@
 ; ## Breaks
 
   :,blah
-; ^ constant.other.keyword.unqualified.edn
+; ^ - constant
 ;  ^ comment.punctuation.comma.edn
   :;blah
-; ^ constant.other.keyword.unqualified.edn
+; ^ - constant
 ;  ^ comment.line.edn punctuation.definition.comment
   :blah,:blah,:blah
 ; ^^^^^ constant.other.keyword.unqualified.edn
@@ -662,20 +662,9 @@
 ; ## These are invalid, but I couldn't get the regex right
 
   :
-; ^ constant.other.keyword.unqualified.edn
-  ::
-; ^ constant.other.keyword.auto-qualified.clojure
+; ^^ - constant
   :::blah
 ; ^^^^^^^ - constant
-  :foo/
-; ^ punctuation.definition.keyword.edn
-;     ^ punctuation.definition.constant.namespace.edn
-; ^^^^^ constant.other.keyword.qualified.edn
-  ::foo/
-; ^^ punctuation.definition.keyword.clojure
-;      ^ punctuation.definition.constant.namespace.clojure
-; ^^^^^^ constant.other.keyword.auto-qualified.clojure
-
   ://
   :10/20
   :blah10/20
@@ -684,6 +673,9 @@
   ::blah::blah
   :/blah
   ::blah/
+; ^^ punctuation.definition.keyword.clojure
+;       ^ punctuation.definition.constant.namespace.clojure
+; ^^^^^^^ constant.other.keyword.auto-qualified.clojure
 
 
 

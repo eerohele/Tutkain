@@ -161,7 +161,7 @@ contexts:
         3: punctuation.definition.constant.namespace.edn
 
   unqualified_keyword:
-    - match: '(:)(?:/|[^{{non_symbol_chars}}:][[^{{non_symbol_chars}}:]:]*)?(?=$|[{{end_chars}}''`#])'
+    - match: '(:)(?:/|[^{{non_symbol_chars}}:][[^{{non_symbol_chars}}:]:]*)(?=$|[{{end_chars}}''`#])'
       scope: meta.reader-form.edn constant.other.keyword.unqualified.edn
       captures:
         1: punctuation.definition.keyword.edn
