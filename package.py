@@ -1,7 +1,5 @@
-import glob
 import json
 import os
-import queue
 import sublime
 
 from threading import Thread
@@ -29,8 +27,6 @@ from .src.repl import info
 from .src.repl import history
 from .src.repl import tap
 from .src.repl import printer
-from .src.repl import views
-from .src.repl.client import Client
 
 
 from .src.log import log, start_logging, stop_logging
