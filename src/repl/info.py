@@ -1,15 +1,9 @@
+import inspect
+import re
 import sublime
 
 from urllib.parse import urlparse
 from zipfile import ZipFile
-
-
-def doc_lines(doc):
-    return [
-        f'<p style="margin-top: 1rem 0;">{line}</p>'
-        for line in doc.split("\n\n")
-        if line
-    ]
 
 
 def show(view, line, column):
@@ -70,6 +64,14 @@ def parse_location(info):
         }
 
 
+def htmlify(docstring):
+    if docstring:
+        html = re.sub(r" ", "&nbsp;", re.sub(r"\n", "<br/>", inspect.cleandoc(docstring)))
+        return f"""<p class="doc">{html}</p>"""
+    else:
+        return ""
+
+
 def show_popup(view, point, response):
     if "info" in response:
         info = response["info"]
@@ -80,20 +82,41 @@ def show_popup(view, point, response):
             ns = info.get("ns", "")
             name = info.get("name", "")
             arglists = info.get("arglists", "")
-            doc = "".join(doc_lines(info.get("doc", "")))
+            doc = info.get("doc", "")
 
             view.show_popup(
                 f"""
-                <body id="tutkain-lookup" style="font-size: .9rem; width: 1024px;">
-                    <p style="margin: 0;">
-                        <a href="{file}"><code>{ns}/{name}</code></a>
+                <body id="tutkain-lookup">
+                    <style>
+                        #tutkain-lookup {{
+                            font-size: .9rem;
+                            padding: 0;
+                            margin: 0;
+                        }}
+
+                        a {{
+                            text-decoration: none;
+                        }}
+
+                        p {{
+                            border-bottom: 1px solid color(var(--foreground) alpha(0.05));
+                            margin: 0;
+                            padding: .25rem .5rem;
+                        }}
+
+                        .arglists {{
+                            color: color(var(--foreground) alpha(0.5));
+                        }}
+                    </style>
+                    <p class="symbol">
+                        <a href="{file}">{ns}/{name}</a>
                     </p>
-                    <p style="margin: 0;">
-                        <code style="color: grey;">{arglists}</code>
+                    <p class="arglists">
+                        <code>{arglists}</code>
                     </p>
-                    {doc}
+                    {htmlify(doc)}
                 </body>""",
                 location=point,
-                max_width=1280,
+                max_width=1024,
                 on_navigate=lambda href: goto(view.window(), location),
             )
