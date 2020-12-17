@@ -87,11 +87,12 @@ class Repl(object):
             )
 
     def describe(self, session):
-        session.send(
-            {"op": "describe"},
-            handler=lambda response: done(response)
-            and self.create_sessions(session, response),
-        )
+        def handler(response):
+            if done(response):
+                self.start_formatter({"newline_on_done": False})
+                self.create_sessions(session, response)
+
+        session.send({"op": "describe"}, handler=handler)
 
     def add_tap(self, session):
         session.send(
@@ -99,17 +100,31 @@ class Repl(object):
             handler=lambda response: done(response) and self.describe(session),
         )
 
-    def add_middleware(self, session):
-        session.send(
-            {
-                "op": "add-middleware",
-                "middleware": [
-                    "tutkain.nrepl.middleware.test/wrap-test",
-                    "tutkain.nrepl.middleware.tap/wrap-tap",
-                ],
-            },
-            handler=lambda response: done(response) and self.add_tap(session),
-        )
+    def add_middleware(self, session, response):
+        if done(response):
+            session.send(
+                {
+                    "op": "add-middleware",
+                    "middleware": [
+                        "tutkain.nrepl.middleware.test/wrap-test",
+                        "tutkain.nrepl.middleware.tap/wrap-tap",
+                    ],
+                },
+                handler=lambda response: done(response) and self.add_tap(session),
+            )
+        elif "err" in response:
+            session.output(response)
+            session.output(
+                {
+                    "err": """*** [Tutkain] Sideloading failed. See error message above for details. Some features are unavailable. ***\n"""
+                }
+            )
+
+            session.send(
+                {"op": "clone"},
+                handler=lambda response: done(response)
+                and self.initialize_without_sideloader(session.info, response),
+            )
 
     def sideload(self, session):
         session.send(
@@ -120,7 +135,7 @@ class Repl(object):
         session.send(
             {"op": "eval", "code": """(require 'tutkain.nrepl.util.pprint)"""},
             pprint=False,
-            handler=lambda response: done(response) and self.add_middleware(session),
+            handler=lambda response: self.add_middleware(session, response),
         )
 
     def start_formatter(self, settings):
@@ -138,21 +153,25 @@ class Repl(object):
         format_loop.name = "tutkain.connection.format_loop"
         format_loop.start()
 
+    def initialize_without_sideloader(self, capabilities, response):
+        session = self.create_session("plugin", capabilities, response)
+        session.output(capabilities)
+
+        def handler(response):
+            if done(response):
+                self.start_formatter({"newline_on_done": True})
+                self.create_session("user", capabilities, response)
+
+        # Send the clone op via the client instead of the plugin session because some servers do
+        # not support sending the op via the session.
+        self.client.send({"op": "clone"}, handler=handler)
+
     def initialize_sessions(self, capabilities, response):
         if "sideloader-start" in capabilities["ops"]:
             session = self.create_session("sideloader", capabilities, response)
-            self.start_formatter({"newline_on_done": False})
             self.sideload(session)
         else:
-            session = self.create_session("plugin", capabilities, response)
-            self.start_formatter({"newline_on_done": True})
-            session.output(capabilities)
-
-            self.client.send(
-                {"op": "clone"},
-                handler=lambda response: done(response)
-                and self.create_session("user", capabilities, response),
-            )
+            self.initialize_without_sideloader(capabilities, response)
 
     def clone(self, capabilities):
         self.client.send(

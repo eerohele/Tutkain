@@ -876,6 +876,122 @@ class TestDefault(ViewTestCase):
         finally:
             server.shutdown()
 
+    def test_handshake_sideloading_failure(self):
+        server = mock.Server()
+
+        try:
+            repl = TestRepl(self.view.window(), server.host, server.port).go()
+
+            msg = server.recv()
+            self.assertEquals({"op", "id"}, msg.keys())
+            self.assertEquals("describe", msg["op"])
+
+            self.capabilities["id"] = msg["id"]
+            self.capabilities["session"] = str(uuid.uuid4())
+            describe = self.capabilities
+            server.send(describe)
+
+            # Clone sideloader session
+            msg = server.recv()
+            self.assertEquals({"op", "id"}, msg.keys())
+            self.assertEquals("clone", msg["op"])
+
+            sideloader_session_id = str(uuid.uuid4())
+
+            server.send(
+                {
+                    "id": msg["id"],
+                    "new-session": sideloader_session_id,
+                    "session": str(uuid.uuid4()),
+                    "status": ["done"],
+                }
+            )
+
+            # Client sends sideloader-start.
+            self.assertEquals(
+                {
+                    "id": 1,
+                    "op": "sideloader-start",
+                    "session": sideloader_session_id,
+                },
+                server.recv(),
+            )
+
+            # Client requires pprint namespace.
+            self.assertEquals(
+                {
+                    "op": "eval",
+                    "id": 2,
+                    "code": "(require 'tutkain.nrepl.util.pprint)",
+                    "session": sideloader_session_id,
+                },
+                select_keys(server.recv(), {"op", "id", "code", "session"}),
+            )
+
+            # The nREPL sideloader cannot create a temporary file because it the server is running
+            # on a ready-only file system.
+            server.send(
+                {
+                    "id": 2,
+                    "err": "Execution error (IOException) at java.io.UnixFileSystem/createFileExclusively (UnixFileSystem.java:-2).\nRead-only file system\n",
+                    "session": sideloader_session_id,
+                }
+            )
+
+            # In reality, the server sends a number of ops with 'nrepl.middleware.caught/throwable',
+            # but the client ignores them, so we ignore them here as well.
+            #
+            # At the moment, the client actually ignores this eval-error, too, but we'll send it
+            # here anyway just in case.
+            server.send(
+                {"id": 2, "status": ["eval-error"], "session": sideloader_session_id}
+            )
+
+            # The client abandons sideloading and falls back to cloning the plugin and user
+            # sessions.
+            msg = server.recv()
+            self.assertEquals({"op", "session", "id"}, msg.keys())
+            self.assertEquals("clone", msg["op"])
+
+            plugin_session_id = str(uuid.uuid4())
+
+            server.send(
+                {
+                    "id": msg["id"],
+                    "new-session": plugin_session_id,
+                    "session": sideloader_session_id,
+                    "status": ["done"],
+                }
+            )
+
+            msg = server.recv()
+            self.assertEquals({"op", "id"}, msg.keys())
+            self.assertEquals("clone", msg["op"])
+
+            user_session_id = str(uuid.uuid4())
+
+            server.send(
+                {
+                    "id": msg["id"],
+                    "new-session": user_session_id,
+                    "status": ["done"],
+                }
+            )
+
+            self.assertEquals(
+                "Execution error (IOException) at java.io.UnixFileSystem/createFileExclusively (UnixFileSystem.java:-2).\nRead-only file system\n",
+                repl.take_print(),
+            )
+
+            self.assertEquals(
+                "*** [Tutkain] Sideloading failed. See error message above for details. Some features are unavailable. ***\n",
+                repl.take_print(),
+            )
+
+            self.assertEquals("Clojure 1.10.1\nnREPL 0.8.3\n", repl.take_print())
+        finally:
+            server.shutdown()
+
     def make_sessions(self, server, repl):
         msg = server.recv()
         self.capabilities["id"] = msg["id"]
