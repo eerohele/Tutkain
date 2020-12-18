@@ -1262,7 +1262,9 @@ class TestDefault(ViewTestCase):
             repl = TestRepl(self.view.window(), server.host, server.port).go()
             plugin_session_id, user_session_id = self.make_sessions(server, repl)
 
-            self.view.window().run_command("tutkain_evaluate", {"ns": "not.found", "code": "(foo)"})
+            self.view.window().run_command(
+                "tutkain_evaluate", {"ns": "not.found", "code": "(foo)"}
+            )
 
             self.assertEquals(
                 {
@@ -1844,7 +1846,7 @@ class TestDefault(ViewTestCase):
 
             self.assertEquals(
                 """{:via [{:type java.lang.InterruptedException,\n        :message "sleep interrupted",\n        :at [java.lang.Thread sleep "Thread.java" -2]}]}""",
-                repl.take_print()
+                repl.take_print(),
             )
         finally:
             server.shutdown()
