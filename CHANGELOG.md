@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+- Add support for keyword auto-completion
+
+  Requires nREPL 0.8.4 or newer, which has not yet been released at the time of this release.
+
+- Improve documentation popup
+- Improve sideloader error tolerance
+
+  This allows Tutkain to connect to nREPL servers that run in environments where the nREPL sideloader cannot write temporary files.
+
 ## 0.6.0
 - Add the **Tutkain: Evaluate** command. Example:
 
