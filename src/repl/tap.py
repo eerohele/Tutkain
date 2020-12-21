@@ -26,12 +26,7 @@ def tap_loop(window, tapq):
 
         create_panel(window)
 
-        while True:
-            tap = tapq.get()
-
-            if tap is None:
-                break
-
+        while tap := tapq.get():
             log.debug({"event": "tapq/recv", "data": tap})
 
             window.run_command("show_panel", {"panel": f"output.{panel_name}"})

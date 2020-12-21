@@ -64,14 +64,8 @@ class Client(object):
         return self
 
     def send_loop(self):
-        while True:
-            item = self.sendq.get()
-
-            if item is None:
-                break
-
+        while item := self.sendq.get():
             log.debug({"event": "socket/send", "item": item})
-
             bencode.write(self.buffer, item)
 
         log.debug({"event": "thread/exit"})

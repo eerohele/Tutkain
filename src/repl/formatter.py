@@ -54,12 +54,7 @@ def format_loop(recvq, printq, tapq, settings):
     try:
         log.debug({"event": "thread/start"})
 
-        while True:
-            response = recvq.get()
-
-            if response is None:
-                break
-
+        while response := recvq.get():
             log.debug({"event": "formatq/recv", "data": response})
 
             if "tap" in response:

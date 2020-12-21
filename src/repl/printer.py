@@ -21,12 +21,7 @@ def print_loop(view, printq):
     try:
         log.debug({'event': 'thread/start'})
 
-        while True:
-            item = printq.get()
-
-            if item is None:
-                break
-
+        while item := printq.get():
             printable = item.get("printable")
             response = item.get("response")
 
