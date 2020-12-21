@@ -54,13 +54,14 @@ def read_list(b):
     return xs
 
 
-def into_dict(xs):
-    """Convert a list into a dict."""
-    return {xs[i]: xs[i + 1] for i in range(0, len(xs), 2)}
-
-
 def read_dict(b):
-    return into_dict(read_list(b))
+    d = {}
+
+    while k := read(b):
+        v = read(b)
+        d[k] = v
+
+    return d
 
 
 def read_int(b):
