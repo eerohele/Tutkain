@@ -46,15 +46,12 @@ def read_until(b, terminator):
 
 
 def read_list(b):
-    items = []
+    xs = []
 
-    while True:
-        item = read(b)
+    while x := read(b):
+        xs.append(x)
 
-        if item is None:
-            return items
-        else:
-            items.append(item)
+    return xs
 
 
 def into_dict(xs):
