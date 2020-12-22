@@ -464,6 +464,7 @@ class TutkainConnectCommand(WindowCommand):
 class TutkainDisconnectCommand(WindowCommand):
     def run(self):
         inline.clear(self.window.active_view())
+        test.progress.stop()
         view = state.get_active_repl_view(self.window)
         view and view.close()
 
