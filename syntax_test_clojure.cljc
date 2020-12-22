@@ -2500,6 +2500,16 @@
 ;              ^^^^^^^^^ - meta.statement.require.clojure
 
 
+  (ns foo.bar
+    (:require
+     #_[baz.quux :as qux]))
+;    ^^^^^^^^^^^^^^^^^^^^ comment.block.edn
+
+  (ns foo.bar
+    (:import
+     #_(baz.quux Qux)))
+;    ^^^^^^^^^^^^^^^^ comment.block.edn
+
 ; # deftest
 
   (deftest foo (is (= 3 (+ 1 2))))
