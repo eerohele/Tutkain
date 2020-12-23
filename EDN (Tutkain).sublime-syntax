@@ -294,11 +294,6 @@ contexts:
       captures:
         1: keyword.operator.macro.edn
         3: punctuation.definition.symbol.namespace.edn
-      push:
-        - meta_scope: meta.reader-form.edn
-        - include: forms
-        - match: ''
-          pop: true
 
   qualified-map:
     - match: '(#)(?=:)'

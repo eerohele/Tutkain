@@ -2562,7 +2562,6 @@
  (foo #bar/baz [1 2 3] [4 5 6])
 ;     ^^^^^^^^ keyword.operator.macro.edn
 ;         ^ punctuation.definition.symbol.namespace.edn
-;     ^^^^^^^^^^^^^^^^ meta.reader-form.edn
 ;                     ^ - meta.reader-form.edn
 
 
@@ -2711,7 +2710,8 @@
 ;                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.edn
 
   #foo/bar {:a {:b [:c]}} [1 2 3]
-; ^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.edn
+; ^^^^^^^^ keyword.operator.macro.edn
+;         ^ - meta.reader-form.edn
 ;                        ^ - meta.reader-form.edn
 
 

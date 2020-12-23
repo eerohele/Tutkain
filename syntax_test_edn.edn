@@ -272,7 +272,9 @@ string"
   #uuid "c5634984-363d-4727-B8CE-b06ab1253c81"
 ; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.uuid.edn
   #datascript/DB {:schema {}, :datoms {}}
-; ^^^^^^^^^^^^^^ meta.reader-form.edn keyword.operator.macro.edn
+; ^^^^^^^^^^^^^^ keyword.operator.macro.edn
+;            ^ punctuation.definition.symbol.namespace.edn
+;               ^ -meta.reader-form.edn
 ;; NOT TAGS
   #inst "1985-"
 ; ^^^^^^^^^^^^^ constant.other.instant.edn & invalid.illegal.instant.edn
