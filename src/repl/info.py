@@ -1,3 +1,4 @@
+import html
 import inspect
 import re
 import sublime
@@ -66,8 +67,13 @@ def parse_location(info):
 
 def htmlify(docstring):
     if docstring:
-        html = re.sub(r" ", "&nbsp;", re.sub(r"\n", "<br/>", inspect.cleandoc(docstring)))
-        return f"""<p class="doc">{html}</p>"""
+        doc = re.sub(
+            r" ",
+            "&nbsp;",
+            re.sub(r"\n", "<br/>", inspect.cleandoc(html.escape(docstring))),
+        )
+
+        return f"""<p class="doc">{doc}</p>"""
     else:
         return ""
 
