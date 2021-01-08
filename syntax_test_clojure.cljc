@@ -2610,6 +2610,20 @@
 ;   ^ punctuation.section.parens.begin.edn
 ;    ^^^^ constant.other.keyword.unqualified.edn
 
+(defn excluded?
+  #?(:cljs {:tag boolean})
+; ^^ keyword.operator.macro
+;   ^ punctuation.section.parens.begin.edn
+;    ^^^^^ constant.other.keyword.unqualified.edn
+;          ^ meta.sexp.begin.edn punctuation.section.braces.begin.edn
+;           ^^^^ constant.other.keyword.unqualified.edn
+;                ^^^^^^^ meta.symbol.edn
+;                       ^ meta.sexp.end.edn punctuation.section.braces.end.edn
+;                        ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+  [env sym]
+; ^^^^^^^^^ meta.function.parameters.clojure
+  ,,,)
+
 
 
 ; # S-expression prefixes

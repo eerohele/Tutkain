@@ -362,6 +362,7 @@ contexts:
     - include: list-end
     - include: comment
     - include: string
+    - include: reader-conditional
     - include: map
     - match: '\('
       scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
