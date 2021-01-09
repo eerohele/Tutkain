@@ -446,9 +446,15 @@ class TutkainConnectCommand(WindowCommand):
 
     def run(self, host, port):
         try:
+            active_view = self.window.active_view()
             self.set_layout()
 
             repl = Repl(self.window, host, int(port))
+
+            # Activate the output view and the view that was active prior to
+            # creating the output view.
+            self.window.focus_view(repl.view)
+            self.window.focus_view(active_view)
 
             self.start_print_loop(repl.view, repl.printq)
             self.start_tap_loop(repl.tapq)

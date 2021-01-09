@@ -1,6 +1,4 @@
 def create(window, client):
-    active_view = window.active_view()
-
     view_count = len(window.views_in_group(1))
     suffix = "" if view_count == 0 else f" ({view_count})"
 
@@ -18,10 +16,5 @@ def create(window, client):
 
     # Move the output view into the second row.
     window.set_view_index(view, 1, view_count)
-
-    # Activate the output view and the view that was active prior to
-    # creating the output view.
-    window.focus_view(view)
-    window.focus_view(active_view)
 
     return view
