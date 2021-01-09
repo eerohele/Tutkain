@@ -82,13 +82,24 @@ def show_popup(view, point, response):
     if "info" in response:
         info = response["info"]
 
-        if "ns" in info:
+        if info:
             file = info.get("file", "")
             location = parse_location(info)
             ns = info.get("ns", "")
             name = info.get("name", "")
             arglists = info.get("arglists", "")
             doc = info.get("doc", "")
+
+            if ns and name:
+                symbol_name = "/".join(filter(None, [ns, name]))
+
+                symbol = f"""
+                <p class="symbol">
+                    <a href="{file}">{symbol_name}</a>
+                </p>
+                """
+            else:
+                symbol = ""
 
             view.show_popup(
                 f"""
@@ -114,9 +125,7 @@ def show_popup(view, point, response):
                             color: color(var(--foreground) alpha(0.5));
                         }}
                     </style>
-                    <p class="symbol">
-                        <a href="{file}">{ns}/{name}</a>
-                    </p>
+                    {symbol}
                     <p class="arglists">
                         <code>{arglists}</code>
                     </p>
@@ -125,4 +134,5 @@ def show_popup(view, point, response):
                 location=point,
                 max_width=1024,
                 on_navigate=lambda href: goto(view.window(), location),
+                flags=sublime.COOPERATE_WITH_AUTO_COMPLETE
             )

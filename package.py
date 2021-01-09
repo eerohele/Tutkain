@@ -501,16 +501,23 @@ def completion_kinds():
         return {}
 
 
+class TutkainShowPopupCommand(TextCommand):
+    def run(self, edit, item={}):
+        info.show_popup(self.view, -1, {"info": item})
+
+
 class TutkainViewEventListener(ViewEventListener):
     def completion_item(self, item):
         return sublime.CompletionItem(
             item.get("candidate"),
             kind=completion_kinds().get(item.get("type"), sublime.KIND_AMBIGUOUS),
+            annotation=item.get("arglists", ""),
+            details=f"""<a href="{sublime.command_url("tutkain_show_popup", args={"item": item})}">More</a>"""
         )
 
     def handle_completions(self, completion_list, response):
         completions = map(self.completion_item, response.get("completions", []))
-        completion_list.set_completions(completions)
+        completion_list.set_completions(completions, flags=sublime.INHIBIT_REORDER)
 
     def on_query_completions(self, prefix, locations):
         if int(sublime.version()) >= 4050:
