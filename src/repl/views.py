@@ -1,5 +1,6 @@
 def create(window, client):
-    view_count = len(window.views_in_group(1))
+    target_group = window.num_groups() - 1
+    view_count = len(window.views_in_group(target_group))
     suffix = "" if view_count == 0 else f" ({view_count})"
 
     view = window.new_file()
@@ -14,7 +15,6 @@ def create(window, client):
 
     view.assign_syntax("Clojure (Tutkain).sublime-syntax")
 
-    # Move the output view into the second row.
-    window.set_view_index(view, 1, view_count)
+    window.set_view_index(view, target_group, view_count)
 
     return view

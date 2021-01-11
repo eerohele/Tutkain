@@ -402,20 +402,26 @@ class TutkainConnectCommand(WindowCommand):
         # TODO: Make configurable? This will clobber pre-existing layouts —
         # maybe add a setting for toggling this bit?
 
-        if settings().get("layout") == "vertical":
-            layout = {
-                "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
-                "cols": [0.0, 0.5, 1.0],
-                "rows": [0.0, 1.0],
-            }
-        else:
-            layout = {
-                "cells": [[0, 0, 1, 1], [0, 1, 1, 2]],
-                "cols": [0.0, 1.0],
-                "rows": [0.0, 0.75, 1.0],
-            }
+        # Only change the layout if the current layout has one row and one column.
+        if self.window.get_layout() == {
+            'cells': [[0, 0, 1, 1]],
+            'cols': [0.0, 1.0],
+            'rows': [0.0, 1.0]
+        }:
+            if settings().get("layout") == "vertical":
+                layout = {
+                    "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
+                    "cols": [0.0, 0.5, 1.0],
+                    "rows": [0.0, 1.0],
+                }
+            else:
+                layout = {
+                    "cells": [[0, 0, 1, 1], [0, 1, 1, 2]],
+                    "cols": [0.0, 1.0],
+                    "rows": [0.0, 0.75, 1.0],
+                }
 
-        self.window.set_layout(layout)
+            self.window.set_layout(layout)
 
     def start_print_loop(self, view, printq):
         print_loop = Thread(

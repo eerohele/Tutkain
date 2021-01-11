@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 
   This allows Tutkain to connect to nREPL servers that run in environments where the nREPL sideloader cannot write temporary files.
 
+- Avoid clobbering existing window layout
+
 ## 0.6.0
 - Add the **Tutkain: Evaluate** command. Example:
 
