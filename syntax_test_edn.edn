@@ -308,18 +308,17 @@ string"
 ;  ^ -punctuation
 ;   ^ punctuation.definition.string.end.edn
   ( )
-; ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
-;   ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+; ^ punctuation.section.parens.begin.edn
+;   ^ punctuation.section.parens.end.edn
   [ ]
-; ^ meta.sexp.begin.edn punctuation.section.brackets.begin.edn
-;   ^ meta.sexp.end.edn punctuation.section.brackets.end.edn
+; ^ punctuation.section.brackets.begin.edn
+;   ^ punctuation.section.brackets.end.edn
   { }
-; ^ meta.sexp.begin.edn punctuation.section.braces.begin.edn
-;   ^ meta.sexp.end.edn punctuation.section.braces.end.edn
+; ^ punctuation.section.braces.begin.edn
+;   ^ punctuation.section.braces.end.edn
   #{ }
-;  ^ meta.sexp.begin.edn
-;    ^ meta.sexp.end.edn
-; ^^ punctuation.section.braces.begin.edn
+; ^ keyword.operator.macro
+;  ^ punctuation.section.braces.begin.edn
 ;    ^ punctuation.section.braces.end.edn
   ; ...
 ; ^ punctuation.definition.comment.edn

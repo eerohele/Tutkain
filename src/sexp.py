@@ -106,13 +106,13 @@ def matches_selector_pattern(view, start_point, patterns):
 
 def has_macro_character_attached_to_sexp(view, point):
     patterns = [
-        ["keyword.operator.macro", "meta.sexp.begin"],
-        ["keyword.operator.macro", "keyword.operator.macro", "meta.sexp.begin"],
+        ["keyword.operator.macro", selectors.SEXP_BEGIN],
+        ["keyword.operator.macro", "keyword.operator.macro", selectors.SEXP_BEGIN],
         [
             "keyword.operator.macro",
             "keyword.operator.macro",
             "keyword.operator.macro",
-            "meta.sexp.begin",
+            selectors.SEXP_BEGIN,
         ],
     ]
 
@@ -127,10 +127,10 @@ def move_inside(view, point, edge):
     if not edge or selectors.inside_string(view, point):
         return point
     elif view.match_selector(
-        point, "meta.sexp.begin"
+        point, selectors.SEXP_BEGIN
     ) or has_macro_character_attached_to_sexp(view, point):
         return view.find(r"[\(\[\{\"]", point).end()
-    elif view.match_selector(point - 1, "meta.sexp.end"):
+    elif view.match_selector(point - 1, selectors.SEXP_END):
         return point - 1
     else:
         return point

@@ -1,5 +1,9 @@
 from sublime import Region
 
+SEXP_DELIMITERS = "punctuation.section.parens | punctuation.section.brackets | punctuation.section.braces | punctuation.definition.string"
+SEXP_BEGIN = "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin | punctuation.definition.string.begin"
+SEXP_END = "punctuation.section.parens.end | punctuation.section.brackets.end | punctuation.section.braces.end | punctuation.definition.string.end"
+
 
 def inside_string(view, point):
     return view.match_selector(point, "string - punctuation.definition.string.begin")

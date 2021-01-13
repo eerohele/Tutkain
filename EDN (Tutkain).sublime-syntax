@@ -70,7 +70,7 @@ contexts:
 
   string:
     - match: '"'
-      scope: meta.sexp.begin.edn punctuation.definition.string.begin.edn
+      scope: punctuation.definition.string.begin.edn
       push:
       - meta_scope: meta.reader-form.edn string.quoted.double.edn
       - match: '(\\)(u\h{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
@@ -80,7 +80,7 @@ contexts:
           3: invalid.illegal.escape.string.edn
           4: punctuation.definition.character.escape.begin.edn
       - match: '"'
-        scope: meta.sexp.end.edn punctuation.definition.string.end.edn
+        scope: punctuation.definition.string.end.edn
         pop: true
 
   numbers:
@@ -316,10 +316,10 @@ contexts:
 
   list:
     - match: '\('
-      scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+      scope: punctuation.section.parens.begin.edn
       push:
       - match: '\)'
-        scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+        scope: punctuation.section.parens.end.edn
         pop: true
       - include: main
 
@@ -327,10 +327,10 @@ contexts:
 
   vector:
     - match: '\['
-      scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+      scope: punctuation.section.brackets.begin.edn
       push:
       - match: '\]'
-        scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+        scope: punctuation.section.brackets.end.edn
         pop: true
       - include: main
 
@@ -338,24 +338,23 @@ contexts:
 
   map:
     - match: '\{'
-      scope: meta.sexp.begin.edn punctuation.section.braces.begin.edn
+      scope: punctuation.section.braces.begin.edn
       push:
       - match: \}
-        scope: meta.sexp.end.edn punctuation.section.braces.end.edn
+        scope: punctuation.section.braces.end.edn
         pop: true
       - include: main
 
   # Set
 
   set:
-    - match: '(#)(\{)'
-      scope: punctuation.section.braces.begin.edn
+    - match: '(#)({)'
       captures:
         1: keyword.operator.macro.edn
-        2: meta.sexp.begin.edn
+        2: punctuation.section.braces.begin.edn
       push:
       - match: \}
-        scope: meta.sexp.end.edn punctuation.section.braces.end.edn
+        scope: punctuation.section.braces.end.edn
         pop: true
       - include: main
 

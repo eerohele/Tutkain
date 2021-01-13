@@ -1133,7 +1133,8 @@
 ; ## Ignore
 
   #{}
-; ^^ punctuation.section.braces.begin.edn
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.section.braces.begin.edn
 
 
 
@@ -1443,12 +1444,14 @@
 ; # Braces
 
   #{} }
-; ^^ punctuation.section.braces.begin.edn
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.section.braces.begin.edn
 ;   ^ punctuation.section.braces.end.edn
 ;     ^ invalid.illegal.stray-bracket-end.edn
 
   #{10, 20, 30}
-; ^^ punctuation.section.braces.begin.edn
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.section.braces.begin.edn
 ;   ^^ constant.numeric
 ;     ^ comment.punctuation.comma.edn
 ;       ^^ constant.numeric
@@ -1457,7 +1460,8 @@
 ;             ^ punctuation.section.braces.end.edn
 
   #{10
-; ^^ punctuation.section.braces.begin.edn
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.section.braces.begin.edn
 ;   ^^ constant.numeric
     ; ---
 ;   ^ comment.line.edn punctuation.definition.comment
@@ -1491,7 +1495,8 @@
 ;  ^ comment.line.edn punctuation.definition.comment
    :blahblah #{10 20 30}}
 ;  ^^^^^^^^^ constant.other.keyword.unqualified.edn
-;            ^^ punctuation.section.braces.begin.edn
+;            ^ keyword.operator.macro.edn
+;             ^ punctuation.section.braces.begin.edn
 ;              ^^ constant.numeric
 ;                 ^^ constant.numeric
 ;                    ^^ constant.numeric
@@ -1500,7 +1505,8 @@
 ; ## Invalid
 
   #{ } }
-; ^^ punctuation.section.braces.begin.edn
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.section.braces.begin.edn
 ;    ^ punctuation.section.braces.end.edn
 ;      ^ invalid.illegal.stray-bracket-end.edn
 
@@ -1639,7 +1645,7 @@
   `(bound-fn* (fn ~@fntail)))
 ;                 ^^ keyword.operator.macro.clojure
 ;                   ^^^^^^ meta.reader-form.edn meta.symbol.edn
-;                         ^^^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;                         ^^^ punctuation.section.parens.end.edn
 
 ; # defs
 
@@ -1927,7 +1933,7 @@
 ;                 ^^^^^ - meta.function.parameters.clojure
 
   (defn foo)
-;          ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;          ^ punctuation.section.parens.end.edn
 
   (def !bang (atom 1))
 ;      ^^^^^ entity.name.variable.clojure
@@ -2009,7 +2015,7 @@
 ;     ^ keyword.operator.macro.clojure
 ;      ^^^^ constant.other.keyword.unqualified.edn
       (print-method (.toString bar) out)))
-;                                       ^^ meta.sexp.end - invalid
+;                                       ^^ punctuation.section.parens.end.edn - invalid
 
   (defmethod event-handler :default
     #?@(:clj  [[{:keys [event uid]}]
@@ -2019,7 +2025,7 @@
                (debugf "Unhandled event %s in session %s" event uid)]
         :cljs [[{:keys [event]}]
                (debugf "Unhandled event %s" event)]))
-;                                                   ^ meta.sexp.end - invalid
+;                                                   ^ punctuation.section.parens.end.edn - invalid
 
 ; # defprotocol
 
@@ -2360,14 +2366,14 @@
     (reify Foo
       (bar [{:keys [baz quux]}] ,,,))
 ;            ^^^^^ constant.other.keyword.unqualified.edn
-;                  ^ meta.function.parameters.clojure meta.sexp.begin.edn punctuation.section.brackets.begin.edn
-;                           ^ meta.function.parameters.clojure meta.sexp.end.edn punctuation.section.brackets.end.edn
-;                            ^ meta.function.parameters.clojure meta.sexp.end.edn punctuation.section.braces.end.edn
-;                                   ^ meta.sexp.end.edn punctuation.section.parens.end.edn - invalid
+;                  ^ meta.function.parameters.clojure punctuation.section.brackets.begin.edn
+;                           ^ meta.function.parameters.clojure punctuation.section.brackets.end.edn
+;                            ^ meta.function.parameters.clojure punctuation.section.braces.end.edn
+;                                   ^ punctuation.section.parens.end.edn - invalid
 
     (println "Hello, world!"))
 ;            ^^^^^^^^^^^^^^^ string.quoted.double.edn
-;                            ^ meta.sexp.end.edn punctuation.section.parens.end.edn - invalid
+;                            ^ punctuation.section.parens.end.edn - invalid
 
 ; # proxy
 
@@ -2376,7 +2382,7 @@
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^^ constant.other.keyword.unqualified.edn
          [clojure.lang.IDeref
-;        ^ meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+;        ^ punctuation.section.brackets.begin.edn
 ;         ^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
 ;         ^^^^^^^^^^^^^^^^^^^^^ - storage
 ;         ^^^^^^^^^^^^^^^^^^^^^ - variable
@@ -2386,24 +2392,24 @@
 ;         ^^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
 ;         ^^^^^^^^^^^^^^^^^^^^ - storage
 ;         ^^^^^^^^^^^^^^^^^^^^ - variable
-;                             ^ meta.sexp.end.edn punctuation.section.brackets.end.edn
-;                               ^ meta.sexp.begin.edn punctuation.section.brackets.begin.edn
-;                                ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;                             ^ punctuation.section.brackets.end.edn
+;                               ^ punctuation.section.brackets.begin.edn
+;                                ^ punctuation.section.parens.begin.edn
 ;                                 ^^^ meta.function-call.clojure variable.function.clojure
-;                                    ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;                                    ^ punctuation.section.parens.end.edn
     (deref [] nil)
 ;    ^^^^^ entity.name.function.clojure
 ;             ^^^ constant.language.edn
     (seq [] nil))
 ;    ^^^ entity.name.function.clojure
 ;           ^^^ constant.language.edn
-;               ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;               ^ punctuation.section.parens.end.edn
 
   (proxy [java.io.Writer] []
     (write
      ([x] ,,,)
      ([x off len] ,,,)))
-;                     ^^ meta.sexp.end.edn - invalid
+;                     ^^ punctuation.section.parens.end.edn - invalid
 
 
 ; # extend-protocol
@@ -2478,19 +2484,19 @@
     (:import
 ;    ^^^^^^^ meta.statement.import.clojure
      (java.time LocalDate)))
-;    ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;    ^ punctuation.section.parens.begin.edn
 ;     ^^^^^^^^^ - meta.function-call.clojure
 ;     ^^^^^^^^^ - variable.function.clojure
-;                        ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;                        ^ punctuation.section.parens.end.edn
   (ns foo.bar
     (:require
 ;    ^^^^^^^ meta.statement.require.clojure
      (foo.bar :as [foo])))
-;    ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;    ^ punctuation.section.parens.begin.edn
 ;     ^^^^^^^ - meta.function-call.clojure
 ;     ^^^^^^^ - variable.function.clojure
 ;             ^^^ constant.other.keyword.unqualified.edn
-;                      ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;                      ^ punctuation.section.parens.end.edn
 
   (ns foo.bar (:import :require))
 ;              ^^^^^^^ meta.statement.import.clojure
@@ -2595,8 +2601,8 @@
 ; ^^ keyword.operator.macro.clojure
 ;   ^^^ meta.symbol.edn - keyword
 ;       ^ keyword.operator.macro.clojure
-;        ^ meta.sexp.begin.edn
-;              ^ meta.sexp.end.edn
+;        ^ punctuation.section.brackets.begin.edn
+;              ^ punctuation.section.brackets.end.edn
 
   #'foo.bar/baz
 ; ^^ keyword.operator.macro.clojure
@@ -2615,11 +2621,11 @@
 ; ^^ keyword.operator.macro
 ;   ^ punctuation.section.parens.begin.edn
 ;    ^^^^^ constant.other.keyword.unqualified.edn
-;          ^ meta.sexp.begin.edn punctuation.section.braces.begin.edn
+;          ^ punctuation.section.braces.begin.edn
 ;           ^^^^ constant.other.keyword.unqualified.edn
 ;                ^^^^^^^ meta.symbol.edn
-;                       ^ meta.sexp.end.edn punctuation.section.braces.end.edn
-;                        ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;                       ^ punctuation.section.braces.end.edn
+;                        ^ punctuation.section.parens.end.edn
   [env sym]
 ; ^^^^^^^^^ meta.function.parameters.clojure
   ,,,)
@@ -2733,37 +2739,37 @@
 ; # S-expressions
 
   (+ 1 2) (- 3 4)
-; ^ meta.sexp.begin.edn
-;       ^ meta.sexp.end.edn
+; ^ punctuation.section.parens.begin.edn
+;       ^ punctuation.section.parens.end.edn
 ;        ^ - meta
 
   '(1 2) '(3 4)
 ; ^ keyword.operator.macro.clojure
-;  ^ meta.sexp.begin.edn
-;      ^ meta.sexp.end.edn
+;  ^ punctuation.section.parens.begin.edn
+;      ^ punctuation.section.parens.end.edn
 ;       ^ - meta
 ;        ^ keyword.operator.macro.clojure
 
   [1 2] [3 4]
-; ^ meta.sexp.begin.edn
-;     ^ meta.sexp.end.edn
+; ^ punctuation.section.brackets.begin.edn
+;     ^ punctuation.section.brackets.end.edn
 ;      ^ - meta
 
   {:a 1} {:b 2}
-; ^ meta.sexp.begin.edn
-;      ^ meta.sexp.end.edn
+; ^ punctuation.section.braces.begin.edn
+;      ^ punctuation.section.braces.end.edn
 ;       ^ - meta
 
   #{1 2} #{3 4}
 ; ^ keyword.operator.macro.edn
-;  ^ meta.sexp.begin.edn
-;      ^ meta.sexp.end.edn
+;  ^ punctuation.section.braces.begin.edn
+;      ^ punctuation.section.braces.end.edn
 ;       ^ - meta
 
   #_(1 2) (3 4)
 ; ^^ keyword.operator.macro.edn punctuation.definition.comment.edn
-;   ^ meta.sexp.begin.edn
-;       ^ meta.sexp.end.edn
+;   ^ punctuation.section.parens.begin.edn
+;       ^ punctuation.section.parens.end.edn
 ;        ^ - meta
 ;         ^^^^^ - meta.discarded.clojure
 
@@ -2785,7 +2791,7 @@
 ;            ^^^^^ - meta.binding-vector.clojure
 
   [(let)]
-;       ^ meta.sexp.end.edn punctuation.section.brackets.end.edn - invalid
+;       ^ punctuation.section.brackets.end.edn - invalid
 
   (quote form)
 ;  ^^^^^ meta.special-form.clojure keyword.other.clojure
@@ -2855,8 +2861,8 @@
 ;       ^^ meta.special-form.clojure keyword.declaration.function.inline.clojure
 ;          ^^^ entity.name.function.clojure
 ;              ^^^^^^^^^^^^^^^^ meta.function.parameters.clojure
-;                              ^ meta.sexp.end.edn punctuation.section.parens.end.edn
-;                               ^ meta.sexp.end.edn punctuation.section.parens.end.edn - invalid.illegal.stray-bracket-edn.edn
+;                              ^ punctuation.section.parens.end.edn
+;                               ^ punctuation.section.parens.end.edn - invalid.illegal.stray-bracket-edn.edn
 
   (defn x
     [y]
@@ -2865,25 +2871,25 @@
 
   (fn
     ()
-;    ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;    ^ punctuation.section.parens.end.edn
     ([x] ,,,))
-;   ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;   ^ punctuation.section.parens.begin.edn
 
   (defn x
     ()
-;    ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;    ^ punctuation.section.parens.end.edn
     ([y] ,,,))
-;   ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;   ^ punctuation.section.parens.begin.edn
 
   (let)
-; ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
-;     ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+; ^ punctuation.section.parens.begin.edn
+;     ^ punctuation.section.parens.end.edn
 
   (let (foo)) (inc 1)
-;      ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;      ^ punctuation.section.parens.begin.edn
 ;       ^^^ meta.function-call.clojure variable.function.clojure
-;          ^^ meta.sexp.end.edn punctuation.section.parens.end.edn
-;             ^ meta.sexp.begin.edn punctuation.section.parens.begin.edn
+;          ^^ punctuation.section.parens.end.edn
+;             ^ punctuation.section.parens.begin.edn
 ;              ^^^ meta.function-call.clojure variable.function.clojure
 ;                  ^ constant.numeric.integer.decimal.edn
-;                   ^ meta.sexp.end.edn punctuation.section.parens.end.edn
+;                   ^ punctuation.section.parens.end.edn

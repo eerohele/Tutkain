@@ -126,7 +126,7 @@ contexts:
 
   list:
     - match: '\('
-      scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+      scope: punctuation.section.parens.begin.edn
       push: list-head
 
   list-head:
@@ -192,14 +192,14 @@ contexts:
 
   let-tail:
     - match: '\)'
-      scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+      scope: punctuation.section.parens.end.edn
       pop: 2
     - match: '\['
-      scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+      scope: punctuation.section.brackets.begin.edn
       push:
       - meta_scope: meta.binding-vector.clojure
       - match: '\]'
-        scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+        scope: punctuation.section.brackets.end.edn
         pop: 2
       - include: forms
     - include: main
@@ -250,7 +250,7 @@ contexts:
 
   require-list:
     - match: '\('
-      scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+      scope: punctuation.section.parens.begin.edn
       push:
         - include: list-end
         - include: metadata
@@ -260,7 +260,7 @@ contexts:
 
   ns-tail:
     - match: '\('
-      scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+      scope: punctuation.section.parens.begin.edn
       push:
       - include: list-end
       - match: ':require{{end}}'
@@ -290,28 +290,28 @@ contexts:
 
   fn-params-2:
     - match: '\['
-      scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+      scope: punctuation.section.brackets.begin.edn
       push:
         - meta_scope: meta.function.parameters.clojure
         - match: '\]'
-          scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+          scope: punctuation.section.brackets.end.edn
           set:
             - match: '\)'
-              scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+              scope: punctuation.section.parens.end.edn
               pop: 2
             - include: main
         - include: main
 
   fn-params-3:
     - match: '\['
-      scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+      scope: punctuation.section.brackets.begin.edn
       push:
         - meta_scope: meta.function.parameters.clojure
         - match: '\]'
-          scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+          scope: punctuation.section.brackets.end.edn
           set:
             - match: '\)'
-              scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+              scope: punctuation.section.parens.end.edn
               pop: 2
             - include: main
         - include: main
@@ -322,20 +322,20 @@ contexts:
     - include: map
     - include: fn-params-2
     - match: '\('
-      scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+      scope: punctuation.section.parens.begin.edn
       push:
         - include: list-end
         - include: comment
         - include: metadata
         - match: '\['
-          scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+          scope: punctuation.section.brackets.begin.edn
           push:
             - meta_scope: meta.function.parameters.clojure
             - match: '\]'
-              scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+              scope: punctuation.section.brackets.end.edn
               set:
                 - match: '\)'
-                  scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+                  scope: punctuation.section.parens.end.edn
                   pop: 2
                 - include: main
             - include: main
@@ -346,14 +346,14 @@ contexts:
     - include: comment
     - include: metadata
     - match: '\['
-      scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+      scope: punctuation.section.brackets.begin.edn
       push:
         - meta_scope: meta.function.parameters.clojure
         - match: '\]'
-          scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+          scope: punctuation.section.brackets.end.edn
           set:
             - match: '\)'
-              scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+              scope: punctuation.section.parens.end.edn
               pop: 2
             - include: main
         - include: main
@@ -365,7 +365,7 @@ contexts:
     - include: reader-conditional
     - include: map
     - match: '\('
-      scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+      scope: punctuation.section.parens.begin.edn
       push: fn-arity
     - include: fn-params-3
 
@@ -401,17 +401,17 @@ contexts:
               - include: metadata
               - include: reader-conditional
               - match: '\)'
-                scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+                scope: punctuation.section.parens.end.edn
                 pop: 2
               - match: '\['
-                scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+                scope: punctuation.section.brackets.begin.edn
                 push:
                   - meta_scope: meta.function.parameters.clojure
                   - match: '\]'
-                    scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+                    scope: punctuation.section.brackets.end.edn
                     set:
                       - match: '\)'
-                        scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+                        scope: punctuation.section.parens.end.edn
                         pop: 3
                       - include: main
                   - include: main
@@ -421,18 +421,18 @@ contexts:
     - include: metadata
     - include: list-end
     - match: '\['
-      scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+      scope: punctuation.section.brackets.begin.edn
       push:
       - include: comment
       - match: '\]'
-        scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+        scope: punctuation.section.brackets.end.edn
         set:
           - match: '\['
-            scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+            scope: punctuation.section.brackets.begin.edn
             push:
             - meta_scope: meta.function.parameters.clojure
             - match: '\]'
-              scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+              scope: punctuation.section.brackets.end.edn
               pop: 2
             - include: main
       - match: '{{qualified_symbol}}'
@@ -445,45 +445,45 @@ contexts:
     - match: '{{qualified_symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.other.inherited-class.clojure
     - match: '\('
-      scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+      scope: punctuation.section.parens.begin.edn
       push:
         - match: '\)'
-          scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+          scope: punctuation.section.parens.end.edn
           pop: true
         - include: constant
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
           push:
           - match: '\)'
-            scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+            scope: punctuation.section.parens.end.edn
             pop: 2
           - match: '\('
-            scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+            scope: punctuation.section.parens.begin.edn
             push:
               - include: list-end
               - include: comment
               - include: metadata
               - match: '\['
-                scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+                scope: punctuation.section.brackets.begin.edn
                 push:
                   - meta_scope: meta.function.parameters.clojure
                   - match: '\]'
-                    scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+                    scope: punctuation.section.brackets.end.edn
                     set:
                       - match: '\)'
-                        scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+                        scope: punctuation.section.parens.end.edn
                         pop: 2
                       - include: main
                   - include: main
           - match: '\['
-            scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+            scope: punctuation.section.brackets.begin.edn
             set:
             - meta_scope: meta.function.parameters.clojure
             - match: '\]'
-              scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+              scope: punctuation.section.brackets.end.edn
               set:
                 - match: '\)'
-                  scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+                  scope: punctuation.section.parens.end.edn
                   pop: 2
                 - include: main
             - include: main
@@ -498,37 +498,37 @@ contexts:
         - include: list-end
         - include: comment
         - match: '\['
-          scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+          scope: punctuation.section.brackets.begin.edn
           set:
           - include: metadata
           - include: comment
           - meta_scope: meta.function.parameters.clojure
           - match: '\]'
-            scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+            scope: punctuation.section.brackets.end.edn
             set: class-specs
 
   interface-specs:
     - include: comment
     - include: string
     - match: '\('
-      scope: meta.sexp.begin.edn punctuation.section.parens.begin.edn
+      scope: punctuation.section.parens.begin.edn
       set:
         - include: metadata
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
           set:
           - match: '\['
-            scope: meta.sexp.begin.edn punctuation.section.brackets.begin.edn
+            scope: punctuation.section.brackets.begin.edn
             set:
             - meta_scope: meta.function.parameters.clojure
             - match: '\]'
-              scope: meta.sexp.end.edn punctuation.section.brackets.end.edn
+              scope: punctuation.section.brackets.end.edn
               pop: true
               set:
                 - include: string
                 - include: comment
                 - match: '\)'
-                  scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+                  scope: punctuation.section.parens.end.edn
                   set: interface-specs
             - include: main
     - include: list-tail
@@ -571,5 +571,5 @@ contexts:
 
   list-end:
     - match: '\)'
-      scope: meta.sexp.end.edn punctuation.section.parens.end.edn
+      scope: punctuation.section.parens.end.edn
       pop: true

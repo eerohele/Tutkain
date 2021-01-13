@@ -230,7 +230,7 @@ def wrap_bracket(view, edit, open_bracket):
             if (
                 form
                 and view.match_selector(point - 1, "keyword.operator.macro")
-                and view.match_selector(point, "meta.sexp.begin")
+                and view.match_selector(point, selectors.SEXP_BEGIN)
             ):
                 form = Region(form.begin() + 1, form.end())
 
@@ -257,7 +257,7 @@ def forward_delete(view, edit):
                 view.erase(edit, Region(point, point + 1))
             elif innermost.is_empty() and innermost.contains(point):
                 view.erase(edit, innermost.extent())
-            elif view.match_selector(point, "meta.sexp.begin | meta.sexp.end"):
+            elif view.match_selector(point, selectors.SEXP_DELIMITERS):
                 sel.append(point + 1)
             else:
                 view.erase(edit, Region(point, point + 1))
@@ -278,7 +278,7 @@ def backward_delete(view, edit):
                 view.erase(edit, Region(point - 1, point))
             elif innermost.is_empty() and innermost.contains(point):
                 view.erase(edit, innermost.extent())
-            elif view.match_selector(point - 1, "meta.sexp.begin | meta.sexp.end"):
+            elif view.match_selector(point - 1, selectors.SEXP_DELIMITERS):
                 sel.append(point - 1)
             else:
                 view.erase(edit, Region(point - 1, point))

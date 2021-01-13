@@ -39,24 +39,24 @@ def find_next(view, point):
         return view.word(view.find_by_class(point, True, CLASS_WORD_END))
     else:
         while point <= max_point:
-            if view.match_selector(point, "meta.sexp.end"):
+            if view.match_selector(point, selectors.SEXP_END):
                 return None
-            elif view.match_selector(point, "meta.sexp.begin"):
+            elif view.match_selector(point, selectors.SEXP_BEGIN):
                 return sexp.innermost(view, point).extent()
             elif view.match_selector(
                 point, "keyword.operator.macro - meta.macro-character.metadata"
             ) and view.match_selector(point + 1, "punctuation.definition.keyword"):
-                begin = selectors.find(view, point, "meta.sexp.begin")
+                begin = selectors.find(view, point, selectors.SEXP_BEGIN)
                 dispatch = Region(point, point + 1)
                 innermost = sexp.innermost(view, begin).extent()
                 return innermost.cover(dispatch)
             elif view.match_selector(point, "keyword.operator.macro"):
                 begin = selectors.find(
-                    view, point, "meta.sexp.begin | meta.reader-form"
+                    view, point, selectors.SEXP_BEGIN + " | meta.reader-form"
                 )
                 dispatch = Region(point, point + 1)
 
-                if view.match_selector(begin, "meta.sexp.begin"):
+                if view.match_selector(begin, selectors.SEXP_BEGIN):
                     innermost = sexp.innermost(view, begin).extent()
                     return innermost.cover(dispatch)
                 else:
@@ -85,9 +85,9 @@ def find_previous(view, point):
         return view.word(view.find_by_class(point, False, CLASS_WORD_START))
     else:
         while point > 0:
-            if view.match_selector(point - 1, "meta.sexp.begin"):
+            if view.match_selector(point - 1, selectors.SEXP_BEGIN):
                 return None
-            elif view.match_selector(point - 1, "meta.sexp.end"):
+            elif view.match_selector(point - 1, selectors.SEXP_END):
                 innermost = sexp.innermost(view, point).extent()
                 return absorb_macro_characters(view, innermost)
             elif view.match_selector(point - 1, "meta.reader-form"):
