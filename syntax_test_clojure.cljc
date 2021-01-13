@@ -1350,7 +1350,7 @@
 ;  ^^^^^^^^^^- keyword.operator.macro.clojure
 
   ^:private blah
-; ^ keyword.operator.macro.clojure meta.macro-character.metadata.clojure
+; ^ keyword.operator.macro.clojure
 ;  ^^^^^^^^ constant.other.keyword.unqualified.edn
 
   ^{:private true} blah

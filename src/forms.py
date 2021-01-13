@@ -43,9 +43,11 @@ def find_next(view, point):
                 return None
             elif view.match_selector(point, selectors.SEXP_BEGIN):
                 return sexp.innermost(view, point).extent()
-            elif view.match_selector(
-                point, "keyword.operator.macro - meta.macro-character.metadata"
-            ) and view.match_selector(point + 1, "punctuation.definition.keyword"):
+            elif (
+                view.match_selector(point, "keyword.operator.macro")
+                and view.substr(point) != "^"
+                and view.match_selector(point + 1, "punctuation.definition.keyword")
+            ):
                 begin = selectors.find(view, point, selectors.SEXP_BEGIN)
                 dispatch = Region(point, point + 1)
                 innermost = sexp.innermost(view, begin).extent()
