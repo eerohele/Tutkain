@@ -547,7 +547,11 @@ class TutkainViewEventListener(ViewEventListener):
 
                     ns = namespace.find_declaration(self.view)
 
-                    op = {"op": "completions", "prefix": prefix}
+                    op = {
+                        "op": "completions",
+                        "prefix": prefix,
+                        "options": {"extra-metadata": ["arglists", "doc"]}
+                    }
 
                     if ns:
                         op["ns"] = ns
