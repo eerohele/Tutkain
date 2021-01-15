@@ -404,9 +404,9 @@ class TutkainConnectCommand(WindowCommand):
 
         # Only change the layout if the current layout has one row and one column.
         if self.window.get_layout() == {
-            'cells': [[0, 0, 1, 1]],
-            'cols': [0.0, 1.0],
-            'rows': [0.0, 1.0]
+            "cells": [[0, 0, 1, 1]],
+            "cols": [0.0, 1.0],
+            "rows": [0.0, 1.0],
         }:
             if settings().get("layout") == "vertical":
                 layout = {
@@ -520,7 +520,7 @@ class TutkainViewEventListener(ViewEventListener):
             item.get("candidate"),
             kind=completion_kinds().get(item.get("type"), sublime.KIND_AMBIGUOUS),
             annotation=item.get("arglists", ""),
-            details=details
+            details=details,
         )
 
     def handle_completions(self, completion_list, response):
@@ -551,7 +551,7 @@ class TutkainViewEventListener(ViewEventListener):
                 op = {
                     "op": "completions",
                     "prefix": prefix,
-                    "options": {"extra-metadata": ["arglists", "doc"]}
+                    "options": {"extra-metadata": ["arglists", "doc"]},
                 }
 
                 if ns:
