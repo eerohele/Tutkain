@@ -511,11 +511,16 @@ class TutkainShowPopupCommand(TextCommand):
 
 class TutkainViewEventListener(ViewEventListener):
     def completion_item(self, item):
+        details = ""
+
+        if "doc" in item:
+            details = f"""<a href="{sublime.command_url("tutkain_show_popup", args={"item": item})}">More</a>"""
+
         return sublime.CompletionItem(
             item.get("candidate"),
             kind=completion_kinds().get(item.get("type"), sublime.KIND_AMBIGUOUS),
             annotation=item.get("arglists", ""),
-            details=f"""<a href="{sublime.command_url("tutkain_show_popup", args={"item": item})}">More</a>"""
+            details=details
         )
 
     def handle_completions(self, completion_list, response):
