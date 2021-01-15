@@ -491,20 +491,17 @@ class TutkainNewScratchViewCommand(WindowCommand):
 
 
 def completion_kinds():
-    if int(sublime.version()) >= 4050:
-        return {
-            "function": sublime.KIND_FUNCTION,
-            "var": sublime.KIND_VARIABLE,
-            "macro": (sublime.KIND_ID_FUNCTION, "m", "macro"),
-            "namespace": sublime.KIND_NAMESPACE,
-            "class": sublime.KIND_TYPE,
-            "special-form": (sublime.KIND_ID_FUNCTION, "s", "special form"),
-            "method": sublime.KIND_FUNCTION,
-            "static-method": sublime.KIND_FUNCTION,
-            "keyword": sublime.KIND_KEYWORD,
-        }
-    else:
-        return {}
+    return {
+        "function": sublime.KIND_FUNCTION,
+        "var": sublime.KIND_VARIABLE,
+        "macro": (sublime.KIND_ID_FUNCTION, "m", "macro"),
+        "namespace": sublime.KIND_NAMESPACE,
+        "class": sublime.KIND_TYPE,
+        "special-form": (sublime.KIND_ID_FUNCTION, "s", "special form"),
+        "method": sublime.KIND_FUNCTION,
+        "static-method": sublime.KIND_FUNCTION,
+        "keyword": sublime.KIND_KEYWORD,
+    }
 
 
 class TutkainShowPopupCommand(TextCommand):
@@ -526,44 +523,43 @@ class TutkainViewEventListener(ViewEventListener):
         completion_list.set_completions(completions, flags=sublime.INHIBIT_REORDER)
 
     def on_query_completions(self, prefix, locations):
-        if int(sublime.version()) >= 4050:
-            point = locations[0] - 1
+        point = locations[0] - 1
 
-            if self.view.match_selector(
-                point,
-                "(meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
-            ):
-                session = state.get_session_by_owner(self.view.window(), "plugin")
+        if self.view.match_selector(
+            point,
+            "(meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
+        ):
+            session = state.get_session_by_owner(self.view.window(), "plugin")
 
-                if session and session.supports("completions"):
-                    scope = selectors.expand_by_selector(
-                        self.view, point, "meta.symbol | constant.other.keyword"
-                    )
+            if session and session.supports("completions"):
+                scope = selectors.expand_by_selector(
+                    self.view, point, "meta.symbol | constant.other.keyword"
+                )
 
-                    if scope:
-                        prefix = self.view.substr(scope)
+                if scope:
+                    prefix = self.view.substr(scope)
 
-                    completion_list = sublime.CompletionList()
+                completion_list = sublime.CompletionList()
 
-                    ns = namespace.find_declaration(self.view)
+                ns = namespace.find_declaration(self.view)
 
-                    op = {
-                        "op": "completions",
-                        "prefix": prefix,
-                        "options": {"extra-metadata": ["arglists", "doc"]}
-                    }
+                op = {
+                    "op": "completions",
+                    "prefix": prefix,
+                    "options": {"extra-metadata": ["arglists", "doc"]}
+                }
 
-                    if ns:
-                        op["ns"] = ns
+                if ns:
+                    op["ns"] = ns
 
-                    session.send(
-                        op,
-                        handler=lambda response: self.handle_completions(
-                            completion_list, response
-                        ),
-                    )
+                session.send(
+                    op,
+                    handler=lambda response: self.handle_completions(
+                        completion_list, response
+                    ),
+                )
 
-                    return completion_list
+                return completion_list
 
 
 def lookup(view, point, handler):
