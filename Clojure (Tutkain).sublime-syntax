@@ -263,7 +263,7 @@ contexts:
       scope: punctuation.section.parens.begin.edn
       push:
       - include: list-end
-      - match: ':require{{end}}'
+      - match: '(:require|:refer-clojure|:use){{end}}'
         scope: meta.reader-form.clojure meta.statement.require.clojure constant.other.keyword.unqualified.clojure
         set:
           - include: list-end
