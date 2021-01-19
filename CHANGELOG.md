@@ -12,6 +12,11 @@ All notable changes to this project will be documented in this file.
   This allows Tutkain to connect to nREPL servers that run in environments where the nREPL sideloader cannot write temporary files.
 
 - Avoid clobbering existing window layout
+- Add :require/:import indentation compatibility mode
+
+    If there's no newline between `:require` and the thing that immediately follows it, Tutkain will now format subsequent `:require` lines the same way. If there's a newline after `:require/:import`, Tutkain will indent the same as before. **Experimental, may be removed in the future**.
+
+- Automatically reconnect to nREPL server on startup and project load
 
 ## 0.6.0
 - Add the **Tutkain: Evaluate** command. Example:
