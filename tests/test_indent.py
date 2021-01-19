@@ -96,6 +96,20 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             clean=False,
         )
 
+    def test_symbol_map_vector(self):
+        self.becomes(
+            """{a b c d}""",
+            """{a b\n c d}""",
+            selections=[(4, 4)],
+            clean=False,
+        )
+        self.becomes(
+            """[a b c d]""",
+            """[a b\n c d]""",
+            selections=[(4, 4)],
+            clean=False,
+        )
+
     # Test cases from https://tonsky.me/blog/clojurefmt/
 
     def test_tonsky_1a(self):
