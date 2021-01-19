@@ -6,24 +6,23 @@ from . import selectors
 from . import sexp
 
 
-def symbol_in_head_position(view, open_bracket):
-    region = view.find(r"\S", open_bracket.end())
-
-    # This is probably not 100% correct. Also, it is tied to the syntax
-    # definition. Is that a problem?
-    return view.match_selector(
-        region.begin(),
-        "meta.special-form | variable | keyword.declaration | keyword.control",
-    )
-
-
 def determine_indentation(view, open_bracket):
     end = open_bracket.end()
     line = view.line(end)
     indentation = " " * (end - line.begin())
+    region = view.find(r"\S", open_bracket.end())
+    point = region.begin()
 
-    if symbol_in_head_position(view, open_bracket):
+    if view.match_selector(point, "meta.special-form | variable | keyword.declaration | keyword.control"):
         return indentation + " "
+    elif view.match_selector(point, "meta.statement.require | meta.statement.import"):
+        form = selectors.expand_by_selector(view, point, "meta.statement.require | meta.statement.import")
+        first_require = selectors.find(view, form.end(), "punctuation | meta.reader-form")
+
+        if line.contains(first_require):
+            return indentation + (" " * (form.size() + 1))
+        else:
+            return indentation
     else:
         return indentation
 

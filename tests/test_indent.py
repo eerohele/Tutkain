@@ -110,6 +110,76 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             clean=False,
         )
 
+    def test_require_import(self):
+        self.becomes(
+            """
+            (ns foo.bar
+              (:require [baz.quux]))""",
+            """
+            (ns foo.bar
+              (:require [baz.quux]
+                        ))""",
+            selections=[(34, 34)],
+        )
+        self.becomes(
+            """
+            (ns foo.bar
+              (:require baz.quux))""",
+            """
+            (ns foo.bar
+              (:require baz.quux
+                        ))""",
+            selections=[(32, 32)],
+        )
+
+        self.becomes(
+            """
+            (ns foo.bar
+              (:require
+               [baz.quux]))""",
+            """
+            (ns foo.bar
+              (:require
+               [baz.quux]
+               ))""",
+            selections=[(37, 37)],
+        )
+
+        self.becomes(
+            """
+            (ns foo.bar
+              (:import (baz Quux)))""",
+            """
+            (ns foo.bar
+              (:import (baz Quux)
+                       ))""",
+            selections=[(33, 33)],
+        )
+
+        self.becomes(
+            """
+            (ns foo.bar
+              (:import baz.Quux))""",
+            """
+            (ns foo.bar
+              (:import baz.Quux
+                       ))""",
+            selections=[(31, 31)],
+        )
+
+        self.becomes(
+            """
+            (ns foo.bar
+              (:import
+               (baz Quux)))""",
+            """
+            (ns foo.bar
+              (:import
+               (baz Quux)
+               ))""",
+            selections=[(36, 36)],
+        )
+
     # Test cases from https://tonsky.me/blog/clojurefmt/
 
     def test_tonsky_1a(self):
