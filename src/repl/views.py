@@ -12,6 +12,7 @@ def create(window, host, port):
     view.settings().set("gutter", False)
     view.settings().set("is_widget", True)
     view.settings().set("scroll_past_end", False)
+    view.settings().set("show_definitions", False)
     view.settings().set("tutkain_repl_output_view", True)
     view.settings().set("tutkain_repl_host", host)
     view.settings().set("tutkain_repl_port", port)
