@@ -27,6 +27,7 @@ from .src.repl import info
 from .src.repl import history
 from .src.repl import tap
 from .src.repl import printer
+from .src.repl import views
 
 
 from .src.log import log, start_logging, stop_logging
@@ -462,7 +463,7 @@ class TutkainConnectCommand(WindowCommand):
                 options={"print_capabilities": view_id is None},
             )
 
-            view = repl.views.configure(self.window, new_repl, view_id)
+            view = views.configure(self.window, new_repl, view_id)
 
             # Activate the output view and the view that was active prior to
             # creating the output view.
@@ -619,8 +620,8 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
         )
 
 
-def reconnect(views):
-    for view in filter(repl.views.is_output_view, views):
+def reconnect(vs):
+    for view in filter(views.is_output_view, vs):
         host = view.settings().get("tutkain_repl_host")
         port = view.settings().get("tutkain_repl_port")
 
