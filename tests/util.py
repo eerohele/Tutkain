@@ -1,6 +1,7 @@
 import sublime
 
 from Tutkain.src.repl import Repl
+from Tutkain.src.repl import views
 
 from unittest import TestCase
 
@@ -52,6 +53,10 @@ class ViewTestCase(TestCase):
 
 
 class TestRepl(Repl):
+    def __init__(self, window, host, port):
+        super().__init__(window, host, port)
+        self.view = views.configure(window, self, None)
+
     def take_print(self):
         return self.printq.get(timeout=1)["printable"]
 

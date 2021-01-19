@@ -6,10 +6,8 @@ import queue
 from threading import Thread
 from .session import Session
 from . import formatter
-from . import views
 from .client import Client
 from ..log import log
-from .. import state
 
 
 def done(response):
@@ -22,14 +20,11 @@ def b64encode_file(path):
 
 
 class Repl(object):
-    def __init__(self, window, host, port):
+    def __init__(self, window, host, port, options={"print_capabilities": True}):
         self.client = Client(host, port).go()
         self.printq = queue.Queue()
         self.tapq = queue.Queue()
-
-        self.view = views.create(window, self.client)
-        state.set_view_client(self.view, self.client)
-        state.set_active_repl_view(self.view)
+        self.options = options
 
     def create_session(self, owner, capabilities, response):
         new_session_id = response["new-session"]
@@ -41,7 +36,9 @@ class Repl(object):
     def create_sessions(self, session, response):
         capabilities = response
         session.info = capabilities
-        session.output(response)
+
+        if self.options.get("print_capabilities"):
+            session.output(response)
 
         session.send(
             {"op": "clone", "session": session.id},
@@ -155,7 +152,9 @@ class Repl(object):
 
     def initialize_without_sideloader(self, capabilities, response):
         session = self.create_session("plugin", capabilities, response)
-        session.output(capabilities)
+
+        if self.options.get("print_capabilities"):
+            session.output(capabilities)
 
         def handler(response):
             if done(response):

@@ -21,8 +21,8 @@ from .src import indent
 from .src import inline
 from .src import paredit
 from .src import namespace
+from .src import repl
 from .src import test
-from .src.repl import Repl
 from .src.repl import info
 from .src.repl import history
 from .src.repl import tap
@@ -450,22 +450,29 @@ class TutkainConnectCommand(WindowCommand):
             self.tap_loop.name = "tutkain.connection.tap_loop"
             self.tap_loop.start()
 
-    def run(self, host, port):
+    def run(self, host, port, view_id=None):
         try:
             active_view = self.window.active_view()
             self.set_layout()
 
-            repl = Repl(self.window, host, int(port))
+            new_repl = repl.Repl(
+                self.window,
+                host,
+                int(port),
+                options={"print_capabilities": view_id is None},
+            )
+
+            view = repl.views.configure(self.window, new_repl, view_id)
 
             # Activate the output view and the view that was active prior to
             # creating the output view.
-            self.window.focus_view(repl.view)
+            self.window.focus_view(view)
             self.window.focus_view(active_view)
 
-            self.start_print_loop(repl.view, repl.printq)
-            self.start_tap_loop(repl.tapq)
+            self.start_print_loop(view, new_repl.printq)
+            self.start_tap_loop(new_repl.tapq)
 
-            repl.go()
+            new_repl.go()
         except ConnectionRefusedError:
             self.window.status_message(f"ERR: connection to {host}:{port} refused.")
 
@@ -612,7 +619,24 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
         )
 
 
+def reconnect(views):
+    for view in filter(repl.views.is_output_view, views):
+        host = view.settings().get("tutkain_repl_host")
+        port = view.settings().get("tutkain_repl_port")
+
+        if host and port:
+            view.window().run_command(
+                "tutkain_connect", {"host": host, "port": port, "view_id": view.id()}
+            )
+
+
 class TutkainEventListener(EventListener):
+    def on_init(self, views):
+        reconnect(views)
+
+    def on_load_project_async(self, window):
+        reconnect(window.views())
+
     def on_modified_async(self, view):
         inline.clear(view)
 
