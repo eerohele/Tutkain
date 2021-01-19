@@ -2516,6 +2516,10 @@
      #_(baz.quux Qux)))
 ;    ^^^^^^^^^^^^^^^^ comment.block.edn
 
+  (ns foo.bar
+    (:refer-clojure :exclude [map]))
+ ;                  ^^^^^^^^ constant.other.keyword.unqualified.edn
+
 ; # deftest
 
   (deftest foo (is (= 3 (+ 1 2))))

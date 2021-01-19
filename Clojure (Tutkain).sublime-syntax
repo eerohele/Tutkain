@@ -274,6 +274,7 @@ contexts:
           - include: reader-conditional
           - include: symbol
           - include: discard
+          - include: unqualified_keyword
       - match: ':import{{end}}'
         scope: meta.reader-form.clojure meta.statement.import.clojure constant.other.keyword.unqualified.clojure
         set:
@@ -285,6 +286,7 @@ contexts:
           - include: reader-conditional
           - include: symbol
           - include: discard
+          - include: unqualified_keyword
       - include: list-tail
     - include: list-tail
 
