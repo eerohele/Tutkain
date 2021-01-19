@@ -1,4 +1,4 @@
-import uuid
+import itertools
 
 from sublime import Region, DRAW_NO_OUTLINE
 from ..log import log
@@ -19,7 +19,8 @@ def append_to_view(view, characters):
 
 def print_loop(view, printq):
     try:
-        log.debug({'event': 'thread/start'})
+        log.debug({"event": "thread/start"})
+        counter = itertools.count()
 
         while item := printq.get():
             printable = item.get("printable")
@@ -37,6 +38,10 @@ def print_loop(view, printq):
                 )
 
                 regions = [Region(size - len(printable), size)]
-                view.add_regions(str(uuid.uuid4()), regions, scope=scope, flags=DRAW_NO_OUTLINE)
+
+                view.add_regions(
+                    str(next(counter)), regions, scope=scope, flags=DRAW_NO_OUTLINE
+                )
+
     finally:
         log.debug({"event": "thread/exit"})
