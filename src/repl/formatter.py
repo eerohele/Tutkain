@@ -57,7 +57,11 @@ def format(response, settings={}):
             result.append(f"""nREPL {major}.{minor}.{incremental}""")
 
         return "\n".join(result) + "\n"
-    if "status" in response and "done" in response["status"] and settings.get("newline_on_done"):
+    if (
+        "status" in response
+        and "done" in response["status"]
+        and settings.get("newline_on_done")
+    ):
         return "\n"
 
 
