@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - Add support for keyword auto-completion
 
-  Requires nREPL 0.8.4 or newer, which has not yet been released at the time of this release.
+  Requires nREPL 0.9.0 or newer, which has not yet been released at the time of this release.
 
 - Improve documentation popup
 - Improve sideloader error tolerance
@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
     If there's no newline between `:require` and the thing that immediately follows it, Tutkain will now format subsequent `:require` lines the same way. If there's a newline after `:require/:import`, Tutkain will indent the same as before. **Experimental, may be removed in the future**.
 
 - Automatically reconnect to nREPL server on startup and project load
+- Fix REPL view input indentation
+- Performance improvements
 
 ## 0.6.0
 - Add the **Tutkain: Evaluate** command. Example:
