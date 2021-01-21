@@ -18,7 +18,18 @@ def format(response, settings={}):
         return response["out"]
     if "in" in response:
         ns = response.get("ns", "")
-        return f"""{ns}=> {response["in"]}\n"""
+        lines = response.get("in", "").splitlines()
+        first_line = (lines[0] + "\n").lstrip()
+
+        if lines:
+            next_lines = "\n".join(
+                map(lambda line: ((len(ns) + 1) * " ") + line, lines[1:])
+            )
+
+            if next_lines:
+                next_lines += "\n"
+
+            return f"""{ns}=> {first_line}{next_lines}"""
     if "err" in response:
         return response.get("err")
     if "versions" in response:

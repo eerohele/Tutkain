@@ -21,4 +21,8 @@
   (println "Hello, world!")
   (def f (future (Thread/sleep 1000) (println "Hello, world!") (map inc (range 10))))
   (deref f)
+
+  (into (sorted-map)
+    (zipmap (map (comp keyword str char) (range 97 123))
+      (range 1 26)))
   )

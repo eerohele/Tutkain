@@ -9,6 +9,21 @@ class TestFormatter(TestCase):
 
         self.assertEquals("=> (+ 1 2)\n", format({"in": "(+ 1 2)"}))
 
+        self.assertEquals("""app.core=> (into (sorted-map)
+             (zipmap (map (comp keyword str char) (range 97 123))
+               (range 1 26)))\n"""
+            ,
+            format(
+                {
+                    "ns": "app.core",
+                    "in":
+                        """(into (sorted-map)
+    (zipmap (map (comp keyword str char) (range 97 123))
+      (range 1 26)))"""
+                }
+            ),
+        )
+
         self.assertEquals(
             "Hello, world!\n", format({"id": 1, "out": "Hello, world!\n"})
         )
