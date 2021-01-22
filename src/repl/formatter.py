@@ -1,3 +1,4 @@
+from inspect import cleandoc
 from ..log import log
 
 
@@ -18,12 +19,12 @@ def format(response, settings={}):
         return response["out"]
     if "in" in response:
         ns = response.get("ns", "")
-        lines = response.get("in", "").splitlines()
-        first_line = (lines[0] + "\n").lstrip()
+        lines = cleandoc(response.get("in", "")).splitlines()
+        first_line = (lines[0] + "\n")
 
         if lines:
             next_lines = "\n".join(
-                map(lambda line: ((len(ns) + 1) * " ") + line, lines[1:])
+                map(lambda line: ((len(ns) + 5) * " ") + line, lines[1:])
             )
 
             if next_lines:
