@@ -394,7 +394,7 @@ def kill_form(view, edit, forward):
                 if forward:
                     sel.append(point)
 
-                view.erase(edit, form)
+                view.erase(edit, region.cover(form))
 
 
 def backward_move_form(view, edit):
