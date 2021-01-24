@@ -20,9 +20,10 @@ def format(response, settings={}):
     if "in" in response:
         ns = response.get("ns", "")
         lines = cleandoc(response.get("in", "")).splitlines()
-        first_line = (lines[0] + "\n")
 
         if lines:
+            first_line = (lines[0] + "\n")
+
             next_lines = "\n".join(
                 map(lambda line: ((len(ns) + 5) * " ") + line, lines[1:])
             )
