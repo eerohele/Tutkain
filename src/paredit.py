@@ -160,13 +160,21 @@ def backward_slurp(view, edit):
         )
 
         if form:
-            sel.append(region)
             chars = view.substr(innermost.open)
             view.erase(edit, innermost.open)
             view.insert(edit, form.begin(), chars)
-            view.run_command(
-                "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
-            )
+            new_innermost = sexp.innermost(view, form.begin(), edge=True)
+            indent.indent_region(view, edit, new_innermost.extent(), prune=True)
+            innermost_after_indent = sexp.innermost(view, new_innermost.open.begin(), edge=True)
+
+            # If pruning changes the size of the sexp we slurped into, move the
+            # caret(s) in front the first form in the sexp. If not, keep the
+            # carets where they were.
+            if new_innermost.extent().size() != innermost_after_indent.extent().size():
+                last_form = forms.find_previous(view, innermost_after_indent.close.begin())
+                sel.append(last_form.begin())
+            else:
+                sel.append(region)
 
 
 def forward_barf(view, edit):

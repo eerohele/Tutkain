@@ -335,14 +335,14 @@ class TestParedit(ViewTestCase):
         self.set_selections((5, 5))
         self.view.run_command("tutkain_paredit_backward_slurp")
         self.assertEquals("((a b) c)", self.view_content())
-        self.assertEquals(self.selections(), [(5, 5)])
+        self.assertEquals(self.selections(), [(4, 4)])
 
     def test_backward_slurp_comment(self):
         self.set_view_content("(a\n  (b)\n  ;; c\n  (d))")
         self.set_selections((19, 19))
         self.view.run_command("tutkain_paredit_backward_slurp")
         self.assertEquals("(a\n  ((b)\n   ;; c\n   d))", self.view_content())
-        self.assertEquals(self.selections(), [(19, 19)])
+        self.assertEquals(self.selections(), [(21, 21)])
 
     def test_backward_slurp_discard(self):
         self.set_view_content("(foo #_(bar) (baz))")
@@ -368,13 +368,12 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_backward_slurp")
         self.assertEquals("((0.2 b))", self.view_content())
 
-    @skip("")
     def test_backward_slurp_indent(self):
         self.set_view_content("({:c    :d} (b    ))")
         self.set_selections((14, 14))
         self.view.run_command("tutkain_paredit_backward_slurp")
         self.assertEquals("(({:c :d} b))", self.view_content())
-        self.assertEquals(self.selections(), [(11, 11)])
+        self.assertEquals(self.selections(), [(10, 10)])
 
     def test_backward_slurp_string(self):
         self.set_view_content('b "a"')
