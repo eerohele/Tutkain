@@ -202,10 +202,35 @@
     },
 
     {
+        "keys": ["ctrl+right", "ctrl+up"],
+        "command": "tutkain_paredit_forward_up",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+right", "ctrl+down"],
+        "command": "tutkain_paredit_forward_down",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
+    {
         "keys": ["ctrl+left"],
         "command": "tutkain_paredit_backward",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
+
+    {
+        "keys": ["ctrl+left", "ctrl+up"],
+        "command": "tutkain_paredit_backward_up",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+left", "ctrl+down"],
+        "command": "tutkain_paredit_backward_down",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
 
     {
         "keys": ["ctrl+c", "ctrl+right", "ctrl+left"],
