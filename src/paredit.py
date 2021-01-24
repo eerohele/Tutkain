@@ -491,3 +491,35 @@ def thread_first(view, edit):
 
 def thread_last(view, edit):
     thread(view, edit, "->>")
+
+
+def forward_up(view, edit):
+    for region, sel in iterate(view):
+        innermost = sexp.innermost(view, region.begin(), edge=False)
+
+        if innermost:
+            sel.append(innermost.close.end())
+
+
+def forward_down(view, edit):
+    for region, sel in iterate(view):
+        open_bracket = selectors.find(view, region.begin(), selectors.SEXP_BEGIN)
+
+        if open_bracket != -1:
+            sel.append(open_bracket + 1)
+
+
+def backward_up(view, edit):
+    for region, sel in iterate(view):
+        innermost = sexp.innermost(view, region.begin(), edge=False)
+
+        if innermost:
+            sel.append(innermost.open.begin())
+
+
+def backward_down(view, edit):
+    for region, sel in iterate(view):
+        close_bracket = selectors.find(view, region.begin(), selectors.SEXP_END, False)
+
+        if close_bracket != -1:
+            sel.append(close_bracket)

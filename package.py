@@ -872,6 +872,26 @@ class TutkainPareditThreadLastCommand(TextCommand):
         paredit.thread_last(self.view, edit)
 
 
+class TutkainPareditForwardUpCommand(TextCommand):
+    def run(self, edit):
+        paredit.forward_up(self.view, edit)
+
+
+class TutkainPareditForwardDownCommand(TextCommand):
+    def run(self, edit):
+        paredit.forward_down(self.view, edit)
+
+
+class TutkainPareditBackwardUpCommand(TextCommand):
+    def run(self, edit):
+        paredit.backward_up(self.view, edit)
+
+
+class TutkainPareditBackwardDownCommand(TextCommand):
+    def run(self, edit):
+        paredit.backward_down(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
