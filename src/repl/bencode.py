@@ -36,11 +36,9 @@ def read_until(b, terminator):
 
     Return the bytes, excluding the terminator byte."""
     bs = bytearray()
-    byte = b.read(1)
 
-    while byte != terminator:
+    while (byte := b.read(1)) != terminator:
         bs.extend(byte)
-        byte = b.read(1)
 
     return bs
 
