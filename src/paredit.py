@@ -300,13 +300,11 @@ def raise_sexp(view, edit):
             innermost = sexp.innermost(view, point, edge=False)
 
             if region.empty():
-                form = forms.find_adjacent(view, point)
+                form = forms.find_next(view, point)
                 view.replace(edit, innermost.extent(), view.substr(form))
-                indent.indent_region(view, edit, innermost.extent(), prune=True)
-
-                if view.match_selector(point - 1, selectors.SEXP_END):
-                    innermost_after_indent = sexp.innermost(view, point - 1, edge=True)
-                    sel.append(innermost_after_indent.open.begin())
+                view.run_command(
+                    "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
+                )
             else:
                 view.replace(edit, innermost.extent(), view.substr(region))
 

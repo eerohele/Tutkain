@@ -818,12 +818,6 @@ class TestParedit(ViewTestCase):
         self.assertEquals("(a\n  (c))", self.view_content())
         self.assertEquals([(5, 5)], self.selections())
 
-        self.set_view_content("(a\n(b\n(c)))")
-        self.set_selections((9, 9))
-        self.view.run_command("tutkain_paredit_raise_sexp")
-        self.assertEquals("(a\n  (c))", self.view_content())
-        self.assertEquals([(5, 5)], self.selections())
-
         self.set_view_content("(and foo?)")
         self.set_selections((5, 5))
         self.view.run_command("tutkain_paredit_raise_sexp")
