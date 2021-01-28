@@ -138,11 +138,44 @@ class TutkainClearOutputViewCommand(WindowCommand):
         panel and self.clear_view(panel)
 
 
+def add_meta(op):
+    if op.get("file"):
+        op["file"] = op["file"].replace('\\', '\\\\')
+
+        op["code"] = "^{:clojure.core/eval-file \"%s\" :line %s :column %s} %s" % (
+            op["file"], op.get("line"), op.get("column"), op.get("code")
+        )
+
+        return op
+    else:
+        return op
+
+
 class TutkainEvaluateFormCommand(TextCommand):
-    def handler(self, region, session, file, ns, code, response, inline_result):
+    def eval_op(self, region, ns=None):
+        file = self.view.file_name()
+        line, column = self.view.rowcol(region.begin())
+        code = self.view.substr(region)
+
+        op = {
+            "op": "eval",
+            "code": code,
+            "line": line + 1,
+            "column": column + 1
+        }
+
+        if ns:
+            op["ns"] = ns
+
+        if file:
+            op["file"] = file
+
+        return op
+
+    def handler(self, region, session, ns, response, inline_result):
         def retry(ns, response):
             if response.get("status") == ["done"]:
-                session.send({"op": "eval", "code": code, "file": file, "ns": ns})
+                session.send(add_meta(self.eval_op(region, ns)))
             elif "status" in response and "namespace-not-found" in response["status"]:
                 session.output(response)
 
@@ -151,12 +184,10 @@ class TutkainEvaluateFormCommand(TextCommand):
             ns_form = sexp.outermost(self.view, ns_region.begin())
 
             if ns_form:
+                ns_form_region = ns_form.extent()
+
                 session.send(
-                    {
-                        "op": "eval",
-                        "code": self.view.substr(ns_form.extent()),
-                        "file": file,
-                    },
+                    add_meta(self.eval_op(ns_form_region)),
                     handler=lambda response: retry(ns, response),
                 )
         elif inline_result and "value" in response:
@@ -185,42 +216,35 @@ class TutkainEvaluateFormCommand(TextCommand):
             self.view.window().status_message("ERR: Not connected to a REPL.")
         else:
             for region in self.view.sel():
-                eval_region = self.get_eval_region(
-                    region, scope=scope, ignore=set(ignore)
-                )
+                eval_region = self.get_eval_region(region, scope=scope, ignore=set(ignore))
 
                 if eval_region:
-                    code = self.view.substr(eval_region)
                     ns = namespace.find_declaration(self.view) or "user"
-                    file = self.view.file_name()
-
-                    session.output({"in": code, "ns": ns})
-
-                    log.debug(
-                        {
-                            "event": "send",
-                            "scope": "form",
-                            "code": code,
-                            "file": file,
-                            "ns": ns,
-                        }
-                    )
 
                     def handler(response):
                         self.handler(
                             eval_region,
                             session,
-                            file,
                             ns,
-                            code,
                             response,
                             inline_result,
                         )
 
-                    session.send(
-                        {"op": "eval", "code": code, "file": file, "ns": ns},
-                        handler=handler,
+                    op = self.eval_op(eval_region, ns)
+
+                    session.output({"in": op.get("code"), "ns": ns})
+
+                    log.debug(
+                        {
+                            "event": "send",
+                            "scope": "form",
+                            "code": op.get("code"),
+                            "file": op.get("file"),
+                            "ns": ns,
+                        }
                     )
+
+                    session.send(add_meta(op), handler=handler)
 
 
 class TutkainEvaluateViewCommand(TextCommand):
