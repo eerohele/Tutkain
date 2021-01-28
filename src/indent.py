@@ -13,7 +13,7 @@ def determine_indentation(view, open_bracket):
     region = view.find(r"\S", open_bracket.end())
     point = region.begin()
 
-    if view.match_selector(point, "meta.special-form | variable | keyword.declaration | keyword.control"):
+    if view.match_selector(point, "meta.special-form | variable | keyword.declaration | keyword.control | storage.type"):
         return indentation + " "
     elif view.match_selector(point, "meta.statement.require | meta.statement.import"):
         form = selectors.expand_by_selector(view, point, "meta.statement.require | meta.statement.import")

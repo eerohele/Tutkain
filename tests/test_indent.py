@@ -351,6 +351,18 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             selections=[(10, 10), (30, 30)],
         )
 
+    def test_deftype(self):
+        self.becomes(
+            """
+            (deftype Handler [] Object)
+            """,
+            """
+            (deftype Handler []
+              Object)
+            """,
+            selections=[(19, 19)],
+        )
+
 
 class TestIndentRegionCommand(ViewTestCase):
     def becomes(self, a, b, selections=[(0, 0), (1, 1)]):
