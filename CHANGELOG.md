@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Fix caret position(s) after backward slurp
 - Add Forward/Backward Up/Down ParEdit commands #9
 - Include whitespace when killing form
+- Fix deftype/defprotocol/etc. indentation
 
 ## 0.6.0 - 2020-11-20
 - Add the **Tutkain: Evaluate** command. Example:
