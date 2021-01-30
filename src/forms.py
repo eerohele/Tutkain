@@ -35,7 +35,7 @@ def find_adjacent(view, point):
 def find_next(view, point):
     max_point = view.size()
 
-    if selectors.inside_string(view, point):
+    if view.match_selector(point, "string - punctuation.definition.string.begin | comment.line"):
         return view.word(view.find_by_class(point, True, CLASS_WORD_END))
     else:
         while point <= max_point:
@@ -85,7 +85,7 @@ def absorb_macro_characters(view, region):
 
 
 def find_previous(view, point):
-    if selectors.inside_string(view, point):
+    if view.match_selector(point, "string - punctuation.definition.string.begin | comment.line"):
         return view.word(view.find_by_class(point, False, CLASS_WORD_START))
     else:
         while point > 0:
