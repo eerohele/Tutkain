@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Fix deftype/defprotocol/etc. indentation
 - Fix file, line, and column info in exception stack traces
 - Clean up exception stack traces
+- Improve test diffs for unsorted collections
 
 ## 0.6.0 - 2020-11-20
 - Add the **Tutkain: Evaluate** command. Example:

@@ -4,21 +4,37 @@
    [clojure.stacktrace :as stacktrace]
    [clojure.string :as str]
    [clojure.test :as test]
+   [clojure.walk :as walk]
    [nrepl.middleware :as middleware]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]))
 
 
+(defn organize
+  [x]
+  (walk/postwalk
+    #(cond
+       (map? %) (into (sorted-map) %)
+       (set? %) (into (sorted-set) %)
+       :else %)
+    x))
+
+
+(defn- pp-str
+  [x]
+  (with-out-str (pprint/pprint (organize x) {:width 100})))
+
+
 (defn- pprint-expected
   [{:keys [actual expected] :as event}]
   (if (and (= (first expected) '=) (sequential? actual))
-    (assoc event :expected (->> actual last second pprint/pprint with-out-str))
+    (assoc event :expected (->> actual last second pp-str))
     (update event :expected str)))
 
 
 (defn- pprint-actual
   [event]
-  (update event :actual (comp #(with-out-str (pprint/pprint %)) last last)))
+  (update event :actual (comp pp-str last last)))
 
 
 (defn- event-var-meta
