@@ -27,6 +27,9 @@ All notable changes to this project will be documented in this file.
 - Clean up exception stack traces
 - Improve test diffs for unsorted collections
 - Fix move backward/forward inside comments
+- Add Discard/Undiscard Form command
+
+  It allows you to toggle whether the innermost form is discarded. That is, between `(a (b) c)` and `(a #_(b) c)` if the caret is inside `(b)`.
 
 ## 0.6.0 - 2020-11-20
 - Add the **Tutkain: Evaluate** command. Example:

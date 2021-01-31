@@ -196,9 +196,10 @@ contexts:
   # Dispatch
 
   discard:
-    - match: '(#_)'
+    - match: '((#)_)'
       captures:
-        1: keyword.operator.macro.edn punctuation.definition.comment.edn
+        1: punctuation.definition.comment.edn
+        2: keyword.operator.macro.edn
       push:
         - meta_scope: comment.block.edn
         - include: forms

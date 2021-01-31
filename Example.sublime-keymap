@@ -339,4 +339,10 @@
         "command": "tutkain_paredit_thread_last",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
+
+    {
+        "keys": ["super+shift+-"],
+        "command": "tutkain_discard_undiscard_form",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
 ]

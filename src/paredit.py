@@ -523,3 +523,24 @@ def backward_down(view, edit):
 
         if close_bracket != -1:
             sel.append(close_bracket)
+
+
+def discard_undiscard(view, edit):
+    for region, sel in iterate(view):
+        point = region.begin()
+
+        if view.match_selector(point, "comment.block"):
+            hash = selectors.find(
+                view,
+                point,
+                "punctuation.definition.comment & keyword.operator.macro",
+                forward=False
+            )
+
+            if hash != -1:
+                view.erase(edit, Region(hash, hash + 2))
+        else:
+            innermost = sexp.innermost(view, point, edge=True)
+
+            if innermost:
+                view.insert(edit, innermost.open.begin(), '#_')

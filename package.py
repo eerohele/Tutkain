@@ -921,6 +921,11 @@ class TutkainCycleCollectionTypeCommand(TextCommand):
         sexp.cycle_collection_type(self.view, edit)
 
 
+class TutkainDiscardUndiscardFormCommand(TextCommand):
+    def run(self, edit):
+        paredit.discard_undiscard(self.view, edit)
+
+
 class TutkainReplHistoryListener(EventListener):
     def on_deactivated(self, view):
         if view.settings().get("tutkain_repl_input_panel"):

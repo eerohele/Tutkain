@@ -2648,7 +2648,8 @@
 ; ^ keyword.operator.macro
 
   #_(1 2 3)
-; ^^ keyword.operator.macro
+; ^ keyword.operator.macro
+;  ^ punctuation.definition.comment.edn
 
   #?@(:default (+ 1 2 3))
 ; ^^^ keyword.operator.macro
@@ -2771,7 +2772,8 @@
 ;       ^ - meta
 
   #_(1 2) (3 4)
-; ^^ keyword.operator.macro.edn punctuation.definition.comment.edn
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.comment.edn
 ;   ^ punctuation.section.parens.begin.edn
 ;       ^ punctuation.section.parens.end.edn
 ;        ^ - meta

@@ -7,7 +7,7 @@ CLOSE = {")": "(", "]": "[", "}": "{"}
 
 
 class Sexp:
-    absorb_selector = "keyword.operator.macro | punctuation.definition.keyword | constant.other.keyword"
+    absorb_selector = "keyword.operator.macro | punctuation.definition.keyword | punctuation.definition.comment | constant.other.keyword"
 
     def __init__(self, view, open_region, close_region):
         self.view = view
