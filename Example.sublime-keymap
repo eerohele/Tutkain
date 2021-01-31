@@ -342,7 +342,7 @@
 
     {
         "keys": ["super+shift+-"],
-        "command": "tutkain_discard_undiscard_form",
+        "command": "tutkain_discard_undiscard_sexp",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 ]

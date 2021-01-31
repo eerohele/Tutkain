@@ -921,7 +921,7 @@ class TutkainCycleCollectionTypeCommand(TextCommand):
         sexp.cycle_collection_type(self.view, edit)
 
 
-class TutkainDiscardUndiscardFormCommand(TextCommand):
+class TutkainDiscardUndiscardSexpCommand(TextCommand):
     def run(self, edit):
         paredit.discard_undiscard(self.view, edit)
 
