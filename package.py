@@ -564,7 +564,7 @@ class TutkainViewEventListener(ViewEventListener):
 
         if self.view.match_selector(
             point,
-            "(meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
+            "- source.clojure.clojurescript & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
         ):
             session = state.get_session_by_owner(self.view.window(), "plugin")
 
