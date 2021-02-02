@@ -935,8 +935,8 @@ class TutkainCycleCollectionTypeCommand(TextCommand):
 
 
 class TutkainDiscardUndiscardSexpCommand(TextCommand):
-    def run(self, edit):
-        paredit.discard_undiscard(self.view, edit)
+    def run(self, edit, scope="innermost"):
+        paredit.discard_undiscard(self.view, edit, scope)
 
 
 class TutkainReplHistoryListener(EventListener):

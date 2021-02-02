@@ -341,8 +341,16 @@
     },
 
     {
+        "keys": ["super+alt+shift+-"],
+        "command": "tutkain_discard_undiscard_sexp",
+        "args": {"scope": "innermost"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
+    {
         "keys": ["super+shift+-"],
         "command": "tutkain_discard_undiscard_sexp",
+        "args": {"scope": "outermost"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 ]

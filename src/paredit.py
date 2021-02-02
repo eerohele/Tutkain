@@ -525,7 +525,7 @@ def backward_down(view, edit):
             sel.append(close_bracket)
 
 
-def discard_undiscard(view, edit):
+def discard_undiscard(view, edit, scope="innermost"):
     for region, sel in iterate(view):
         point = region.begin()
 
@@ -540,7 +540,12 @@ def discard_undiscard(view, edit):
             if hash != -1:
                 view.erase(edit, Region(hash, hash + 2))
         else:
-            innermost = sexp.innermost(view, point, edge=True)
+            expression = None
 
-            if innermost:
-                view.insert(edit, innermost.open.begin(), '#_')
+            if scope == "innermost":
+                expression = sexp.innermost(view, point, edge=True)
+            elif scope == "outermost":
+                expression = sexp.outermost(view, point, edge=True)
+
+            if expression:
+                view.insert(edit, expression.open.begin(), '#_')
