@@ -151,45 +151,48 @@ def add_meta(op):
         return op
 
 
+def eval_op(view, region, ns=None):
+    file = view.file_name()
+    line, column = view.rowcol(region.begin())
+    code = view.substr(region)
+
+    op = {
+        "op": "eval",
+        "code": code,
+        "line": line + 1,
+        "column": column + 1
+    }
+
+    if ns:
+        op["ns"] = ns
+
+    if file:
+        op["file"] = file
+
+    return op
+
+
+def eval_ns_form(view, session, handler):
+    ns_region = namespace.find_last(view)
+
+    if ns_region:
+        ns_form = sexp.outermost(view, ns_region.begin())
+
+        if ns_form:
+            ns_form_region = ns_form.extent()
+            session.send(add_meta(eval_op(view, ns_form_region)), handler=handler)
+
+
 class TutkainEvaluateFormCommand(TextCommand):
-    def eval_op(self, region, ns=None):
-        file = self.view.file_name()
-        line, column = self.view.rowcol(region.begin())
-        code = self.view.substr(region)
-
-        op = {
-            "op": "eval",
-            "code": code,
-            "line": line + 1,
-            "column": column + 1
-        }
-
-        if ns:
-            op["ns"] = ns
-
-        if file:
-            op["file"] = file
-
-        return op
-
     def handler(self, region, session, ns, response, inline_result):
         def retry(ns, response):
             if response.get("status") == ["done"]:
-                session.send(add_meta(self.eval_op(region, ns)))
+                session.send(add_meta(eval_op(self.view, region, ns)))
             elif "status" in response and "namespace-not-found" in response["status"]:
                 session.output(response)
 
         if "status" in response and "namespace-not-found" in response["status"]:
-            ns_region = namespace.find_last(self.view)
-            ns_form = sexp.outermost(self.view, ns_region.begin())
-
-            if ns_form:
-                ns_form_region = ns_form.extent()
-
-                session.send(
-                    add_meta(self.eval_op(ns_form_region)),
-                    handler=lambda response: retry(ns, response),
-                )
+            eval_ns_form(self.view, session, lambda response: retry(ns, response))
         elif inline_result and "value" in response:
             inline.clear(self.view)
             inline.show(self.view, region.end(), response["value"])
@@ -221,16 +224,7 @@ class TutkainEvaluateFormCommand(TextCommand):
                 if eval_region:
                     ns = namespace.find_declaration(self.view) or "user"
 
-                    def handler(response):
-                        self.handler(
-                            eval_region,
-                            session,
-                            ns,
-                            response,
-                            inline_result,
-                        )
-
-                    op = self.eval_op(eval_region, ns)
+                    op = eval_op(self.view, eval_region, ns)
 
                     session.output({"in": op.get("code"), "ns": ns})
 
@@ -244,7 +238,16 @@ class TutkainEvaluateFormCommand(TextCommand):
                         }
                     )
 
-                    session.send(add_meta(op), handler=handler)
+                    session.send(
+                        add_meta(op),
+                        handler=lambda response: self.handler(
+                            eval_region,
+                            session,
+                            ns,
+                            response,
+                            inline_result,
+                        )
+                    )
 
 
 class TutkainEvaluateViewCommand(TextCommand):
@@ -555,9 +558,24 @@ class TutkainViewEventListener(ViewEventListener):
             details=details,
         )
 
-    def handle_completions(self, completion_list, response):
-        completions = map(self.completion_item, response.get("completions", []))
-        completion_list.set_completions(completions, flags=sublime.INHIBIT_REORDER)
+    def send_completion_op(self, session, op, completion_list):
+        session.send(
+            op,
+            handler=lambda response: self.handle_completions(
+                session, op, completion_list, response
+            ),
+        )
+
+    def handle_completions(self, session, op, completion_list, response):
+        if "completion-error" in response.get("status", []):
+            def handler(response):
+                if response.get("status") == ["done"]:
+                    self.send_completion_op(session, op, completion_list)
+
+            eval_ns_form(self.view, session, handler)
+        else:
+            completions = map(self.completion_item, response.get("completions", []))
+            completion_list.set_completions(completions, flags=sublime.INHIBIT_REORDER)
 
     def on_query_completions(self, prefix, locations):
         point = locations[0] - 1
@@ -589,12 +607,7 @@ class TutkainViewEventListener(ViewEventListener):
                 if ns:
                     op["ns"] = ns
 
-                session.send(
-                    op,
-                    handler=lambda response: self.handle_completions(
-                        completion_list, response
-                    ),
-                )
+                self.send_completion_op(session, op, completion_list)
 
                 return completion_list
 
