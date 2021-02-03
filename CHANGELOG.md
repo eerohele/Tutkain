@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
   It allows you to toggle whether the innermost form is discarded. That is, between `(a (b) c)` and `(a #_(b) c)` if the caret is inside `(b)`.
 
 - Fix autocompletion in unknown namespace
+- Fix minor indentation issues
 
 ## 0.6.0 - 2020-11-20
 - Add the **Tutkain: Evaluate** command. Example:
