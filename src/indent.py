@@ -48,7 +48,7 @@ def insert_newline_and_indent(view, edit):
             _, open_bracket = sexp.find_open(view, point)
 
             if open_bracket is None:
-                view.run_command("insert", {"characters": "\n"})
+                view.insert(edit, point, "\n")
             else:
                 end = region.end()
                 view.insert(edit, end, "\n")
