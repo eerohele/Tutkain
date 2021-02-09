@@ -180,14 +180,14 @@ def eval_ns_form(view, session, handler):
 
         if ns_form:
             ns_form_region = ns_form.extent()
-            session.send(add_meta(eval_op(view, ns_form_region)), handler=handler)
+            session.send(eval_op(view, ns_form_region), handler=handler)
 
 
 class TutkainEvaluateFormCommand(TextCommand):
     def handler(self, region, session, ns, response, inline_result):
         def retry(ns, response):
             if response.get("status") == ["done"]:
-                session.send(add_meta(eval_op(self.view, region, ns)))
+                session.send(eval_op(self.view, region, ns))
             elif "status" in response and "namespace-not-found" in response["status"]:
                 session.output(response)
 
@@ -239,7 +239,7 @@ class TutkainEvaluateFormCommand(TextCommand):
                     )
 
                     session.send(
-                        add_meta(op),
+                        op,
                         handler=lambda response: self.handler(
                             eval_region,
                             session,
