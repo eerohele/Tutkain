@@ -25,13 +25,14 @@ def goto(window, location):
         column = location["column"]
 
         if not resource.scheme or resource.scheme == "file":
-            view = window.find_open_file(resource.path)
+            if resource.path:
+                view = window.find_open_file(resource.path)
 
-            if not view:
-                view = window.open_file(resource.path, flags=sublime.TRANSIENT)
+                if not view:
+                    view = window.open_file(resource.path, flags=sublime.TRANSIENT)
 
-            window.focus_view(view)
-            show(view, line, column)
+                window.focus_view(view)
+                show(view, line, column)
         elif resource.scheme == "jar" and "!" in resource.path:
             parts = resource.path.split("!")
             jar_url = urlparse(parts[0])
