@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix autocompletion in unknown namespace
 - Fix minor indentation issues
+- Ensure defs are in local and global symbol list
 
 ## 0.6.0 - 2020-11-20
 - Add the **Tutkain: Evaluate** command. Example:

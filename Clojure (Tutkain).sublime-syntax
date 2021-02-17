@@ -552,13 +552,13 @@ contexts:
       scope: constant.language.edn
       set: list-tail
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.variable.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.constant.clojure
       set: list-tail
     - include: list-tail
 
   declare-tail:
     - match: '{{symbol}}'
-      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.variable.forward-decl.clojure
+      scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.forward-decl.clojure
     - include: list-tail
 
   deftest-tail:

@@ -1653,28 +1653,28 @@
 
   (def declare-def)
 ;  ^^^ keyword.declaration.variable.clojure
-;      ^^^^^^^^^^^ entity.name.variable.clojure
+;      ^^^^^^^^^^^ entity.name.constant.clojure
 
   (def declare-def dont-declare)
 ; ^ punctuation.section.parens.begin.edn
 ;  ^^^ keyword.declaration.variable.clojure
-;      ^^^^^^^^^^^ entity.name.variable.clojure
+;      ^^^^^^^^^^^ entity.name.constant.clojure
 ;                 ^^^^^^^^^^^^- storage
 ;                 ^^^^^^^^^^^^- entity
 
   (def λ nil)
 ;  ^^^ keyword.declaration.variable.clojure
-;      ^ entity.name.variable.clojure
+;      ^ entity.name.constant.clojure
 ;        ^^^ constant.language.edn
 
   (def 👽 nil)
 ;  ^^^ keyword.declaration.variable.clojure
-;      ^ entity.name.variable.clojure
+;      ^ entity.name.constant.clojure
 ;        ^^^ constant.language.edn
 
   (def def nil)
 ;  ^^^ keyword.declaration.variable.clojure
-;      ^^^ entity.name.variable.clojure
+;      ^^^ entity.name.constant.clojure
 ;          ^^^ constant.language.edn
 
   (
@@ -1685,7 +1685,7 @@
    ; ---
 ;  ^ comment.line.edn punctuation.definition.comment
    declare-def
-;  ^^^^^^^^^^^ entity.name.variable.clojure
+;  ^^^^^^^^^^^ entity.name.constant.clojure
    dont-declare
 ;  ^^^^^^^^^^^^^- storage
 ;  ^^^^^^^^^^^^^- entity
@@ -1693,7 +1693,7 @@
 
   (defonce declare-defonce)
 ;  ^^^^^^^ keyword.declaration.variable.clojure
-;          ^^^^^^^^^^^^^^^ entity.name.variable.clojure
+;          ^^^^^^^^^^^^^^^ entity.name.constant.clojure
 
 ; ## Declare with metadata
 
@@ -1701,14 +1701,14 @@
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ keyword.operator.macro.clojure
 ;       ^^^^^^^^ constant.other.keyword.unqualified.edn
-;                ^^^^^^^^^^^ entity.name.variable.clojure
+;                ^^^^^^^^^^^ entity.name.constant.clojure
 ;                            ^^^ constant.language.edn
 
   (def ^:private declare-def dont-declare)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ keyword.operator.macro.clojure
 ;       ^^^^^^^^ constant.other.keyword.unqualified.edn
-;                ^^^^^^^^^^^ entity.name.variable.clojure
+;                ^^^^^^^^^^^ entity.name.constant.clojure
 ;                           ^^^^^^^^^^^^^- storage
 ;                           ^^^^^^^^^^^^^- entity
 
@@ -1720,7 +1720,7 @@
 ;       ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                ^ keyword.operator.macro.clojure
 ;                 ^^^^^^^^ constant.other.keyword.unqualified.edn
-;                          ^^^^^^^^^^^ entity.name.variable.clojure
+;                          ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                      ^^^ constant.language.edn
 
   (def ^:private ^:dynamic declare-def dont-declare)
@@ -1729,7 +1729,7 @@
 ;       ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                ^ keyword.operator.macro.clojure
 ;                 ^^^^^^^^ constant.other.keyword.unqualified.edn
-;                          ^^^^^^^^^^^ entity.name.variable.clojure
+;                          ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                     ^^^^^^^^^^^^^- storage
 ;                                     ^^^^^^^^^^^^^- entity
 
@@ -1749,7 +1749,7 @@
 ;       ^ punctuation.section.braces.end.edn
    ; ---
    declare-def
-;  ^^^^^^^^^^^ entity.name.variable.clojure
+;  ^^^^^^^^^^^ entity.name.constant.clojure
    ; ---
    dont-declare
 ;  ^^^^^^^^^^^^^- storage
@@ -1761,7 +1761,7 @@
 ;  ^^^^^^^ keyword.declaration.variable.clojure
 ;          ^ keyword.operator.macro.clojure
 ;           ^^^^^^^^ constant.other.keyword.unqualified.edn
-;                    ^^^^^^^^^^^^^^^ entity.name.variable.clojure
+;                    ^^^^^^^^^^^^^^^ entity.name.constant.clojure
 ;                                    ^^^ constant.language.edn
 
   ; Useless but accepted by Clojure reader
@@ -1774,7 +1774,7 @@
 ;           ^^^ keyword.declaration.variable.clojure
 ;               ^ keyword.operator.macro.clojure
 ;                ^^^^^^^^ constant.other.keyword.unqualified.edn
-;                         ^^^^^^^^^^^ entity.name.variable.clojure
+;                         ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                    ^^^^^^^^^^^^^- storage
 ;                                    ^^^^^^^^^^^^^- entity
 
@@ -1794,7 +1794,7 @@
 ;                        ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                                 ^^^^ constant.language.edn
 ;                                     ^ punctuation.section.braces.end.edn
-;                                       ^^^^^^^^^^^ entity.name.variable.clojure
+;                                       ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                                  ^^^^^^^^^^^^^- storage
 ;                                                  ^^^^^^^^^^^^^- entity
 
@@ -1804,7 +1804,7 @@
 
   (declare declare-noindex)
 ;  ^^^^^^^ keyword.declaration.variable.clojure
-;          ^^^^^^^^^^^^^^^ entity.name.variable.forward-decl.clojure
+;          ^^^^^^^^^^^^^^^ entity.name.function.forward-decl.clojure
 ;         ^^^^^^^^^^^^^^^^^- storage
 
 
@@ -1936,10 +1936,10 @@
 ;          ^ punctuation.section.parens.end.edn
 
   (def !bang (atom 1))
-;      ^^^^^ entity.name.variable.clojure
+;      ^^^^^ entity.name.constant.clojure
 
   (def *db* ,,,)
-;      ^^^^ entity.name.variable.clojure
+;      ^^^^ entity.name.constant.clojure
 
   ; Invalid but take care anyway
   (defn declare-defn dont-declare [] dont-declare)
