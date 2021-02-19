@@ -163,9 +163,9 @@ def backward_slurp(view, edit):
             chars = view.substr(innermost.open)
             view.erase(edit, innermost.open)
             view.insert(edit, form.begin(), chars)
-            new_innermost = sexp.innermost(view, form.begin(), edge=True)
+            new_innermost = sexp.innermost(view, form.begin(), edge="forward")
             indent.indent_region(view, edit, new_innermost.extent(), prune=True)
-            innermost_after_indent = sexp.innermost(view, new_innermost.open.begin(), edge=True)
+            innermost_after_indent = sexp.innermost(view, new_innermost.open.begin(), edge="forward")
 
             # If pruning changes the size of the sexp we slurped into, move the
             # caret(s) in front the first form in the sexp. If not, keep the
@@ -256,7 +256,7 @@ def forward_delete(view, edit):
             view.erase(edit, region)
         else:
             point = region.begin()
-            innermost = sexp.innermost(view, point, edge=True)
+            innermost = sexp.innermost(view, point, edge="forward")
 
             if view.match_selector(point, "constant.character"):
                 erase = selectors.expand_by_selector(view, point, "constant.character")
@@ -277,7 +277,7 @@ def backward_delete(view, edit):
             view.erase(edit, region)
         else:
             point = region.begin()
-            innermost = sexp.innermost(view, point, edge=True)
+            innermost = sexp.innermost(view, point, edge="backward")
 
             if view.match_selector(point - 1, "constant.character"):
                 erase = selectors.expand_by_selector(view, point - 1, "constant.character")

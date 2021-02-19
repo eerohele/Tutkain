@@ -126,11 +126,11 @@ def has_macro_character_attached_to_sexp(view, point):
 def move_inside(view, point, edge):
     if not edge or selectors.inside_string(view, point):
         return point
-    elif view.match_selector(
+    elif (edge is True or edge == "forward") and view.match_selector(
         point, selectors.SEXP_BEGIN
     ) or has_macro_character_attached_to_sexp(view, point):
         return view.find(r"[\(\[\{\"]", point).end()
-    elif view.match_selector(point - 1, selectors.SEXP_END):
+    elif (edge is True or edge == "backward") and view.match_selector(point - 1, selectors.SEXP_END):
         return point - 1
     else:
         return point

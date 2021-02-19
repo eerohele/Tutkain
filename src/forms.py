@@ -42,7 +42,7 @@ def find_next(view, point):
             if view.match_selector(point, selectors.SEXP_END):
                 return None
             elif view.match_selector(point, selectors.SEXP_BEGIN):
-                return sexp.innermost(view, point).extent()
+                return sexp.innermost(view, point, edge="forward").extent()
             elif (
                 view.match_selector(point, "keyword.operator.macro")
                 and view.substr(point) != "^"
@@ -92,7 +92,7 @@ def find_previous(view, point):
             if view.match_selector(point - 1, selectors.SEXP_BEGIN):
                 return None
             elif view.match_selector(point - 1, selectors.SEXP_END):
-                innermost = sexp.innermost(view, point).extent()
+                innermost = sexp.innermost(view, point, edge="backward").extent()
                 return absorb_macro_characters(view, innermost)
             elif view.match_selector(point - 1, "meta.reader-form"):
                 form = selectors.expand_by_selector(view, point - 1, "meta.reader-form")
