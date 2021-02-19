@@ -38,7 +38,7 @@ def find_next(view, point):
     if view.match_selector(point, "string - punctuation.definition.string.begin | comment.line"):
         return view.word(view.find_by_class(point, True, CLASS_WORD_END))
     else:
-        while point <= max_point:
+        while point < max_point:
             if view.match_selector(point, selectors.SEXP_END):
                 return None
             elif view.match_selector(point, selectors.SEXP_BEGIN):

@@ -389,12 +389,17 @@ def kill_form(view, edit, forward):
                 form = forms.find_next(view, point)
             else:
                 form = forms.find_previous(view, point)
-
             if form:
+                delete = form.cover(region)
+
                 if forward:
+                    if not re.match(r"\s", view.substr(point)):
+                        if next_form := forms.find_next(view, delete.end()):
+                            delete = Region(delete.begin(), next_form.begin())
+
                     sel.append(point)
 
-                view.erase(edit, region.cover(form))
+                view.erase(edit, delete)
 
 
 def backward_move_form(view, edit):
