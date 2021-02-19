@@ -2,7 +2,14 @@ from .. import state
 
 
 def create(window, host, port):
-    target_group = window.num_groups() - 1
+    num_groups = window.num_groups()
+    target_group = num_groups - 1
+
+    for group_num in range(0, num_groups):
+        if not window.views_in_group(group_num):
+            target_group = group_num
+            break
+
     view_count = len(window.views_in_group(target_group))
     suffix = "" if view_count == 0 else f" ({view_count})"
 
