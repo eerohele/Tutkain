@@ -1039,8 +1039,9 @@
 ;  ^- keyword.operator.macro.clojure
 
   #_[]
-; ^^ comment.block.edn punctuation.definition.comment.edn
+; ^^ punctuation.definition.comment.edn
 ;   ^- keyword.operator.macro.edn
+; ^^^ comment.block.edn comment.discard.edn
 
   #?[]
 ; ^^ keyword.operator.macro.clojure
@@ -1083,14 +1084,17 @@
   #_0.000692025M
 ; ^^ punctuation.definition.comment.edn
 ;   ^^^^^^^^^^^^ constant.numeric
+; ^^^^^^^^^^^^^^ comment.discard.edn
 
   #_ 0.000692025M
 ; ^^ punctuation.definition.comment.edn
 ;    ^^^^^^^^^^^^ constant.numeric
+; ## FIXME: Ought to have comment.discard.edn, I think.
 
   #_blah
 ; ^^ punctuation.definition.comment.edn
 ;   ^^^^- punctuation.definition.comment.edn
+; ^^^^^^ comment.discard.edn
 
 ; ## Unaffected
 
@@ -2509,12 +2513,12 @@
   (ns foo.bar
     (:require
      #_[baz.quux :as qux]))
-;    ^^^^^^^^^^^^^^^^^^^^ comment.block.edn
+;    ^^^^^^^^^^^^^^^^^^^^ comment.block.edn comment.discard.edn
 
   (ns foo.bar
     (:import
      #_(baz.quux Qux)))
-;    ^^^^^^^^^^^^^^^^ comment.block.edn
+;    ^^^^^^^^^^^^^^^^ comment.block.edn comment.discard.edn
 
   (ns foo.bar
     (:refer-clojure :exclude [map]))
@@ -2650,6 +2654,7 @@
   #_(1 2 3)
 ; ^ keyword.operator.macro
 ;  ^ punctuation.definition.comment.edn
+; ^^^^^^^^ comment.discard.edn
 
   #?@(:default (+ 1 2 3))
 ; ^^^ keyword.operator.macro
@@ -2777,7 +2782,8 @@
 ;   ^ punctuation.section.parens.begin.edn
 ;       ^ punctuation.section.parens.end.edn
 ;        ^ - meta
-;         ^^^^^ - meta.discarded.clojure
+; ^^^^^^^ comment.discard.edn
+;         ^^^^^ - comment.discard.edn
 
 
 ; # Special forms

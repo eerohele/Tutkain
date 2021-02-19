@@ -201,7 +201,7 @@ contexts:
         1: punctuation.definition.comment.edn
         2: keyword.operator.macro.edn
       push:
-        - meta_scope: comment.block.edn
+        - meta_scope: comment.block.edn comment.discard.edn
         - include: forms
         - match: ''
           pop: true
