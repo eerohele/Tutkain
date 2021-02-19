@@ -558,21 +558,18 @@ class TutkainViewEventListener(ViewEventListener):
             details=details,
         )
 
-    def send_completion_op(self, session, op, completion_list):
+    def send_completion_op(self, session, op, completion_list, retry=False):
         session.send(
             op,
             handler=lambda response: self.handle_completions(
-                session, op, completion_list, response
+                session, op, completion_list, response, retry
             ),
         )
 
-    def handle_completions(self, session, op, completion_list, response):
-        if "completion-error" in response.get("status", []):
-            def handler(response):
-                if response.get("status") == ["done"]:
-                    self.send_completion_op(session, op, completion_list)
-
-            eval_ns_form(self.view, session, handler)
+    def handle_completions(self, session, op, completion_list, response, retry=False):
+        if retry and "completion-error" in response.get("status", []):
+            del op["ns"]
+            self.send_completion_op(session, op, completion_list, retry=False)
         else:
             completions = map(self.completion_item, response.get("completions", []))
             completion_list.set_completions(completions, flags=sublime.INHIBIT_REORDER)
@@ -607,9 +604,17 @@ class TutkainViewEventListener(ViewEventListener):
                 if ns:
                     op["ns"] = ns
 
-                self.send_completion_op(session, op, completion_list)
+                self.send_completion_op(session, op, completion_list, retry=True)
 
                 return completion_list
+
+
+def lookup_handler(session, op, response, handler, retry=False):
+    if "lookup-error" in response.get("status", []):
+        del op["ns"]
+        session.send(op, handler=lambda response: lookup_handler(session, op, response, handler, retry=False))
+    else:
+        handler(response)
 
 
 def lookup(view, point, handler):
@@ -632,29 +637,26 @@ def lookup(view, point, handler):
                 if ns:
                     op["ns"] = ns
 
-                session.send(op, handler=handler)
+                session.send(
+                    op,
+                    handler=lambda response: lookup_handler(session, op, response, handler, retry=True)
+                )
 
 
 class TutkainShowSymbolInformationCommand(TextCommand):
+    def handler(self, response):
+        info.show_popup(self.view, self.view.sel()[0].begin(), response)
+
     def run(self, edit):
-        lookup(
-            self.view,
-            self.view.sel()[0].begin(),
-            lambda response: info.show_popup(
-                self.view, self.view.sel()[0].begin(), response
-            ),
-        )
+        lookup(self.view, self.view.sel()[0].begin(), self.handler)
 
 
 class TutkainGotoSymbolDefinitionCommand(TextCommand):
+    def handler(self, response):
+        info.goto(self.view.window(), info.parse_location(response.get("info")))
+
     def run(self, edit):
-        lookup(
-            self.view,
-            self.view.sel()[0].begin(),
-            lambda response: info.goto(
-                self.view.window(), info.parse_location(response.get("info"))
-            ),
-        )
+        lookup(self.view, self.view.sel()[0].begin(), self.handler)
 
 
 def reconnect(vs):
