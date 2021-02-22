@@ -481,7 +481,6 @@ class TutkainConnectCommand(WindowCommand):
     def run(self, host, port, view_id=None):
         try:
             active_view = self.window.active_view()
-            self.set_layout()
 
             new_repl = repl.Repl(
                 self.window,
@@ -490,6 +489,7 @@ class TutkainConnectCommand(WindowCommand):
                 options={"print_capabilities": view_id is None},
             )
 
+            self.set_layout()
             view = views.configure(self.window, new_repl, view_id)
 
             # Activate the output view and the view that was active prior to
