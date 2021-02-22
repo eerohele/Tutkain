@@ -36,8 +36,6 @@ class Session:
         if d["op"] == "eval":
             if pprint:
                 d["nrepl.middleware.print/print"] = "tutkain.nrepl.util.pprint/pprint"
-                # TODO: Read wrap_width setting or the last ruler from the rulers setting?
-                d["nrepl.middleware.print/options"] = {"width": 100}
 
             d["nrepl.middleware.caught/print?"] = "true"
             d["nrepl.middleware.print/stream?"] = "true"

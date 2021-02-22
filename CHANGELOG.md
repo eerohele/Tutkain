@@ -35,6 +35,11 @@ All notable changes to this project will be documented in this file.
 - Fix minor indentation issues
 - Ensure defs are in local and global symbol list
 - Improve ParEdit Backward/Forward Kill behavior
+- Use clojure.pprint instead of Fipp for pretty-printing
+
+  Mainly because of https://github.com/brandonbloom/fipp/issues/37.
+
+  I'll try to make it easy to use Fipp instead of clojure.pprint for those who want to.
 
 ## 0.6.0 - 2020-11-20
 - Add the **Tutkain: Evaluate** command. Example:

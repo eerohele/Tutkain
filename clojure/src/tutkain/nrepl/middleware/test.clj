@@ -1,6 +1,6 @@
 (ns tutkain.nrepl.middleware.test
   (:require
-   [tutkain.fipp.v0v6v23.fipp.edn :as pprint]
+   [clojure.pprint :as pprint]
    [clojure.stacktrace :as stacktrace]
    [clojure.string :as str]
    [clojure.test :as test]
@@ -22,7 +22,7 @@
 
 (defn- pp-str
   [x]
-  (with-out-str (pprint/pprint (organize x) {:width 100})))
+  (with-out-str (pprint/pprint (organize x))))
 
 
 (defn- pprint-expected
