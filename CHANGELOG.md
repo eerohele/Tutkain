@@ -34,7 +34,6 @@ All notable changes to this project will be documented in this file.
 - Fix autocompletion in unknown namespace
 - Fix minor indentation issues
 - Ensure defs are in local and global symbol list
-- Improve ParEdit Backward/Forward Kill behavior
 - Use clojure.pprint instead of Fipp for pretty-printing
 
   Mainly because of https://github.com/brandonbloom/fipp/issues/37.

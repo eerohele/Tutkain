@@ -385,23 +385,16 @@ def kill_form(view, edit, forward):
             if word:
                 view.erase(edit, word)
         else:
-            form = forms.find_next(view, point) if forward else forms.find_previous(view, point)
+            if forward:
+                form = forms.find_next(view, point)
+            else:
+                form = forms.find_previous(view, point)
 
             if form:
-                delete = form.cover(region)
+                if forward:
+                    sel.append(point)
 
-                if delete:
-                    view.erase(edit, delete)
-
-                    a = delete.begin() - 1
-                    b = delete.begin()
-
-                    if re.match(r"\s", view.substr(a)) and re.match(r"\s", view.substr(b)):
-                        view.erase(edit, Region(a, b))
-                    elif re.match(r"\s", view.substr(b)) and re.match(r"[\(\[\{]", view.substr(a)):
-                        view.erase(edit, Region(b, b + 1))
-                    elif re.match(r"\s", view.substr(a)) and re.match(r"[\)\]\}]", view.substr(b)):
-                        view.erase(edit, Region(a, a + 1))
+                view.erase(edit, region.cover(form))
 
 
 def backward_move_form(view, edit):
