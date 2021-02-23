@@ -41,6 +41,8 @@ All notable changes to this project will be documented in this file.
 
   I'll try to make it easy to use Fipp instead of clojure.pprint for those who want to.
 
+- Fix indentation inside `reify`
+
 ## 0.6.0 - 2020-11-20
 - Add the **Tutkain: Evaluate** command. Example:
 

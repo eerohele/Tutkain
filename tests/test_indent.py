@@ -363,6 +363,20 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
             selections=[(19, 19)],
         )
 
+    def test_reify(self):
+        self.becomes(
+            """
+            (reify Foo
+              (bar [_ x]))
+            """,
+            """
+            (reify Foo
+              (bar [_ x]
+                ))
+            """,
+            selections=[(23, 23)],
+        )
+
 
 class TestIndentRegionCommand(ViewTestCase):
     def becomes(self, a, b, selections=[(0, 0), (1, 1)]):
