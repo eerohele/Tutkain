@@ -318,6 +318,7 @@ class HostInputHandler(TextInputHandler):
             return (path, file.read())
 
     def possibilities(self, folder):
+        yield os.path.join(folder, ".repl-port")
         yield os.path.join(folder, ".nrepl-port")
         yield os.path.join(folder, ".shadow-cljs", "nrepl.port")
 
