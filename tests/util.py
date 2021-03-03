@@ -1,6 +1,8 @@
 import sublime
+import socket
 
-from Tutkain.src.repl import Repl
+from threading import Event, Thread
+
 from Tutkain.src.repl import views
 
 from unittest import TestCase
@@ -52,21 +54,62 @@ class ViewTestCase(TestCase):
         return self.view.substr(self.view.sel()[i])
 
 
-class TestRepl(Repl):
-    def __init__(self, window, host, port):
-        super().__init__(window, host, port)
-        self.view = views.configure(window, self, None)
+# class TestRepl(Repl):
+#     def __init__(self, window, host, port):
+#         super().__init__(window, host, port)
+#         self.view = views.configure(window, self, None)
 
-    def take_print(self):
-        return self.printq.get(timeout=1)["printable"]
+#     def take_print(self):
+#         return self.printq.get(timeout=1)["printable"]
 
-    def take_prints(self, n):
-        xs = []
+#     def take_prints(self, n):
+#         xs = []
 
-        for _ in range(n):
-            xs.append(self.take_print())
+#         for _ in range(n):
+#             xs.append(self.take_print())
 
-        return xs
+#         return xs
 
-    def take_tap(self):
-        return self.tapq.get(timeout=1)
+#     def take_tap(self):
+#         return self.tapq.get(timeout=1)
+
+
+def echo_loop(server, stop_event):
+    conn, _ = server.accept()
+
+    while not stop_event.is_set():
+        data = conn.recv(1024)
+        conn.sendall(data)
+
+
+def start_server():
+    stop_event = Event()
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(("localhost", 0))
+    server.listen(1)
+
+    serve_loop = Thread(
+        daemon=True,
+        target=echo_loop,
+        args=(
+            server,
+            stop_event,
+        ),
+    )
+
+    serve_loop.name = "tutkain.test.serve_loop"
+    serve_loop.start()
+    return server, stop_event
+
+
+def start_client(server):
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(server.getsockname())
+    client.settimeout(0.5)
+    return client
+
+
+def stop_client(client):
+    if client:
+        client.shutdown(socket.SHUT_RDWR)
+        client.close()

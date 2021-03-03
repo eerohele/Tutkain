@@ -1,54 +1,19 @@
 import socket
-from threading import Event, Thread
-
 from unittest import TestCase
 from Tutkain.src.repl import bencode
-
-
-def echo_loop(server, stop_event):
-    conn, _ = server.accept()
-
-    while not stop_event.is_set():
-        data = conn.recv(1024)
-        conn.sendall(data)
-
-
-def start_server(stop_event):
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(("localhost", 0))
-    server.listen(1)
-
-    serve_loop = Thread(
-        daemon=True,
-        target=echo_loop,
-        args=(
-            server,
-            stop_event,
-        ),
-    )
-
-    serve_loop.name = "tutkain.test.serve_loop"
-    serve_loop.start()
-    return server
+from .util import start_client, stop_client, start_server
 
 
 class TestBencode(TestCase):
     @classmethod
     def setUpClass(self):
-        self.stop_event = Event()
-        self.server = start_server(self.stop_event)
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(self.server.getsockname())
-        self.client.settimeout(0.5)
+        self.server, self.stop_event = start_server()
+        self.client = start_client(self.server)
 
     @classmethod
     def tearDownClass(self):
-        if self.client:
-            self.client.shutdown(socket.SHUT_RDWR)
-            self.client.close()
-
-        if self.server:
-            self.stop_event.set()
+        self.stop_event.set()
+        stop_client(self.client)
 
     def setUp(self):
         self.buffer = self.client.makefile(mode="rwb")
