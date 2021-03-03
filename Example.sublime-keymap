@@ -75,6 +75,13 @@
         "command": "tutkain_evaluate_input"
     },
 
+    // Print last exception
+    {
+        "keys": ["ctrl+c", "ctrl++"],
+        "command": "evaluate",
+        "args": {"code": "*e"}
+    },
+
     // Evaluate the form given as an argument.
     {
         "keys": ["f19"],
