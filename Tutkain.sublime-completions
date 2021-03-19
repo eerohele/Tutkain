@@ -1,0 +1,69 @@
+{
+    "scope": "source.edn | source.clojure | source.clojure.clojurescript",
+    "completions": [
+        {
+            "trigger": "nil",
+            "contents": "nil",
+            "kind": ["nil", "n", "Nothing"],
+            "details": "Represents host language null and tests logical false."
+        },
+        {
+            "trigger": "true",
+            "contents": "true",
+            "kind": ["boolean", "b", "Boolean"]
+        },
+        {
+            "trigger": "false",
+            "contents": "false",
+            "kind": ["boolean", "b", "Boolean"]
+        },
+        {
+            "trigger": "##Inf",
+            "contents": "##Inf",
+            "kind": ["symbolic", "s", "Symbolic"],
+            "details": "Infinity"
+        },
+        {
+            "trigger": "##-Inf",
+            "contents": "##-Inf",
+            "kind": ["symbolic", "s", "Symbolic"],
+            "details": "Negative infinity"
+        },
+        {
+            "trigger": "##NaN",
+            "contents": "##NaN",
+            "kind": ["symbolic", "s", "Symbolic"],
+            "details": "Not a Number"
+        },
+        {
+            "trigger": "\\newline",
+            "contents": "newline",
+            "kind": ["character", "c", "Character"]
+        },
+        {
+            "trigger": "\\space",
+            "contents": "space",
+            "kind": ["character", "c", "Character"]
+        },
+        {
+            "trigger": "\\tab",
+            "contents": "tab",
+            "kind": ["character", "c", "Character"]
+        },
+        {
+            "trigger": "\\formfeed",
+            "contents": "formfeed",
+            "kind": ["character", "c", "Character"]
+        },
+        {
+            "trigger": "\\backspace",
+            "contents": "backspace",
+            "kind": ["character", "c", "Character"]
+        },
+        {
+            "trigger": "\\return",
+            "contents": "return",
+            "kind": ["character", "c", "Character"]
+        },
+    ]
+}
