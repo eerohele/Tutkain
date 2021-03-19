@@ -691,6 +691,18 @@ class TutkainEventListener(EventListener):
     def on_hover(self, view, point, hover_zone):
         lookup(view, point, lambda response: info.show_popup(view, point, response))
 
+    def on_close(self, view):
+        if view.settings().get("tutkain_repl_output_view"):
+            window = sublime.active_window()
+            num_groups = window.num_groups()
+
+            if num_groups == 2 and len(window.views_in_group(num_groups - 1)) == 0:
+                window.set_layout({
+                    'cells': [[0, 0, 1, 1]],
+                    'cols': [0.0, 1.0],
+                    'rows': [0.0, 1.0]
+                })
+
     def on_pre_close(self, view):
         if view and view.settings().get("tutkain_repl_output_view"):
             window = view.window()
@@ -699,14 +711,6 @@ class TutkainEventListener(EventListener):
             if client:
                 client.halt()
                 state.forget_repl_view(view)
-
-                # TODO: This sometimes crashes ST.
-                #
-                # window.set_layout({
-                #     'cells': [[0, 0, 1, 1]],
-                #     'cols': [0.0, 1.0],
-                #     'rows': [0.0, 1.0]
-                # })
 
                 window.destroy_output_panel(tap.panel_name)
 
