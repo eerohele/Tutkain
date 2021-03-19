@@ -29,7 +29,8 @@
     // Evaluate view.
     {
         "keys": ["ctrl+c", "ctrl+k"],
-        "command": "tutkain_evaluate_view",
+        "command": "tutkain_evaluate",
+        "args": {"scope": "view"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
@@ -47,7 +48,7 @@
     // (comment (inc 1)).
     {
         "keys": ["ctrl+c", "ctrl+c"],
-        "command": "tutkain_evaluate_form",
+        "command": "tutkain_evaluate",
         "args": {"scope": "outermost", "ignore": ["comment"]},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
@@ -56,7 +57,7 @@
     // and inline, right after the evaluated form
     {
         "keys": ["ctrl+c", "ctrl+a"],
-        "command": "tutkain_evaluate_form",
+        "command": "tutkain_evaluate",
         "args": {"scope": "outermost", "inline_result": true},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
@@ -64,7 +65,7 @@
     // Evaluate current selections or the innermost form.
     {
         "keys": ["ctrl+c", "ctrl+e"],
-        "command": "tutkain_evaluate_form",
+        "command": "tutkain_evaluate",
         "args": {"scope": "innermost"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
@@ -72,14 +73,35 @@
     // Prompt for input and evaluate it in the "user" namespace.
     {
         "keys": ["ctrl+c", "ctrl+i"],
-        "command": "tutkain_evaluate_input"
+        "command": "tutkain_evaluate",
+        "args": {"scope": "input"}
     },
 
     // Print last exception
     {
         "keys": ["ctrl+c", "ctrl++"],
-        "command": "evaluate",
+        "command": "tutkain_evaluate",
         "args": {"code": "*e"}
+    },
+
+    // Parameterize evaluations
+    {
+        "keys": ["ctrl+p", "ctrl+p"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "((requiring-resolve 'clojure.pprint/pprint) $0)", "scope": "innermost"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+    {
+        "keys": ["ctrl+p", "ctrl+i"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "((requiring-resolve 'clojure.inspector/inspect) $0)", "scope": "outermost"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+    {
+        "keys": ["ctrl+p", "ctrl+m"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "(macroexpand-1 '$0)", "scope": "innermost"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
     // Evaluate the form given as an argument.

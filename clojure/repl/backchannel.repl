@@ -1,0 +1,51 @@
+(ns repl.backchannel
+  (:refer-clojure :exclude [send])
+  (:require
+   [clojure.edn :as edn]
+   [cognitect.transcriptor :as xr]
+   [tutkain.repl.runtime.repl :as repl])
+  (:import
+   (java.io BufferedReader InputStreamReader PrintWriter)
+   (java.net Socket)
+   (java.util.concurrent LinkedBlockingQueue TimeUnit)))
+
+(defn client
+  [& {:keys [host port out-fn] :or {out-fn println}}]
+  (let [socket (Socket. host port)
+        output (.getOutputStream socket)
+        writer (PrintWriter. output true)
+        input (.getInputStream socket)
+        reader (BufferedReader. (InputStreamReader. input))
+        q (LinkedBlockingQueue.)]
+    (future
+      (loop []
+        (let [item (.take q)]
+          (.println writer (pr-str item))
+          (when-not (= ::quit item)
+            (recur)))))
+
+    (future
+      (loop []
+        (when-some [result (.readLine reader)]
+          (out-fn result)
+          (recur))))
+    q))
+
+(def recvq (LinkedBlockingQueue.))
+(def backchannel (repl/open-backchannel :port 1337))
+(def port (-> backchannel .getLocalAddress .getPort))
+(def sendq (client :host "localhost" :port port :out-fn #(.put recvq %)))
+
+(defn send
+  [message]
+  (.put sendq message))
+
+(defn recv
+  []
+  (-> recvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+
+(send {:op :echo})
+(recv)
+(xr/check! #{{:op :echo}})
+
+(.close backchannel)

@@ -1,43 +1,45 @@
-import collections
+from sublime import View, Window
+from typing import Dict, TypedDict, Union
+
+from .repl.client import Client
 
 
-state = {
-    "active_repl_view": collections.defaultdict(dict),
-    "client_by_view": collections.defaultdict(dict),
-    "view_by_session": collections.defaultdict(dict)
-}
+WindowId = int
+ViewId = int
 
 
-def set_view_client(view, client):
-    state["client_by_view"][view.id()] = client
+class State(TypedDict):
+    active_repl_view: Dict[WindowId, View]
+    client_by_view: Dict[ViewId, Client]
 
 
-def get_active_repl_view(window):
-    return state.get("active_repl_view").get(window.id())
+__state = State(active_repl_view={}, client_by_view={})
 
 
-def set_active_repl_view(view):
-    state["active_repl_view"][view.window().id()] = view
+def set_view_client(view: View, client: Client) -> None:
+    __state["client_by_view"][view.id()] = client
 
 
-def get_view_client(view):
-    return view and state["client_by_view"].get(view.id())
+def repl_view(window: Window) -> Union[View, None]:
+    if window:
+        return __state.get("active_repl_view").get(window.id())
 
 
-def get_active_view_client(window):
-    return get_view_client(get_active_repl_view(window))
+def set_repl_view(view: View) -> None:
+    __state["active_repl_view"][view.window().id()] = view
 
 
-def get_active_view_sessions(window):
-    client = get_active_view_client(window)
-    return client and client.sessions_by_owner
+def view_client(view: View) -> Union[Client, None]:
+    if view:
+        return __state["client_by_view"].get(view.id())
 
 
-def get_session_by_owner(window, owner):
-    sessions = get_active_view_sessions(window)
-    return sessions and sessions.get(owner)
+def client(window: Window) -> Union[Client, None]:
+    """Return the Client for the REPL view that is active in the given Window."""
+    if view := repl_view(window):
+        return view_client(view)
 
 
-def forget_repl_view(view):
-    if view and view.id() in state["client_by_view"]:
-        del state["client_by_view"][view.id()]
+def forget_repl_view(view: View) -> None:
+    if view and view.id() in __state["client_by_view"]:
+        del __state["client_by_view"][view.id()]

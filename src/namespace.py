@@ -1,8 +1,18 @@
-def find_last(view):
-    regions = view.find_by_selector("entity.name.namespace.clojure")
-    return regions and regions[-1]
+from . import sexp
 
 
-def find_declaration(view):
-    region = find_last(view)
-    return region and view.substr(region)
+def find_regions(view):
+    return view.find_by_selector("entity.name.namespace.clojure")
+
+
+def name(view):
+    if regions := find_regions(view):
+        return view.substr(regions[-1])
+
+
+def forms(view):
+    regions = find_regions(view)
+
+    for region in regions:
+        if outermost := sexp.outermost(view, region.begin()):
+            yield outermost.extent()

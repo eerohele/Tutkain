@@ -6,6 +6,8 @@ import sublime
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
+from ...api import edn
+
 
 def show(view, line, column):
     if view is not None:
@@ -60,9 +62,9 @@ def goto(window, location):
 def parse_location(info):
     if info:
         return {
-            "resource": urlparse(info.get("file", "")),
-            "line": int(info.get("line", "1")) - 1,
-            "column": int(info.get("column", "1")) - 1,
+            "resource": urlparse(info.get(edn.Keyword("file"), "")),
+            "line": int(info.get(edn.Keyword("line"), "1")) - 1,
+            "column": int(info.get(edn.Keyword("column"), "1")) - 1,
         }
 
 
@@ -71,7 +73,7 @@ def htmlify(docstring):
         doc = re.sub(
             r" ",
             "&nbsp;",
-            re.sub(r"\n", "<br/>", inspect.cleandoc(html.escape(docstring))),
+            re.sub(r"\n", "<br/>", inspect.cleandoc(html.escape(docstring.replace('\\n', '\n')))),
         )
 
         return f"""<p class="doc">{doc}</p>"""
@@ -80,19 +82,19 @@ def htmlify(docstring):
 
 
 def show_popup(view, point, response):
-    if "info" in response:
-        info = response["info"]
+    if edn.Keyword("info") in response:
+        info = response[edn.Keyword("info")]
 
         if info:
-            file = info.get("file", "")
+            file = info.get(edn.Keyword("file"), "")
             location = parse_location(info)
-            ns = info.get("ns", "")
-            name = info.get("name", "")
-            arglists = info.get("arglists", "")
-            doc = info.get("doc", "")
+            ns = info.get(edn.Keyword("ns"), "")
+            symbol = info.get(edn.Keyword("name"), edn.Symbol(""))
+            arglists = info.get(edn.Keyword("arglists"), "")
+            doc = info.get(edn.Keyword("doc"), "")
 
-            if ns and name:
-                symbol_name = "/".join(filter(None, [ns, name]))
+            if ns and symbol:
+                symbol_name = "/".join(filter(None, [ns, symbol.name]))
 
                 symbol = f"""
                 <p class="symbol">

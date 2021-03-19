@@ -1,0 +1,35 @@
+(ns repl.lookup
+  (:require
+   [clojure.spec.alpha :as spec]
+   [cognitect.transcriptor :as xr]
+   [tutkain.repl.runtime.lookup :refer [lookup]]))
+
+(spec/def ::ns string?)
+(spec/def ::name symbol?)
+(spec/def ::file string?)
+(spec/def ::column int?)
+(spec/def ::line int?)
+(spec/def ::arglists string?)
+(spec/def ::doc string?)
+
+(spec/def ::info
+  (spec/keys
+    :req-un [::ns ::name]
+    :opt-un [::file ::column ::line ::arglists ::doc]))
+
+(spec/def ::infos
+  (spec/coll-of ::info :min-count 1 :distinct true))
+
+(def syms
+  (mapcat (fn [[alias ns]]
+            (map #(vector alias %) (map first (ns-publics ns))))
+    (ns-aliases *ns*)))
+
+(map (fn [[alias sym]] (lookup *ns* (symbol (str alias "/" sym)))) syms)
+(xr/check! ::infos)
+
+(map #(lookup *ns* %) (map first (ns-refers *ns*)))
+(xr/check! ::infos)
+
+(map #(lookup 'clojure.main %) (map first (ns-publics 'clojure.main)))
+(xr/check! ::infos)

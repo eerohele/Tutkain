@@ -2,29 +2,26 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+
+- BREAKING: Tutkain can now only connect to the [socket REPL](https://clojure.org/reference/repl_and_main#_launching_a_socket_server). It no longer supports nREPL.
+- BREAKING: Now requires Java 9 or newer. Might relax the requirement to Java 8 if there's demand for it.
+- The `tutkain_evaluate_form`, `tutkain_evaluate_view`, and `tutkain_evaluate_input` commands are now deprecated. Use `tutkain_evaluate` with `scope` arg instead (see example key bindings).
+- Update example key bindings
+- Improve Java package auto-completion
 - Add support for keyword auto-completion
-
-  Requires nREPL 0.9.0 or newer, which has not yet been released at the time of this release.
-
-- Improve documentation popup
-- Improve sideloader error tolerance
-
-  This allows Tutkain to connect to nREPL servers that run in environments where the nREPL sideloader cannot write temporary files.
-
+- Improve documentation popups
 - Avoid clobbering existing window layout
 - Add :require/:import indentation compatibility mode
 
     If there's no newline between `:require` and the thing that immediately follows it, Tutkain will now format subsequent `:require` lines the same way. If there's a newline after `:require/:import`, Tutkain will indent the same as before. **Experimental, may be removed in the future**.
 
-- Automatically reconnect to nREPL server on startup and project load
+- Automatically reconnect to REPL server on startup and project load
 - Fix REPL view input indentation
 - Performance improvements
 - Fix caret position(s) after backward slurp
 - Add Forward/Backward Up/Down ParEdit commands #9
 - Include whitespace when killing form
 - Fix deftype/defprotocol/etc. indentation
-- Fix file, line, and column info in exception stack traces
-- Clean up exception stack traces
 - Improve test diffs for unsorted collections
 - Fix move backward/forward inside comments
 - Add Discard/Undiscard Sexp command
@@ -37,8 +34,6 @@ All notable changes to this project will be documented in this file.
 - Use clojure.pprint instead of Fipp for pretty-printing
 
   Mainly because of https://github.com/brandonbloom/fipp/issues/37.
-
-  I'll try to make it easy to use Fipp instead of clojure.pprint for those who want to.
 
 - Fix indentation inside `reify`
 

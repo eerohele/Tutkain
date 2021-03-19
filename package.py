@@ -1,7 +1,8 @@
+from concurrent.futures import TimeoutError
+from inspect import cleandoc
 import json
 import os
 import sublime
-
 from threading import Thread
 
 from sublime_plugin import (
@@ -21,16 +22,20 @@ from .src import indent
 from .src import inline
 from .src import paredit
 from .src import namespace
-from .src import repl
 from .src import test
+from .src.repl.client import Client
 from .src.repl import info
 from .src.repl import history
 from .src.repl import tap
+from .src.repl import ports
 from .src.repl import printer
 from .src.repl import views
 
 
-from .src.log import log, start_logging, stop_logging
+from .src.log import start_logging, stop_logging
+
+
+from .api import edn
 
 
 def make_color_scheme(cache_dir):
@@ -119,6 +124,19 @@ def plugin_unloaded():
     preferences.clear_on_change("Tutkain")
 
 
+def dialect(view, point):
+    if view.match_selector(point, "source.clojure.clojurescript"):
+        return edn.Keyword("cljs")
+    else:
+        return edn.Keyword("clj")
+
+
+def source_root():
+    return os.path.join(
+        sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain", "repl", "runtime"
+    )
+
+
 class TutkainClearOutputViewCommand(WindowCommand):
     def clear_view(self, view):
         if view:
@@ -129,7 +147,7 @@ class TutkainClearOutputViewCommand(WindowCommand):
             inline.clear(self.window.active_view())
 
     def run(self):
-        view = state.get_active_repl_view(self.window)
+        view = state.repl_view(self.window)
 
         if view:
             self.clear_view(view)
@@ -138,155 +156,22 @@ class TutkainClearOutputViewCommand(WindowCommand):
         panel and self.clear_view(panel)
 
 
-def add_meta(op):
-    if op.get("file"):
-        op["file"] = op["file"].replace('\\', '\\\\')
-
-        op["code"] = "^{:clojure.core/eval-file \"%s\" :line %s :column %s} %s" % (
-            op["file"], op.get("line"), op.get("column"), op.get("code")
-        )
-
-        return op
-    else:
-        return op
-
-
-def eval_op(view, region, ns=None):
-    file = view.file_name()
-    line, column = view.rowcol(region.begin())
-    code = view.substr(region)
-
-    op = {
-        "op": "eval",
-        "code": code,
-        "line": line + 1,
-        "column": column + 1
-    }
-
-    if ns:
-        op["ns"] = ns
-
-    if file:
-        op["file"] = file
-
-    return op
-
-
-def eval_ns_form(view, session, handler):
-    ns_region = namespace.find_last(view)
-
-    if ns_region:
-        ns_form = sexp.outermost(view, ns_region.begin())
-
-        if ns_form:
-            ns_form_region = ns_form.extent()
-            session.send(eval_op(view, ns_form_region), handler=handler)
-
-
 class TutkainEvaluateFormCommand(TextCommand):
-    def handler(self, region, session, ns, response, inline_result):
-        def retry(ns, response):
-            if response.get("status") == ["done"]:
-                session.send(eval_op(self.view, region, ns))
-            elif "status" in response and "namespace-not-found" in response["status"]:
-                session.output(response)
-
-        if "status" in response and "namespace-not-found" in response["status"]:
-            eval_ns_form(self.view, session, lambda response: retry(ns, response))
-        elif inline_result and "value" in response:
-            inline.clear(self.view)
-            inline.show(self.view, region.end(), response["value"])
-        else:
-            session.output(response)
-
-    def get_eval_region(self, region, scope="outermost", ignore={}):
-        assert scope in {"innermost", "outermost"}
-
-        if not region.empty():
-            return region
-        else:
-            if scope == "outermost":
-                outermost = sexp.outermost(self.view, region.begin(), ignore=ignore)
-                return outermost and outermost.extent()
-            elif scope == "innermost":
-                innermost = sexp.innermost(self.view, region.begin(), edge=True)
-                return innermost and innermost.extent()
-
     def run(self, edit, scope="outermost", ignore={"comment"}, inline_result=False):
-        session = state.get_session_by_owner(self.view.window(), "user")
-
-        if session is None:
-            self.view.window().status_message("ERR: Not connected to a REPL.")
-        else:
-            for region in self.view.sel():
-                eval_region = self.get_eval_region(region, scope=scope, ignore=set(ignore))
-
-                if eval_region:
-                    ns = namespace.find_declaration(self.view) or "user"
-
-                    op = eval_op(self.view, eval_region, ns)
-
-                    session.output({"in": op.get("code"), "ns": ns})
-
-                    log.debug(
-                        {
-                            "event": "send",
-                            "scope": "form",
-                            "code": op.get("code"),
-                            "file": op.get("file"),
-                            "ns": ns,
-                        }
-                    )
-
-                    session.send(
-                        op,
-                        handler=lambda response: self.handler(
-                            eval_region,
-                            session,
-                            ns,
-                            response,
-                            inline_result,
-                        )
-                    )
+        self.view.window().status_message("tutkain_evaluate_form is deprecated; use tutkain_evaluate instead")
+        self.view.run_command("tutkain_evaluate", {"scope": scope, "ignore": ignore, "inline_result": inline_result})
 
 
 class TutkainEvaluateViewCommand(TextCommand):
-    def handler(self, session, response):
-        if "err" in response:
-            session.output(response)
-            session.denounce(response)
-        elif "nrepl.middleware.caught/throwable" in response:
-            session.output(response)
-        elif response.get("status") == ["done"]:
-            if not session.is_denounced(response):
-                session.output({"value": ":tutkain/loaded\n"})
-                session.output(response)
-
     def run(self, edit):
-        window = self.view.window()
-        session = state.get_session_by_owner(window, "plugin")
-
-        if session is None:
-            window.status_message("ERR: Not connected to a REPL.")
-        else:
-            op = {
-                "op": "load-file",
-                "file": self.view.substr(sublime.Region(0, self.view.size())),
-            }
-
-            file_path = self.view.file_name()
-
-            if file_path:
-                op["file-name"] = os.path.basename(file_path)
-                op["file-path"] = file_path
-
-            session.send(op, handler=lambda response: self.handler(session, response))
+        self.view.window().status_message("tutkain_evaluate_view is deprecated; use tutkain_evaluate instead")
+        self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
 
 class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
     def run(self, edit):
-        session = state.get_session_by_owner(self.view.window(), "plugin")
-        test.run(self.view, session)
+        client = state.client(self.view.window())
+        test.run(self.view, client)
 
 
 class TutkainRunTestUnderCursorCommand(TextCommand):
@@ -296,8 +181,8 @@ class TutkainRunTestUnderCursorCommand(TextCommand):
         test_var = test.current(self.view, point)
 
         if test_var:
-            session = state.get_session_by_owner(self.view.window(), "plugin")
-            test.run(self.view, session, test_vars=[test_var])
+            client = state.client(self.view.window())
+            test.run(self.view, client, test_vars=[test_var])
 
 
 class HostInputHandler(TextInputHandler):
@@ -313,44 +198,13 @@ class HostInputHandler(TextInputHandler):
     def initial_text(self):
         return "localhost"
 
-    def read_port(self, path):
-        with open(path, "r") as file:
-            return (path, file.read())
-
-    def possibilities(self, folder):
-        yield os.path.join(folder, ".repl-port")
-        yield os.path.join(folder, ".nrepl-port")
-        yield os.path.join(folder, ".shadow-cljs", "nrepl.port")
-
-        project_port_file = (
-            self.window.project_data().get("tutkain", {}).get("nrepl_port_file")
-        )
-
-        if project_port_file:
-            yield os.path.join(folder, project_port_file)
-
-    def discover_ports(self):
-        return [
-            self.read_port(port_file)
-            for folder in self.window.folders()
-            for port_file in self.possibilities(folder)
-            if os.path.isfile(port_file)
-        ]
-
-    def next_input(self, host):
-        ports = self.discover_ports()
-
-        if len(ports) > 1:
-            return PortsInputHandler(ports)
-        elif len(ports) == 1:
-            return PortInputHandler(ports[0][1])
-        else:
-            return PortInputHandler("")
+    def next_input(self, args):
+        return PortInputHandler(self.window)
 
 
 class PortInputHandler(TextInputHandler):
-    def __init__(self, default_value):
-        self.default_value = default_value
+    def __init__(self, window):
+        self.window = window
 
     def name(self):
         return "port"
@@ -362,69 +216,143 @@ class PortInputHandler(TextInputHandler):
         return text.isdigit()
 
     def initial_text(self):
-        return self.default_value
+        alts = ports.discover(self.window)
 
-
-class PortsInputHandler(ListInputHandler):
-    def __init__(self, ports):
-        self.ports = ports
-
-    def name(self):
-        return "port"
-
-    def validate(self, text):
-        return text.isdigit()
-
-    def contract_path(self, path):
-        return path.replace(os.path.expanduser("~"), "~")
-
-    def list_items(self):
-        return list(
-            map(lambda x: (f"{x[1]} ({self.contract_path(x[0])})", x[1]), self.ports)
-        )
+        if alts:
+            return alts[0][1]
+        else:
+            return ""
 
 
 class TutkainEvaluateInputCommand(WindowCommand):
-    def eval(self, session, code):
-        session.output({"in": code, "ns": session.namespace})
-        session.send({"op": "eval", "code": code, "ns": session.namespace})
-        history.update(self.window, code)
+    def run(self):
+        self.window.status_message("tutkain_evaluate_input is deprecated; use tutkain_evaluate instead")
+        self.window.active_view().run_command("tutkain_evaluate", {"scope": "input"})
+
+
+class TutkainEvaluateCommand(TextCommand):
+    def get_eval_region(self, region, scope="outermost", ignore={}):
+        if not region.empty():
+            return region
+        else:
+            if scope == "form":
+                return forms.find_adjacent(self.view, region.begin())
+            elif scope == "innermost" and (innermost := sexp.innermost(self.view, region.begin(), edge=True)):
+                return innermost.extent()
+            elif scope == "outermost" and (outermost := sexp.outermost(self.view, region.begin(), ignore=ignore)):
+                return outermost.extent()
+
+    def evaluate_view(self, client, code):
+        file = self.view.file_name()
+
+        op = {
+            edn.Keyword("op"): edn.Keyword("load"),
+            edn.Keyword("code"): code,
+            edn.Keyword("file"): file,
+            edn.Keyword("dialect"): dialect(self.view, 0)
+        }
+
+        if ns := namespace.name(self.view):
+            client.switch_namespace(ns)
+
+        client.backchannel.send(op, handler=client.recvq.put)
+
+    def handler(self, region, client, response, inline_result):
+        if inline_result and edn.Keyword("val") in response:
+            inline.clear(self.view)
+            inline.show(self.view, region.end(), response[edn.Keyword("val")])
+        else:
+            client.recvq.put(response)
+
+    def evaluate_input(self, client, code):
+        client.recvq.put({edn.Keyword("in"): code})
+        client.eval(code)
+        history.update(self.view.window(), code)
 
     def noop(*args):
         pass
 
-    def run(self):
-        session = state.get_session_by_owner(self.window, "user")
+    def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, inline_result=False):
+        assert scope in {"input", "form", "ns", "innermost", "outermost", "view"}
 
-        if session is None:
-            self.window.status_message("ERR: Not connected to a REPL.")
+        client = state.client(self.view.window())
+
+        if client is None:
+            self.view.window().status_message("ERR: Not connected to a REPL.")
         else:
-            view = self.window.show_input_panel(
-                "Input: ",
-                history.get(self.window),
-                lambda code: self.eval(session, code),
-                self.noop,
-                self.noop,
-            )
+            if code:
+                if ns:
+                    ns_before = client.namespace
 
-            view.settings().set("tutkain_repl_input_panel", True)
-            view.assign_syntax("Clojure (Tutkain).sublime-syntax")
+                    try:
+                        client.switch_namespace(ns)
+                        client.eval(code)
+                    finally:
+                        client.switch_namespace(ns_before)
+                else:
+                    variables = {}
 
+                    for index, region in enumerate(self.view.sel()):
+                        if eval_region := self.get_eval_region(region, scope, ignore):
+                            variables[str(index)] = self.view.substr(eval_region)
 
-class TutkainEvaluateCommand(WindowCommand):
-    def run(self, code, ns="user"):
-        session = state.get_session_by_owner(self.window, "user")
+                    code = sublime.expand_variables(code, variables)
+                    client.recvq.put({edn.Keyword("in"): code})
+                    client.eval(code)
+            elif scope == "input":
+                view = self.view.window().show_input_panel(
+                    "Input: ",
+                    history.get(self.view.window()),
+                    lambda code: self.evaluate_input(client, code),
+                    self.noop,
+                    self.noop,
+                )
 
-        if session is None:
-            self.window.status_message("ERR: Not connected to a REPL.")
+                view.settings().set("tutkain_repl_input_panel", True)
+                view.assign_syntax("Clojure (Tutkain).sublime-syntax")
+            elif scope == "view":
+                eval_region = sublime.Region(0, self.view.size())
+
+                if not eval_region.empty():
+                    self.evaluate_view(client, self.view.substr(eval_region))
+            elif scope == "ns":
+                forms = namespace.forms(self.view)
+
+                for form in forms:
+                    code = self.view.substr(form)
+                    client.eval(code)
+            else:
+                for region in self.view.sel():
+                    eval_region = self.get_eval_region(region, scope, ignore)
+                    code = self.view.substr(eval_region)
+                    client.recvq.put({edn.Keyword("in"): code})
+                    client.eval(code, lambda response: self.handler(eval_region, client, response, inline_result))
+
+    def input(self, args):
+        if any(map(lambda region: not region.empty(), self.view.sel())):
+            return None
+        if "scope" in args:
+            return None
         else:
-            session.output({"in": code, "ns": ns})
-            session.send({"op": "eval", "code": code, "ns": ns})
+            return ScopeInputHandler()
+
+
+class ScopeInputHandler(ListInputHandler):
+    def placeholder(self):
+        return "Choose evaluation scope"
+
+    def list_items(self):
+        return [
+            sublime.ListInputItem("Adjacent form", "form", details="The form (not necessarily S-expression) adjacent to the caret."),
+            sublime.ListInputItem("Innermost S-expression", "innermost", details="The innermost S-expression with respect to the caret position."),
+            sublime.ListInputItem("Outermost S-expression", "outermost", details="The outermost S-expression with respect to the caret position.", annotation="ignores (comment)"),
+            sublime.ListInputItem("Active view", "view", details="The entire contents of the currently active view."),
+            sublime.ListInputItem("Input", "input", details="Tutkain prompts you for input to evaluate."),
+            sublime.ListInputItem("Namespace declarations", "ns", details="Every namespace declaration (<code>ns</code> form) in the active view."),
+        ]
 
 
 class TutkainConnectCommand(WindowCommand):
-    tap_loop = None
-
     def set_layout(self):
         # Set up a two-row layout.
         #
@@ -452,68 +380,47 @@ class TutkainConnectCommand(WindowCommand):
 
             self.window.set_layout(layout)
 
-    def start_print_loop(self, view, printq):
-        print_loop = Thread(
-            daemon=True,
-            target=printer.print_loop,
-            args=(
-                view,
-                printq,
-            ),
-        )
-
-        print_loop.name = "tutkain.connection.print_loop"
-        print_loop.start()
-
-    def start_tap_loop(self, tapq):
-        if settings().get("tap_panel") and self.tap_loop is None:
-            self.tap_loop = Thread(
-                daemon=True,
-                target=tap.tap_loop,
-                args=(
-                    self.window,
-                    tapq,
-                ),
-            )
-
-            self.tap_loop.name = "tutkain.connection.tap_loop"
-            self.tap_loop.start()
-
     def run(self, host, port, view_id=None):
         try:
             active_view = self.window.active_view()
-
-            new_repl = repl.Repl(
-                self.window,
-                host,
-                int(port),
-                options={"print_capabilities": view_id is None},
-            )
-
+            tap.create_panel(self.window)
+            client = Client(source_root(), host, int(port)).connect()
             self.set_layout()
-            view = views.configure(self.window, new_repl, view_id)
+            view = views.configure(self.window, client, view_id)
+
+            print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
+            print_loop.name = "tutkain.print_loop"
+            print_loop.start()
 
             # Activate the output view and the view that was active prior to
             # creating the output view.
             self.window.focus_view(view)
             self.window.focus_view(active_view)
+        except TimeoutError:
+            sublime.error_message(cleandoc("""
+                Timed out trying to connect to socket REPL server.
 
-            self.start_print_loop(view, new_repl.printq)
-            self.start_tap_loop(new_repl.tapq)
+                Are you trying to connect to an nREPL server? Tutkain no longer supports nREPL.
 
-            new_repl.go()
+                See https://tutkain.flowthing.me/#starting-a-socket-repl for more information.
+                """))
         except ConnectionRefusedError:
             self.window.status_message(f"ERR: connection to {host}:{port} refused.")
 
     def input(self, args):
-        return HostInputHandler(self.window)
+        if "host" in args and "port" in args:
+            return None
+        elif "host" in args:
+            return PortInputHandler(self.window)
+        else:
+            return HostInputHandler(self.window)
 
 
 class TutkainDisconnectCommand(WindowCommand):
     def run(self):
         inline.clear(self.window.active_view())
         test.progress.stop()
-        view = state.get_active_repl_view(self.window)
+        view = state.repl_view(self.window)
         view and view.close()
 
 
@@ -542,80 +449,56 @@ def completion_kinds():
 
 class TutkainShowPopupCommand(TextCommand):
     def run(self, edit, item={}):
-        info.show_popup(self.view, -1, {"info": item})
+        d = {}
+
+        for k, v in item.items():
+            d[edn.Keyword(k)] = v
+
+        info.show_popup(self.view, -1, {edn.Keyword("info"): d})
 
 
 class TutkainViewEventListener(ViewEventListener):
     def completion_item(self, item):
         details = ""
 
-        if "doc" in item:
-            details = f"""<a href="{sublime.command_url("tutkain_show_popup", args={"item": item})}">More</a>"""
+        if edn.Keyword("doc") in item:
+            d = {}
+
+            for k, v in item.items():
+                d[k.name] = v.name if isinstance(v, edn.Keyword) else v
+
+            details = f"""<a href="{sublime.command_url("tutkain_show_popup", args={"item": d})}">More</a>"""
 
         return sublime.CompletionItem(
-            item.get("candidate"),
-            kind=completion_kinds().get(item.get("type"), sublime.KIND_AMBIGUOUS),
-            annotation=item.get("arglists", ""),
+            item.get(edn.Keyword("candidate")),
+            kind=completion_kinds().get(item.get(edn.Keyword("type")).name, sublime.KIND_AMBIGUOUS),
+            annotation=item.get(edn.Keyword("arglists"), ""),
             details=details,
         )
-
-    def send_completion_op(self, session, op, completion_list, retry=False):
-        session.send(
-            op,
-            handler=lambda response: self.handle_completions(
-                session, op, completion_list, response, retry
-            ),
-        )
-
-    def handle_completions(self, session, op, completion_list, response, retry=False):
-        if retry and "completion-error" in response.get("status", []):
-            del op["ns"]
-            self.send_completion_op(session, op, completion_list, retry=False)
-        else:
-            completions = map(self.completion_item, response.get("completions", []))
-            completion_list.set_completions(completions, flags=sublime.INHIBIT_REORDER)
 
     def on_query_completions(self, prefix, locations):
         point = locations[0] - 1
 
         if self.view.match_selector(
             point,
-            "- source.clojure.clojurescript & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
-        ):
-            session = state.get_session_by_owner(self.view.window(), "plugin")
+            "source.clojure & - source.clojure.clojurescript & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
+        ) and (client := state.client(self.view.window())):
+            if scope := selectors.expand_by_selector(self.view, point, "meta.symbol | constant.other.keyword"):
+                prefix = self.view.substr(scope)
 
-            if session and session.supports("completions"):
-                scope = selectors.expand_by_selector(
-                    self.view, point, "meta.symbol | constant.other.keyword"
+            completion_list = sublime.CompletionList()
+
+            client.backchannel.send({
+                edn.Keyword("op"): edn.Keyword("completions"),
+                edn.Keyword("prefix"): prefix,
+                edn.Keyword("ns"): namespace.name(self.view)
+            }, handler=lambda response: (
+                completion_list.set_completions(
+                    map(self.completion_item, response.get(edn.Keyword("completions"), []))
                 )
+            ))
 
-                if scope:
-                    prefix = self.view.substr(scope)
-
-                completion_list = sublime.CompletionList()
-
-                ns = namespace.find_declaration(self.view)
-
-                op = {
-                    "op": "completions",
-                    "prefix": prefix,
-                    "options": {"extra-metadata": ["arglists", "doc"]},
-                }
-
-                if ns:
-                    op["ns"] = ns
-
-                self.send_completion_op(session, op, completion_list, retry=True)
-
-                return completion_list
-
-
-def lookup_handler(session, op, response, handler, retry=False):
-    if "lookup-error" in response.get("status", []):
-        del op["ns"]
-        session.send(op, handler=lambda response: lookup_handler(session, op, response, handler, retry=False))
-    else:
-        handler(response)
+            return completion_list
 
 
 def lookup(view, point, handler):
@@ -625,23 +508,16 @@ def lookup(view, point, handler):
         view.match_selector(point, "source.clojure & meta.symbol")
         and not is_repl_output_view
     ):
-        symbol = selectors.expand_by_selector(view, point, "meta.symbol")
-
-        if symbol:
-            session = state.get_session_by_owner(view.window(), "plugin")
-
-            # TODO: Cache lookup results?
-            if session and session.supports("lookup"):
-                op = {"op": "lookup", "sym": view.substr(symbol)}
-                ns = namespace.find_declaration(view)
-
-                if ns:
-                    op["ns"] = ns
-
-                session.send(
-                    op,
-                    handler=lambda response: lookup_handler(session, op, response, handler, retry=True)
-                )
+        if (symbol := selectors.expand_by_selector(view, point, "meta.symbol")) and (
+            client := state.client(view.window())
+        ):
+            client.backchannel.send({
+                edn.Keyword("op"): edn.Keyword("lookup"),
+                edn.Keyword("sym"): view.substr(symbol),
+                edn.Keyword("ns"): namespace.name(view)
+            },
+                handler=handler
+            )
 
 
 class TutkainShowSymbolInformationCommand(TextCommand):
@@ -654,7 +530,7 @@ class TutkainShowSymbolInformationCommand(TextCommand):
 
 class TutkainGotoSymbolDefinitionCommand(TextCommand):
     def handler(self, response):
-        info.goto(self.view.window(), info.parse_location(response.get("info")))
+        info.goto(self.view.window(), info.parse_location(response.get(edn.Keyword("info"))))
 
     def run(self, edit):
         lookup(self.view, self.view.sel()[0].begin(), self.handler)
@@ -686,7 +562,17 @@ class TutkainEventListener(EventListener):
 
     def on_activated(self, view):
         if view.settings().get("tutkain_repl_output_view"):
-            state.set_active_repl_view(view)
+            state.set_repl_view(view)
+
+    def on_activated_async(self, view):
+        if not view.settings().get("is_widget") and view.match_selector(0, "source.clojure & - source.clojure.clojurescript"):
+            if client := state.client(view.window()):
+                ns = namespace.name(view) or "user"
+
+                if ns != client.namespace:
+                    client.switch_namespace(ns)
+                    repl_view = state.repl_view(view.window())
+                    repl_view.set_name(f"REPL · {ns} · {client.host}:{client.port}")
 
     def on_hover(self, view, point, hover_zone):
         lookup(view, point, lambda response: info.show_popup(view, point, response))
@@ -706,7 +592,7 @@ class TutkainEventListener(EventListener):
     def on_pre_close(self, view):
         if view and view.settings().get("tutkain_repl_output_view"):
             window = view.window()
-            client = state.get_view_client(view)
+            client = state.view_client(view)
 
             if client:
                 client.halt()
@@ -737,13 +623,12 @@ class TutkainExpandSelectionCommand(TextCommand):
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
     def run(self):
-        session = state.get_session_by_owner(self.window, "user")
+        client = state.client(self.window)
 
-        if session is None:
+        if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
         else:
-            log.debug({"event": "eval/interrupt", "id": session.id})
-            session.send({"op": "interrupt"})
+            client.backchannel.send({edn.Keyword("op"): edn.Keyword("interrupt")})
 
 
 class TutkainInsertNewlineCommand(TextCommand):

@@ -20,22 +20,8 @@
         "command": "tutkain_disconnect"
     },
     {
-        "caption": "Tutkain: Evaluate Outermost Form",
-        "args": {"scope": "outermost"},
-        "command": "tutkain_evaluate_form"
-    },
-    {
-        "caption": "Tutkain: Evaluate Innermost Form",
-        "args": {"scope": "innermost"},
-        "command": "tutkain_evaluate_form"
-    },
-    {
-        "caption": "Tutkain: Evaluate View",
-        "command": "tutkain_evaluate_view"
-    },
-    {
-        "caption": "Tutkain: Evaluate Input",
-        "command": "tutkain_evaluate_input"
+        "caption": "Tutkain: Evaluate",
+        "command": "tutkain_evaluate"
     },
     {
         "caption": "Tutkain: Clear Output View",

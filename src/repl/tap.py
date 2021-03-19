@@ -1,8 +1,3 @@
-from ..log import log
-
-from . import printer
-
-
 panel_name = "tutkain.tap_panel"
 
 
@@ -18,19 +13,3 @@ def create_panel(window):
         panel.assign_syntax("Clojure (Tutkain).sublime-syntax")
 
     return panel
-
-
-def tap_loop(window, tapq):
-    try:
-        log.debug({'event': 'thread/start'})
-
-        create_panel(window)
-
-        while tap := tapq.get():
-            log.debug({"event": "tapq/recv", "data": tap})
-
-            window.run_command("show_panel", {"panel": f"output.{panel_name}"})
-            panel = window.find_output_panel(panel_name)
-            printer.append_to_view(panel, tap.get("tap"))
-    finally:
-        log.debug({"event": "thread/exit"})

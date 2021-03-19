@@ -1,14 +1,13 @@
-(ns tutkain.nrepl.middleware.test
+(ns tutkain.repl.runtime.test
   (:require
-   [clojure.pprint :as pprint]
    [clojure.stacktrace :as stacktrace]
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.walk :as walk]
-   [nrepl.middleware :as middleware]
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport]))
-
+   [tutkain.repl.runtime.repl :refer [handle pp-str response-for]])
+  (:import
+   (clojure.lang LineNumberingPushbackReader)
+   (java.io File StringReader)))
 
 (defn organize
   [x]
@@ -19,53 +18,51 @@
        :else %)
     x))
 
-
-(defn- pp-str
-  [x]
-  (with-out-str (pprint/pprint (organize x))))
-
-
 (defn- pprint-expected
   [{:keys [actual expected] :as event}]
   (if (and (= (first expected) '=) (sequential? actual))
-    (assoc event :expected (->> actual last second pp-str))
+    (assoc event :expected (->> actual last second organize pp-str))
     (update event :expected str)))
-
 
 (defn- pprint-actual
   [event]
-  (update event :actual (comp pp-str last last)))
-
+  (update event :actual (comp pp-str organize last last)))
 
 (defn- event-var-meta
   [event]
   (-> event :var meta (select-keys [:line :column :file :name :ns]) (update :ns str)))
 
-
 (defn- class-name-prefix
   [ns]
   (str/replace (format "%s$" ns) "-" "_"))
 
-
 (defn- line-number
   [ns]
-  (->> (.getStackTrace (new java.lang.Throwable))
+  (->>
+    (.getStackTrace (new java.lang.Throwable))
     (drop-while #(not (str/starts-with? (.getClassName ^StackTraceElement %)
                         (class-name-prefix ns))))
     (first)
     (.getLineNumber)))
 
-
 (defn- add-result
   [results id result]
   (swap! results update id (fnil conj []) result))
 
+(defn ^:private clean-ns!
+  [ns]
+  (run! #(ns-unalias ns (first %)) (ns-aliases ns))
+  (->>
+    (ns-publics ns)
+    (filter (fn [[_ v]] (-> v meta :test)))
+    (run! (fn [[sym _]] (ns-unmap ns sym)))))
 
-(defn wrap-test
-  [handler]
-  (fn [{:keys [op transport ns file vars] :as message}]
-    (case op
-      "tutkain/test"
+(defmethod handle :test
+  [{:keys [ns code file vars out-fn] :as message}]
+  (let [ns-sym (or (some-> ns symbol) 'user)]
+    (try
+      (clean-ns! (find-ns ns-sym))
+      (Compiler/load (LineNumberingPushbackReader. (StringReader. code)) file (-> file File. .getName))
       (let [results (atom {:fail [] :pass [] :error []})
             var-meta (atom nil)]
         (binding [test/report (fn [event*]
@@ -86,7 +83,7 @@
                                             (test/inc-report-counter :assert)
                                             (test/inc-report-counter :pass)
                                             (add-result results :pass
-                                              {:type :pass :line (line-number ns) :var-meta @var-meta}))
+                                              {:type :pass :line (line-number ns-sym) :var-meta @var-meta}))
                                     :error (do
                                              (test/inc-report-counter :assert)
                                              (test/inc-report-counter :error)
@@ -101,21 +98,10 @@
             (binding [test/*report-counters* (ref test/*initial-report-counters*)]
               (test/test-vars (map #(resolve (symbol ns %)) vars))
               (swap! results assoc :summary (str (assoc @test/*report-counters* :type :summary))))
-            (test/run-tests (symbol ns))))
-        (transport/send transport (response-for message @results))
-        (transport/send transport (response-for message {:status :done})))
-      (handler message))))
-
-
-(middleware/set-descriptor! #'wrap-test
-  {:requires #{"clone"}
-   :expects #{}
-   :handles {"tutkain/test" {:doc "Tutkain clojure.test integration middleware."
-                             :requires {"ns" "The name of the namespace with the tests."}
-                             :optional {"file" "The path to the Clojure source file with the tests."
-                                        "vars" "A list of test var names to test."}
-                             :returns {"status" "'done' when all tests have been run and results have been delivered to the client."
-                                       "fail" "Test failures."
-                                       "errors" "Test errors."
-                                       "pass" "Test passes."
-                                       "value" "A summary of the test results."}}}})
+            (test/run-tests ns-sym)))
+        (out-fn (response-for message @results)))
+      (catch Throwable ex
+        (out-fn (response-for message {:tag :ret
+                                       :ns (str (.name *ns*))
+                                       :val (pp-str (assoc (Throwable->map ex) :phase :execution))
+                                       :exception true}))))))

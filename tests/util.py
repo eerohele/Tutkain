@@ -3,8 +3,6 @@ import socket
 
 from threading import Event, Thread
 
-from Tutkain.src.repl import views
-
 from unittest import TestCase
 
 
@@ -52,26 +50,6 @@ class ViewTestCase(TestCase):
 
     def selection(self, i):
         return self.view.substr(self.view.sel()[i])
-
-
-# class TestRepl(Repl):
-#     def __init__(self, window, host, port):
-#         super().__init__(window, host, port)
-#         self.view = views.configure(window, self, None)
-
-#     def take_print(self):
-#         return self.printq.get(timeout=1)["printable"]
-
-#     def take_prints(self, n):
-#         xs = []
-
-#         for _ in range(n):
-#             xs.append(self.take_print())
-
-#         return xs
-
-#     def take_tap(self):
-#         return self.tapq.get(timeout=1)
 
 
 def echo_loop(server, stop_event):

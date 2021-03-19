@@ -1,38 +1,55 @@
 import socket
-
+import queue
 from concurrent import futures
-from Tutkain.src.repl import bencode
+
+from Tutkain.api import edn
 
 
-class Server:
-    """A mock nREPL server.
+class Server(object):
+    def __init__(self, port=0, greeting="", timeout=1):
+        self.conn = None
+        self.executor = futures.ThreadPoolExecutor()
+        self.greeting = greeting
+        self.port = port
+        self.timeout = 1
+        self.recvq = queue.Queue()
 
-    Use recv() to receive Bencoded data from the client. Use send() to send bencoded data to the
-    client.
-    """
+    def recv_loop(self):
+        while item := self.buffer().readline():
+            self.recvq.put(item)
 
-    def __init__(self):
-        self.server = self.socket_server()
-        self.executor = futures.ThreadPoolExecutor(max_workers=1)
-        self.host, self.port = self.server.getsockname()
-        self.future = self.executor.submit(self.buffer)
+    def recv(self, timeout=1):
+        return self.recvq.get(timeout=timeout)
+
+    def send(self, message):
+        edn.write(self.buffer(), message)
+
+    def wait(self):
+        self.conn, _ = self.socket.accept()
+
+        if self.greeting:
+            self.conn.sendall(self.greeting.encode("UTF-8"))
+
+        return self.conn.makefile(mode="rw")
+
+    def start(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.bind(("localhost", self.port))
+        self.socket.listen()
+        self.socket.settimeout(self.timeout)
+        self.buf = self.executor.submit(self.wait)
+        self.host, self.port = self.socket.getsockname()
+        self.executor.submit(self.recv_loop)
+        return self
+
+    def __enter__(self):
+        return self.executor.submit(self.start).result(timeout=self.timeout)
 
     def buffer(self):
-        connection, _ = self.server.accept()
-        return connection.makefile(mode="rwb")
+        return self.buf.result(timeout=self.timeout)
 
-    def socket_server(self):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(("localhost", 0))
-        server.listen(1)
-        server.settimeout(1)
-        return server
-
-    def send(self, x):
-        bencode.write(self.future.result(timeout=1), x)
-
-    def recv(self):
-        return bencode.read(self.future.result(timeout=1))
-
-    def shutdown(self):
+    def stop(self):
         self.executor.shutdown(wait=False)
+
+    def __exit__(self, type, value, traceback):
+        self.stop()

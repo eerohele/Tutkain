@@ -5,10 +5,7 @@
   (js/parseInt x 10))
 
 (comment
-  ; Evaluate these before evaluating the view.
-  (require 'cider.piggieback)
-  (require '[cljs.repl.node])
-  (cider.piggieback/cljs-repl (cljs.repl.node/repl-env))
-
-  (parse-int "42")
+  (require '[cljs.repl :as repl])
+  (require '[cljs.repl.node :as node])
+  (repl/repl (node/repl-env) :need-prompt (constantly false))
   )
