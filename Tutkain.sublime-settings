@@ -13,5 +13,12 @@
   //
   // If the tap panel is enabled, calling clojure.core/tap> will pretty-print the the function
   // argument in a Sublime Text output panel. Useful for debugging.
-  "tap_panel": false
+  "tap_panel": false,
+
+  // Enable or disable auto-completion.
+  //
+  // If you use something like clojure-lsp, you might want to turn this off to
+  // prevent Tutkain's auto-completion from interfering with clojure-lsp's
+  // auto-completion.
+  "auto_complete": true
 }

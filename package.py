@@ -479,7 +479,7 @@ class TutkainViewEventListener(ViewEventListener):
     def on_query_completions(self, prefix, locations):
         point = locations[0] - 1
 
-        if self.view.match_selector(
+        if settings().get("auto_complete") and self.view.match_selector(
             point,
             "source.clojure & - source.clojure.clojurescript & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
         ) and (client := state.client(self.view.window())):
