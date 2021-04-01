@@ -120,7 +120,16 @@
     // Evaluate the current view and run the clojure.test tests in the view.
     {
         "keys": ["ctrl+c", "ctrl+t"],
-        "command": "tutkain_run_tests_in_current_namespace",
+        "command": "tutkain_run_tests",
+        "args": {"scope": "ns"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Evaluate teh current view and run the clojure.test test under the cursor.
+    {
+        "keys": ["ctrl+c", "ctrl+v"],
+        "command": "tutkain_run_tests",
+        "args": {"scope": "var"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 

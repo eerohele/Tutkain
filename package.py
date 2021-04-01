@@ -168,21 +168,48 @@ class TutkainEvaluateViewCommand(TextCommand):
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
 
+class TutkainRunTests(TextCommand):
+    def run(self, edit, scope="ns"):
+        if scope == "ns":
+            client = state.client(self.view.window())
+            test.run(self.view, client)
+        elif scope == "var":
+            region = self.view.sel()[0]
+            point = region.begin()
+            test_var = test.current(self.view, point)
+
+            if test_var:
+                client = state.client(self.view.window())
+                test.run(self.view, client, test_vars=[test_var])
+
+    def input(self, args):
+        if "scope" in args:
+            return None
+        else:
+            return TestScopeInputHandler()
+
+
+class TestScopeInputHandler(ListInputHandler):
+    def placeholder(self):
+        return "Choose test scope"
+
+    def list_items(self):
+        return [
+            sublime.ListInputItem("Var", "var", details="Run the test defined by the var under the caret.", annotation="<code>deftest</code>"),
+            sublime.ListInputItem("Namespace", "ns", details="Run all tests in the current namespace."),
+        ]
+
+
 class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
     def run(self, edit):
-        client = state.client(self.view.window())
-        test.run(self.view, client)
+        self.view.window().status_message("tutkain_run_tests_in_current_namespace is deprecated; use tutkain_run_tests instead")
+        self.view.run_command("tutkain_run_tests", {"scope": "ns"})
 
 
 class TutkainRunTestUnderCursorCommand(TextCommand):
     def run(self, edit):
-        region = self.view.sel()[0]
-        point = region.begin()
-        test_var = test.current(self.view, point)
-
-        if test_var:
-            client = state.client(self.view.window())
-            test.run(self.view, client, test_vars=[test_var])
+        self.view.window().status_message("tutkain_run_test_under_cursor is deprecated; use tutkain_run_tests instead")
+        self.view.run_command("tutkain_run_tests", {"scope": "var"})
 
 
 class HostInputHandler(TextInputHandler):
@@ -334,10 +361,10 @@ class TutkainEvaluateCommand(TextCommand):
         if "scope" in args:
             return None
         else:
-            return ScopeInputHandler()
+            return EvaluationScopeInputHandler()
 
 
-class ScopeInputHandler(ListInputHandler):
+class EvaluationScopeInputHandler(ListInputHandler):
     def placeholder(self):
         return "Choose evaluation scope"
 
