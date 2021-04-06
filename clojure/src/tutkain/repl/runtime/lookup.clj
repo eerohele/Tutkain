@@ -1,6 +1,7 @@
 (ns tutkain.repl.runtime.lookup
   (:require
    [clojure.java.io :as io]
+   [clojure.spec.alpha :as spec]
    [tutkain.repl.runtime.repl :refer [handle pp-str response-for]]))
 
 (set! *warn-on-reflection* true)
@@ -15,15 +16,20 @@
       :file "clojure/core.clj"
       :special-form "true")))
 
-(defn normal-sym-meta
-  [ns sym]
-  (some-> (ns-resolve ns sym) meta))
+(defn fnspec
+  [v]
+  (into {}
+    (keep #(some->> (get (spec/get-spec v) %) spec/describe pr-str (vector %)))
+    [:args :ret :fn]))
 
 (defn sym-meta
   [ns sym]
-  (if (special-symbol? sym)
-    (special-sym-meta sym)
-    (normal-sym-meta ns sym)))
+  (let [var (ns-resolve ns sym)
+        fnspec* (fnspec var)]
+    (cond-> (if (special-symbol? sym)
+              (special-sym-meta sym)
+              (some-> var meta))
+      (seq fnspec*) (assoc :fnspec fnspec*))))
 
 (defn ^:private remove-empty
   [m]
@@ -37,7 +43,7 @@
   [ns sym]
   (some->
     (sym-meta ns sym)
-    (select-keys [:ns :name :file :column :line :arglists :doc])
+    (select-keys [:ns :name :file :column :line :arglists :doc :fnspec])
     (update :ns str)
     (update :file #(let [s (str %)]
                      (or (some-> s io/resource str) s)))
@@ -47,7 +53,8 @@
 (defmethod handle :lookup
   [{:keys [sym ns out-fn] :as message}]
   (try
-    (when-some [result (lookup (or (some-> ns symbol) (the-ns 'user)) (symbol sym))]
-      (out-fn (response-for message {:info result})))
+    (let [ns (or (some-> ns symbol) 'user)]
+      (when-some [result (lookup (the-ns ns) (symbol sym))]
+        (out-fn (response-for message {:info result}))))
     (catch Throwable ex
       (out-fn (response-for message {:ex (pp-str (Throwable->map ex))})))))

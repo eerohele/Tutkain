@@ -31,7 +31,7 @@ def goto(window, location):
                 view = window.find_open_file(resource.path)
 
                 if not view:
-                    view = window.open_file(resource.path, flags=sublime.TRANSIENT)
+                    view = window.open_file(resource.path)
 
                 window.focus_view(view)
                 show(view, line, column)
@@ -91,6 +91,7 @@ def show_popup(view, point, response):
             ns = info.get(edn.Keyword("ns"), "")
             symbol = info.get(edn.Keyword("name"), edn.Symbol(""))
             arglists = info.get(edn.Keyword("arglists"), "")
+            fnspec = info.get(edn.Keyword("fnspec"), {})
             doc = info.get(edn.Keyword("doc"), "")
 
             if ns and symbol:
@@ -104,8 +105,7 @@ def show_popup(view, point, response):
             else:
                 symbol = ""
 
-            view.show_popup(
-                f"""
+            content = f"""
                 <body id="tutkain-lookup">
                     <style>
                         #tutkain-lookup {{
@@ -119,23 +119,44 @@ def show_popup(view, point, response):
                         }}
 
                         p {{
-                            border-bottom: 1px solid color(var(--foreground) alpha(0.05));
                             margin: 0;
                             padding: .25rem .5rem;
                         }}
 
-                        .arglists {{
+                        .symbol, .arglists, .fnspec {{
+                            border-bottom: 1px solid color(var(--foreground) alpha(0.05));
+                        }}
+
+                        .arglists, .fnspec {{
                             color: color(var(--foreground) alpha(0.5));
                         }}
+
+                        .fnspec-key {{
+                            color: color(var(--foreground) alpha(0.75));
+                        }}
                     </style>
-                    {symbol}
-                    <p class="arglists">
-                        <code>{arglists}</code>
-                    </p>
-                    {htmlify(doc)}
-                </body>""",
+                    {symbol}"""
+
+            if arglists:
+                content += f"""<p class="arglists"><code>{arglists}</code></p>"""
+
+            if fnspec:
+                content += """<p class="fnspec">"""
+
+                for k in [edn.Keyword("args"), edn.Keyword("ret"), edn.Keyword("fn")]:
+                    if k in fnspec:
+                        content += f""":<span class="fnspec-key">{k.name}</span> {fnspec[k]}<br/>"""
+
+                content += """</p>"""
+
+            if doc:
+                content += htmlify(doc)
+
+            content += "</body>"
+
+            view.show_popup(
+                content,
                 location=point,
                 max_width=1024,
-                on_navigate=lambda href: goto(view.window(), location),
-                flags=sublime.COOPERATE_WITH_AUTO_COMPLETE
+                on_navigate=lambda href: goto(view.window(), location), flags=sublime.COOPERATE_WITH_AUTO_COMPLETE
             )

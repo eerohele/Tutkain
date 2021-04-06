@@ -11,11 +11,17 @@
 (spec/def ::line int?)
 (spec/def ::arglists string?)
 (spec/def ::doc string?)
+(spec/def ::args string?)
+(spec/def ::ret string?)
+(spec/def ::fn string?)
+
+(spec/def ::fnspec
+  (spec/keys :opt-un [::args ::ret ::fn]))
 
 (spec/def ::info
   (spec/keys
     :req-un [::ns ::name]
-    :opt-un [::file ::column ::line ::arglists ::doc]))
+    :opt-un [::file ::column ::line ::arglists ::doc ::fnspec]))
 
 (spec/def ::infos
   (spec/coll-of ::info :min-count 1 :distinct true))
@@ -33,3 +39,6 @@
 
 (map #(lookup 'clojure.main %) (map first (ns-publics 'clojure.main)))
 (xr/check! ::infos)
+
+(lookup 'clojure.core 'let)
+(xr/check! ::info)
