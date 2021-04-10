@@ -532,15 +532,20 @@ def lookup(view, point, handler):
     is_repl_output_view = view.settings().get("tutkain_repl_output_view")
 
     if (
-        view.match_selector(point, "source.clojure & meta.symbol")
+        view.match_selector(
+            point,
+            "source.clojure & (meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified)"
+        )
         and not is_repl_output_view
     ):
-        if (symbol := selectors.expand_by_selector(view, point, "meta.symbol")) and (
-            client := state.client(view.window())
-        ):
+        if (symbol := selectors.expand_by_selector(
+            view,
+            point,
+            "meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified"
+        )) and (client := state.client(view.window())):
             client.backchannel.send({
                 edn.Keyword("op"): edn.Keyword("lookup"),
-                edn.Keyword("sym"): view.substr(symbol),
+                edn.Keyword("named"): view.substr(symbol),
                 edn.Keyword("ns"): namespace.name(view)
             },
                 handler=handler

@@ -40,21 +40,25 @@
     m))
 
 (defn lookup
-  [ns sym]
-  (some->
-    (sym-meta ns sym)
-    (select-keys [:ns :name :file :column :line :arglists :doc :fnspec])
-    (update :ns str)
-    (update :file #(let [s (str %)]
-                     (or (some-> s io/resource str) s)))
-    (update :arglists str)
-    (remove-empty)))
+  [ns named]
+  (if (keyword? named)
+    (when-some [spec (some-> named spec/get-spec spec/describe pr-str)]
+      {:name named
+       :spec spec})
+    (some->
+      (sym-meta ns named)
+      (select-keys [:ns :name :file :column :line :arglists :doc :fnspec])
+      (update :ns str)
+      (update :file #(let [s (str %)]
+                       (or (some-> s io/resource str) s)))
+      (update :arglists #(map pr-str %))
+      (remove-empty))))
 
 (defmethod handle :lookup
-  [{:keys [sym ns out-fn] :as message}]
+  [{:keys [named ns out-fn] :as message}]
   (try
-    (let [ns (or (some-> ns symbol) 'user)]
-      (when-some [result (lookup (the-ns ns) (symbol sym))]
+    (let [ns (the-ns (or (some-> ns symbol) 'user))]
+      (when-some [result (lookup ns (binding [*ns* ns] (read-string named)))]
         (out-fn (response-for message {:info result}))))
     (catch Throwable ex
       (out-fn (response-for message {:ex (pp-str (Throwable->map ex))})))))

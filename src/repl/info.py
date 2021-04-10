@@ -68,15 +68,9 @@ def parse_location(info):
         }
 
 
-def htmlify(docstring):
-    if docstring:
-        doc = re.sub(
-            r" ",
-            "&nbsp;",
-            re.sub(r"\n", "<br/>", inspect.cleandoc(html.escape(docstring.replace('\\n', '\n')))),
-        )
-
-        return f"""<p class="doc">{doc}</p>"""
+def htmlify(text):
+    if text:
+        return re.sub(r"\n", "<br/>", inspect.cleandoc(html.escape(text)))
     else:
         return ""
 
@@ -89,21 +83,24 @@ def show_popup(view, point, response):
             file = info.get(edn.Keyword("file"), "")
             location = parse_location(info)
             ns = info.get(edn.Keyword("ns"), "")
-            symbol = info.get(edn.Keyword("name"), edn.Symbol(""))
+            name = info.get(edn.Keyword("name"), edn.Symbol(""))
             arglists = info.get(edn.Keyword("arglists"), "")
+            spec = info.get(edn.Keyword("spec"), "")
             fnspec = info.get(edn.Keyword("fnspec"), {})
             doc = info.get(edn.Keyword("doc"), "")
 
-            if ns and symbol:
-                symbol_name = "/".join(filter(None, [ns, symbol.name]))
+            if ns and name:
+                symbol_name = "/".join(filter(None, [ns, name.name]))
 
-                symbol = f"""
-                <p class="symbol">
+                name = f"""
+                <p class="name">
                     <a href="{file}">{symbol_name}</a>
                 </p>
                 """
+            elif name:
+                name = f"""<p class="name">{name}</p>"""
             else:
-                symbol = ""
+                name = ""
 
             content = f"""
                 <body id="tutkain-lookup">
@@ -123,11 +120,11 @@ def show_popup(view, point, response):
                             padding: .25rem .5rem;
                         }}
 
-                        .symbol, .arglists, .fnspec {{
+                        .name, .arglists, .spec, .fnspec {{
                             border-bottom: 1px solid color(var(--foreground) alpha(0.05));
                         }}
 
-                        .arglists, .fnspec {{
+                        .arglists, .spec, .fnspec {{
                             color: color(var(--foreground) alpha(0.5));
                         }}
 
@@ -135,22 +132,31 @@ def show_popup(view, point, response):
                             color: color(var(--foreground) alpha(0.75));
                         }}
                     </style>
-                    {symbol}"""
+                    {name}"""
 
             if arglists:
-                content += f"""<p class="arglists"><code>{arglists}</code></p>"""
+                content += """<p class="arglists">"""
+
+                for arglist in arglists:
+                    content += f"""<code>{htmlify(arglist)}</code> """
+
+                content += "</p>"
+
+            if spec:
+                content += f"""<p class="spec"><code>{htmlify(spec)}</code></p>"""
 
             if fnspec:
                 content += """<p class="fnspec">"""
 
                 for k in [edn.Keyword("args"), edn.Keyword("ret"), edn.Keyword("fn")]:
                     if k in fnspec:
-                        content += f""":<span class="fnspec-key">{k.name}</span> {fnspec[k]}<br/>"""
+                        content += f""":<span class="fnspec-key">{k.name}</span> {htmlify(fnspec[k])}<br/>"""
 
                 content += """</p>"""
 
             if doc:
-                content += htmlify(doc)
+                doc = re.sub(r"\s", "&nbsp;", htmlify(doc))
+                content += f"""<p class="doc">{doc}</p>"""
 
             content += "</body>"
 
