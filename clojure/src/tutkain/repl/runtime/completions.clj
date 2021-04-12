@@ -244,7 +244,7 @@
       (comp
         (remove #(and (not (.contains prefix "$")) (.contains ^String (:candidate %) "$")))
         (drop-while (complement candidate?))
-        (halt-when (complement candidate?)))
+        (take-while candidate?))
       @class-candidate-list)))
 
 (defn generic-candidates
