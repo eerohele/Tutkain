@@ -147,7 +147,7 @@ class Client(object):
         if self.ready:
             self.eval(
                 # I mean the :tutkain/ignore thing is a total hack.
-                f"(do (or (some-> '{ns} find-ns ns-name in-ns) (ns {ns})) :tutkain/ignore)",
+                f"""(when-some [f (resolve 'in-ns)] (or (some-> '{ns} find-ns ns-name f) (ns {ns}) :tutkain/ignore) :tutkain/ignore)""",
                 lambda _: None
             )
 
