@@ -196,10 +196,14 @@
   []
   (map #(hash-map :candidate (name %) :type :special-form :ns "clojure.core") special-forms))
 
+(defn annotate-namespace
+  [ns]
+  {:candidate (name ns) :type :namespace})
+
 (defn ns-candidates
   [ns]
   (map #(let [doc (some-> % find-ns meta :doc)]
-          (cond-> {:candidate (name %) :type :namespace}
+          (cond-> (annotate-namespace %)
             doc (assoc :doc doc)))
     (namespaces ns)))
 
