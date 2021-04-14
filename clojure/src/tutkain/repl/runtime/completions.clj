@@ -184,7 +184,7 @@
         type (cond macro :macro arglists :function :else :var)]
     (cond-> {:candidate (name var-name) :type type}
       doc (assoc :doc doc)
-      arglists (assoc :arglists (str arglists)))))
+      arglists (assoc :arglists (map pr-str arglists)))))
 
 (def class-candidate-list
   (delay (concat @system-module-resources @top-level-classes @nested-classes)))

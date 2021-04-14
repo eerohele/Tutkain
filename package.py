@@ -499,7 +499,7 @@ class TutkainViewEventListener(ViewEventListener):
         return sublime.CompletionItem(
             item.get(edn.Keyword("candidate")),
             kind=completion_kinds().get(item.get(edn.Keyword("type")).name, sublime.KIND_AMBIGUOUS),
-            annotation=item.get(edn.Keyword("arglists"), ""),
+            annotation=" ".join(item.get(edn.Keyword("arglists"), [])),
             details=details,
         )
 
