@@ -259,7 +259,7 @@
     (ns-var-candidates ns)
     (ns-class-candidates ns)))
 
-(defn completions
+(defn candidates
   [^String prefix ns]
   (when (seq prefix)
     (let [candidates (cond
@@ -270,10 +270,16 @@
                        :else (generic-candidates ns))]
       (sort-by :candidate (filter #(candidate? prefix %) candidates)))))
 
-(defmethod handle :completions
+(defmulti completions :dialect)
+
+(defmethod completions :default
   [{:keys [prefix ns out-fn] :as message}]
   (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))]
-    (out-fn (response-for message {:completions (completions prefix ns)}))))
+    (out-fn (response-for message {:completions (candidates prefix ns)}))))
+
+(defmethod handle :completions
+  [message]
+  (completions message))
 
 (comment
   (completions "main/" *ns*)

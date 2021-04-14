@@ -7,7 +7,7 @@
    [clojure.test.check.generators :as gen]
    [clojure.test.check.properties :as prop]
    [cognitect.transcriptor :as xr]
-   [tutkain.repl.runtime.completions :as completions :refer [completions]]))
+   [tutkain.repl.runtime.completions :as completions :refer [candidates]]))
 
 ;; Specs
 
@@ -21,19 +21,19 @@
 
 ;; Tests
 
-(completions "" *ns*)
+(candidates "" *ns*)
 (xr/check! empty?)
 
-(completions ":a" 'clojure.core)
+(candidates ":a" 'clojure.core)
 (xr/check! ::completions)
 
 (tc/quick-check 100
   (prop/for-all [kw gen/keyword]
     (let [prefix (subs (str kw) 0 2)
-          completion-set (set (completions prefix *ns*))]
+          completion-set (set (candidates prefix *ns*))]
       (contains? completion-set {:candidate (str kw) :type :keyword}))))
 
-(spec/def ::arglists string?)
+(spec/def ::arglists (spec/coll-of string?))
 (spec/def ::doc string?)
 
 (spec/def ::symbol-completion
@@ -42,7 +42,7 @@
 (spec/def ::symbol-completions
   (spec/coll-of ::symbol-completion :kind sequential?))
 
-(completions "a" 'clojure.core)
+(candidates "a" 'clojure.core)
 (xr/check! ::symbol-completions)
 
 (def sym-names
@@ -53,30 +53,30 @@
     (all-ns)))
 
 (def sym-candidates
-  (mapcat #(completions (subs % 0 1) *ns*) sym-names))
+  (mapcat #(candidates (subs % 0 1) *ns*) sym-names))
 
 (xr/check! ::symbol-completions sym-candidates)
 
 (assert (set/subset? #{{:candidate "java.util.ArrayList" :type :class}
                        {:candidate "java.util.Date" :type :class}}
-          (set (completions "java.u" *ns*))))
+          (set (candidates "java.u" *ns*))))
 
-(assert (not-any? #(.contains (:candidate %) "$") (completions "java." *ns*)))
+(assert (not-any? #(.contains (:candidate %) "$") (candidates "java." *ns*)))
 
 (assert (set/subset? #{{:candidate "java.time.LocalDate/parse" :type :static-method}
                        {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :static-method}}
-          (set (completions "java.time.LocalDate/" *ns*))))
+          (set (candidates "java.time.LocalDate/" *ns*))))
 
 (let [imported-classes (set (map second (mapcat ns-imports (all-ns))))]
-  (mapcat #(completions (str (.getName %) "/") *ns*) imported-classes))
+  (mapcat #(candidates (str (.getName %) "/") *ns*) imported-classes))
 
 (xr/check! (spec/coll-of ::completion :min-count 1))
 
-(xr/check! ::completions (completions ".g" *ns*))
-(completions "java.util.Date/" *ns*)
+(xr/check! ::completions (candidates ".g" *ns*))
+(candidates "java.util.Date/" *ns*)
 
-(xr/check! ::completions (completions "java.util.Spliterator$" *ns*))
-(assert (every? #(.contains (:candidate %) "$") (completions "java.util.Spliterator$" *ns*)))
+(xr/check! ::completions (candidates "java.util.Spliterator$" *ns*))
+(assert (every? #(.contains (:candidate %) "$") (candidates "java.util.Spliterator$" *ns*)))
 
 (spec/def ::function-completion
   (spec/keys :req-un [::candidate ::type ::arglists] :opt-un [::doc]))

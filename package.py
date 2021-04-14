@@ -508,7 +508,7 @@ class TutkainViewEventListener(ViewEventListener):
 
         if settings().get("auto_complete") and self.view.match_selector(
             point,
-            "source.clojure & - source.clojure.clojurescript & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
+            "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
         ) and (client := state.client(self.view.window())):
             if scope := selectors.expand_by_selector(self.view, point, "meta.symbol | constant.other.keyword"):
                 prefix = self.view.substr(scope)
@@ -518,7 +518,8 @@ class TutkainViewEventListener(ViewEventListener):
             client.backchannel.send({
                 edn.Keyword("op"): edn.Keyword("completions"),
                 edn.Keyword("prefix"): prefix,
-                edn.Keyword("ns"): namespace.name(self.view)
+                edn.Keyword("ns"): namespace.name(self.view),
+                edn.Keyword("dialect"): dialect(self.view, point)
             }, handler=lambda response: (
                 completion_list.set_completions(
                     map(self.completion_item, response.get(edn.Keyword("completions"), []))
