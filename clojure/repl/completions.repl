@@ -92,14 +92,14 @@
 (spec/def ::ns
   (spec/with-gen (partial instance? clojure.lang.Namespace) #(gen/elements (all-ns))))
 
-(spec/fdef completions/completions
+(spec/fdef completions/candidates
   :args (spec/cat :prefix ::prefix :ns ::ns)
   :ret ::completions)
 
-(spec/exercise-fn `completions/completions)
+(spec/exercise-fn `completions/candidates)
 
 (->>
-  (test/check `completions/completions)
+  (test/check `completions/candidates)
   (test/summarize-results))
 
 (xr/check! #{{:total 1 :check-passed 1}})
