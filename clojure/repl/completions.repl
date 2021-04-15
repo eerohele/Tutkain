@@ -27,11 +27,16 @@
 (candidates ":a" 'clojure.core)
 (xr/check! ::completions)
 
+
+(spec/def ::pass? #{true})
+
 (tc/quick-check 100
   (prop/for-all [kw gen/keyword]
     (let [prefix (subs (str kw) 0 2)
           completion-set (set (candidates prefix *ns*))]
       (contains? completion-set {:candidate (str kw) :type :keyword}))))
+
+(xr/check! (spec/keys :req-un [::pass?]))
 
 (spec/def ::arglists (spec/coll-of string?))
 (spec/def ::doc string?)
