@@ -106,7 +106,7 @@
                         (catch Throwable ex
                           (set! *e ex)
                           (out-fn {:tag :err
-                                   :val (main/err->msg ex)
+                                   :val (-> ex Throwable->map main/ex-triage main/ex-str)
                                    :ns (str (.name *ns*))
                                    :form s})
                           true)))
