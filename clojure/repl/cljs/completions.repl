@@ -61,3 +61,7 @@
 (xr/check! #(set/subset? #{{:candidate "unsafe-bit-and"
                             :type :macro
                             :arglists '("[x y]" "[x y & more]")}} %))
+
+(set (cljs/candidates (env) "st" 'my.app))
+(xr/check! #(set/subset? #{{:candidate "start" :type :function :arglists '("([])")}
+                           {:candidate "stop" :type :function :arglists '("([])")}} %))

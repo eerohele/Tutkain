@@ -110,6 +110,14 @@
       (map annotate-var))
     (analyzer.api/ns-interns env 'cljs.core)))
 
+(defn ^:private local-candidates
+  [env ns]
+  (sequence
+    (comp
+      (map val)
+      (map annotate-var))
+    (analyzer.api/ns-interns env ns)))
+
 (defn ^:private keyword-candidates
   [env ns]
   (completions/keyword-candidates
@@ -124,7 +132,7 @@
                      (.startsWith prefix ":") (keyword-candidates env ns)
                      (completions/scoped? prefix) (scoped-candidates env prefix ns)
                      (.contains prefix ".") (ns-candidates env)
-                     :else (concat (core-candidates env) (ns-alias-candidates env ns)))]
+                     :else (concat (local-candidates env ns) (core-candidates env) (ns-alias-candidates env ns)))]
     (sort-by :candidate (filter #(completions/candidate? prefix %) candidates))))
 
 (defn ^:private no-shadow?
