@@ -145,11 +145,9 @@ class Client(object):
 
     def switch_namespace(self, ns):
         if self.ready:
-            self.eval(
-                # I mean the :tutkain/ignore thing is a total hack.
-                f"""(when-some [f (resolve 'in-ns)] (or (some-> '{ns} find-ns ns-name f) (ns {ns}) :tutkain/ignore) :tutkain/ignore)""",
-                lambda _: None
-            )
+            if dialect == edn.Keyword("clj"):
+                code = f"""(tutkain.repl.runtime.repl/switch-ns {ns})"""
+                self.eval(code, lambda _: None)
 
     def read_line(self):
         if self.bare:

@@ -59,6 +59,10 @@
         (.start))
       socket)))
 
+(defmacro switch-ns
+  [ns-sym]
+  `(or (some-> (quote ~ns-sym) find-ns ns-name in-ns) (ns ~ns-sym)))
+
 (defn repl
   []
   (let [EOF (Object.)
