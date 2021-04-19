@@ -93,7 +93,7 @@ class Client(object):
 
         return True
 
-    def connect(self):
+    def connect(self, then=lambda _: None):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
         self.buffer = self.socket.makefile(mode="rw")
@@ -101,6 +101,7 @@ class Client(object):
         log.debug({"event": "client/connect", "host": self.host, "port": self.port})
         handshake = self.executor.submit(self.handshake)
         handshake.add_done_callback(self.start_workers)
+        handshake.add_done_callback(then)
 
         if self.wait:
             handshake.result(self.wait)

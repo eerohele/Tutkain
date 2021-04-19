@@ -408,11 +408,23 @@ class TutkainConnectCommand(WindowCommand):
 
             self.window.set_layout(layout)
 
-    def run(self, host, port, view_id=None):
+    def run_commands(self, active_view, then):
+        if then:
+            for command in then:
+                scope = command.get("scope", "window")
+
+                if "command" in command and "args" in command:
+                    if scope == "view":
+                        active_view.run_command(command["command"], command["args"])
+                    else:
+                        self.window.run_com
+                        mand(command["command"], command["args"])
+
+    def run(self, host, port, view_id=None, then=[]):
         try:
             active_view = self.window.active_view()
             tap.create_panel(self.window)
-            client = Client(source_root(), host, int(port)).connect()
+            client = Client(source_root(), host, int(port)).connect(then=lambda _: self.run_commands(active_view, then))
             self.set_layout()
             view = views.configure(self.window, client, view_id)
 
@@ -942,28 +954,31 @@ class TutkainInitializeClojurescriptSupportCommand(WindowCommand):
         client.backchannel.options["shadow-build-id"] = build_id
         client.recvq.put({edn.Keyword("val"): f":{build_id.name}\n"})
 
-    def enable_handler(self, client, response):
+    def choose_build_id(self, client, response):
+        items = list(map(lambda id: id.name, response.get(edn.Keyword("build-ids", "shadow"), [])))
+
+        if items:
+            self.window.show_quick_panel(
+                items,
+                lambda index: self.set_build_id(client, edn.Keyword(items[index])),
+                placeholder="Choose shadow-cljs build ID"
+            )
+
+    def enable_handler(self, client, response, build_id=None):
+        if build_id is None:
+            handler = lambda response: self.choose_build_id(client, response)
+        else:
+            handler = lambda _: self.set_build_id(client, build_id)
+
         val = response.get(edn.Keyword("val"))
 
-        def handler(response):
-            items = list(map(lambda id: id.name, response.get(edn.Keyword("build-ids", "shadow"), [])))
-
-            if items:
-                self.window.show_quick_panel(
-                    items,
-                    lambda index: self.set_build_id(client, edn.Keyword(items[index])),
-                    placeholder="Choose shadow-cljs build ID"
-                )
-
         if val and edn.read(val):
-            client.backchannel.send({
-                edn.Keyword("op"): edn.Keyword("initialize-cljs")
-            }, handler=handler)
+            client.backchannel.send({edn.Keyword("op"): edn.Keyword("initialize-cljs")}, handler=handler)
 
-    def run(self):
+    def run(self, build_id=None):
         client = state.client(self.window)
 
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
         else:
-            client.initialize_cljs(lambda response: self.enable_handler(client, response))
+            client.initialize_cljs(lambda response: self.enable_handler(client, response, build_id))
