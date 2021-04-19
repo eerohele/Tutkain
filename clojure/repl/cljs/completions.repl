@@ -65,3 +65,6 @@
 (set (cljs/candidates (env) "st" 'my.app))
 (xr/check! #(set/subset? #{{:candidate "start" :type :function :arglists '("([])")}
                            {:candidate "stop" :type :function :arglists '("([])")}} %))
+
+(set (cljs/candidates (env) "write-t" 'cljs.pprint))
+(xr/check! #(set/subset? #{{:candidate "write-token" :type :multimethod}} %))

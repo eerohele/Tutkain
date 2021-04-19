@@ -88,10 +88,18 @@
   [env ns alias]
   (get (ns-aliases env ns) alias))
 
+(defn ^:private var-type
+  [{:keys [macro fn-var tag] :as x}]
+  (cond
+    (= tag 'cljs.core/MultiFn) :multimethod
+    macro :macro
+    fn-var :function
+    :else :var))
+
 (defn ^:private annotate-var
-  [{arglists :arglists doc :doc var-name :name fn-var :fn-var macro :macro}]
+  [{arglists :arglists doc :doc var-name :name :as v}]
   (cond-> {:candidate (name var-name)
-           :type (cond macro :macro fn-var :function :else :var)}
+           :type (var-type v)}
     (seq arglists) (assoc :arglists (format-arglists arglists))
     (seq doc) (assoc :doc doc)))
 
