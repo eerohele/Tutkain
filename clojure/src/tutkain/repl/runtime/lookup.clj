@@ -39,22 +39,29 @@
     {}
     m))
 
+(defn resolve-file
+  [file]
+  (let [s (str file)]
+    (or (some-> s io/resource str) s)))
+
 (defn lookup
   [ns named]
   (if (keyword? named)
     (when-some [spec (some-> named spec/get-spec spec/describe pr-str)]
       {:name named
        :spec spec})
-    (some->
-      (sym-meta ns named)
-      (select-keys [:ns :name :file :column :line :arglists :doc :fnspec])
-      (update :ns str)
-      (update :file #(let [s (str %)]
-                       (or (some-> s io/resource str) s)))
-      (update :arglists #(map pr-str %))
-      (remove-empty))))
+    (let [{sym-name :name sym-ns :ns :as m} (sym-meta ns named)]
+      (some->
+        m
+        (select-keys [:name :file :column :line :arglists :doc :fnspec])
+        (assoc :name (symbol (str (ns-name sym-ns)) (name sym-name)))
+        (update :file resolve-file)
+        (update :arglists #(map pr-str %))
+        (remove-empty)))))
 
-(defmethod handle :lookup
+(defmulti info :dialect)
+
+(defmethod info :default
   [{:keys [named ns out-fn] :as message}]
   (try
     (let [ns (the-ns (or (some-> ns symbol) 'user))]
@@ -62,3 +69,7 @@
         (out-fn (response-for message {:info result}))))
     (catch Throwable ex
       (out-fn (response-for message {:ex (pp-str (Throwable->map ex))})))))
+
+(defmethod handle :lookup
+  [message]
+  (info message))

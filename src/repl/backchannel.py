@@ -43,10 +43,16 @@ class Backchannel(object):
         self.recvq = queue.Queue()
         self.handlers = {}
         self.message_id = itertools.count(1)
+        self.options = {}
+
+    def augment(self, item):
+        if item.get(edn.Keyword("dialect")) == edn.Keyword("cljs") and "shadow-build-id" in self.options:
+            item[edn.Keyword("build-id")] = self.options["shadow-build-id"]
 
     def send_loop(self):
         try:
             while item := self.sendq.get():
+                self.augment(item)
                 log.debug({"event": "backchannel/send", "item": item})
                 edn.write(self.buffer, item)
         except OSError as error:

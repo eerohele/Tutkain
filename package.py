@@ -280,7 +280,7 @@ class TutkainEvaluateCommand(TextCommand):
         }
 
         if ns := namespace.name(self.view):
-            client.switch_namespace(ns)
+            client.switch_namespace(ns, dialect(self.view, 0))
 
         client.backchannel.send(op, handler=client.recvq.put)
 
@@ -347,6 +347,7 @@ class TutkainEvaluateCommand(TextCommand):
 
                 for form in forms:
                     code = self.view.substr(form)
+                    client.recvq.put({edn.Keyword("in"): code})
                     client.eval(code)
             else:
                 for region in self.view.sel():
@@ -547,7 +548,8 @@ def lookup(view, point, handler):
             client.backchannel.send({
                 edn.Keyword("op"): edn.Keyword("lookup"),
                 edn.Keyword("named"): view.substr(symbol),
-                edn.Keyword("ns"): namespace.name(view)
+                edn.Keyword("ns"): namespace.name(view),
+                edn.Keyword("dialect"): dialect(view, point)
             },
                 handler=handler
             )
@@ -598,14 +600,13 @@ class TutkainEventListener(EventListener):
             state.set_repl_view(view)
 
     def on_activated_async(self, view):
-        if not view.settings().get("is_widget") and view.match_selector(0, "source.clojure & - source.clojure.clojurescript"):
-            if client := state.client(view.window()):
-                ns = namespace.name(view) or "user"
+        if not view.settings().get("is_widget") and view.match_selector(0, "source.clojure") and (client := state.client(view.window())):
+            ns = namespace.name(view) or "user"
 
-                if ns != client.namespace:
-                    client.switch_namespace(ns)
-                    repl_view = state.repl_view(view.window())
-                    repl_view.set_name(f"REPL · {ns} · {client.host}:{client.port}")
+            if ns != client.namespace:
+                client.switch_namespace(ns, dialect(view, 0))
+                repl_view = state.repl_view(view.window())
+                repl_view.set_name(f"REPL · {ns} · {client.host}:{client.port}")
 
     def on_hover(self, view, point, hover_zone):
         lookup(view, point, lambda response: info.show_popup(view, point, response))
@@ -934,3 +935,35 @@ class TutkainShowUnsuccessfulTestsCommand(TextCommand):
                 flags=sublime.MONOSPACE_FONT,
                 on_highlight=goto,
             )
+
+
+class TutkainInitializeClojurescriptSupportCommand(WindowCommand):
+    def set_build_id(self, client, build_id):
+        client.backchannel.options["shadow-build-id"] = build_id
+        client.recvq.put({edn.Keyword("val"): f":{build_id.name}\n"})
+
+    def enable_handler(self, client, response):
+        val = response.get(edn.Keyword("val"))
+
+        def handler(response):
+            items = list(map(lambda id: id.name, response.get(edn.Keyword("build-ids", "shadow"), [])))
+
+            if items:
+                self.window.show_quick_panel(
+                    items,
+                    lambda index: self.set_build_id(client, edn.Keyword(items[index])),
+                    placeholder="Choose shadow-cljs build ID"
+                )
+
+        if val and edn.read(val):
+            client.backchannel.send({
+                edn.Keyword("op"): edn.Keyword("initialize-cljs")
+            }, handler=handler)
+
+    def run(self):
+        client = state.client(self.window)
+
+        if client is None:
+            self.window.status_message("ERR: Not connected to a REPL.")
+        else:
+            client.initialize_cljs(lambda response: self.enable_handler(client, response))

@@ -1,0 +1,30 @@
+(ns repl.cljs.lookup
+  (:require
+   [cognitect.transcriptor :as xr]
+   [shadow.cljs.devtools.server :as server]
+   [shadow.cljs.devtools.api :as shadow]
+   [tutkain.repl.runtime.lookup.specs :as specs]
+   [tutkain.repl.runtime.cljs :as cljs]))
+
+(def build-id :app)
+
+;; Start shadow-cljs watch
+
+(do (server/start!) (shadow/watch build-id))
+(defn env [] (cljs/compiler-env build-id))
+
+;; qualified symbols
+(cljs/info (env) 'pprint/pprint 'my.app)
+(xr/check! ::specs/info)
+
+;; core vars
+(cljs/info (env) 'mapcat 'my.app)
+(xr/check! ::specs/info)
+
+;; current ns vars
+(cljs/info (env) 'start 'my.app)
+(xr/check! ::specs/info)
+
+;; special forms
+(cljs/info (env) 'def 'my.app)
+(xr/check! ::specs/info)

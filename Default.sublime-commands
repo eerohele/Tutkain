@@ -55,4 +55,8 @@
         "caption": "Tutkain: Show Unsuccessful Tests",
         "command": "tutkain_show_unsuccessful_tests"
     },
+    {
+        "caption": "Tutkain: Initialize ClojureScript Support",
+        "command": "tutkain_initialize_clojurescript_support"
+    },
 ]

@@ -43,6 +43,14 @@ class Client(object):
 
         return bs
 
+    def initialize_cljs(self, handler):
+        file = os.path.join(self.source_root, "cljs.clj")
+
+        self.eval(
+            f"""(try (clojure.core/load-file "{file}") true (catch clojure.lang.Compiler$CompilerException _ false))""",
+            handler=handler
+        )
+
     def blob(self):
         files = list(map(
             lambda file: '"' + os.path.join(self.source_root, file) + '"',
@@ -143,7 +151,7 @@ class Client(object):
         self.handlers[code] = handler or self.recvq.put
         self.sendq.put(code)
 
-    def switch_namespace(self, ns):
+    def switch_namespace(self, ns, dialect=edn.Keyword("clj")):
         if self.ready:
             if dialect == edn.Keyword("clj"):
                 code = f"""(tutkain.repl.runtime.repl/switch-ns {ns})"""
@@ -168,13 +176,6 @@ class Client(object):
         try:
             while item := self.read_line():
                 log.debug({"event": "client/recv", "item": item})
-
-                if item == {
-                    edn.Keyword("tag"): edn.Keyword("out"),
-                    edn.Keyword("val"): ":tutkain/ignore\n"
-                } or item == ":tutkain/ignore\n":
-                    continue
-
                 self.handle(item)
         except OSError as error:
             log.error({"event": "error", "error": error})

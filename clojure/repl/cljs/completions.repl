@@ -1,0 +1,63 @@
+(ns repl.cljs.completions
+  (:require
+   [clojure.set :as set]
+   [cognitect.transcriptor :as xr]
+   [shadow.cljs.devtools.server :as server]
+   [shadow.cljs.devtools.api :as shadow]
+   [tutkain.repl.runtime.completions.specs :as specs]
+   [tutkain.repl.runtime.cljs :as cljs]))
+
+(def build-id :app)
+
+;; Start shadow-cljs watch
+
+(do (server/start!) (shadow/watch build-id))
+(defn env [] (cljs/compiler-env build-id))
+
+(cljs/all-keywords (env))
+(xr/check! #(set/subset? #{:my.app/running :my.app/stopped :require} %))
+
+(cljs/ns-candidates (env))
+(xr/check! ::specs/completions)
+
+(set (cljs/ns-candidates (env)))
+(xr/check! #(set/subset? #{{:candidate "cljs.user" :type :namespace}
+                           {:candidate "cljs.pprint" :type :namespace}
+                           {:candidate "my.app" :type :namespace}}
+              %))
+
+(set (cljs/candidates (env) ":m" 'my.app))
+(xr/check! #(set/subset? #{{:candidate ":my.app/running" :type :keyword}
+                           {:candidate ":my.app/stopped", :type :keyword}} %))
+
+(set (cljs/candidates (env) "::r" 'my.app))
+(xr/check! #(set/subset? #{{:candidate "::running" :type :keyword}} %))
+
+(set (cljs/candidates (env) ":r" 'my.app))
+(xr/check! #(set/subset? #{{:candidate ":require" :type :keyword}} %))
+
+;; auto-resolved qualified keywords
+(set (cljs/candidates (env) "::other/k" 'my.app))
+(xr/check! #(set/subset? #{{:candidate "::other/keyword" :type :keyword}} %))
+
+;; scoped candidates
+(cljs/candidates (env) "pprint/" 'my.app)
+(xr/check! ::specs/completions)
+
+;; namespaces
+(cljs/candidates (env) "cljs.s" 'my.app)
+(xr/check! ::specs/completions)
+
+;; namespace aliases
+(cljs/candidates (env) "pp" 'my.app)
+(xr/check! ::specs/completions)
+
+;; core function
+(cljs/candidates (env) "ma" 'my.app)
+(xr/check! ::specs/completions)
+
+;; core macro
+(set (cljs/candidates (env) "unsa" 'my.app))
+(xr/check! #(set/subset? #{{:candidate "unsafe-bit-and"
+                            :type :macro
+                            :arglists '("[x y]" "[x y & more]")}} %))

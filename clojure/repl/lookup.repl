@@ -1,31 +1,8 @@
 (ns repl.lookup
   (:require
-   [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
-   [tutkain.repl.runtime.lookup :refer [lookup]]))
-
-(spec/def ::ns string?)
-(spec/def ::name (spec/or :sym symbol? :keyword keyword?))
-(spec/def ::file string?)
-(spec/def ::column int?)
-(spec/def ::line int?)
-(spec/def ::arglists (spec/coll-of string?))
-(spec/def ::doc string?)
-(spec/def ::args string?)
-(spec/def ::ret string?)
-(spec/def ::fn string?)
-(spec/def ::spec string?)
-
-(spec/def ::fnspec
-  (spec/keys :opt-un [::args ::ret ::fn]))
-
-(spec/def ::info
-  (spec/keys
-    :req-un [::name]
-    :opt-un [::ns ::file ::column ::line ::arglists ::doc ::fnspec ::spec]))
-
-(spec/def ::infos
-  (spec/coll-of ::info :min-count 1 :distinct true))
+   [tutkain.repl.runtime.lookup :refer [lookup]]
+   [tutkain.repl.runtime.lookup.specs :as specs]))
 
 (def syms
   (mapcat (fn [[alias ns]]
@@ -33,20 +10,20 @@
     (ns-aliases *ns*)))
 
 (map (fn [[alias sym]] (lookup *ns* (symbol (str alias "/" sym)))) syms)
-(xr/check! ::infos)
+(xr/check! ::specs/infos)
 
 (map #(lookup *ns* %) (map first (ns-refers *ns*)))
-(xr/check! ::infos)
+(xr/check! ::specs/infos)
 
 (map #(lookup 'clojure.main %) (map first (ns-publics 'clojure.main)))
-(xr/check! ::infos)
+(xr/check! ::specs/infos)
 
 (lookup 'clojure.core 'let)
-(xr/check! ::info)
+(xr/check! ::specs/info)
 
 (lookup 'clojure.core :clojure.core.specs.alpha/binding-form)
-(xr/check! ::info)
+(xr/check! ::specs/info)
 
-(require '[clojure.core.specs.alpha :as specs])
-(lookup 'user ::specs/local-name)
-(xr/check! ::info)
+(require '[clojure.core.specs.alpha :as core.specs])
+(lookup 'user ::core.specs/local-name)
+(xr/check! ::specs/info)

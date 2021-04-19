@@ -1,0 +1,8 @@
+{:nrepl false
+ :socket-repl false
+ :deps {:aliases [:dev]}
+ :dev-http {8000 "resources/public"}
+ :builds {:app {:target :browser
+                :modules {:main {:entries [my.app]}}
+                :output-dir "resources/public"
+                :devtools {:ignore-warnings #{:single-segment-namespace}}}}}

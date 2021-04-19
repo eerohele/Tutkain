@@ -1,1 +1,4 @@
 out/
+.shadow-cljs/
+node_modules/
+target/

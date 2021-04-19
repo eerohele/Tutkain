@@ -14,29 +14,29 @@
 
 (defn annotate-keyword
   [kw]
-  {:candidate kw :type :keyword})
+  {:candidate (str kw) :type :keyword})
 
 (defn all-keywords
   []
   (let [^Field field (.getDeclaredField clojure.lang.Keyword "table")]
     (.setAccessible field true)
-    (lazy-seq (.keySet ^ConcurrentHashMap (.get field nil)))))
+    (map keyword (.keySet ^ConcurrentHashMap (.get field nil)))))
 
 (defn- resolve-namespace
-  [sym ns]
-  (get (ns-aliases ns) sym (find-ns sym)))
+  [sym aliases]
+  (get aliases sym (find-ns sym)))
 
 (defn qualified-auto-resolved-keywords
-  [keywords ns]
+  [keywords aliases]
   (mapcat (fn [[ns-alias _]]
-            (let [ns-alias-name (str (resolve-namespace (symbol ns-alias) ns))]
+            (let [ns-alias-name (str (resolve-namespace (symbol ns-alias) aliases))]
               (sequence
                 (comp
                   (filter #(= (namespace %) ns-alias-name))
                   (map #(str "::" ns-alias "/" (name %)))
                   (map annotate-keyword))
                 keywords)))
-    (ns-aliases ns)))
+    aliases))
 
 (defn unqualified-auto-resolved-keywords
   [keywords ns]
@@ -48,21 +48,20 @@
     keywords))
 
 (defn keyword-namespace-aliases
-  [ns]
-  (map (comp annotate-keyword #(str "::" (name %)) name first) (ns-aliases ns)))
+  [aliases]
+  (map (comp annotate-keyword #(str "::" (name %)) name first) aliases))
 
 (defn single-colon-keywords
   [keywords]
-  (map (comp annotate-keyword #(str ":" %)) keywords))
+  (map annotate-keyword keywords))
 
 (defn keyword-candidates
-  [ns]
-  (let [keywords (all-keywords)]
-    (concat
-      (qualified-auto-resolved-keywords keywords ns)
-      (unqualified-auto-resolved-keywords keywords ns)
-      (keyword-namespace-aliases ns)
-      (single-colon-keywords keywords))))
+  [keywords aliases ns]
+  (concat
+    (qualified-auto-resolved-keywords keywords aliases)
+    (unqualified-auto-resolved-keywords keywords ns)
+    (keyword-namespace-aliases aliases)
+    (single-colon-keywords keywords)))
 
 (defn namespaces
   [ns]
@@ -259,13 +258,17 @@
     (ns-var-candidates ns)
     (ns-class-candidates ns)))
 
+(defn scoped?
+  [^String prefix]
+  (and (not (.startsWith prefix "/")) (.contains prefix "/")))
+
 (defn candidates
   [^String prefix ns]
   (when (seq prefix)
     (let [candidates (cond
-                       (.startsWith prefix ":") (keyword-candidates ns)
+                       (.startsWith prefix ":") (keyword-candidates (all-keywords) (ns-aliases ns) ns)
                        (.startsWith prefix ".") (ns-java-method-candidates ns)
-                       (and (not (.startsWith prefix "/")) (.contains prefix "/")) (scoped-candidates prefix ns)
+                       (scoped? prefix) (scoped-candidates prefix ns)
                        (.contains prefix ".") (concat (ns-candidates ns) (class-candidates prefix))
                        :else (generic-candidates ns))]
       (sort-by :candidate (filter #(candidate? prefix %) candidates)))))

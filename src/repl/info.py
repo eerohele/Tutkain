@@ -82,23 +82,22 @@ def show_popup(view, point, response):
         if info:
             file = info.get(edn.Keyword("file"), "")
             location = parse_location(info)
-            ns = info.get(edn.Keyword("ns"), "")
             name = info.get(edn.Keyword("name"), edn.Symbol(""))
             arglists = info.get(edn.Keyword("arglists"), "")
             spec = info.get(edn.Keyword("spec"), "")
             fnspec = info.get(edn.Keyword("fnspec"), {})
             doc = info.get(edn.Keyword("doc"), "")
 
-            if ns and name:
-                symbol_name = "/".join(filter(None, [ns, name.name]))
-
+            if name and file:
                 name = f"""
                 <p class="name">
-                    <a href="{file}">{symbol_name}</a>
+                    <a href="{file}">{name}</a>
                 </p>
                 """
             elif name:
-                name = f"""<p class="name">{name}</p>"""
+                name = f"""
+                <p class="name">{name}</p>
+                """
             else:
                 name = ""
 
