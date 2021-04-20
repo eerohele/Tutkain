@@ -23,7 +23,7 @@
   (when-some [f (resolve 'shadow.cljs.devtools.api/compiler-env)]
     (atom (f build-id))))
 
-(defn ^:private figwheel-compiler-env
+#_(defn ^:private figwheel-compiler-env
   [build-id]
   (some->
     (resolve 'figwheel.main/build-registry)
@@ -36,10 +36,7 @@
   ([]
    (analyzer.api/current-state))
   ([build-id]
-   (or
-     (figwheel-compiler-env build-id)
-     (shadow-compiler-env build-id)
-     (compiler-env))))
+   (or (shadow-compiler-env build-id) (compiler-env))))
 
 ;; Stolen from Suitable
 (def ^:private language-keywords
