@@ -14,7 +14,6 @@
   (walk/postwalk
     #(cond
        (map? %) (into (sorted-map) %)
-       (set? %) (into (sorted-set) %)
        :else %)
     x))
 
