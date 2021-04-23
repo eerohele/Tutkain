@@ -104,6 +104,14 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // Prompt for a value for the symbol under the first caret and def it
+    {
+        "keys": ["ctrl+p", "ctrl+e"],
+        "command": "tutkain_evaluate",
+        "args": {"scope": "input", "snippet": "(def $FORMS[0] $1)$0"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}],
+    },
+
     // Evaluate the form given as an argument.
     {
         "keys": ["f19"],

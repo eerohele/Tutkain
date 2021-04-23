@@ -21,8 +21,10 @@ java.
 ;; still a streaming REPL (message frames don't interfere with reading)
 (defn bmi
   [mass height]
-  (let [val (/ (* mass 1.3) (Math/pow (/ height 100) 2.5))]
-    (-> val bigdec (.setScale 0 BigDecimal/ROUND_HALF_UP))))
+  (->
+    (/ (* mass 1.3) (Math/pow (/ height 100) 2.5))
+    bigdec
+    (.setScale 0 BigDecimal/ROUND_HALF_UP)))
 
 (comment
   (bmi 60 170)

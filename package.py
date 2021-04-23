@@ -299,7 +299,7 @@ class TutkainEvaluateCommand(TextCommand):
     def noop(*args):
         pass
 
-    def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, inline_result=False):
+    def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, snippet=None, inline_result=False):
         assert scope in {"input", "form", "ns", "innermost", "outermost", "view"}
 
         client = state.client(self.view.window())
@@ -307,7 +307,26 @@ class TutkainEvaluateCommand(TextCommand):
         if client is None:
             self.view.window().status_message("ERR: Not connected to a REPL.")
         else:
-            if code:
+            if scope == "input":
+                view = self.view.window().show_input_panel(
+                    "Input: ",
+                    history.get(self.view.window()),
+                    lambda code: self.evaluate_input(client, code),
+                    self.noop,
+                    self.noop,
+                )
+
+                if snippet:
+                    if "$FORMS" in snippet:
+                        for index, region in enumerate(self.view.sel()):
+                            form = forms.find_adjacent(self.view, region.begin())
+                            snippet = snippet.replace(f"$FORMS[{index}]", self.view.substr(form))
+
+                    view.run_command("insert_snippet", {"contents": snippet})
+
+                view.settings().set("tutkain_repl_input_panel", True)
+                view.assign_syntax("Clojure (Tutkain).sublime-syntax")
+            elif code:
                 if ns:
                     ns_before = client.namespace
 
@@ -326,26 +345,15 @@ class TutkainEvaluateCommand(TextCommand):
                     code = sublime.expand_variables(code, variables)
                     client.recvq.put({edn.Keyword("in"): code})
                     client.eval(code)
-            elif scope == "input":
-                view = self.view.window().show_input_panel(
-                    "Input: ",
-                    history.get(self.view.window()),
-                    lambda code: self.evaluate_input(client, code),
-                    self.noop,
-                    self.noop,
-                )
-
-                view.settings().set("tutkain_repl_input_panel", True)
-                view.assign_syntax("Clojure (Tutkain).sublime-syntax")
             elif scope == "view":
                 eval_region = sublime.Region(0, self.view.size())
 
                 if not eval_region.empty():
                     self.evaluate_view(client, self.view.substr(eval_region))
             elif scope == "ns":
-                forms = namespace.forms(self.view)
+                ns_forms = namespace.forms(self.view)
 
-                for form in forms:
+                for form in ns_forms:
                     code = self.view.substr(form)
                     client.recvq.put({edn.Keyword("in"): code})
                     client.eval(code)
