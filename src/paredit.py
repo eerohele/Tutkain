@@ -25,13 +25,13 @@ def iterate(view):
             selections.add(region)
 
 
-def move(view, forward):
+def move(view, forward, extend):
     for region, sel in iterate(view):
-        point = region.begin()
-
         if forward:
+            point = region.end()
             form = forms.find_next(view, point)
         else:
+            point = region.begin()
             form = forms.find_previous(view, point)
 
         new_point = None
@@ -45,7 +45,13 @@ def move(view, forward):
                 new_point = innermost.close.end() if forward else innermost.open.begin()
 
         if new_point is not None:
-            sel.append(new_point)
+            if extend and forward:
+                sel.append(Region(point, new_point).cover(region))
+            elif extend and not forward:
+                sel.append(region.cover(Region(new_point, point)))
+            else:
+                sel.append(new_point)
+
             view.show(new_point)
 
 

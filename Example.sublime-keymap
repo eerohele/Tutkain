@@ -240,6 +240,13 @@
     },
 
     {
+        "keys": ["ctrl+shift+right"],
+        "command": "tutkain_paredit_forward",
+        "args": {"extend": true},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
+    {
         "keys": ["ctrl+right", "ctrl+up"],
         "command": "tutkain_paredit_forward_up",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
@@ -254,6 +261,13 @@
     {
         "keys": ["ctrl+left"],
         "command": "tutkain_paredit_backward",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+shift+left"],
+        "command": "tutkain_paredit_backward",
+        "args": {"extend": true},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 

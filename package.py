@@ -699,13 +699,13 @@ class TutkainIndentSexpCommand(TextCommand):
 
 
 class TutkainPareditForwardCommand(TextCommand):
-    def run(self, edit):
-        paredit.move(self.view, True)
+    def run(self, edit, extend=False):
+        paredit.move(self.view, True, extend)
 
 
 class TutkainPareditBackwardCommand(TextCommand):
-    def run(self, edit):
-        paredit.move(self.view, False)
+    def run(self, edit, extend=False):
+        paredit.move(self.view, False, extend)
 
 
 class TutkainPareditOpenRoundCommand(TextCommand):
