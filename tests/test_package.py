@@ -109,3 +109,21 @@ class TestEvaluation(ViewTestCase):
             '{:op :load :code "(ns foo.bar) (defn x [y] y)" :file nil :dialect :clj :id 1}\n',
             self.backchannel.recv()
         )
+
+    def test_discard(self):
+        self.set_view_content("#_(inc 1)")
+        self.set_selections((2, 2))
+        self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.set_view_content("#_(inc 1)")
+        self.set_selections((2, 2))
+        self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
+        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.set_view_content("(inc #_(dec 2) 4)")
+        self.set_selections((14, 14))
+        self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.assertEquals("(dec 2)\n", self.server.recv())
+        self.set_view_content("#_:a")
+        self.set_selections((2, 2))
+        self.view.run_command("tutkain_evaluate", {"scope": "form"})
+        self.assertEquals(":a\n", self.server.recv())

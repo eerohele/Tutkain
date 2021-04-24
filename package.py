@@ -258,16 +258,28 @@ class TutkainEvaluateInputCommand(WindowCommand):
 
 
 class TutkainEvaluateCommand(TextCommand):
+    def without_discard_macro(self, region):
+        if region:
+            s = sublime.Region(region.begin(), region.begin() + 2)
+
+            if self.view.substr(s) == "#_":
+                return sublime.Region(s.end(), region.end())
+
+        return region
+
     def get_eval_region(self, region, scope="outermost", ignore={}):
-        if not region.empty():
-            return region
-        else:
-            if scope == "form":
-                return forms.find_adjacent(self.view, region.begin())
-            elif scope == "innermost" and (innermost := sexp.innermost(self.view, region.begin(), edge=True)):
-                return innermost.extent()
-            elif scope == "outermost" and (outermost := sexp.outermost(self.view, region.begin(), ignore=ignore)):
-                return outermost.extent()
+        eval_region = region
+
+        if not eval_region.empty():
+            return eval_region
+        elif scope == "form":
+            eval_region = forms.find_adjacent(self.view, region.begin())
+        elif scope == "innermost" and (innermost := sexp.innermost(self.view, region.begin(), edge=True)):
+            eval_region = innermost.extent()
+        elif scope == "outermost" and (outermost := sexp.outermost(self.view, region.begin(), ignore=ignore)):
+            eval_region = outermost.extent()
+
+        return self.without_discard_macro(eval_region)
 
     def evaluate_view(self, client, code):
         file = self.view.file_name()
