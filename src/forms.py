@@ -49,19 +49,16 @@ def find_next(view, point):
                 and view.match_selector(point + 1, "punctuation.definition.keyword")
             ):
                 begin = selectors.find(view, point, selectors.SEXP_BEGIN)
-                dispatch = Region(point, point + 1)
-                innermost = sexp.innermost(view, begin).extent()
-                return innermost.cover(dispatch)
+                return sexp.innermost(view, begin).extent()
             elif view.match_selector(point, "keyword.operator.macro"):
                 begin = selectors.find(
                     view, point, selectors.SEXP_BEGIN + " | meta.reader-form"
                 )
-                dispatch = Region(point, point + 1)
 
                 if view.match_selector(begin, selectors.SEXP_BEGIN):
-                    innermost = sexp.innermost(view, begin).extent()
-                    return innermost.cover(dispatch)
+                    return sexp.innermost(view, begin).extent()
                 else:
+                    dispatch = Region(point, point + 1)
                     form = selectors.expand_by_selector(view, begin, "meta.reader-form")
                     return form.cover(dispatch)
             elif view.match_selector(point, "meta.reader-form"):
