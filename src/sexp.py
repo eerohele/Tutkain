@@ -107,7 +107,9 @@ def matches_selector_pattern(view, start_point, patterns):
 def has_macro_character_attached_to_sexp(view, point):
     patterns = [
         ["keyword.operator.macro", selectors.SEXP_BEGIN],
+        ["punctuation.definition.comment", selectors.SEXP_BEGIN],
         ["keyword.operator.macro", "keyword.operator.macro", selectors.SEXP_BEGIN],
+        ["keyword.operator.macro", "punctuation.definition.comment", selectors.SEXP_BEGIN],
         [
             "keyword.operator.macro",
             "keyword.operator.macro",
