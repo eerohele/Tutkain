@@ -440,8 +440,7 @@ class TutkainConnectCommand(WindowCommand):
                     if scope == "view":
                         active_view.run_command(command["command"], command["args"])
                     else:
-                        self.window.run_com
-                        mand(command["command"], command["args"])
+                        self.window.run_command(command["command"], command["args"])
 
     def run(self, host, port, view_id=None, then=[]):
         try:
