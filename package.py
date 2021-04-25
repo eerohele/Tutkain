@@ -358,10 +358,13 @@ class TutkainEvaluateCommand(TextCommand):
                     client.recvq.put({edn.Keyword("in"): code})
                     client.eval(code)
             elif scope == "view":
-                eval_region = sublime.Region(0, self.view.size())
+                if not self.view.syntax().scope == "source.clojure":
+                    self.view.window().status_message(f"Active view has incompatible syntax; can't evaluate.")
+                else:
+                    eval_region = sublime.Region(0, self.view.size())
 
-                if not eval_region.empty():
-                    self.evaluate_view(client, self.view.substr(eval_region))
+                    if not eval_region.empty():
+                        self.evaluate_view(client, self.view.substr(eval_region))
             elif scope == "ns":
                 ns_forms = namespace.forms(self.view)
 
