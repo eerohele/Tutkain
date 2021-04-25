@@ -20,9 +20,11 @@
     (future
       (loop []
         (let [item (.take q)]
-          (.println writer (pr-str item))
           (when-not (= ::quit item)
-            (recur)))))
+            (.println writer (pr-str item))
+            (recur))))
+
+      (.shutdownOutput socket))
 
     (future
       (loop []
@@ -33,6 +35,7 @@
 
 (def recvq (LinkedBlockingQueue.))
 (def backchannel (repl/open-backchannel :port 1337))
+(.setSoTimeout (.socket backchannel) 1000)
 (def port (-> backchannel .getLocalAddress .getPort))
 (def sendq (client :host "localhost" :port port :out-fn #(.put recvq %)))
 
@@ -47,5 +50,4 @@
 (send {:op :echo})
 (recv)
 (xr/check! #{{:op :echo}})
-
-(.close backchannel)
+(send ::quit)
