@@ -4,13 +4,20 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - BREAKING: Tutkain can now only connect to the [socket REPL](https://clojure.org/reference/repl_and_main#_launching_a_socket_server). It no longer supports nREPL.
-- BREAKING: Now requires Java 9 or newer. Might relax the requirement to Java 8 if there's demand for it.
 - The `tutkain_evaluate_form`, `tutkain_evaluate_view`, and `tutkain_evaluate_input` commands are now deprecated. Use `tutkain_evaluate` with `scope` arg instead (see example key bindings).
-- Update example key bindings
-- Improve Java package auto-completion
+- The `tutkain_run_tests_in_current_namespace` and `tutkain_run_test_under_cursor` commands are now deprecated. Use `tutkain_run_tests` with `scope` arg instead (see example key bindings).
+- Improve Java package auto-completion (Java 9+ only)
 - Add support for keyword auto-completion
 - Improve documentation popups
-- Avoid clobbering existing window layout
+- Avoid clobbering existing window layout when connecting
+- Add fdef spec info into documentation popup when available
+- Add spec keyword lookup support
+- Allow evaluating discarded forms
+- Add `extend` arg to ParEdit Forward/Backward commands
+
+    If `extend` is `true`, extend the current selection in addition to moving the caret.
+
+- Add support for evaluating snippets (see documentation).
 - Add :require/:import indentation compatibility mode
 
     If there's no newline between `:require` and the thing that immediately follows it, Tutkain will now format subsequent `:require` lines the same way. If there's a newline after `:require/:import`, Tutkain will indent the same as before. **Experimental, may be removed in the future**.
@@ -36,6 +43,7 @@ All notable changes to this project will be documented in this file.
   Mainly because of https://github.com/brandonbloom/fipp/issues/37.
 
 - Fix indentation inside `reify`
+- Update example key bindings
 
 ## 0.6.0 - 2020-11-20
 - Add the **Tutkain: Evaluate** command. Example:
