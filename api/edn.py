@@ -38,20 +38,16 @@ def unread(b, n):
 
 def read_string(b, _):
     with io.StringIO() as s:
-        while (c := b.read(1)) != '"':
-            if c == "\\":
-                stack = 0
+        while (ch := b.read(1)) != '"':
+            if ch == "\\":
+                ch = b.read(1)
 
-                while c == "\\":
-                    c = b.read(1)
-                    stack += 1
+                if ch == "t":
+                    ch = "\t"
+                elif ch in {"n", "r"}:
+                    ch = "\n"
 
-                if c == "n" or c == "r":
-                    s.write("\n")
-                elif c == '"':
-                    s.write(((stack - 2) * "\\") + '"')
-            else:
-                s.write(c)
+            s.write(ch)
 
         return s.getvalue()
 
@@ -107,7 +103,19 @@ def read_map(b, ch):
 
 
 def read_character(b, ch):
-    raise NotImplementedError()
+    ch = b.read(1)
+    token = read_token(b, ch)
+
+    if len(token) == 1:
+        return token
+    elif token == "space":
+        return " "
+    elif token == "tab":
+        return "\t"
+    elif token in {"newline", "return"}:
+        return "\n"
+    else:
+        raise NotImplementedError(ch, token)
 
 
 def read_dispatch(b, ch):
@@ -155,12 +163,12 @@ def read_token(b, ch):
     with io.StringIO() as s:
         s.write(ch)
 
-        while not is_whitespace(x := b.read(1)):
-            if is_terminating_macro(x):
+        while ch := b.read(1):
+            if is_whitespace(ch) or is_terminating_macro(ch):
                 unread(b, 1)
                 break
 
-            s.write(x)
+            s.write(ch)
 
         return s.getvalue()
 

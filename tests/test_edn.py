@@ -18,6 +18,12 @@ class TestEdn(TestCase):
     def setUp(self):
         self.buffer = self.client.makefile(mode="rw")
 
+    def test_character(self):
+        self.buffer.write("\\newline")
+        self.buffer.flush()
+        s = self.buffer.read(8)
+        self.assertEquals("\n", edn.read(s))
+
     def test_roundtrip(self):
         for val in [
             None,
@@ -27,7 +33,7 @@ class TestEdn(TestCase):
             0,
             # -42,
             "Hello, world!",
-            "foo \"bar\" baz",
+            "foo \"bar\" quux\\n",
             "äö",
             [],
             ["spam", 42, 84],
@@ -40,7 +46,7 @@ class TestEdn(TestCase):
             {"status": ["error", "namespace-not-found", "done"], "id": 11},
             {"a": []},
             {"a": [{"b": "c"}]},
-            {edn.Keyword("a"): [{edn.Keyword("b"): edn.Keyword("c")}]}
+            {edn.Keyword("a"): [{edn.Keyword("b"): edn.Keyword("c")}]},
         ]:
             edn.write(self.buffer, val)
             self.assertEquals(val, edn.read_line(self.buffer))
