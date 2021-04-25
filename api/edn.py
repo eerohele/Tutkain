@@ -53,14 +53,14 @@ def read_string(b, _):
 
 
 def read_comment(b, ch):
-    raise NotImplementedError()
+    raise NotImplementedError(b.getvalue(), b.tell(), ch)
 
 
 def read_meta(b, ch):
-    raise NotImplementedError()
+    raise NotImplementedError(b.getvalue(), b.tell(), ch)
 
 
-def read_list(b, ch):
+def read_list(b, _):
     return read_delimited_list(b, ')')
 
 
@@ -76,11 +76,11 @@ def read_delimited_list(b, delim):
     return xs
 
 
-def read_vector(b, ch):
+def read_vector(b, _):
     return read_delimited_list(b, ']')
 
 
-def read_set(b, ch):
+def read_set(b, _):
     return set(read_delimited_list(b, '}'))
 
 
@@ -92,7 +92,7 @@ def read_unmatched_delimiter(b, ch):
     raise UnmatchedDelimiterError(b.getvalue(), b.tell(), ch)
 
 
-def read_map(b, ch):
+def read_map(b, _):
     xs = read_delimited_list(b, '}')
 
     if (len(xs) & 1) == 1:
@@ -102,7 +102,7 @@ def read_map(b, ch):
     return dict(zip(it, it))
 
 
-def read_character(b, ch):
+def read_character(b, _):
     ch = b.read(1)
     token = read_token(b, ch)
 
@@ -230,7 +230,7 @@ def read_line(b):
 # Write
 
 
-def write_nil(b, x):
+def write_nil(b, _):
     b.write("nil")
 
 
