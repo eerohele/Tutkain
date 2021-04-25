@@ -12,6 +12,7 @@
 
 ;; Start shadow-cljs watch
 
+(xr/on-exit #(server/stop!))
 (do (server/start!) (shadow/watch build-id))
 (defn env [] (cljs/compiler-env build-id))
 
