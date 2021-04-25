@@ -1,5 +1,6 @@
 (ns repl.cljs.completions
   (:require
+   [clojure.java.io :as io]
    [clojure.set :as set]
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as server]
@@ -13,6 +14,10 @@
 
 (do (server/start!) (shadow/watch build-id))
 (defn env [] (cljs/compiler-env build-id))
+
+;; Touch the file to ensure the keywords in that file are in the compiler
+;; environment. Not sure why I need to do this.
+(-> (io/file "dev/src/my/app.cljs") (.setLastModified (System/currentTimeMillis)))
 
 (cljs/all-keywords (env))
 (xr/check! #(set/subset? #{:my.app/running :my.app/stopped :require} %))
