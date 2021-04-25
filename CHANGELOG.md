@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 - BREAKING: Tutkain can now only connect to the [socket REPL](https://clojure.org/reference/repl_and_main#_launching_a_socket_server). It no longer supports nREPL.
 - The `tutkain_evaluate_form`, `tutkain_evaluate_view`, and `tutkain_evaluate_input` commands are now deprecated. Use `tutkain_evaluate` with `scope` arg instead (see example key bindings).
 - The `tutkain_run_tests_in_current_namespace` and `tutkain_run_test_under_cursor` commands are now deprecated. Use `tutkain_run_tests` with `scope` arg instead (see example key bindings).
+- Add experimental ClojureScript support
+
+    shadow-cljs only for now, until I can figure out the intricacies of getting
+    a hold of the compiler environment with different ClojureScript tools.
+
 - Improve Java package auto-completion (Java 9+ only)
 - Add support for keyword auto-completion
 - Improve documentation popups
