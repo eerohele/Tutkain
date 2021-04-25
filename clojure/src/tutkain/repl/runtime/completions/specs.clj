@@ -4,7 +4,18 @@
    [clojure.test.check.generators :as gen]))
 
 (spec/def ::candidate string?)
-(spec/def ::type #{:keyword :var :function :static-method :macro :special-form :namespace :class :method})
+
+(spec/def ::type
+  #{:keyword
+    :var
+    :function
+    :static-method
+    :macro
+    :special-form
+    :namespace
+    :class
+    :method
+    :multimethod})
 
 (spec/def ::completion
   (spec/keys :req-un [::candidate ::type]))
