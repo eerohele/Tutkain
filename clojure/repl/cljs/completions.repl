@@ -17,7 +17,10 @@
 
 ;; Touch the file to ensure the keywords in that file are in the compiler
 ;; environment. Not sure why I need to do this.
-(-> (io/file "dev/src/my/app.cljs") (.setLastModified (System/currentTimeMillis)))
+(run!
+  #(-> (io/file %) (.setLastModified (System/currentTimeMillis)))
+  ["dev/src/my/other.cljs" "dev/src/my/app.cljs"])
+(Thread/sleep 3000)
 
 (cljs/all-keywords (env))
 (xr/check! #(set/subset? #{:my.app/running :my.app/stopped :require} %))
