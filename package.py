@@ -386,6 +386,9 @@ class TutkainEvaluateCommand(TextCommand):
 
 
 class EvaluationScopeInputHandler(ListInputHandler):
+    def name(self):
+        return "scope"
+
     def placeholder(self):
         return "Choose evaluation scope"
 
