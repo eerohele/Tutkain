@@ -125,5 +125,3 @@
           (finally
             (.close backchannel)
             (remove-tap tapfn)))))))
-
-(repl)

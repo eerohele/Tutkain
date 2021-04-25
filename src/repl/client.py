@@ -66,7 +66,7 @@ class Client(object):
         log.debug({"event": "client/handshake", "data": self.sink_all()})
 
         self.write_line(cleandoc(f"""
-            #?(:bb (do (prn {{:tag :ret :val "{{}}"}}) ((requiring-resolve 'clojure.core.server/io-prepl))) :clj (load-file "{os.path.join(self.source_root, "repl.clj")}"))
+            #?(:bb (do (prn {{:tag :ret :val "{{}}"}}) ((requiring-resolve 'clojure.core.server/io-prepl))) :clj (do (load-file "{os.path.join(self.source_root, "repl.clj")}") (tutkain.repl.runtime.repl/repl)))
         """))
 
         ret = edn.read_line(self.buffer)
