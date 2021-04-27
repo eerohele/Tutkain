@@ -359,7 +359,9 @@ class TutkainEvaluateCommand(TextCommand):
                     client.eval(code)
             elif scope == "view":
                 if not self.view.syntax().scope == "source.clojure":
-                    self.view.window().status_message(f"Active view has incompatible syntax; can't evaluate.")
+                    self.view.window().status_message(
+                        "Active view has incompatible syntax; can't evaluate."
+                    )
                 else:
                     eval_region = sublime.Region(0, self.view.size())
 
