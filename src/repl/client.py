@@ -66,7 +66,8 @@ class Client(object):
 
         with open(os.path.join(self.source_root, "repl.clj"), "rb") as file:
             blob = base64.b64encode(file.read()).decode("utf-8")
-            self.write_line(f"""#?(:bb (do (prn {{:tag :ret :val "{{}}"}}) ((requiring-resolve 'clojure.core.server/io-prepl))) :clj (do (with-open [reader (-> (java.util.Base64/getDecoder) (.decode "{blob}") (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader)) (tutkain.repl.runtime.repl/repl)))""")
+            backchannel_port = self.backchannel_opts.get("port", 0)
+            self.write_line(f"""#?(:bb (do (prn {{:tag :ret :val "{{}}"}}) ((requiring-resolve 'clojure.core.server/io-prepl))) :clj (do (with-open [reader (-> (java.util.Base64/getDecoder) (.decode "{blob}") (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader)) (try (tutkain.repl.runtime.repl/repl {{:port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))))""")
 
         ret = edn.read_line(self.buffer)
 
@@ -74,10 +75,12 @@ class Client(object):
             port = ret.get(edn.Keyword("port"))
             self.backchannel = Backchannel(host, port).connect()
             self.bare = True
-        elif isinstance(ret, dict) and (val := edn.read(ret.get(edn.Keyword("val")))):
+        elif isinstance(ret, dict) and (val := edn.read(ret.get(edn.Keyword("val")))) and isinstance(val, dict):
             host = val.get(edn.Keyword("host"))
             port = val.get(edn.Keyword("port"))
             self.backchannel = Backchannel(host, port).connect()
+        else:
+            self.recvq.put(ret)
 
         self.load_modules(self.backchannel)
         self.write_line(self.handshake_payloads["print_version"])
