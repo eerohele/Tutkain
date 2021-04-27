@@ -24,8 +24,10 @@
     (update event :expected str)))
 
 (defn- pprint-actual
-  [event]
-  (update event :actual (comp pp-str organize last last)))
+  [{:keys [actual] :as event}]
+  (if (sequential? actual)
+    (update event :actual (comp pp-str organize last last))
+    (update event :actual pp-str)))
 
 (defn- event-var-meta
   [event]
