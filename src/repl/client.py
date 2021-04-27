@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from inspect import cleandoc
+import base64
 import queue
 import os
 import select
@@ -44,30 +45,28 @@ class Client(object):
         return bs
 
     def initialize_cljs(self, handler):
-        file = os.path.join(self.source_root, "cljs.clj")
+        with open(os.path.join(self.source_root, "cljs.clj"), "rb") as file:
+            self.backchannel.send({
+                edn.Keyword("op"): edn.Keyword("load-base64"),
+                edn.Keyword("filename"): "cljs.clj",
+                edn.Keyword("blob"): base64.b64encode(file.read()).decode("utf-8")
+            }, handler=handler)
 
-        self.eval(
-            f"""(try (clojure.core/load-file "{file}") true (catch clojure.lang.Compiler$CompilerException _ false))""",
-            handler=handler
-        )
-
-    def blob(self):
-        files = list(map(
-            lambda file: '"' + os.path.join(self.source_root, file) + '"',
-            ["lookup.clj",
-             "completions.clj",
-             "load_blob.clj",
-             "test.clj"]
-        ))
-
-        return f"""#?(:bb nil :clj (run! load-file [{" ".join(files)}]))"""
+    def load_modules(self, backchannel):
+        for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj"]:
+            with open(os.path.join(self.source_root, filename), "rb") as file:
+                backchannel.send({
+                    edn.Keyword("op"): edn.Keyword("load-base64"),
+                    edn.Keyword("filename"): filename,
+                    edn.Keyword("blob"): base64.b64encode(file.read()).decode("utf-8")
+                })
 
     def handshake(self):
         log.debug({"event": "client/handshake", "data": self.sink_all()})
 
-        self.write_line(cleandoc(f"""
-            #?(:bb (do (prn {{:tag :ret :val "{{}}"}}) ((requiring-resolve 'clojure.core.server/io-prepl))) :clj (do (load-file "{os.path.join(self.source_root, "repl.clj")}") (tutkain.repl.runtime.repl/repl)))
-        """))
+        with open(os.path.join(self.source_root, "repl.clj"), "rb") as file:
+            blob = base64.b64encode(file.read()).decode("utf-8")
+            self.write_line(f"""#?(:bb (do (prn {{:tag :ret :val "{{}}"}}) ((requiring-resolve 'clojure.core.server/io-prepl))) :clj (do (with-open [reader (-> (java.util.Base64/getDecoder) (.decode "{blob}") (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader)) (tutkain.repl.runtime.repl/repl)))""")
 
         ret = edn.read_line(self.buffer)
 
@@ -80,8 +79,7 @@ class Client(object):
             port = val.get(edn.Keyword("port"))
             self.backchannel = Backchannel(host, port).connect()
 
-        self.write_line(self.blob())
-        log.debug({"event": "client/handshake", "data": self.buffer.readline()})
+        self.load_modules(self.backchannel)
         self.write_line(self.handshake_payloads["print_version"])
 
         if self.bare:

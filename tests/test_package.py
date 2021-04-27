@@ -16,17 +16,8 @@ def conduct_handshake(server):
             edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
         })
 
-        form = server.recv()
-
-        server.send({
-            edn.Keyword("tag"): edn.Keyword("ret"),
-            edn.Keyword("val"): "nil",
-            edn.Keyword("ns"): "user",
-            edn.Keyword("ms"): 253,
-            edn.Keyword("form"): form
-        })
-
-        server.recv()
+        for _ in range(4):
+            backchannel.recv()
 
         server.send({
             edn.Keyword("tag"): edn.Keyword("out"),
@@ -40,6 +31,8 @@ def conduct_handshake(server):
             edn.Keyword("ms"): 0,
             edn.Keyword("form"): Client.handshake_payloads["print_version"]
         })
+
+        server.recv()
 
         return backchannel
 
@@ -106,7 +99,7 @@ class TestEvaluation(ViewTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
         self.assertEquals(
-            '{:op :load :code "(ns foo.bar) (defn x [y] y)" :file nil :dialect :clj :id 1}\n',
+            '{:op :load :code "(ns foo.bar) (defn x [y] y)" :file nil :dialect :clj :id 5}\n',
             self.backchannel.recv()
         )
 

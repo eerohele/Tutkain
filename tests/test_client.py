@@ -28,17 +28,10 @@ class TestClient(TestCase):
                         edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
                     })
 
-                    # Client sends load-file request for backchannel assets
-                    form = server.recv()
-
-                    # Server ack
-                    server.send({
-                        edn.Keyword("tag"): edn.Keyword("ret"),
-                        edn.Keyword("val"): "nil",  # really nil\n
-                        edn.Keyword("ns"): "user",
-                        edn.Keyword("ms"): 253,
-                        edn.Keyword("form"): form
-                    })
+                    for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj"]:
+                        response = edn.read(backchannel.recv())
+                        self.assertEquals(edn.Keyword("load-base64"), response.get(edn.Keyword("op")))
+                        self.assertEquals(filename, response.get(edn.Keyword("filename")))
 
                     self.assertEquals(
                         Client.handshake_payloads["print_version"],

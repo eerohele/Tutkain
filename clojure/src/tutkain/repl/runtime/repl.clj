@@ -3,9 +3,11 @@
    [clojure.main :as main]
    [clojure.pprint :as pprint])
   (:import
-   (clojure.lang LineNumberingPushbackReader)
+   (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
+   (java.io ByteArrayInputStream InputStreamReader)
    (java.net InetSocketAddress)
-   (java.nio.channels Channels ServerSocketChannel)))
+   (java.nio.channels Channels ServerSocketChannel)
+   (java.util Base64)))
 
 (defn response-for
   [{:keys [id]} response]
@@ -20,6 +22,24 @@
 (defmethod handle :default
   [message]
   (throw (ex-info "Unknown op" {:message message})))
+
+(defn ^:private base64-reader
+  [blob]
+  (->
+    (Base64/getDecoder)
+    (.decode blob)
+    (ByteArrayInputStream.)
+    (InputStreamReader.)
+    (LineNumberingPushbackReader.)))
+
+(defmethod handle :load-base64
+  [{:keys [blob filename out-fn] :as message}]
+  (with-open [reader (base64-reader blob)]
+    (try
+      (Compiler/load reader)
+      (out-fn (response-for message {:filename filename :result :ok}))
+      (catch Compiler$CompilerException _
+        (out-fn (response-for message {:filename filename :result :fail}))))))
 
 (defn pp-str
   [x]

@@ -998,15 +998,14 @@ class TutkainInitializeClojurescriptSupportCommand(WindowCommand):
         else:
             handler = lambda _: self.set_build_id(client, build_id)
 
-        val = response.get(edn.Keyword("val"))
-
-        if val and edn.read(val):
-            client.backchannel.send({edn.Keyword("op"): edn.Keyword("initialize-cljs")}, handler=handler)
+        if response.get(edn.Keyword("result"), edn.Keyword("fail")) == edn.Keyword("ok"):
+            client.backchannel.send({
+                edn.Keyword("op"): edn.Keyword("initialize-cljs")
+            }, handler=handler)
         else:
             client.recvq.put({
                 edn.Keyword("tag"): edn.Keyword("err"),
                 edn.Keyword("val"): "ClojureScript initialization failed.\n"
-
             })
 
     def run(self, build_id=None):
