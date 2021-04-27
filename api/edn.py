@@ -32,6 +32,10 @@ class Symbol:
 # Read
 
 
+def error(error, b, ch):
+    raise error(b.getvalue(), b.tell(), ch)
+
+
 def unread(b, n):
     b.seek(b.tell() - n)
 
@@ -53,11 +57,11 @@ def read_string(b, _):
 
 
 def read_comment(b, ch):
-    raise NotImplementedError(b.getvalue(), b.tell(), ch)
+    error(NotImplementedError, b, ch)
 
 
 def read_meta(b, ch):
-    raise NotImplementedError(b.getvalue(), b.tell(), ch)
+    error(NotImplementedError, b, ch)
 
 
 def read_list(b, _):
@@ -89,7 +93,7 @@ class UnmatchedDelimiterError(ValueError):
 
 
 def read_unmatched_delimiter(b, ch):
-    raise UnmatchedDelimiterError(b.getvalue(), b.tell(), ch)
+    error(UnmatchedDelimiterError, b, ch)
 
 
 def read_map(b, _):
@@ -115,7 +119,7 @@ def read_character(b, _):
     elif token in {"newline", "return"}:
         return "\n"
     else:
-        raise NotImplementedError(ch, token)
+        error(NotImplementedError, b, ch)
 
 
 def read_dispatch(b, ch):
@@ -124,7 +128,7 @@ def read_dispatch(b, ch):
     if x == '{':
         return read_set(b, ch)
     else:
-        raise NotImplementedError()
+        error(NotImplementedError, b, ch)
 
 
 # https://github.com/clojure/clojure/blob/ecd5ff59e07de649a9f9affb897d02165fe7e553/src/jvm/clojure/lang/EdnReader.java#L37-L59
