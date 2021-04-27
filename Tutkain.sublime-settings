@@ -20,5 +20,22 @@
   // If you use something like clojure-lsp, you might want to turn this off to
   // prevent Tutkain's auto-completion from interfering with clojure-lsp's
   // auto-completion.
-  "auto_complete": true
+  "auto_complete": true,
+
+  // Backchannel settings.
+  //
+  // The backchannel powers features like auto-completion, var lookup,
+  // clojure.test integration, etc.
+  "backchannel": {
+    // The TCP socket port you want the backchannel to listen on. Use port
+    // number 0 to automatically allocate an available port.
+    //
+    // You only need to override this setting if you want to use Tutkain over
+    // an SSH tunnel or if you're debugging Tutkain itself.
+    //
+    // NOTE: If you use a fixed port number, you can only open a single
+    // connection from Tutkain to a socket REPL server. This is because
+    // Tutkain currently uses one backchannel per REPL connection.
+    "port": 0
+  }
 }

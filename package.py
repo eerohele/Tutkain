@@ -453,7 +453,15 @@ class TutkainConnectCommand(WindowCommand):
         try:
             active_view = self.window.active_view()
             tap.create_panel(self.window)
-            client = Client(source_root(), host, int(port)).connect(then=lambda _: self.run_commands(active_view, then))
+
+            client = Client(
+                source_root(), host, int(port), backchannel_opts={
+                    "port": settings().get("backchannel").get("port")
+                }
+            )
+
+            client.connect(then=lambda _: self.run_commands(active_view, then))
+
             self.set_layout()
             view = views.configure(self.window, client, view_id)
 

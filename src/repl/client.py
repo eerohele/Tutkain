@@ -119,7 +119,7 @@ class Client(object):
             except OSError as e:
                 log.debug({"event": "error", "exception": e})
 
-    def __init__(self, source_root, host, port, wait=5):
+    def __init__(self, source_root, host, port, backchannel_opts={}, wait=5):
         self.source_root = source_root
         self.host = host
         self.port = port
@@ -131,6 +131,7 @@ class Client(object):
         self.namespace = "user"
         self.bare = False
         self.ready = False
+        self.backchannel_opts = backchannel_opts
         self.wait = wait
 
         self.executor = ThreadPoolExecutor(thread_name_prefix="tutkain.client")

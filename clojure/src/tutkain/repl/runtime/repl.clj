@@ -47,7 +47,7 @@
     (-> x pprint/pprint with-out-str)))
 
 (defn open-backchannel
-  [& {:keys [port] :or {port 0}}]
+  [{:keys [port] :or {port 0}}]
   (let [socket (ServerSocketChannel/open)
         address (InetSocketAddress. "localhost" port)
         repl-thread (Thread/currentThread)]
@@ -84,7 +84,7 @@
   `(or (some-> (quote ~ns-sym) find-ns ns-name in-ns) (ns ~ns-sym)))
 
 (defn repl
-  []
+  [opts]
   (let [EOF (Object.)
         lock (Object.)
         out *out*
@@ -95,7 +95,7 @@
                    (locking lock
                      (prn message))))
         tapfn #(out-fn {:tag :tap :val (pp-str %1)})
-        backchannel (open-backchannel)]
+        backchannel (open-backchannel opts)]
     (main/with-bindings
       (in-ns 'user)
       (apply require main/repl-requires)
