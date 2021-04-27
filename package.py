@@ -358,7 +358,9 @@ class TutkainEvaluateCommand(TextCommand):
                     client.recvq.put({edn.Keyword("in"): code})
                     client.eval(code)
             elif scope == "view":
-                if not self.view.syntax().scope == "source.clojure":
+                syntax = self.view.syntax()
+
+                if syntax and not syntax.scope == "source.clojure":
                     self.view.window().status_message(
                         "Active view has incompatible syntax; can't evaluate."
                     )
