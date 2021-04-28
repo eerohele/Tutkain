@@ -27,3 +27,7 @@
 (require '[clojure.core.specs.alpha :as core.specs])
 (lookup 'user ::core.specs/local-name)
 (xr/check! ::specs/info)
+
+(require '[clojure.spec.alpha :as spec])
+(lookup 'user 'clojure.spec.alpha)
+(xr/check! (spec/keys :req-un [::specs/name ::specs/doc ::specs/file ::specs/column ::specs/line]))

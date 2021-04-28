@@ -24,12 +24,18 @@
 
 (defn sym-meta
   [ns sym]
-  (let [var (ns-resolve ns sym)
-        fnspec* (fnspec var)]
-    (cond-> (if (special-symbol? sym)
-              (special-sym-meta sym)
-              (some-> var meta))
-      (seq fnspec*) (assoc :fnspec fnspec*))))
+  (if-some [found-ns (find-ns sym)]
+    (merge (meta found-ns)
+      {:name (ns-name found-ns)
+       :file (->> found-ns ns-interns vals first meta :file)
+       :line 0
+       :column 0})
+    (let [var (ns-resolve ns sym)
+          fnspec* (fnspec var)]
+      (cond-> (if (special-symbol? sym)
+                (special-sym-meta sym)
+                (some-> var meta))
+        (seq fnspec*) (assoc :fnspec fnspec*)))))
 
 (defn ^:private remove-empty
   [m]
@@ -54,7 +60,8 @@
       (some->
         m
         (select-keys [:name :file :column :line :arglists :doc :fnspec])
-        (assoc :name (symbol (str (ns-name sym-ns)) (name sym-name)))
+        (assoc :ns (some-> sym-ns ns-name name))
+        (assoc :name sym-name)
         (update :file resolve-file)
         (update :arglists #(map pr-str %))
         (remove-empty)))))
