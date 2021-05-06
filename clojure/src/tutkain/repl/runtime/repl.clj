@@ -46,6 +46,13 @@
   (binding [pprint/*print-right-margin* 100]
     (-> x pprint/pprint with-out-str)))
 
+(defonce current-ns
+  (atom (the-ns 'user)))
+
+(defmethod handle :switch-ns
+  [{:keys [ns]}]
+  (reset! current-ns (some-> ns symbol find-ns the-ns)))
+
 (defn open-backchannel
   [{:keys [port] :or {port 0}}]
   (let [socket (ServerSocketChannel/open)
@@ -79,10 +86,6 @@
         (.start))
       socket)))
 
-(defmacro switch-ns
-  [ns-sym]
-  `(or (some-> (quote ~ns-sym) find-ns ns-name in-ns) (ns ~ns-sym)))
-
 (defn repl
   [opts]
   (let [EOF (Object.)
@@ -111,6 +114,7 @@
                     (let [[form s] (read+string {:eof EOF :read-cond :allow} *in*)]
                       (try
                         (when-not (identical? form EOF)
+                          (set! *ns* @current-ns)
                           (let [start (System/nanoTime)
                                 ret (eval form)
                                 ms (quot (- (System/nanoTime) start) 1000000)]

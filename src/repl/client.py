@@ -157,8 +157,10 @@ class Client(object):
     def switch_namespace(self, ns, dialect=edn.Keyword("clj")):
         if self.ready:
             if dialect == edn.Keyword("clj"):
-                code = f"""(tutkain.repl.runtime.repl/switch-ns {ns})"""
-                self.eval(code, lambda _: None)
+                self.backchannel.send({
+                    edn.Keyword("op"): edn.Keyword("switch-ns"),
+                    edn.Keyword("ns"): ns
+                })
 
     def read_line(self):
         if self.bare:
