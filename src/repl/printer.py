@@ -33,24 +33,25 @@ def print_loop(view, client):
                 view.window().run_command("show_panel", {"panel": f"output.{tap.panel_name}"})
                 panel = view.window().find_output_panel(tap.panel_name)
                 append_to_view(panel, printable)
+            elif tag == edn.Keyword("out"):
+                # Print U+2063 around stdout to prevent them from getting syntax highlighting.
+                #
+                # This is probably somewhat evil, but the performance is *so* much better than
+                # with view.add_regions.
+                #
+                # TODO: Something similar with stderr?
+                append_to_view(view, '⁣' + printable + '⁣')
             else:
                 append_to_view(view, printable)
 
             view.set_name(f"REPL · {client.namespace} · {client.host}:{client.port}")
 
-            if tag in {edn.Keyword("out"), edn.Keyword("err")}:
+            if tag == edn.Keyword("err"):
                 size = view.size()
-
-                scope = (
-                    "tutkain.repl.stderr"
-                    if tag == edn.Keyword("err")
-                    else "tutkain.repl.stdout"
-                )
-
                 regions = [Region(size - len(printable), size)]
 
                 view.add_regions(
-                    str(next(counter)), regions, scope=scope, flags=DRAW_NO_OUTLINE
+                    str(next(counter)), regions, scope="tutkain.repl.stderr", flags=DRAW_NO_OUTLINE
                 )
     finally:
         log.debug({"event": "thread/exit"})

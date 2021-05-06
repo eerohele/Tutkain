@@ -37,7 +37,7 @@ def create(window, client):
     if client.bare:
         view.assign_syntax("Packages/Text/Plain Text.tmLanguage")
     else:
-        view.assign_syntax("Clojure (Tutkain).sublime-syntax")
+        view.assign_syntax("REPL (Tutkain).sublime-syntax")
 
     window.set_view_index(view, target_group, view_count)
 

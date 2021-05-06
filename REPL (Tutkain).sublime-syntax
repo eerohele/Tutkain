@@ -1,0 +1,19 @@
+%YAML 1.2
+---
+# https://www.sublimetext.com/docs/syntax.html
+name: REPL (Tutkain)
+scope: source.clojure.repl
+extends: Packages/Tutkain/Clojure (Tutkain).sublime-syntax
+
+contexts:
+  main:
+    - include: stray-brackets
+    - include: stdout
+    - include: forms
+
+  stdout:
+    - match: '⁣' # U+2063
+      push:
+        - meta_scope: text.plain
+        - match: '⁣' # U+2063
+          pop: true
