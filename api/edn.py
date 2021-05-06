@@ -263,6 +263,13 @@ def write_keyword(b, x):
     b.write(x.name)
 
 
+def write_symbol(b, x):
+    if x.namespace:
+        b.write(x.namespace + "/")
+
+    b.write(x.name)
+
+
 def write_list(b, xs):
     b.write("[")
 
@@ -315,6 +322,8 @@ def write1(b, x):
         write_str(b, x)
     elif isinstance(x, Keyword):
         write_keyword(b, x)
+    elif isinstance(x, Symbol):
+        write_symbol(b, x)
     elif isinstance(x, set):
         write_set(b, x)
     elif isinstance(x, list):
