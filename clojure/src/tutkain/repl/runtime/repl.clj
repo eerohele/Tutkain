@@ -129,7 +129,7 @@
                                               (if (instance? Throwable ret)
                                                 (Throwable->map ret)
                                                 ret))
-                                       :ns (str (.name *ns*))
+                                       :ns (str (reset! current-ns (.name *ns*)))
                                        :ms ms
                                        :form s})
                               true)))
@@ -137,14 +137,14 @@
                           (set! *e ex)
                           (out-fn {:tag :err
                                    :val (-> ex Throwable->map main/ex-triage main/ex-str)
-                                   :ns (str (.name *ns*))
+                                   :ns (str (reset! current-ns (.name *ns*)))
                                    :form s})
                           true)))
                     (catch Throwable ex
                       (set! *e ex)
                       (out-fn {:tag :ret
                                :val (pp-str (assoc (Throwable->map ex) :phase :read-source))
-                               :ns (str (.name *ns*))
+                               :ns (str (reset! current-ns (.name *ns*)))
                                :exception true})
                       true))
               (recur)))
