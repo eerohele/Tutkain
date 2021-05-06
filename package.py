@@ -401,12 +401,12 @@ class EvaluationScopeInputHandler(ListInputHandler):
 
     def list_items(self):
         return [
-            sublime.ListInputItem("Adjacent form", "form", details="The form (not necessarily S-expression) adjacent to the caret."),
+            sublime.ListInputItem("Adjacent Form", "form", details="The form (not necessarily S-expression) adjacent to the caret."),
             sublime.ListInputItem("Innermost S-expression", "innermost", details="The innermost S-expression with respect to the caret position."),
             sublime.ListInputItem("Outermost S-expression", "outermost", details="The outermost S-expression with respect to the caret position.", annotation="ignores (comment)"),
-            sublime.ListInputItem("Active view", "view", details="The entire contents of the currently active view."),
+            sublime.ListInputItem("Active View", "view", details="The entire contents of the currently active view."),
             sublime.ListInputItem("Input", "input", details="Tutkain prompts you for input to evaluate."),
-            sublime.ListInputItem("Namespace declarations", "ns", details="Every namespace declaration (<code>ns</code> form) in the active view."),
+            sublime.ListInputItem("Namespace Declarations", "ns", details="Every namespace declaration (<code>ns</code> form) in the active view."),
         ]
 
 
