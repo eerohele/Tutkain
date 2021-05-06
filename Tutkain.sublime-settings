@@ -9,6 +9,9 @@
   // - "vertical"
   "layout": "horizontal",
 
+  // Enable or disable var info lookup on hover.
+  "lookup_on_hover": true,
+
   // Enable or disable tap panel.
   //
   // If the tap panel is enabled, calling clojure.core/tap> will pretty-print the the function

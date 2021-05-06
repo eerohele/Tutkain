@@ -659,7 +659,8 @@ class TutkainEventListener(EventListener):
                 repl_view.set_name(f"REPL · {ns} · {client.host}:{client.port}")
 
     def on_hover(self, view, point, hover_zone):
-        lookup(view, point, lambda response: info.show_popup(view, point, response))
+        if settings().get("lookup_on_hover"):
+            lookup(view, point, lambda response: info.show_popup(view, point, response))
 
     def on_close(self, view):
         if view.settings().get("tutkain_repl_output_view"):
