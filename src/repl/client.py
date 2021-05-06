@@ -157,10 +157,14 @@ class Client(object):
     def switch_namespace(self, ns, dialect=edn.Keyword("clj")):
         if self.ready:
             if dialect == edn.Keyword("clj"):
+                def handler(response):
+                    if ns := response.get(edn.Keyword("ns")):
+                        self.namespace = ns.name
+
                 self.backchannel.send({
                     edn.Keyword("op"): edn.Keyword("switch-ns"),
                     edn.Keyword("ns"): edn.Symbol(ns)
-                })
+                }, handler=handler)
 
     def read_line(self):
         if self.bare:
