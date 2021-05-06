@@ -159,7 +159,7 @@ class Client(object):
             if dialect == edn.Keyword("clj"):
                 self.backchannel.send({
                     edn.Keyword("op"): edn.Keyword("switch-ns"),
-                    edn.Keyword("ns"): ns
+                    edn.Keyword("ns"): edn.Symbol(ns)
                 })
 
     def read_line(self):
