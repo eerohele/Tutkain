@@ -99,7 +99,12 @@ class TestEvaluation(ViewTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
         self.assertEquals(
-            '{:op :load :code "(ns foo.bar) (defn x [y] y)" :file nil :dialect :clj :id 5}\n',
+            '{:op :switch-ns :ns foo.bar :id 5}\n',
+            self.backchannel.recv()
+        )
+
+        self.assertEquals(
+            '{:op :load :code "(ns foo.bar) (defn x [y] y)" :file nil :dialect :clj :id 6}\n',
             self.backchannel.recv()
         )
 
