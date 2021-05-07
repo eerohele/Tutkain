@@ -218,21 +218,36 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
 
-    // Show information about the symbol under the cursor.
+    // Show information about the symbol or keyword under the cursor.
     //
-    // If the view has multiple cursors, show information about the symbol under the first cursor.
+    // If the view has multiple cursors, show information about the symbol or
+    // keyword under the first cursor.
     //
-    // Click the name of the symbol in the popup to go to the definition for that symbol.
+    // Click the name of the symbol in the popup to go to the definition for
+    // that symbol.
     {
         "keys": ["ctrl+c", "ctrl+f"],
-        "command": "tutkain_show_symbol_information",
+        "command": "tutkain_show_information",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
-    // Goto symbol definition.
+    // Show information for the head element of the current S-expression (a
+    // function).
+    //
+    // Starting from the current caret position, walk backward until the first
+    // form that matches the variable.function scope and look up the
+    // information for that element.
+    {
+        "keys": ["ctrl+c", "ctrl+h"],
+        "command": "tutkain_show_information",
+        "args": {"selector": "variable.function", "forward": false},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Goto definition.
     {
         "keys": ["ctrl+c", "ctrl+g"],
-        "command": "tutkain_goto_symbol_definition",
+        "command": "tutkain_goto_definition",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
