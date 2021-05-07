@@ -83,3 +83,11 @@ java.
 
 (div 10 0)
 ::tl
+
+;; https://www.cognitect.com/blog/2017/6/5/repl-debugging-no-stacktrace-required
+(defn foo
+  [n]
+  (cond
+    (> n 40) (+ n 20)
+    (> n 20) (- (first n) 20)
+    :else 0))
