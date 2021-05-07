@@ -110,3 +110,17 @@ def seek_forward(view, start_point, pred):
             return form
         else:
             point = form.end()
+
+
+def seek_backward(view, start_point, pred):
+    point = start_point
+
+    while point >= 0:
+        form = find_previous(view, point)
+
+        if form is None:
+            return Region(0, 0)
+        elif pred(form):
+            return form
+        else:
+            point = form.begin()
