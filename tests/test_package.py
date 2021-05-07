@@ -99,12 +99,12 @@ class TestEvaluation(ViewTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
         self.assertEquals(
-            '{:op :switch-ns :ns foo.bar :id 5}\n',
+            '{:op :switch-ns :ns foo.bar :id 6}\n',
             self.backchannel.recv()
         )
 
         self.assertEquals(
-            '{:op :load :code "(ns foo.bar) (defn x [y] y)" :file nil :dialect :clj :id 6}\n',
+            '{:op :load :code "(ns foo.bar) (defn x [y] y)" :file nil :dialect :clj :id 7}\n',
             self.backchannel.recv()
         )
 
@@ -125,3 +125,17 @@ class TestEvaluation(ViewTestCase):
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.assertEquals(":a\n", self.server.recv())
+
+    def test_lookup_head(self):
+        self.set_view_content("(map inc )")
+        self.set_selections((9, 9))
+
+        self.view.run_command("tutkain_show_information", {
+            "selector": "variable.function",
+            "forward": False
+        })
+
+        self.assertEquals(
+            '{:op :lookup :named "map" :ns nil :dialect :clj :id 5}\n',
+            self.backchannel.recv()
+        )

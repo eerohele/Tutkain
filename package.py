@@ -580,45 +580,62 @@ class TutkainViewEventListener(ViewEventListener):
             return completion_list
 
 
-def lookup(view, point, handler):
-    is_repl_output_view = view.settings().get("tutkain_repl_output_view")
-
-    if (
-        view.match_selector(
-            point,
-            "source.clojure & (meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified)"
-        )
-        and not is_repl_output_view
-    ):
-        if (symbol := selectors.expand_by_selector(
-            view,
-            point,
-            "meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified"
-        )) and (client := state.client(view.window())):
-            client.backchannel.send({
-                edn.Keyword("op"): edn.Keyword("lookup"),
-                edn.Keyword("named"): view.substr(symbol),
-                edn.Keyword("ns"): namespace.name(view),
-                edn.Keyword("dialect"): dialect(view, point)
-            },
-                handler=handler
-            )
+def lookup(view, form, handler):
+    if not view.settings().get("tutkain_repl_output_view") and form and (client := state.client(view.window())):
+        client.backchannel.send({
+            edn.Keyword("op"): edn.Keyword("lookup"),
+            edn.Keyword("named"): view.substr(form),
+            edn.Keyword("ns"): namespace.name(view),
+            edn.Keyword("dialect"): dialect(view, form.begin())
+        }, handler)
 
 
-class TutkainShowSymbolInformationCommand(TextCommand):
+class TutkainShowInformationCommand(TextCommand):
+    def handler(self, form, response):
+        info.show_popup(self.view, form.begin(), response)
+
+    def predicate(self, selector, form):
+        return self.view.match_selector(form.begin(), selector)
+
+    def run(self, _, selector="meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified", forward=True):
+        start_point = self.view.sel()[0].begin()
+
+        if form := forms.seek_backward(self.view, start_point, lambda form: self.predicate(selector, form)):
+            lookup(self.view, form, lambda response: self.handler(form, response))
+
+
+class TutkainGotoDefinitionCommand(TextCommand):
     def handler(self, response):
-        info.show_popup(self.view, self.view.sel()[0].begin(), response)
+        info.goto(self.view.window(), info.parse_location(response.get(edn.Keyword("info"))))
 
-    def run(self, edit):
-        lookup(self.view, self.view.sel()[0].begin(), self.handler)
+    def run(self, _):
+        point = self.view.sel()[0].begin()
+        form = selectors.expand_by_selector(self.view, point, "meta.symbol")
+        lookup(self.view, form, self.handler)
 
 
+# DEPRECATED
+class TutkainShowSymbolInformationCommand(TextCommand):
+    def handler(self, form, response):
+        info.show_popup(self.view, form.begin(), response)
+
+    def run(self, _):
+        self.view.window().status_message("tutkain_show_symbol_information is deprecated; use tutkain_show_information instead")
+        point = self.view.sel()[0].begin()
+        form = selectors.expand_by_selector(self.view, point, "meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified")
+        lookup(self.view, form, lambda response: self.handler(form, response))
+
+
+# DEPRECATED
 class TutkainGotoSymbolDefinitionCommand(TextCommand):
     def handler(self, response):
         info.goto(self.view.window(), info.parse_location(response.get(edn.Keyword("info"))))
 
-    def run(self, edit):
-        lookup(self.view, self.view.sel()[0].begin(), self.handler)
+    def run(self, _):
+        self.view.window().status_message("tutkain_goto_symbol_definition is deprecated; use tutkain_goto_definition instead")
+        point = self.view.sel()[0].begin()
+        form = selectors.expand_by_selector(self.view, point, "meta.symbol")
+        lookup(self.view, form, self.handler)
 
 
 def reconnect(vs):
