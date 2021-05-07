@@ -52,9 +52,8 @@
 
 (defn ^:private clean-ns!
   [ns]
-  (run! #(ns-unalias ns (first %)) (ns-aliases ns))
-  (->>
-    (ns-publics ns)
+  (some->> ns ns-aliases (run! #(ns-unalias ns (first %))))
+  (some->> ns ns-publics
     (filter (fn [[_ v]] (-> v meta :test)))
     (run! (fn [[sym _]] (ns-unmap ns sym)))))
 
