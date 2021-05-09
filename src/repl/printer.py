@@ -44,8 +44,6 @@ def print_loop(view, client):
             else:
                 append_to_view(view, printable)
 
-            view.set_name(f"REPL · {client.namespace} · {client.host}:{client.port}")
-
             if tag == edn.Keyword("err"):
                 size = view.size()
                 regions = [Region(size - len(printable), size)]
