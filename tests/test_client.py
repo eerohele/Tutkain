@@ -60,6 +60,23 @@ class TestClient(TestCase):
                     }, client.printq.get(timeout=1))
 
                     client.eval("(inc 1)")
+
+                    self.assertEquals(
+                        {edn.Keyword("op"): edn.Keyword("set-eval-context"),
+                         edn.Keyword("id"): 5,
+                         edn.Keyword("file"): "NO_SOURCE_FILE",
+                         edn.Keyword("ns"): edn.Symbol("user"),
+                         edn.Keyword("line"): 1,
+                         edn.Keyword("column"): 1},
+                        edn.read(backchannel.recv())
+                    )
+
+                    backchannel.send({
+                        edn.Keyword("id"): 5,
+                        edn.Keyword("file"): None,
+                        edn.Keyword("ns"): edn.Symbol("user")
+                    })
+
                     self.assertEquals("(inc 1)\n", server.recv())
 
                     response = {

@@ -20,7 +20,6 @@ class Client(object):
         self.executor.submit(self.send_loop)
         self.executor.submit(self.recv_loop)
         self.executor.submit(self.format_loop)
-        self.ready = True
         return self
 
     def write_line(self, line):
@@ -131,7 +130,6 @@ class Client(object):
         self.handlers = {}
         self.namespace = "user"
         self.bare = False
-        self.ready = False
         self.backchannel_opts = backchannel_opts
         self.wait = wait
 
@@ -151,21 +149,16 @@ class Client(object):
 
         log.debug({"event": "thread/exit"})
 
-    def eval(self, code, handler=None):
+    def eval(self, code, file="NO_SOURCE_FILE", ns="user", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put
-        self.sendq.put(code)
 
-    def switch_namespace(self, ns, dialect=edn.Keyword("clj")):
-        if self.ready:
-            if dialect == edn.Keyword("clj"):
-                def handler(response):
-                    if ns := response.get(edn.Keyword("ns")):
-                        self.namespace = ns.name
-
-                self.backchannel.send({
-                    edn.Keyword("op"): edn.Keyword("switch-ns"),
-                    edn.Keyword("ns"): edn.Symbol(ns)
-                }, handler=handler)
+        self.backchannel.send({
+            edn.Keyword("op"): edn.Keyword("set-eval-context"),
+            edn.Keyword("file"): file,
+            edn.Keyword("ns"): edn.Symbol(ns),
+            edn.Keyword("line"): line + 1,
+            edn.Keyword("column"): column + 1
+        }, lambda _: self.sendq.put(code))
 
     def read_line(self):
         if self.bare:

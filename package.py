@@ -137,6 +137,17 @@ def source_root():
     )
 
 
+def evaluate(view, client, code, point=None, handler=None):
+    if point:
+        line, column = view.rowcol(point)
+    else:
+        line, column = 0, 0
+
+    file = view.file_name() or "NO_SOURCE_FILE"
+    ns = namespace.name(view) or "user"
+    client.eval(code, file, ns, line, column, handler)
+
+
 class TutkainClearOutputViewCommand(WindowCommand):
     def clear_view(self, view):
         if view:
@@ -291,9 +302,6 @@ class TutkainEvaluateCommand(TextCommand):
             edn.Keyword("dialect"): dialect(self.view, 0)
         }
 
-        if ns := namespace.name(self.view):
-            client.switch_namespace(ns, dialect(self.view, 0))
-
         client.backchannel.send(op, handler=client.recvq.put)
 
     def handler(self, region, client, response, inline_result):
@@ -305,7 +313,7 @@ class TutkainEvaluateCommand(TextCommand):
 
     def evaluate_input(self, client, code):
         client.recvq.put({edn.Keyword("in"): code})
-        client.eval(code)
+        evaluate(self.view, client, code)
         history.update(self.view.window(), code)
 
     def noop(*args):
@@ -339,24 +347,15 @@ class TutkainEvaluateCommand(TextCommand):
                 view.settings().set("tutkain_repl_input_panel", True)
                 view.assign_syntax("Clojure (Tutkain).sublime-syntax")
             elif code:
-                if ns:
-                    ns_before = client.namespace
+                variables = {}
 
-                    try:
-                        client.switch_namespace(ns)
-                        client.eval(code)
-                    finally:
-                        client.switch_namespace(ns_before)
-                else:
-                    variables = {}
+                for index, region in enumerate(self.view.sel()):
+                    if eval_region := self.get_eval_region(region, scope, ignore):
+                        variables[str(index)] = self.view.substr(eval_region)
 
-                    for index, region in enumerate(self.view.sel()):
-                        if eval_region := self.get_eval_region(region, scope, ignore):
-                            variables[str(index)] = self.view.substr(eval_region)
-
-                    code = sublime.expand_variables(code, variables)
-                    client.recvq.put({edn.Keyword("in"): code})
-                    client.eval(code)
+                code = sublime.expand_variables(code, variables)
+                client.recvq.put({edn.Keyword("in"): code})
+                evaluate(self.view, client, code)
             elif scope == "view":
                 syntax = self.view.syntax()
 
@@ -375,13 +374,20 @@ class TutkainEvaluateCommand(TextCommand):
                 for form in ns_forms:
                     code = self.view.substr(form)
                     client.recvq.put({edn.Keyword("in"): code})
-                    client.eval(code)
+                    evaluate(self.view, client, code, point=form.begin())
             else:
                 for region in self.view.sel():
                     eval_region = self.get_eval_region(region, scope, ignore)
                     code = self.view.substr(eval_region)
                     client.recvq.put({edn.Keyword("in"): code})
-                    client.eval(code, lambda response: self.handler(eval_region, client, response, inline_result))
+
+                    evaluate(
+                        self.view,
+                        client,
+                        code,
+                        eval_region.begin(),
+                        lambda response: self.handler(eval_region, client, response, inline_result)
+                    )
 
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):
@@ -665,15 +671,6 @@ class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if view.settings().get("tutkain_repl_output_view"):
             state.set_repl_view(view)
-
-    def on_activated_async(self, view):
-        if not view.settings().get("is_widget") and view.match_selector(0, "source.clojure") and (client := state.client(view.window())):
-            ns = namespace.name(view) or "user"
-
-            if ns != client.namespace:
-                client.switch_namespace(ns, dialect(view, 0))
-                repl_view = state.repl_view(view.window())
-                repl_view.set_name(f"REPL · {ns} · {client.host}:{client.port}")
 
     def on_hover(self, view, point, hover_zone):
         if settings().get("lookup_on_hover"):

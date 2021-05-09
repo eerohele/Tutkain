@@ -60,10 +60,35 @@ class TestEvaluation(ViewTestCase):
         if self.client:
             self.client.halt()
 
+    def eval_context(self, ns="user", file="NO_SOURCE_FILE", line=1, column=1):
+        actual = edn.read(self.backchannel.recv())
+        id = actual.get(edn.Keyword("id"))
+
+        response = {
+             edn.Keyword("id"): id,
+             edn.Keyword("op"): edn.Keyword("set-eval-context"),
+             edn.Keyword("file"): file,
+             edn.Keyword("ns"): edn.Symbol(ns),
+             edn.Keyword("line"): line,
+             edn.Keyword("column"): column
+        }
+
+        self.assertEquals(response, actual)
+
+        self.backchannel.send({
+            edn.Keyword("id"): id,
+            edn.Keyword("file"): file,
+            edn.Keyword("ns"): edn.Symbol(ns)
+        })
+
     def test_outermost(self):
         self.set_view_content("(comment (inc 1) (inc 2))")
         self.set_selections((9, 9), (17, 17))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
+
+        self.eval_context(column=10)
+        self.eval_context(column=18)
+
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.assertEquals("(inc 2)\n", self.server.recv())
 
@@ -71,12 +96,15 @@ class TestEvaluation(ViewTestCase):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.eval_context(column=10)
         self.assertEquals("(range 10)\n", self.server.recv())
 
     def test_form(self):
         self.set_view_content("42 84")
         self.set_selections((0, 0), (3, 3))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
+        self.eval_context()
+        self.eval_context(column=4)
         self.assertEquals("42\n", self.server.recv())
         self.assertEquals("84\n", self.server.recv())
 
@@ -84,13 +112,16 @@ class TestEvaluation(ViewTestCase):
         self.set_view_content("{:a 1} {:b 2}")
         self.set_selections((0, 0), (7, 7))
         self.view.run_command("tutkain_evaluate", {"code": "((requiring-resolve 'clojure.data/diff) $0 $1)"})
+        self.eval_context()
         self.assertEquals("((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.server.recv())
 
     def test_ns(self):
         self.set_view_content("(ns foo.bar) (ns baz.quux) (defn x [y] y)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "ns"})
+        self.eval_context(ns="baz.quux")
         self.assertEquals("(ns foo.bar)\n", self.server.recv())
+        self.eval_context(ns="baz.quux", column=14)
         self.assertEquals("(ns baz.quux)\n", self.server.recv())
 
     def test_view(self):
@@ -98,32 +129,36 @@ class TestEvaluation(ViewTestCase):
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
-        self.assertEquals(
-            '{:op :switch-ns :ns foo.bar :id 6}\n',
-            self.backchannel.recv()
-        )
+        response = edn.read(self.backchannel.recv())
 
-        self.assertEquals(
-            '{:op :load :code "(ns foo.bar) (defn x [y] y)" :file nil :dialect :clj :id 7}\n',
-            self.backchannel.recv()
-        )
+        self.assertEquals({
+            edn.Keyword("op"): edn.Keyword("load"),
+            edn.Keyword("code"): "(ns foo.bar) (defn x [y] y)",
+            edn.Keyword("file"): None,
+            edn.Keyword("dialect"): edn.Keyword("clj"),
+            edn.Keyword("id"): response.get(edn.Keyword("id"))
+        }, response)
 
     def test_discard(self):
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.eval_context(column=3)
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
+        self.eval_context(column=3)
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.set_view_content("(inc #_(dec 2) 4)")
         self.set_selections((14, 14))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.eval_context(column=8)
         self.assertEquals("(dec 2)\n", self.server.recv())
         self.set_view_content("#_:a")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
+        self.eval_context(column=3)
         self.assertEquals(":a\n", self.server.recv())
 
     def test_lookup_head(self):
@@ -135,7 +170,12 @@ class TestEvaluation(ViewTestCase):
             "forward": False
         })
 
-        self.assertEquals(
-            '{:op :lookup :named "map" :ns nil :dialect :clj :id 5}\n',
-            self.backchannel.recv()
-        )
+        response = edn.read(self.backchannel.recv())
+
+        self.assertEquals({
+            edn.Keyword("op"): edn.Keyword("lookup"),
+            edn.Keyword("named"): "map",
+            edn.Keyword("ns"): None,
+            edn.Keyword("dialect"): edn.Keyword("clj"),
+            edn.Keyword("id"): response.get(edn.Keyword("id"))
+        }, response)
