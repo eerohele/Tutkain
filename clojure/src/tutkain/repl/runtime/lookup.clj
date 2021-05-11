@@ -12,7 +12,7 @@
   [sym]
   (let [f (requiring-resolve 'clojure.repl/special-doc)]
     (assoc (f sym)
-      :ns "clojure.core"
+      :ns (the-ns 'clojure.core)
       :file "clojure/core.clj"
       :special-form "true")))
 

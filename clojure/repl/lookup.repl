@@ -31,3 +31,6 @@
 (require '[clojure.spec.alpha :as spec])
 (lookup 'user 'clojure.spec.alpha)
 (xr/check! (spec/keys :req-un [::specs/name ::specs/doc ::specs/file ::specs/column ::specs/line]))
+
+(lookup 'user 'def)
+(xr/check! ::specs/info)
