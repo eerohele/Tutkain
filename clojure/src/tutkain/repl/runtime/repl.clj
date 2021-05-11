@@ -103,6 +103,18 @@
         (.start))
       socket)))
 
+(def ^:dynamic ^:experimental *print*
+  "A function you can use as the :print arg of clojure.main/repl.
+
+  Prints evaluation results such that Tutkain can print them correctly."
+  prn)
+
+(def ^:dynamic ^:experimental *caught*
+  "A function you can use as the :caught arg of clojure.main/repl.
+
+  Prints exceptions such that Tutkain can print them correctly."
+  main/repl-caught)
+
 (defn repl
   [opts]
   (let [EOF (Object.)
@@ -120,7 +132,23 @@
       (in-ns 'user)
       (apply require main/repl-requires)
       (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
-                *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)]
+                *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
+                *print* (fn [val & {:keys [ms form]}]
+                          (out-fn (cond-> {:tag :ret
+                                           :val (if (string? val)
+                                                  val
+                                                  (pp-str
+                                                    (if (instance? Throwable val)
+                                                      (Throwable->map val)
+                                                      val)))
+                                           :ns (str (.name *ns*))}
+                                    ms (assoc :ms ms)
+                                    form (assoc :form form))))
+                *caught* (fn [ex & {:keys [form]}]
+                           (out-fn (cond-> {:tag :err
+                                            :val (-> ex Throwable->map main/ex-triage main/ex-str)
+                                            :ns (str (.name *ns*))}
+                                     :form (assoc :form form))))]
         (try
           (out-fn {:tag :ret
                    :val (pr-str {:host (-> backchannel .getLocalAddress .getHostName)
@@ -144,21 +172,11 @@
                             (set! *3 *2)
                             (set! *2 *1)
                             (set! *1 ret)
-                            (out-fn {:tag :ret
-                                     :val (pp-str
-                                            (if (instance? Throwable ret)
-                                              (Throwable->map ret)
-                                              ret))
-                                     :ns (str (.name *ns*))
-                                     :ms ms
-                                     :form s})
+                            (*print* ret :ms ms :form s)
                             true)))
                       (catch Throwable ex
                         (set! *e ex)
-                        (out-fn {:tag :err
-                                 :val (-> ex Throwable->map main/ex-triage main/ex-str)
-                                 :ns (str (.name *ns*))
-                                 :form s})
+                        (*caught* ex :form s)
                         true))))
                 (catch Throwable ex
                   (set! *e ex)

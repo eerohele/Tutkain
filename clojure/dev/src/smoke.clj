@@ -74,7 +74,9 @@ java.
      :need-prompt (constantly false)
      :prompt (constantly "")
      :read readr
-     :eval (partial contextual-eval (local-context))))
+     :eval (partial contextual-eval (local-context))
+     :print tutkain.repl.runtime.repl/*print*
+     :caught tutkain.repl.runtime.repl/*caught*))
 
 (defn div
   [n d]
