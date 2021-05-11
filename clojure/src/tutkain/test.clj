@@ -1,10 +1,10 @@
-(ns tutkain.repl.runtime.test
+(ns tutkain.test
   (:require
    [clojure.stacktrace :as stacktrace]
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.walk :as walk]
-   [tutkain.repl.runtime.repl :refer [handle pp-str response-for]])
+   [tutkain.repl :refer [handle pp-str response-for]])
   (:import
    (clojure.lang LineNumberingPushbackReader)
    (java.io File StringReader)))

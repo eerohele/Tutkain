@@ -133,7 +133,7 @@ def dialect(view, point):
 
 def source_root():
     return os.path.join(
-        sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain", "repl", "runtime"
+        sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain"
     )
 
 

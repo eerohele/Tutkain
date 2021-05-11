@@ -1,4 +1,4 @@
-(ns tutkain.repl.runtime.repl
+(ns tutkain.repl
   (:require
    [clojure.main :as main]
    [clojure.pprint :as pprint])

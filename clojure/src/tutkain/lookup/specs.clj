@@ -1,4 +1,4 @@
-(ns tutkain.repl.runtime.lookup.specs
+(ns tutkain.lookup.specs
   (:require
    [clojure.spec.alpha :as spec]))
 

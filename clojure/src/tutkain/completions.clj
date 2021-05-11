@@ -1,7 +1,7 @@
-(ns tutkain.repl.runtime.completions
+(ns tutkain.completions
   (:require
    [clojure.main :as main]
-   [tutkain.repl.runtime.repl :refer [handle response-for]])
+   [tutkain.repl :refer [handle response-for]])
   (:import
    (clojure.lang Reflector)
    (java.util.jar JarFile)

@@ -1,13 +1,13 @@
-(ns tutkain.repl.runtime.cljs
+(ns tutkain.cljs
   (:refer-clojure :exclude [ns-aliases])
   (:require
    [clojure.string :as string]
    [cljs.analyzer :as analyzer]
    [cljs.analyzer.api :as analyzer.api]
    [cljs.repl :as repl]
-   [tutkain.repl.runtime.completions :as completions]
-   [tutkain.repl.runtime.lookup :as lookup]
-   [tutkain.repl.runtime.repl :refer [handle response-for]])
+   [tutkain.completions :as completions]
+   [tutkain.lookup :as lookup]
+   [tutkain.repl :refer [handle response-for]])
   (:import
    (clojure.lang ExceptionInfo)))
 

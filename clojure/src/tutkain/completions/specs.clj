@@ -1,4 +1,4 @@
-(ns tutkain.repl.runtime.completions.specs
+(ns tutkain.completions.specs
   (:require
    [clojure.spec.alpha :as spec]
    [clojure.test.check.generators :as gen]))

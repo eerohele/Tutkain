@@ -75,8 +75,8 @@ java.
      :prompt (constantly "")
      :read readr
      :eval (partial contextual-eval (local-context))
-     :print tutkain.repl.runtime.repl/*print*
-     :caught tutkain.repl.runtime.repl/*caught*))
+     :print tutkain.repl/*print*
+     :caught tutkain.repl/*caught*))
 
 (defn div
   [n d]

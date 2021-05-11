@@ -1,8 +1,8 @@
 (ns repl.lookup
   (:require
    [cognitect.transcriptor :as xr]
-   [tutkain.repl.runtime.lookup :refer [lookup]]
-   [tutkain.repl.runtime.lookup.specs :as specs]))
+   [tutkain.lookup :refer [lookup]]
+   [tutkain.lookup.specs :as specs]))
 
 (def syms
   (mapcat (fn [[alias ns]]

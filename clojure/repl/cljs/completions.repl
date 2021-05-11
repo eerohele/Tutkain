@@ -5,8 +5,8 @@
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as server]
    [shadow.cljs.devtools.api :as shadow]
-   [tutkain.repl.runtime.completions.specs :as specs]
-   [tutkain.repl.runtime.cljs :as cljs]))
+   [tutkain.completions.specs :as specs]
+   [tutkain.cljs :as cljs]))
 
 (def build-id :app)
 

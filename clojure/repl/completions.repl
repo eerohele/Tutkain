@@ -7,8 +7,8 @@
    [clojure.test.check.generators :as gen]
    [clojure.test.check.properties :as prop]
    [cognitect.transcriptor :as xr]
-   [tutkain.repl.runtime.completions :as completions :refer [candidates]]
-   [tutkain.repl.runtime.completions.specs :as specs]))
+   [tutkain.completions :as completions :refer [candidates]]
+   [tutkain.completions.specs :as specs]))
 
 ;; Tests
 

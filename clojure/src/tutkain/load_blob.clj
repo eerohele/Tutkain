@@ -1,7 +1,7 @@
-(ns tutkain.repl.runtime.load-blob
+(ns tutkain.load-blob
   (:require
    [clojure.edn :as edn]
-   [tutkain.repl.runtime.repl :refer [handle pp-str response-for]])
+   [tutkain.repl :refer [handle pp-str response-for]])
   (:import
    (clojure.lang Compiler LineNumberingPushbackReader)
    (java.io File StringReader)))

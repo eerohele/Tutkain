@@ -3,7 +3,7 @@
   (:require
    [clojure.edn :as edn]
    [cognitect.transcriptor :as xr]
-   [tutkain.repl.runtime.repl :as repl])
+   [tutkain.repl :as repl])
   (:import
    (java.io BufferedReader InputStreamReader PrintWriter)
    (java.net Socket)

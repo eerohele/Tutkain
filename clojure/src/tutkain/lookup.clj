@@ -1,8 +1,8 @@
-(ns tutkain.repl.runtime.lookup
+(ns tutkain.lookup
   (:require
    [clojure.java.io :as io]
    [clojure.spec.alpha :as spec]
-   [tutkain.repl.runtime.repl :refer [handle pp-str response-for]]))
+   [tutkain.repl :refer [handle pp-str response-for]]))
 
 (set! *warn-on-reflection* true)
 
