@@ -135,13 +135,10 @@
                 *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
                 *print* (fn [val & {:keys [ms form]}]
                           (out-fn (cond-> {:tag :ret
-                                           ;; In ClojureScript REPLs, vals are strings. Protocol?
-                                           :val (if (string? val)
-                                                  val
-                                                  (pp-str
-                                                    (if (instance? Throwable val)
-                                                      (Throwable->map val)
-                                                      val)))
+                                           :val (pp-str
+                                                  (if (instance? Throwable val)
+                                                    (Throwable->map val)
+                                                    val))
                                            :ns (str (.name *ns*))}
                                     ms (assoc :ms ms)
                                     form (assoc :form form))))
