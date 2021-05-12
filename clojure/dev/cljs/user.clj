@@ -1,17 +1,20 @@
 (ns user
   (:require
-   [cljs.analyzer.api :as analyzer.api]
    [cljs.build.api :as build]
-   [cljs.env :as env]
    [cljs.repl :as repl]
    [cljs.repl.browser :as browser]))
 
 (comment
+  (require
+    '[tutkain.cljs :refer [*compiler-env*]]
+    '[tutkain.repl :refer [*print* *caught*]])
+
   (build/build "dev/src"
     {:main 'my.app
      :output-to "out/main.js"
      :target :browser
-     :verbose false})
+     :verbose false}
+    *compiler-env*)
 
   (repl/repl (browser/repl-env)
     :init #(println :done)
@@ -19,8 +22,9 @@
     :output-dir "out"
     :need-prompt (constantly false)
     :prompt (constantly "")
-    :print tutkain.repl/*print*
-    :caught tutkain.repl/*caught*)
+    :print *print*
+    :caught *caught*
+    :compiler-env *compiler-env*)
 
   :cljs/quit
   )
