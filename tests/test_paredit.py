@@ -1150,6 +1150,28 @@ class TestParedit(ViewTestCase):
         self.assertEquals("(->\n  (foo)\n  (bar)\n  (baz))", self.view_content())
         self.assertEquals([(22, 22)], self.selections())
 
+        # Existing selection
+        self.set_view_content("{:foo :bar :baz :quux}")
+        self.set_selections((11, 21))
+        self.view.run_command("tutkain_paredit_backward_move_form")
+        self.assertEquals("{:foo :baz :quux :bar}", self.view_content())
+        self.assertEquals([(6, 16)], self.selections())
+        self.view.run_command("tutkain_paredit_backward_move_form")
+        self.assertEquals("{:baz :quux :foo :bar}", self.view_content())
+        self.assertEquals([(1, 11)], self.selections())
+        self.view.run_command("tutkain_paredit_backward_move_form")
+        self.assertEquals("{:baz :quux :foo :bar}", self.view_content())
+        self.assertEquals([(1, 11)], self.selections())
+        self.view.run_command("tutkain_paredit_forward_move_form")
+        self.assertEquals("{:foo :baz :quux :bar}", self.view_content())
+        self.assertEquals([(6, 16)], self.selections())
+        self.view.run_command("tutkain_paredit_forward_move_form")
+        self.assertEquals("{:foo :bar :baz :quux}", self.view_content())
+        self.assertEquals([(11, 21)], self.selections())
+        self.view.run_command("tutkain_paredit_forward_move_form")
+        self.assertEquals("{:foo :bar :baz :quux}", self.view_content())
+        self.assertEquals([(11, 21)], self.selections())
+
     def test_thread_first(self):
         self.set_view_content("(inc (dec (* 2 (/ 4 10))))")
         self.set_selections((18, 18))

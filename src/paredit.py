@@ -405,38 +405,52 @@ def kill_form(view, edit, forward):
 
 def backward_move_form(view, edit):
     for region, sel in iterate(view):
-        point = region.begin()
-        form = forms.find_adjacent(view, point)
+        form = region
 
-        if form:
-            previous_form = forms.find_previous(view, form.begin())
+        if region.empty():
+            form = forms.find_adjacent(view, region.begin())
 
-            if previous_form:
-                sel.append(previous_form.begin())
-                form_str = view.substr(form)
-                previous_form_str = view.substr(previous_form)
-                between = view.substr(Region(previous_form.end(), form.begin()))
-                view.erase(edit, Region(previous_form.begin(), form.end()))
-                view.insert(
-                    edit, previous_form.begin(), form_str + between + previous_form_str
-                )
+        previous_form = forms.find_previous(view, form.begin())
+
+        if previous_form:
+            form_str = view.substr(form)
+            previous_form_str = view.substr(previous_form)
+            between = view.substr(Region(previous_form.end(), form.begin()))
+            view.erase(edit, Region(previous_form.begin(), form.end()))
+            view.insert(edit, previous_form.begin(), form_str + between + previous_form_str)
+
+            begin = previous_form.begin()
+
+            if region.empty():
+                sel.append(begin)
+            else:
+                sel.append(Region(begin + form.size(), begin))
 
 
 def forward_move_form(view, edit):
     for region, sel in iterate(view):
-        form = forms.find_adjacent(view, region.begin())
+        form = region
 
-        if form:
-            next_form = forms.find_next(view, form.end())
+        if region.empty():
+            form = forms.find_adjacent(view, region.begin())
 
-            if next_form:
-                form_str = view.substr(form)
-                next_form_str = view.substr(next_form)
-                between = view.substr(Region(form.end(), next_form.begin()))
-                view.erase(edit, Region(form.begin(), next_form.end()))
-                before = next_form_str + between
-                view.insert(edit, form.begin(), before + form_str)
-                sel.append(form.begin() + len(before))
+        next_form = forms.find_next(view, form.end())
+
+        if next_form:
+            form_str = view.substr(form)
+            next_form_str = view.substr(next_form)
+            between = view.substr(Region(form.end(), next_form.begin()))
+            view.erase(edit, Region(form.begin(), next_form.end()))
+            before = next_form_str + between
+            view.insert(edit, form.begin(), before + form_str)
+
+            begin = form.begin() + len(before)
+
+            if region.empty():
+                sel.append(begin)
+            else:
+                end = begin + len(form_str)
+                sel.append(Region(begin, end))
 
 
 # FIXME: This is awful. Also, it doesn't handle line breaks.
