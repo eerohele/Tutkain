@@ -13,6 +13,9 @@
 
 (set! *warn-on-reflection* true)
 
+(def ^:dynamic *compiler-env*
+  (atom {}))
+
 (defn ^:private format-arglists
   [arglists]
   ;; Why?
@@ -34,7 +37,7 @@
 
 (defn compiler-env
   ([]
-   (analyzer.api/current-state))
+   (or *compiler-env* (analyzer.api/current-state)))
   ([build-id]
    (or (shadow-compiler-env build-id) (compiler-env))))
 
