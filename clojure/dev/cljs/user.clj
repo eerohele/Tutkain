@@ -25,6 +25,4 @@
     :print *print*
     :caught *caught*
     :compiler-env *compiler-env*)
-
-  :cljs/quit
   )
