@@ -4,7 +4,7 @@
    [clojure.pprint :as pprint])
   (:import
    (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
-   (java.io ByteArrayInputStream File InputStreamReader)
+   (java.io ByteArrayInputStream File FileNotFoundException InputStreamReader)
    (java.net InetSocketAddress)
    (java.nio.channels Channels ServerSocketChannel)
    (java.lang.reflect Field)
@@ -34,13 +34,17 @@
     (LineNumberingPushbackReader.)))
 
 (defmethod handle :load-base64
-  [{:keys [blob filename out-fn] :as message}]
-  (with-open [reader (base64-reader blob)]
-    (try
-      (Compiler/load reader)
-      (out-fn (response-for message {:filename filename :result :ok}))
-      (catch Compiler$CompilerException _
-        (out-fn (response-for message {:filename filename :result :fail}))))))
+  [{:keys [blob filename out-fn requires] :as message}]
+  (try
+    (run! require requires)
+    (with-open [reader (base64-reader blob)]
+      (try
+        (Compiler/load reader)
+        (out-fn (response-for message {:filename filename :result :ok}))
+        (catch Compiler$CompilerException _
+          (out-fn (response-for message {:filename filename :result :fail :reason :compiler-ex})))))
+    (catch FileNotFoundException _
+      (out-fn (response-for message {:filename filename :result :fail :reason :not-found})))))
 
 (defn pp-str
   [x]

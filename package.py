@@ -1017,21 +1017,15 @@ class TutkainInitializeClojurescriptSupportCommand(WindowCommand):
                 placeholder="Choose shadow-cljs build ID"
             )
 
-    def enable_handler(self, client, response, build_id=None):
+    def enable_handler(self, client, build_id=None):
         if build_id is None:
             handler = lambda response: self.choose_build_id(client, response)
         else:
             handler = lambda _: self.set_build_id(client, build_id)
 
-        if response.get(edn.Keyword("result"), edn.Keyword("fail")) == edn.Keyword("ok"):
-            client.backchannel.send({
-                edn.Keyword("op"): edn.Keyword("initialize-cljs")
-            }, handler=handler)
-        else:
-            client.recvq.put({
-                edn.Keyword("tag"): edn.Keyword("err"),
-                edn.Keyword("val"): "ClojureScript initialization failed.\n"
-            })
+        client.backchannel.send({
+            edn.Keyword("op"): edn.Keyword("initialize-cljs")
+        }, handler=handler)
 
     def run(self, build_id=None):
         client = state.client(self.window)
@@ -1039,4 +1033,4 @@ class TutkainInitializeClojurescriptSupportCommand(WindowCommand):
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
         else:
-            client.initialize_cljs(lambda response: self.enable_handler(client, response, build_id))
+            self.enable_handler(client, build_id)

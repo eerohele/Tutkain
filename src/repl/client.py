@@ -43,21 +43,20 @@ class Client(object):
 
         return bs
 
-    def initialize_cljs(self, handler):
-        with open(os.path.join(self.source_root, "cljs.clj"), "rb") as file:
-            self.backchannel.send({
-                edn.Keyword("op"): edn.Keyword("load-base64"),
-                edn.Keyword("filename"): "cljs.clj",
-                edn.Keyword("blob"): base64.b64encode(file.read()).decode("utf-8")
-            }, handler=handler)
-
     def load_modules(self, backchannel):
-        for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj"]:
+        for filename, requires in [
+            ("lookup.clj", []),
+            ("completions.clj", []),
+            ("load_blob.clj", []),
+            ("test.clj", []),
+            ("cljs.clj", [edn.Symbol("cljs.core")])
+        ]:
             with open(os.path.join(self.source_root, filename), "rb") as file:
                 backchannel.send({
                     edn.Keyword("op"): edn.Keyword("load-base64"),
                     edn.Keyword("filename"): filename,
-                    edn.Keyword("blob"): base64.b64encode(file.read()).decode("utf-8")
+                    edn.Keyword("blob"): base64.b64encode(file.read()).decode("utf-8"),
+                    edn.Keyword("requires"): requires
                 })
 
     def handshake(self):
