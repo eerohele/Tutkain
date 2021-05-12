@@ -34,12 +34,12 @@
     (LineNumberingPushbackReader.)))
 
 (defmethod handle :load-base64
-  [{:keys [blob filename out-fn requires] :as message}]
+  [{:keys [blob path filename out-fn requires] :as message}]
   (try
     (run! require requires)
     (with-open [reader (base64-reader blob)]
       (try
-        (Compiler/load reader)
+        (Compiler/load reader path filename)
         (out-fn (response-for message {:filename filename :result :ok}))
         (catch Compiler$CompilerException _
           (out-fn (response-for message {:filename filename :result :fail :reason :compiler-ex})))))

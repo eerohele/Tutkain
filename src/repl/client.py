@@ -51,9 +51,12 @@ class Client(object):
             ("test.clj", []),
             ("cljs.clj", [edn.Symbol("cljs.core")])
         ]:
-            with open(os.path.join(self.source_root, filename), "rb") as file:
+            path = os.path.join(self.source_root, filename)
+
+            with open(path, "rb") as file:
                 backchannel.send({
                     edn.Keyword("op"): edn.Keyword("load-base64"),
+                    edn.Keyword("path"): path,
                     edn.Keyword("filename"): filename,
                     edn.Keyword("blob"): base64.b64encode(file.read()).decode("utf-8"),
                     edn.Keyword("requires"): requires
