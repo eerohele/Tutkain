@@ -145,7 +145,7 @@ def evaluate(view, client, code, point=None, handler=None):
 
     file = view.file_name() or "NO_SOURCE_FILE"
     ns = namespace.name(view) or "user"
-    client.eval(code, file, ns, line, column, handler)
+    client.eval(code, dialect(view, point or 0), file, ns, line, column, handler)
 
 
 class TutkainClearOutputViewCommand(WindowCommand):

@@ -57,7 +57,7 @@
       (-> x pprint/pprint with-out-str))))
 
 (def eval-context
-  (atom {:file nil :ns 'user}))
+  (atom {:file nil :ns 'user :dialect :clj}))
 
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn- set-column!
@@ -71,11 +71,11 @@
       (.set reader column))))
 
 (defmethod handle :set-eval-context
-  [{:keys [in ns file line column out-fn] :or {line 0 column 0} :as message}]
+  [{:keys [in ns dialect file line column out-fn] :or {dialect :clj line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
   (->>
-    (swap! eval-context assoc :file file :ns ns)
+    (swap! eval-context assoc :dialect dialect :file file :ns ns)
     (response-for message)
     out-fn))
 

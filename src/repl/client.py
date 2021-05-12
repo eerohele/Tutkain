@@ -151,11 +151,12 @@ class Client(object):
 
         log.debug({"event": "thread/exit"})
 
-    def eval(self, code, file="NO_SOURCE_FILE", ns="user", line=0, column=0, handler=None):
+    def eval(self, code, dialect=edn.Keyword("clj"), file="NO_SOURCE_FILE", ns="user", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put
 
         self.backchannel.send({
             edn.Keyword("op"): edn.Keyword("set-eval-context"),
+            edn.Keyword("dialect"): dialect,
             edn.Keyword("file"): file,
             edn.Keyword("ns"): edn.Symbol(ns),
             edn.Keyword("line"): line + 1,
