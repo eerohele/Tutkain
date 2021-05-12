@@ -74,10 +74,8 @@
   [{:keys [in ns dialect file line column out-fn] :or {dialect :clj line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (->>
-    (swap! eval-context assoc :dialect dialect :file file :ns ns)
-    (response-for message)
-    out-fn))
+  (let [new-context (swap! eval-context assoc :dialect dialect :file file :ns ns)]
+    (out-fn (response-for message new-context))))
 
 (defn open-backchannel
   [{:keys [repl-in port] :or {port 0}}]
