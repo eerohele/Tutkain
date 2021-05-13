@@ -7,7 +7,7 @@
 (comment
   (require
     '[tutkain.cljs :refer [*compiler-env*]]
-    '[tutkain.repl :refer [*print* *caught*]])
+    '[tutkain.repl :refer [*out-fn*]])
 
   (build/build "dev/src"
     {:main 'my.app
@@ -16,12 +16,13 @@
      :verbose false}
     *compiler-env*)
 
-  (repl/repl (browser/repl-env)
+  (repl/repl (browser/repl-env :launch-browser false)
     :watch "dev/src"
     :output-dir "out"
     :need-prompt (constantly false)
     :prompt (constantly "")
-    :print *print*
-    :caught *caught*
+    :print #(*out-fn* :ret %)
+    :caught (fn [ex & _]
+              (*out-fn* :err (-> ex Throwable->map repl/ex-triage repl/ex-str)))
     :compiler-env *compiler-env*)
   )

@@ -108,17 +108,21 @@
         (.start))
       socket)))
 
-(def ^:dynamic ^:experimental *print*
-  "A function you can use as the :print arg of clojure.main/repl.
+(def ^:dynamic *out-fn*
+  "A function that takes a tag (one of #{:ret :err}) and an evaluation result
+  or an exception and writes it into the current socket output stream.
 
-  Prints evaluation results such that Tutkain can print them correctly."
+  Use in functions given as clojure.main/repl or cljs.repl/repl :print and
+  :caught args when starting a nested REPL in Tutkain.
+
+  For example:
+
+      (main/repl
+        :print #(*out-fn* :ret %)
+        :caught (fn [ex & _]
+                  (*out-fn* :err (-> ex Throwable->map ex-triage ex-str))
+        ,,,)"
   prn)
-
-(def ^:dynamic ^:experimental *caught*
-  "A function you can use as the :caught arg of clojure.main/repl.
-
-  Prints exceptions such that Tutkain can print them correctly."
-  main/repl-caught)
 
 (defn repl
   [opts]
@@ -138,17 +142,7 @@
       (apply require main/repl-requires)
       (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
                 *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
-                *print* (fn [val & {:keys [ms form]}]
-                          (out-fn (cond-> {:tag :ret
-                                           :val (pp-str val)
-                                           :ns (str (.name *ns*))}
-                                    ms (assoc :ms ms)
-                                    form (assoc :form form))))
-                *caught* (fn [ex & {:keys [form]}]
-                           (out-fn (cond-> {:tag :err
-                                            :val (-> ex Throwable->map main/ex-triage main/ex-str)
-                                            :ns (str (.name *ns*))}
-                                     :form (assoc :form form))))]
+                *out-fn* (fn [tag val] (out-fn {:tag tag :val val}))]
         (try
           (out-fn {:tag :ret
                    :val (pr-str {:host (-> backchannel .getLocalAddress .getHostName)
@@ -172,11 +166,18 @@
                             (set! *3 *2)
                             (set! *2 *1)
                             (set! *1 ret)
-                            (*print* ret :ms ms :form s)
+                            (out-fn {:tag :ret
+                                     :val (pp-str ret)
+                                     :ns (str (.name *ns*))
+                                     :ms ms
+                                     :form s})
                             true)))
                       (catch Throwable ex
                         (set! *e ex)
-                        (*caught* ex :form s)
+                        (out-fn {:tag :err
+                                 :val (-> ex Throwable->map main/ex-triage main/ex-str)
+                                 :ns (str (.name *ns*))
+                                 :form s})
                         true))))
                 (catch Throwable ex
                   (set! *e ex)
