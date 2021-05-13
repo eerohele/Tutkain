@@ -10,9 +10,9 @@
    (java.lang.reflect Field)
    (java.util Base64)))
 
-(defn response-for
-  [{:keys [id]} response]
-  (cond-> response id (assoc :id id)))
+(defn respond-to
+  [{:keys [id out-fn]} response]
+  (out-fn (cond-> response id (assoc :id id))))
 
 (defmulti handle :op)
 
@@ -37,17 +37,17 @@
     (LineNumberingPushbackReader.)))
 
 (defmethod handle :load-base64
-  [{:keys [blob path filename out-fn requires] :as message}]
+  [{:keys [blob path filename requires] :as message}]
   (try
     (run! require requires)
     (with-open [reader (base64-reader blob)]
       (try
         (Compiler/load reader path filename)
-        (out-fn (response-for message {:filename filename :result :ok}))
+        (respond-to message {:filename filename :result :ok})
         (catch Compiler$CompilerException _
-          (out-fn (response-for message {:filename filename :result :fail :reason :compiler-ex})))))
+          (respond-to message {:filename filename :result :fail :reason :compiler-ex}))))
     (catch FileNotFoundException _
-      (out-fn (response-for message {:filename filename :result :fail :reason :not-found})))))
+      (respond-to message {:filename filename :result :fail :reason :not-found}))))
 
 (defn pp-str
   [x]
@@ -74,11 +74,11 @@
       (.set reader column))))
 
 (defmethod handle :set-eval-context
-  [{:keys [in ns dialect file line column out-fn] :or {dialect :clj line 0 column 0} :as message}]
+  [{:keys [in ns dialect file line column] :or {dialect :clj line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
   (let [new-context (swap! eval-context assoc :dialect dialect :file file :ns ns)]
-    (out-fn (response-for message new-context))))
+    (respond-to message new-context)))
 
 (defn open-backchannel
   [{:keys [repl-in port] :or {port 0}}]

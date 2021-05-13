@@ -4,7 +4,7 @@
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.walk :as walk]
-   [tutkain.repl :refer [handle pp-str response-for]])
+   [tutkain.repl :refer [handle pp-str respond-to]])
   (:import
    (clojure.lang LineNumberingPushbackReader)
    (java.io File StringReader)))
@@ -99,9 +99,9 @@
               (test/test-vars (map #(resolve (symbol ns %)) vars))
               (swap! results assoc :summary (str (assoc @test/*report-counters* :type :summary))))
             (test/run-tests ns-sym)))
-        (out-fn (response-for message @results)))
+        (respond-to message @results))
       (catch Throwable ex
-        (out-fn (response-for message {:tag :ret
-                                       :ns (str (.name *ns*))
-                                       :val (pp-str (assoc (Throwable->map ex) :phase :execution))
-                                       :exception true}))))))
+        (respond-to message {:tag :ret
+                             :ns (str (.name *ns*))
+                             :val (pp-str (assoc (Throwable->map ex) :phase :execution))
+                             :exception true})))))

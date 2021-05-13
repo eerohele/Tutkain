@@ -2,7 +2,7 @@
   (:require
    [clojure.java.io :as io]
    [clojure.spec.alpha :as spec]
-   [tutkain.repl :refer [handle pp-str response-for]]))
+   [tutkain.repl :refer [handle pp-str respond-to]]))
 
 (set! *warn-on-reflection* true)
 
@@ -69,13 +69,13 @@
 (defmulti info :dialect)
 
 (defmethod info :default
-  [{:keys [named ns out-fn] :as message}]
+  [{:keys [named ns] :as message}]
   (try
     (let [ns (the-ns (or (some-> ns symbol) 'user))]
       (when-some [result (lookup ns (binding [*ns* ns] (read-string named)))]
-        (out-fn (response-for message {:info result}))))
+        (respond-to message {:info result})))
     (catch Throwable ex
-      (out-fn (response-for message {:ex (pp-str (Throwable->map ex))})))))
+      (respond-to message {:ex (pp-str (Throwable->map ex))}))))
 
 (defmethod handle :lookup
   [message]

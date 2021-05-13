@@ -7,7 +7,7 @@
    [cljs.repl :as repl]
    [tutkain.completions :as completions]
    [tutkain.lookup :as lookup]
-   [tutkain.repl :refer [handle response-for]])
+   [tutkain.repl :refer [handle respond-to]])
   (:import
    (clojure.lang ExceptionInfo)))
 
@@ -155,13 +155,13 @@
   (or (some-> ns symbol) 'cljs.user))
 
 (defmethod completions/completions :cljs
-  [{:keys [ns prefix out-fn build-id] :as message}]
+  [{:keys [ns prefix build-id] :as message}]
   (try
     (let [completions (candidates (compiler-env build-id) prefix (parse-ns ns))]
-      (out-fn (response-for message {:completions completions})))
+      (respond-to message {:completions completions}))
     (catch ExceptionInfo ex
       (if (no-shadow? ex)
-        (out-fn (response-for message {:completions []}))
+        (respond-to message {:completions []})
         (throw ex)))))
 
 (comment
@@ -207,18 +207,18 @@
       file (assoc :file (lookup/resolve-file file)))))
 
 (defmethod lookup/info :cljs
-  [{:keys [^String named ns out-fn build-id] :as message}]
+  [{:keys [^String named ns build-id] :as message}]
   (try
     (let [env (compiler-env build-id)
           named (symbol named)]
-      (out-fn (response-for message {:info (info env named (parse-ns ns))})))
+      (respond-to message {:info (info env named (parse-ns ns))}))
     (catch ExceptionInfo ex
       (if (no-shadow? ex)
-        (out-fn (response-for message {:info nil}))
+        (respond-to message {:info nil})
         (throw ex)))))
 
 (defmethod handle :initialize-cljs
-  [{:keys [out-fn] :as message}]
+  [message]
   (if-some [get-build-ids (resolve 'shadow.cljs.devtools.api/get-build-ids)]
-    (out-fn (response-for message {:shadow/build-ids (sort (get-build-ids))}))
-    (out-fn (response-for message {:status :ok}))))
+    (respond-to message {:shadow/build-ids (sort (get-build-ids))})
+    (respond-to message {:status :ok})))

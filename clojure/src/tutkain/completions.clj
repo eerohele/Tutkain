@@ -1,7 +1,7 @@
 (ns tutkain.completions
   (:require
    [clojure.main :as main]
-   [tutkain.repl :refer [handle response-for]])
+   [tutkain.repl :refer [handle respond-to]])
   (:import
    (clojure.lang Reflector)
    (java.util.jar JarFile)
@@ -276,9 +276,9 @@
 (defmulti completions :dialect)
 
 (defmethod completions :default
-  [{:keys [prefix ns out-fn] :as message}]
+  [{:keys [prefix ns] :as message}]
   (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))]
-    (out-fn (response-for message {:completions (candidates prefix ns)}))))
+    (respond-to message {:completions (candidates prefix ns)})))
 
 (defmethod handle :completions
   [message]
