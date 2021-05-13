@@ -29,6 +29,12 @@ class Symbol:
             return f"{self.name}"
 
 
+def kwmap(d):
+    """Given a Python dictionary, return a copy of the dictionary with the
+    keys transformed into EDN keywords."""
+    return {Keyword(k): v for k, v in d.items()}
+
+
 # Read
 
 

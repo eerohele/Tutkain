@@ -588,12 +588,13 @@ class TutkainViewEventListener(ViewEventListener):
 
 def lookup(view, form, handler):
     if not view.settings().get("tutkain_repl_output_view") and form and (client := state.client(view.window())):
-        client.backchannel.send({
-            edn.Keyword("op"): edn.Keyword("lookup"),
-            edn.Keyword("named"): view.substr(form),
-            edn.Keyword("ns"): namespace.name(view),
-            edn.Keyword("dialect"): dialect(view, form.begin())
-        }, handler)
+        client.backchannel.send(
+            edn.kwmap({
+                "op": edn.Keyword("lookup"),
+                "named": view.substr(form),
+                "ns": namespace.name(view),
+                "dialect": dialect(view, form.begin())
+            }), handler)
 
 
 class TutkainShowInformationCommand(TextCommand):
