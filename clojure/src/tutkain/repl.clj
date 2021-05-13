@@ -51,13 +51,8 @@
 
 (defn pp-str
   [x]
-  ;; ClojureScript eval results are strings
-  ;;
-  ;; TODO: Pretty-printing?
-  (if (string? x)
-    x
-    (binding [pprint/*print-right-margin* 100]
-      (-> x pprint/pprint with-out-str))))
+  (binding [pprint/*print-right-margin* 100]
+    (-> x pprint/pprint with-out-str)))
 
 (def eval-context
   (atom {:file nil :ns 'user :dialect :clj}))
