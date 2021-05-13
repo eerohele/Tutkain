@@ -24,10 +24,13 @@
   [message]
   (throw (ex-info "Unknown op" {:message message})))
 
+(def ^:private base64-decoder
+  (Base64/getDecoder))
+
 (defn ^:private base64-reader
   [blob]
   (->
-    (Base64/getDecoder)
+    base64-decoder
     (.decode blob)
     (ByteArrayInputStream.)
     (InputStreamReader.)
