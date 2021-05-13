@@ -17,7 +17,6 @@
     *compiler-env*)
 
   (repl/repl (browser/repl-env)
-    :init #(println :done)
     :watch "dev/src"
     :output-dir "out"
     :need-prompt (constantly false)
