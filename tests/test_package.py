@@ -16,7 +16,7 @@ def conduct_handshake(server):
             edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
         })
 
-        for _ in range(4):
+        for _ in range(5):
             backchannel.recv()
 
         server.send({
@@ -64,22 +64,23 @@ class TestEvaluation(ViewTestCase):
         actual = edn.read(self.backchannel.recv())
         id = actual.get(edn.Keyword("id"))
 
-        response = {
-             edn.Keyword("id"): id,
-             edn.Keyword("op"): edn.Keyword("set-eval-context"),
-             edn.Keyword("file"): file,
-             edn.Keyword("ns"): edn.Symbol(ns),
-             edn.Keyword("line"): line,
-             edn.Keyword("column"): column
-        }
+        response = edn.kwmap({
+             "id": id,
+             "op": edn.Keyword("set-eval-context"),
+             "file": file,
+             "ns": edn.Symbol(ns),
+             "line": line,
+             "column": column,
+             "dialect": edn.Keyword("clj"),
+        })
 
         self.assertEquals(response, actual)
 
-        self.backchannel.send({
-            edn.Keyword("id"): id,
-            edn.Keyword("file"): file,
-            edn.Keyword("ns"): edn.Symbol(ns)
-        })
+        self.backchannel.send(edn.kwmap({
+            "id": id,
+            "file": file,
+            "ns": edn.Symbol(ns)
+        }))
 
     def test_outermost(self):
         self.set_view_content("(comment (inc 1) (inc 2))")

@@ -295,14 +295,12 @@ class TutkainEvaluateCommand(TextCommand):
     def evaluate_view(self, client, code):
         file = self.view.file_name()
 
-        op = {
-            edn.Keyword("op"): edn.Keyword("load"),
-            edn.Keyword("code"): code,
-            edn.Keyword("file"): file,
-            edn.Keyword("dialect"): dialect(self.view, 0)
-        }
-
-        client.backchannel.send(op, handler=client.recvq.put)
+        client.backchannel.send({
+            "op": edn.Keyword("load"),
+            "code": code,
+            "file": file,
+            "dialect": dialect(self.view, 0)
+        }, handler=client.recvq.put)
 
     def handler(self, region, client, response, inline_result):
         if inline_result and edn.Keyword("val") in response:
@@ -533,12 +531,7 @@ def completion_kinds():
 
 class TutkainShowPopupCommand(TextCommand):
     def run(self, edit, item={}):
-        d = {}
-
-        for k, v in item.items():
-            d[edn.Keyword(k)] = v
-
-        info.show_popup(self.view, -1, {edn.Keyword("info"): d})
+        info.show_popup(self.view, -1, {edn.Keyword("info"): edn.kwmap(item)})
 
 
 class TutkainViewEventListener(ViewEventListener):
@@ -573,10 +566,10 @@ class TutkainViewEventListener(ViewEventListener):
             completion_list = sublime.CompletionList()
 
             client.backchannel.send({
-                edn.Keyword("op"): edn.Keyword("completions"),
-                edn.Keyword("prefix"): prefix,
-                edn.Keyword("ns"): namespace.name(self.view),
-                edn.Keyword("dialect"): dialect(self.view, point)
+                "op": edn.Keyword("completions"),
+                "prefix": prefix,
+                "ns": namespace.name(self.view),
+                "dialect": dialect(self.view, point)
             }, handler=lambda response: (
                 completion_list.set_completions(
                     map(self.completion_item, response.get(edn.Keyword("completions"), []))
@@ -588,13 +581,12 @@ class TutkainViewEventListener(ViewEventListener):
 
 def lookup(view, form, handler):
     if not view.settings().get("tutkain_repl_output_view") and form and (client := state.client(view.window())):
-        client.backchannel.send(
-            edn.kwmap({
-                "op": edn.Keyword("lookup"),
-                "named": view.substr(form),
-                "ns": namespace.name(view),
-                "dialect": dialect(view, form.begin())
-            }), handler)
+        client.backchannel.send({
+            "op": edn.Keyword("lookup"),
+            "named": view.substr(form),
+            "ns": namespace.name(view),
+            "dialect": dialect(view, form.begin())
+        }, handler)
 
 
 class TutkainShowInformationCommand(TextCommand):
@@ -728,7 +720,7 @@ class TutkainInterruptEvaluationCommand(WindowCommand):
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
         else:
-            client.backchannel.send({edn.Keyword("op"): edn.Keyword("interrupt")})
+            client.backchannel.send({"op": edn.Keyword("interrupt")})
 
 
 class TutkainInsertNewlineCommand(TextCommand):
@@ -1025,7 +1017,7 @@ class TutkainInitializeClojurescriptSupportCommand(WindowCommand):
             handler = lambda _: self.set_build_id(client, build_id)
 
         client.backchannel.send({
-            edn.Keyword("op"): edn.Keyword("initialize-cljs")
+            "op": edn.Keyword("initialize-cljs")
         }, handler=handler)
 
     def run(self, build_id=None):

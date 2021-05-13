@@ -64,6 +64,7 @@ class Backchannel(object):
 
     def send(self, op, handler=None):
         mid = edn.Keyword("id")
+        op = edn.kwmap(op)
         op[mid] = next(self.message_id)
 
         if handler:

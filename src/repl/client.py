@@ -55,11 +55,11 @@ class Client(object):
 
             with open(path, "rb") as file:
                 backchannel.send({
-                    edn.Keyword("op"): edn.Keyword("load-base64"),
-                    edn.Keyword("path"): path,
-                    edn.Keyword("filename"): filename,
-                    edn.Keyword("blob"): base64.b64encode(file.read()).decode("utf-8"),
-                    edn.Keyword("requires"): requires
+                    "op": edn.Keyword("load-base64"),
+                    "path": path,
+                    "filename": filename,
+                    "blob": base64.b64encode(file.read()).decode("utf-8"),
+                    "requires": requires
                 })
 
     def handshake(self):
@@ -155,12 +155,12 @@ class Client(object):
         self.handlers[code] = handler or self.recvq.put
 
         self.backchannel.send({
-            edn.Keyword("op"): edn.Keyword("set-eval-context"),
-            edn.Keyword("dialect"): dialect,
-            edn.Keyword("file"): file,
-            edn.Keyword("ns"): edn.Symbol(ns),
-            edn.Keyword("line"): line + 1,
-            edn.Keyword("column"): column + 1
+            "op": edn.Keyword("set-eval-context"),
+            "dialect": dialect,
+            "file": file,
+            "ns": edn.Symbol(ns),
+            "line": line + 1,
+            "column": column + 1
         }, lambda _: self.sendq.put(code))
 
     def read_line(self):

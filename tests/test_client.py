@@ -23,12 +23,14 @@ class TestClient(TestCase):
                 server.recv()
 
                 with Server() as backchannel:
-                    server.send({
-                        edn.Keyword("tag"): edn.Keyword("ret"),
-                        edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
-                    })
+                    server.send(
+                        edn.kwmap({
+                            "tag": edn.Keyword("ret"),
+                            "val": f"""{{:host "localhost", :port {backchannel.port}}}""",
+                        })
+                    )
 
-                    for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj"]:
+                    for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "cljs.clj"]:
                         response = edn.read(backchannel.recv())
                         self.assertEquals(edn.Keyword("load-base64"), response.get(edn.Keyword("op")))
                         self.assertEquals(filename, response.get(edn.Keyword("filename")))
@@ -61,31 +63,38 @@ class TestClient(TestCase):
 
                     client.eval("(inc 1)")
 
+                    response = edn.read(backchannel.recv())
+                    id = response.get(edn.Keyword("id"))
+
                     self.assertEquals(
-                        {edn.Keyword("op"): edn.Keyword("set-eval-context"),
-                         edn.Keyword("id"): 5,
-                         edn.Keyword("file"): "NO_SOURCE_FILE",
-                         edn.Keyword("ns"): edn.Symbol("user"),
-                         edn.Keyword("line"): 1,
-                         edn.Keyword("column"): 1},
-                        edn.read(backchannel.recv())
+                        edn.kwmap({
+                            "op": edn.Keyword("set-eval-context"),
+                            "dialect": edn.Keyword("clj"),
+                            "id": id,
+                            "file": "NO_SOURCE_FILE",
+                            "ns": edn.Symbol("user"),
+                            "line": 1,
+                            "column": 1
+                        }),
+                        response
                     )
 
-                    backchannel.send({
-                        edn.Keyword("id"): 5,
-                        edn.Keyword("file"): None,
-                        edn.Keyword("ns"): edn.Symbol("user")
-                    })
+                    backchannel.send(edn.kwmap({
+                        "id": id,
+                        "file": None,
+                        "ns": edn.Symbol("user"),
+                        "dialect": edn.Keyword("clj")
+                    }))
 
                     self.assertEquals("(inc 1)\n", server.recv())
 
-                    response = {
-                        edn.Keyword("tag"): edn.Keyword("ret"),
-                        edn.Keyword("val"): "2",
-                        edn.Keyword("ns"): "user",
-                        edn.Keyword("ms"): 1,
-                        edn.Keyword("form"): "(inc 1)"
-                    }
+                    response = edn.kwmap({
+                        "tag": edn.Keyword("ret"),
+                        "val": "2",
+                        "ns": "user",
+                        "ms": 1,
+                        "form": "(inc 1)"
+                    })
 
                     server.send(response)
 
