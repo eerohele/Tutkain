@@ -10,9 +10,10 @@
 (defmethod load-blob :default
   [{:keys [code file] :as message}]
   (try
-    (let [file-name (some-> file File. .getName)
-          val (Compiler/load (LineNumberingPushbackReader. (StringReader. code)) file file-name)]
-      (respond-to message {:tag :ret :val (pr-str val)}))
+    (with-open [reader (LineNumberingPushbackReader. (StringReader. code))]
+      (let [file-name (some-> file File. .getName)
+            val (Compiler/load reader file file-name)]
+        (respond-to message {:tag :ret :val (pr-str val)})))
     (catch Throwable ex
       (respond-to message {:tag :ret
                            :val (pp-str (assoc (Throwable->map ex) :phase :execution))
