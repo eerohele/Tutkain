@@ -145,6 +145,8 @@ def evaluate(view, client, code, point=None, handler=None):
 
     file = view.file_name() or "NO_SOURCE_FILE"
     ns = namespace.name(view) or "user"
+    client.namespace = ns
+    client.recvq.put({edn.Keyword("in"): code})
     client.eval(code, dialect(view, point or 0), file, ns, line, column, handler)
 
 
@@ -310,7 +312,6 @@ class TutkainEvaluateCommand(TextCommand):
             client.recvq.put(response)
 
     def evaluate_input(self, client, code):
-        client.recvq.put({edn.Keyword("in"): code})
         evaluate(self.view, client, code)
         history.update(self.view.window(), code)
 
@@ -352,7 +353,6 @@ class TutkainEvaluateCommand(TextCommand):
                         variables[str(index)] = self.view.substr(eval_region)
 
                 code = sublime.expand_variables(code, variables)
-                client.recvq.put({edn.Keyword("in"): code})
                 evaluate(self.view, client, code)
             elif scope == "view":
                 syntax = self.view.syntax()
@@ -371,13 +371,11 @@ class TutkainEvaluateCommand(TextCommand):
 
                 for form in ns_forms:
                     code = self.view.substr(form)
-                    client.recvq.put({edn.Keyword("in"): code})
                     evaluate(self.view, client, code, point=form.begin())
             else:
                 for region in self.view.sel():
                     eval_region = self.get_eval_region(region, scope, ignore)
                     code = self.view.substr(eval_region)
-                    client.recvq.put({edn.Keyword("in"): code})
 
                     evaluate(
                         self.view,
