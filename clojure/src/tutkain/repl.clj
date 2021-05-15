@@ -10,6 +10,11 @@
    (java.lang.reflect Field)
    (java.util Base64)))
 
+(defn Throwable->str
+  "Print a java.lang.Throwable into a string."
+  [t]
+  (-> t Throwable->map main/ex-triage main/ex-str))
+
 (defn respond-to
   [{:keys [id out-fn]} response]
   (out-fn (cond-> response id (assoc :id id))))
@@ -120,7 +125,7 @@
       (main/repl
         :print #(*out-fn* :ret %)
         :caught (fn [ex & _]
-                  (*out-fn* :err (-> ex Throwable->map ex-triage ex-str))
+                  (*out-fn* :err (Throwable->str ex))
         ,,,)"
   prn)
 
@@ -175,7 +180,7 @@
                       (catch Throwable ex
                         (set! *e ex)
                         (out-fn {:tag :err
-                                 :val (-> ex Throwable->map main/ex-triage main/ex-str)
+                                 :val (Throwable->str ex)
                                  :ns (str (.name *ns*))
                                  :form s})
                         true))))
