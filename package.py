@@ -499,12 +499,26 @@ class TutkainDisconnectCommand(WindowCommand):
 
 
 class TutkainNewScratchViewCommand(WindowCommand):
+    syntaxes = {
+        "Clojure": "Clojure (Tutkain).sublime-syntax",
+        "ClojureScript": "ClojureScript (Tutkain).sublime-syntax"
+    }
+
+    def finish(self, view, index):
+        syntax = list(self.syntaxes.values())[index]
+        view.assign_syntax(syntax)
+        self.window.focus_view(view)
+
     def run(self):
         view = self.window.new_file()
         view.set_name("*scratch*")
         view.set_scratch(True)
-        view.assign_syntax("Clojure (Tutkain).sublime-syntax")
-        self.window.focus_view(view)
+
+        view.window().show_quick_panel(
+            self.syntaxes.keys(),
+            lambda index: self.finish(view, index),
+            placeholder="Choose syntax"
+        )
 
 
 def completion_kinds():
