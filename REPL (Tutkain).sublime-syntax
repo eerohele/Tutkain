@@ -8,12 +8,20 @@ extends: Packages/Tutkain/Clojure (Tutkain).sublime-syntax
 contexts:
   main:
     - include: stray-brackets
+    - include: stderr
     - include: stdout
     - include: forms
+
+  stderr:
+    - match: '⁣⁣' # U+2063 * 2
+      push:
+        - meta_scope: tutkain.repl.stderr
+        - match: '⁣⁣' # U+2063 * 2
+          pop: true
 
   stdout:
     - match: '⁣' # U+2063
       push:
-        - meta_scope: text.plain
+        - meta_scope: text.plain.repl
         - match: '⁣' # U+2063
           pop: true

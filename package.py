@@ -78,11 +78,6 @@ def make_color_scheme(cache_dir):
                             {
                                 "rules": [
                                     {
-                                        "name": "Tutkain REPL Standard Output",
-                                        "scope": "tutkain.repl.stdout",
-                                        "background": "rgba(0, 0, 0, 0.01)",
-                                    },
-                                    {
                                         "name": "Tutkain REPL Standard Error",
                                         "scope": "tutkain.repl.stderr",
                                         "background": "rgba(0, 0, 0, 0.01)",
