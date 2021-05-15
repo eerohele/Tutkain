@@ -59,4 +59,8 @@
         "caption": "Tutkain: Initialize ClojureScript Support",
         "command": "tutkain_initialize_clojurescript_support"
     },
+    {
+        "caption": "Tutkain: Choose Evaluation Dialect",
+        "command": "tutkain_choose_evaluation_dialect",
+    },
 ]

@@ -119,8 +119,17 @@ def plugin_unloaded():
     preferences.clear_on_change("Tutkain")
 
 
+DIALECTS = edn.kwmap({
+    "clj": "Clojure",
+    "cljs": "ClojureScript",
+    "cljc": "Clojure Common",
+})
+
+
 def dialect(view, point):
-    if view.match_selector(point, "source.clojure.clojurescript"):
+    if eval_dialect := view.settings().get("tutkain_evaluation_dialect"):
+        return edn.Keyword(eval_dialect)
+    elif view.match_selector(point, "source.clojure.clojurescript"):
         return edn.Keyword("cljs")
     else:
         return edn.Keyword("clj")
@@ -1034,3 +1043,24 @@ class TutkainInitializeClojurescriptSupportCommand(WindowCommand):
             self.window.status_message("ERR: Not connected to a REPL.")
         else:
             self.enable_handler(client, build_id)
+
+
+class TutkainChooseEvaluationDialectCommand(TextCommand):
+    dialects = [
+        ["clj", "Clojure"],
+        ["cljs", "ClojureScript"]
+    ]
+
+    def finish(self, view, index):
+        val = self.dialects[index][0]
+        self.view.settings().set("tutkain_evaluation_dialect", val)
+        dialect_name = DIALECTS.get(edn.Keyword(val), "Clojure")
+        self.view.set_status("tutkain_evaluation_dialect", f"[Tutkain] Evaluating as {dialect_name}")
+
+    def run(self, edit):
+        if self.view.syntax().scope == "source.clojure.clojure-common":
+            self.view.window().show_quick_panel(
+                self.dialects,
+                lambda index: self.finish(self.view, index),
+                placeholder="Choose evaluation dialect"
+            )
