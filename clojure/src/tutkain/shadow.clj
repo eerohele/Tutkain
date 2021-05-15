@@ -72,6 +72,8 @@
 (defmethod handle :shadow/start-repl
   [{:keys [build-id port] :or {port 0} :as message}]
   (let [server-name (build-id->server-name build-id)]
+    ;; TODO: If the user switches Shadow CLJS REPLs without disconnecting,
+    ;; the server for the previous REPL will keep running. Clean up?
     (server/stop-server server-name)
     (if-some [{:keys [supervisor relay]} (runtime/get-instance)]
       (if-some [worker (supervisor/get-worker supervisor build-id)]
