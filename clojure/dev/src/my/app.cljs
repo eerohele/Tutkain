@@ -1,12 +1,7 @@
 (ns my.app
   (:require
-   [clojure.browser.repl :as repl]
-   [cljs.pprint :as pprint]
    [cljs.spec.alpha :as spec]
    [my.other :as other]))
-
-(defonce conn
-  (repl/connect "http://localhost:9000/repl"))
 
 (enable-console-print!)
 
@@ -34,5 +29,7 @@
   (start)
   (stop)
 
-  (pprint/pprint {:a 1})
+  (random-uuid)
+  (clj->js {:a [1 "b" 'c]})
+  (spec/exercise any?)
   )

@@ -216,9 +216,3 @@
       (if (no-shadow? ex)
         (respond-to message {:info nil})
         (throw ex)))))
-
-(defmethod handle :initialize-cljs
-  [message]
-  (if-some [get-build-ids (resolve 'shadow.cljs.devtools.api/get-build-ids)]
-    (respond-to message {:shadow/build-ids (sort (get-build-ids))})
-    (respond-to message {:status :ok})))

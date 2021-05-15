@@ -1,4 +1,5 @@
 from .. import state
+from ...api import edn
 
 
 def create(window, client):
@@ -33,12 +34,7 @@ def create(window, client):
     view.settings().set("result_file_regex", r"""\s*\[.+?\"(.+?)" (\d+)\]""")
     view.set_read_only(True)
     view.set_scratch(True)
-
-    if client.bare:
-        view.assign_syntax("Packages/Text/Plain Text.tmLanguage")
-    else:
-        view.assign_syntax("REPL (Tutkain).sublime-syntax")
-
+    view.assign_syntax("REPL (Tutkain).sublime-syntax")
     window.set_view_index(view, target_group, view_count)
 
     return view
@@ -50,7 +46,7 @@ def configure(window, client, view_id=None):
         None,
     ) or create(window, client)
 
-    state.set_view_client(view, client)
+    state.set_view_client(view, edn.Keyword("clj"), client)
     state.set_repl_view(view)
 
     return view

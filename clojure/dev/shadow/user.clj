@@ -6,7 +6,6 @@
 (comment
   (server/start!)
   (shadow/watch :app)
-  (shadow/repl :app {:prompt false})
   (server/stop!)
   :cljs/quit
   )

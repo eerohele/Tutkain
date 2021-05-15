@@ -1,6 +1,6 @@
 from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
-from Tutkain.src.repl.client import Client
+from Tutkain.src.repl.client import JVMClient
 from Tutkain.src import state
 
 from .mock import Server
@@ -16,7 +16,7 @@ def conduct_handshake(server):
             edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
         })
 
-        for _ in range(5):
+        for _ in range(6):
             backchannel.recv()
 
         server.send({
@@ -29,7 +29,7 @@ def conduct_handshake(server):
             edn.Keyword("val"): "nil",
             edn.Keyword("ns"): "user",
             edn.Keyword("ms"): 0,
-            edn.Keyword("form"): Client.handshake_payloads["print_version"]
+            edn.Keyword("form"): JVMClient.handshake_payloads["print_version"]
         })
 
         server.recv()
@@ -44,8 +44,8 @@ class TestEvaluation(ViewTestCase):
         start_logging(False)
 
         self.server = Server(greeting="user=> ").start()
-        self.client = Client(source_root(), self.server.host, self.server.port, wait=False).connect()
-        state.set_view_client(self.view, self.client)
+        self.client = JVMClient(source_root(), self.server.host, self.server.port, wait=False).connect()
+        state.set_view_client(self.view, edn.Keyword("clj"), self.client)
         state.set_repl_view(self.view)
         self.backchannel = conduct_handshake(self.server)
 
@@ -71,7 +71,6 @@ class TestEvaluation(ViewTestCase):
              "ns": edn.Symbol(ns),
              "line": line,
              "column": column,
-             "dialect": edn.Keyword("clj"),
         })
 
         self.assertEquals(response, actual)

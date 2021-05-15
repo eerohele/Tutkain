@@ -5,4 +5,5 @@
  :builds {:app {:target :browser
                 :modules {:main {:entries [my.app]}}
                 :output-dir "resources/public"
-                :devtools {:ignore-warnings #{:single-segment-namespace}}}}}
+                :devtools {:ignore-warnings #{:single-segment-namespace}
+                           :preloads [clojure.test.check.generators]}}}}

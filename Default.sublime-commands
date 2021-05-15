@@ -56,8 +56,8 @@
         "command": "tutkain_show_unsuccessful_tests"
     },
     {
-        "caption": "Tutkain: Initialize ClojureScript Support",
-        "command": "tutkain_initialize_clojurescript_support"
+        "caption": "Tutkain: Start Shadow CLJS REPL",
+        "command": "tutkain_start_shadow_repl"
     },
     {
         "caption": "Tutkain: Choose Evaluation Dialect",

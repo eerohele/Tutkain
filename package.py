@@ -23,7 +23,7 @@ from .src import inline
 from .src import paredit
 from .src import namespace
 from .src import test
-from .src.repl.client import Client
+from .src.repl.client import JVMClient, JSClient
 from .src.repl import info
 from .src.repl import history
 from .src.repl import tap
@@ -126,7 +126,7 @@ DIALECTS = edn.kwmap({
 })
 
 
-def dialect(view, point):
+def get_dialect(view, point):
     if eval_dialect := view.settings().get("tutkain_evaluation_dialect"):
         return edn.Keyword(eval_dialect)
     elif view.match_selector(point, "source.clojure.clojurescript"):
@@ -151,7 +151,7 @@ def evaluate(view, client, code, point=None, handler=None):
     ns = namespace.name(view) or "user"
     client.namespace = ns
     client.recvq.put({edn.Keyword("in"): code})
-    client.eval(code, dialect(view, point or 0), file, ns, line, column, handler)
+    client.eval(code, file, ns, line, column, handler)
 
 
 class TutkainClearOutputViewCommand(WindowCommand):
@@ -188,7 +188,7 @@ class TutkainEvaluateViewCommand(TextCommand):
 class TutkainRunTests(TextCommand):
     def run(self, edit, scope="ns"):
         if scope == "ns":
-            client = state.client(self.view.window())
+            client = state.client(self.view.window(), edn.Keyword("clj"))
             test.run(self.view, client)
         elif scope == "var":
             region = self.view.sel()[0]
@@ -196,7 +196,7 @@ class TutkainRunTests(TextCommand):
             test_var = test.current(self.view, point)
 
             if test_var:
-                client = state.client(self.view.window())
+                client = state.client(self.view.window(), edn.Keyword("clj"))
                 test.run(self.view, client, test_vars=[test_var])
 
     def input(self, args):
@@ -305,7 +305,7 @@ class TutkainEvaluateCommand(TextCommand):
             "op": edn.Keyword("load"),
             "code": code,
             "file": file,
-            "dialect": dialect(self.view, 0)
+            "dialect": get_dialect(self.view, 0)
         }, handler=client.recvq.put)
 
     def handler(self, region, client, response, inline_result):
@@ -325,10 +325,13 @@ class TutkainEvaluateCommand(TextCommand):
     def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, snippet=None, inline_result=False):
         assert scope in {"input", "form", "ns", "innermost", "outermost", "view"}
 
-        client = state.client(self.view.window())
+        point = self.view.sel()[0].begin()
+        point_dialect = get_dialect(self.view, point)
+        client = state.client(self.view.window(), point_dialect)
 
         if client is None:
-            self.view.window().status_message("ERR: Not connected to a REPL.")
+            dialect_name = DIALECTS.get(point_dialect, "Clojure")
+            self.view.window().status_message(f"ERR: Not connected to a {dialect_name} REPL.")
         else:
             if scope == "input":
                 view = self.view.window().show_input_panel(
@@ -444,35 +447,24 @@ class TutkainConnectCommand(WindowCommand):
 
             self.window.set_layout(layout)
 
-    def run_commands(self, active_view, then):
-        if then:
-            for command in then:
-                scope = command.get("scope", "window")
-
-                if "command" in command and "args" in command:
-                    if scope == "view":
-                        active_view.run_command(command["command"], command["args"])
-                    else:
-                        self.window.run_command(command["command"], command["args"])
-
-    def run(self, host, port, view_id=None, then=[]):
+    def run(self, host, port, view_id=None):
         try:
             active_view = self.window.active_view()
             tap.create_panel(self.window)
 
-            client = Client(
+            client = JVMClient(
                 source_root(), host, int(port), backchannel_opts={
                     "port": settings().get("backchannel").get("port")
-                }
+                }, done=lambda: self.window.status_message("Tutkain is ready.")
             )
 
-            client.connect(then=lambda _: self.run_commands(active_view, then))
+            client.connect()
 
             self.set_layout()
             view = views.configure(self.window, client, view_id)
 
             print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
-            print_loop.name = "tutkain.print_loop"
+            print_loop.name = "tutkain.clojure.print_loop"
             print_loop.start()
 
             # Activate the output view and the view that was active prior to
@@ -575,7 +567,7 @@ class TutkainViewEventListener(ViewEventListener):
         if settings().get("auto_complete") and self.view.match_selector(
             point,
             "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
-        ) and (client := state.client(self.view.window())):
+        ) and (client := state.client(self.view.window(), edn.Keyword("clj"))):
             if scope := selectors.expand_by_selector(self.view, point, "meta.symbol | constant.other.keyword"):
                 prefix = self.view.substr(scope)
 
@@ -585,7 +577,7 @@ class TutkainViewEventListener(ViewEventListener):
                 "op": edn.Keyword("completions"),
                 "prefix": prefix,
                 "ns": namespace.name(self.view),
-                "dialect": dialect(self.view, point)
+                "dialect": get_dialect(self.view, point)
             }, handler=lambda response: (
                 completion_list.set_completions(
                     map(self.completion_item, response.get(edn.Keyword("completions"), []))
@@ -596,12 +588,12 @@ class TutkainViewEventListener(ViewEventListener):
 
 
 def lookup(view, form, handler):
-    if not view.settings().get("tutkain_repl_output_view") and form and (client := state.client(view.window())):
+    if not view.settings().get("tutkain_repl_output_view") and form and (client := state.client(view.window(), edn.Keyword("clj"))):
         client.backchannel.send({
             "op": edn.Keyword("lookup"),
             "named": view.substr(form),
             "ns": namespace.name(view),
-            "dialect": dialect(view, form.begin())
+            "dialect": get_dialect(view, form.begin())
         }, handler)
 
 
@@ -700,20 +692,20 @@ class TutkainEventListener(EventListener):
     def on_pre_close(self, view):
         if view and view.settings().get("tutkain_repl_output_view"):
             window = view.window()
-            client = state.view_client(view)
 
-            if client:
-                client.halt()
-                state.forget_repl_view(view)
+            for dialect in [edn.Keyword("cljs"), edn.Keyword("clj")]:
+                if client := state.view_client(view, dialect):
+                    client.halt()
 
-                window.destroy_output_panel(tap.panel_name)
+                if window:
+                    window.destroy_output_panel(tap.panel_name)
+                    active_view = window.active_view()
 
-            if window:
-                active_view = window.active_view()
+                    if active_view:
+                        active_view.run_command("tutkain_clear_test_markers")
+                        window.focus_view(active_view)
 
-                if active_view:
-                    active_view.run_command("tutkain_clear_test_markers")
-                    window.focus_view(active_view)
+            state.forget_repl_view(view)
 
 
 class TutkainExpandSelectionCommand(TextCommand):
@@ -731,7 +723,7 @@ class TutkainExpandSelectionCommand(TextCommand):
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
     def run(self):
-        client = state.client(self.window)
+        client = state.client(self.window, edn.Keyword("clj"))
 
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
@@ -1011,38 +1003,71 @@ class TutkainShowUnsuccessfulTestsCommand(TextCommand):
             )
 
 
-class TutkainInitializeClojurescriptSupportCommand(WindowCommand):
+class TutkainStartShadowReplCommand(WindowCommand):
+    def connect(self, build_id, response):
+        if response.get(edn.Keyword("status")) == edn.Keyword("fail"):
+            reason = response.get(edn.Keyword("reason"))
+
+            if reason == edn.Keyword("no-server"):
+                self.window.status_message("ERR: shadow-cljs server not running")
+            elif reason == edn.Keyword("no-worker"):
+                self.window.status_message(f"ERR: shadow-cljs watch for :{build_id.name} not running")
+        else:
+            view = state.repl_view(self.window)
+
+            host = response.get(edn.Keyword("host"))
+            port = response.get(edn.Keyword("port"))
+            client = JSClient(host, int(port))
+
+            client.connect()
+            state.set_view_client(view, edn.Keyword("cljs"), client)
+
+            print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
+            print_loop.name = "tutkain.cljs.print_loop"
+            print_loop.start()
+
+            self.window.status_message(f"[Tutkain] Started a REPL on Shadow CLJS build :{build_id.name}")
+
     def set_build_id(self, client, build_id):
-        client.backchannel.options["shadow-build-id"] = build_id
-        client.recvq.put({edn.Keyword("val"): f":{build_id.name}\n"})
+        # build_id is -1 if the user dismisses the ST quick panel
+        if build_id != -1:
+            client.backchannel.options["shadow-build-id"] = build_id
+
+            client.backchannel.send({
+                "op": edn.Keyword("start-repl", "shadow"),
+                "build-id": build_id
+            }, lambda response: self.connect(build_id, response))
 
     def choose_build_id(self, client, response):
-        items = list(map(lambda id: id.name, response.get(edn.Keyword("build-ids", "shadow"), [])))
+        items = list(map(lambda id: id.name, response.get(edn.Keyword("ids"), [])))
 
         if items:
             self.window.show_quick_panel(
                 items,
                 lambda index: self.set_build_id(client, edn.Keyword(items[index])),
-                placeholder="Choose shadow-cljs build ID"
+                placeholder="Choose Shadow CLJS build ID",
+                flags=sublime.MONOSPACE_FONT
             )
 
-    def enable_handler(self, client, build_id=None):
-        if build_id is None:
-            handler = lambda response: self.choose_build_id(client, response)
-        else:
-            handler = lambda _: self.set_build_id(client, build_id)
+    def get_project_build_id(self):
+        return self.window.project_data().get("settings", {}).get("Tutkain", {}).get("shadow-cljs", {}).get("build-id")
 
-        client.backchannel.send({
-            "op": edn.Keyword("initialize-cljs")
-        }, handler=handler)
-
-    def run(self, build_id=None):
-        client = state.client(self.window)
+    def run(self):
+        client = state.client(self.window, edn.Keyword("clj"))
 
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
+        elif client and not client.ready:
+            self.window.status_message("ERR: Not ready to start Shadow CLJS yet. Try again in a couple of seconds.")
+        elif client and client.ready and "shadow.clj" not in client.capabilities:
+            self.window.status_message("ERR: Shadow CLJS not in classpath, can't initialize.")
         else:
-            self.enable_handler(client, build_id)
+            if build_id := self.get_project_build_id():
+                self.set_build_id(client, edn.Keyword(build_id))
+            else:
+                client.backchannel.send({
+                    "op": edn.Keyword("choose-build-id", "shadow")
+                }, handler=lambda response: self.choose_build_id(client, response))
 
 
 class TutkainChooseEvaluationDialectCommand(TextCommand):

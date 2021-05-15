@@ -2,12 +2,12 @@ from unittest import TestCase
 
 from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
-from Tutkain.src.repl.client import Client
+from Tutkain.src.repl.client import JVMClient
 
 from .mock import Server
 
 
-class TestClient(TestCase):
+class TestJVMClient(TestCase):
     @classmethod
     def setUpClass(self):
         start_logging(False)
@@ -18,7 +18,7 @@ class TestClient(TestCase):
 
     def test_smoke(self):
         with Server(greeting="user=> ") as server:
-            with Client(source_root(), server.host, server.port, wait=False) as client:
+            with JVMClient(source_root(), server.host, server.port, wait=False) as client:
                 # Client starts sub-REPL
                 server.recv()
 
@@ -30,13 +30,13 @@ class TestClient(TestCase):
                         })
                     )
 
-                    for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "cljs.clj"]:
+                    for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "cljs.clj", "shadow.clj"]:
                         response = edn.read(backchannel.recv())
                         self.assertEquals(edn.Keyword("load-base64"), response.get(edn.Keyword("op")))
                         self.assertEquals(filename, response.get(edn.Keyword("filename")))
 
                     self.assertEquals(
-                        Client.handshake_payloads["print_version"],
+                        JVMClient.handshake_payloads["print_version"],
                         server.recv().rstrip()
                     )
 
@@ -50,7 +50,7 @@ class TestClient(TestCase):
                         edn.Keyword("val"): "nil",
                         edn.Keyword("ns"): "user",
                         edn.Keyword("ms"): 0,
-                        edn.Keyword("form"): Client.handshake_payloads["print_version"]
+                        edn.Keyword("form"): JVMClient.handshake_payloads["print_version"]
                     })
 
                     self.assertEquals({
@@ -69,7 +69,6 @@ class TestClient(TestCase):
                     self.assertEquals(
                         edn.kwmap({
                             "op": edn.Keyword("set-eval-context"),
-                            "dialect": edn.Keyword("clj"),
                             "id": id,
                             "file": "NO_SOURCE_FILE",
                             "ns": edn.Symbol("user"),
