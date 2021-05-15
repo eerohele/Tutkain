@@ -506,9 +506,12 @@ class TutkainNewScratchViewCommand(WindowCommand):
     }
 
     def finish(self, view, index):
-        syntax = list(self.syntaxes.values())[index]
-        view.assign_syntax(syntax)
-        self.window.focus_view(view)
+        if index == -1:
+            view.close()
+        else:
+            syntax = list(self.syntaxes.values())[index]
+            view.assign_syntax(syntax)
+            self.window.focus_view(view)
 
     def run(self):
         view = self.window.new_file()
