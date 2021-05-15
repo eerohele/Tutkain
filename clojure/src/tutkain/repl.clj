@@ -109,8 +109,8 @@
       socket)))
 
 (def ^:dynamic *out-fn*
-  "A function that takes a tag (one of #{:ret :err}) and an evaluation result
-  or an exception and writes it into the current socket output stream.
+  "A function that takes a tag (one of #{:ret :err :out}) and an evaluation
+  result or an exception and writes it into the current socket output stream.
 
   Use in functions given as clojure.main/repl or cljs.repl/repl :print and
   :caught args when starting a nested REPL in Tutkain.
