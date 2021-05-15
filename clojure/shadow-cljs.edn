@@ -2,8 +2,12 @@
  :socket-repl false
  :deps {:aliases [:dev]}
  :dev-http {8000 "resources/public"}
- :builds {:app {:target :browser
-                :modules {:main {:entries [my.app]}}
-                :output-dir "resources/public"
-                :devtools {:ignore-warnings #{:single-segment-namespace}
-                           :preloads [clojure.test.check.generators]}}}}
+ :builds {:browser {:target :browser
+                    :modules {:main {:entries [my.browser.app]}}
+                    :output-dir "resources/public"
+                    :devtools {:ignore-warnings #{:single-segment-namespace}
+                               :preloads [clojure.test.check.generators]}}
+
+          :node-script {:target :node-script
+                        :main my.node.app/-main
+                        :output-to "out/script.js"}}}

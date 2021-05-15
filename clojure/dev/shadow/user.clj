@@ -5,7 +5,8 @@
 
 (comment
   (server/start!)
-  (shadow/watch :app)
+  (shadow/watch :browser)
+  (shadow/watch :node-script)
   (server/stop!)
   :cljs/quit
   )

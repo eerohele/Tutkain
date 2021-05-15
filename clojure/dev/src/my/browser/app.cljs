@@ -1,5 +1,6 @@
-(ns my.app
+(ns my.browser.app
   (:require
+   [cljs.pprint :as pprint]
    [cljs.spec.alpha :as spec]
    [my.other :as other]))
 
@@ -29,6 +30,7 @@
   (start)
   (stop)
 
+  (pprint/pprint {:a 1})
   (random-uuid)
   (clj->js {:a [1 "b" 'c]})
   (spec/exercise any?)

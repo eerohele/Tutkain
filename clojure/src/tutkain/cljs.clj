@@ -165,11 +165,11 @@
         (throw ex)))))
 
 (comment
-  (candidates (compiler-env :app) "c" 'cljs.core)
-  (candidates (compiler-env :app) "string/" 'cljs.pprint)
-  (candidates (compiler-env :app) "string/b" 'cljs.pprint)
-  (candidates (compiler-env :app) "make-hi" 'cljs.core)
-  (candidates (compiler-env :app) ":a" 'cljs.core)
+  (candidates (compiler-env :browser) "c" 'cljs.core)
+  (candidates (compiler-env :browser) "string/" 'cljs.pprint)
+  (candidates (compiler-env :browser) "string/b" 'cljs.pprint)
+  (candidates (compiler-env :browser) "make-hi" 'cljs.core)
+  (candidates (compiler-env :browser) ":a" 'cljs.core)
   ,)
 
 (defn special-sym-meta

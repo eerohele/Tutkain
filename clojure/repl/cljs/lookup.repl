@@ -6,7 +6,7 @@
    [tutkain.lookup.specs :as specs]
    [tutkain.cljs :as cljs]))
 
-(def build-id :app)
+(def build-id :browser)
 
 ;; Start shadow-cljs watch
 
@@ -15,17 +15,17 @@
 (defn env [] (cljs/compiler-env build-id))
 
 ;; qualified symbols
-(cljs/info (env) 'pprint/pprint 'my.app)
+(cljs/info (env) 'pprint/pprint 'my.browser.app)
 (xr/check! ::specs/info)
 
 ;; core vars
-(cljs/info (env) 'mapcat 'my.app)
+(cljs/info (env) 'mapcat 'my.browser.app)
 (xr/check! ::specs/info)
 
 ;; current ns vars
-(cljs/info (env) 'start 'my.app)
+(cljs/info (env) 'start 'my.browser.app)
 (xr/check! ::specs/info)
 
 ;; special forms
-(cljs/info (env) 'def 'my.app)
+(cljs/info (env) 'def 'my.browser.app)
 (xr/check! ::specs/info)

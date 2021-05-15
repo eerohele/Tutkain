@@ -8,7 +8,7 @@
    [tutkain.completions.specs :as specs]
    [tutkain.cljs :as cljs]))
 
-(def build-id :app)
+(def build-id :browser)
 
 ;; Start shadow-cljs watch
 
@@ -24,7 +24,7 @@
 (Thread/sleep 3000)
 
 (cljs/all-keywords (env))
-(xr/check! #(set/subset? #{:my.app/running :my.app/stopped :require} %))
+(xr/check! #(set/subset? #{:my.browser.app/running :my.browser.app/stopped :require} %))
 
 (cljs/ns-candidates (env))
 (xr/check! ::specs/completions)
@@ -32,46 +32,46 @@
 (set (cljs/ns-candidates (env)))
 (xr/check! #(set/subset? #{{:candidate "cljs.user" :type :namespace}
                            {:candidate "cljs.pprint" :type :namespace}
-                           {:candidate "my.app" :type :namespace}}
+                           {:candidate "my.browser.app" :type :namespace}}
               %))
 
-(set (cljs/candidates (env) ":m" 'my.app))
-(xr/check! #(set/subset? #{{:candidate ":my.app/running" :type :keyword}
-                           {:candidate ":my.app/stopped", :type :keyword}} %))
+(set (cljs/candidates (env) ":m" 'my.browser.app))
+(xr/check! #(set/subset? #{{:candidate ":my.browser.app/running" :type :keyword}
+                           {:candidate ":my.browser.app/stopped", :type :keyword}} %))
 
-(set (cljs/candidates (env) "::r" 'my.app))
+(set (cljs/candidates (env) "::r" 'my.browser.app))
 (xr/check! #(set/subset? #{{:candidate "::running" :type :keyword}} %))
 
-(set (cljs/candidates (env) ":r" 'my.app))
+(set (cljs/candidates (env) ":r" 'my.browser.app))
 (xr/check! #(set/subset? #{{:candidate ":require" :type :keyword}} %))
 
 ;; auto-resolved qualified keywords
-(set (cljs/candidates (env) "::other/k" 'my.app))
+(set (cljs/candidates (env) "::other/k" 'my.browser.app))
 (xr/check! #(set/subset? #{{:candidate "::other/keyword" :type :keyword}} %))
 
 ;; scoped candidates
-(cljs/candidates (env) "pprint/" 'my.app)
+(cljs/candidates (env) "pprint/" 'my.browser.app)
 (xr/check! ::specs/completions)
 
 ;; namespaces
-(cljs/candidates (env) "cljs.s" 'my.app)
+(cljs/candidates (env) "cljs.s" 'my.browser.app)
 (xr/check! ::specs/completions)
 
 ;; namespace aliases
-(cljs/candidates (env) "pp" 'my.app)
+(cljs/candidates (env) "pp" 'my.browser.app)
 (xr/check! ::specs/completions)
 
 ;; core function
-(cljs/candidates (env) "ma" 'my.app)
+(cljs/candidates (env) "ma" 'my.browser.app)
 (xr/check! ::specs/completions)
 
 ;; core macro
-(set (cljs/candidates (env) "unsa" 'my.app))
+(set (cljs/candidates (env) "unsa" 'my.browser.app))
 (xr/check! #(set/subset? #{{:candidate "unsafe-bit-and"
                             :type :macro
                             :arglists '("[x y]" "[x y & more]")}} %))
 
-(set (cljs/candidates (env) "st" 'my.app))
+(set (cljs/candidates (env) "st" 'my.browser.app))
 (xr/check! #(set/subset? #{{:candidate "start" :type :function :arglists '("([])")}
                            {:candidate "stop" :type :function :arglists '("([])")}} %))
 

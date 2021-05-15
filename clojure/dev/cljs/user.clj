@@ -10,7 +10,7 @@
     '[tutkain.repl :refer [*out-fn*]])
 
   (build/build "dev/src"
-    {:main 'my.app
+    {:main 'my.browser.app
      :output-to "out/main.js"
      :target :browser
      :verbose false}
