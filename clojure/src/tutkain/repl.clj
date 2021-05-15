@@ -118,21 +118,16 @@
         (.start))
       socket)))
 
-(def ^:dynamic *out-fn*
-  "A function that takes a tag (one of #{:ret :err :out}) and an evaluation
-  result or an exception and writes it into the current socket output stream.
+(def ^:dynamic ^:experimental *print*
+  "A function you can use as the :print arg of clojure.main/repl."
+  prn)
 
-  Use in functions given as clojure.main/repl or cljs.repl/repl :print and
-  :caught args when starting a nested REPL in Tutkain.
-
+(def ^:dynamic ^:experimental *caught*
+  "A function you can use as the :caught arg of clojure.main/repl.
   For example:
 
-      (main/repl
-        :print #(*out-fn* :ret %)
-        :caught (fn [ex & _]
-                  (*out-fn* :err (Throwable->str ex))
-        ,,,)"
-  prn)
+  Prints exceptions such that Tutkain can print them correctly."
+  main/repl-caught)
 
 (defn repl
   [opts]
@@ -152,7 +147,8 @@
       (apply require main/repl-requires)
       (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
                 *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
-                *out-fn* (fn [tag val] (out-fn {:tag tag :val val}))]
+                *print* #(out-fn {:tag :ret :val (pp-str %)})
+                *caught* #(out-fn {:tag :err :val (Throwable->str %)})]
         (try
           (out-fn {:tag :ret
                    :val (pr-str {:host (-> backchannel .getLocalAddress .getHostName)
