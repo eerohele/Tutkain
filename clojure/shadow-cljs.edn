@@ -10,4 +10,5 @@
 
           :node-script {:target :node-script
                         :main my.node.app/-main
-                        :output-to "out/script.js"}}}
+                        :output-to "out/script.js"
+                        :compiler-options {:infer-externs true}}}}
