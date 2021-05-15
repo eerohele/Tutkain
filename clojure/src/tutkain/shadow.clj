@@ -87,3 +87,9 @@
                                :port (.getLocalPort socket)}))
         (respond-to message {:status :fail :reason :no-worker}))
       (respond-to message {:status :fail :reason :no-server}))))
+
+(defmethod handle :shadow/stop-repls
+  [message]
+  (let [stopped-ids (filter #(server/stop-server (build-id->server-name %))
+                      (api/active-builds))]
+    (respond-to message {:stopped-ids (set stopped-ids)})))

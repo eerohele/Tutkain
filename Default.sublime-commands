@@ -60,6 +60,10 @@
         "command": "tutkain_start_shadow_repl"
     },
     {
+        "caption": "Tutkain: Stop Shadow CLJS REPLs",
+        "command": "tutkain_stop_shadow_repls"
+    },
+    {
         "caption": "Tutkain: Choose Evaluation Dialect",
         "command": "tutkain_choose_evaluation_dialect",
     },

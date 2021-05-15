@@ -1085,10 +1085,22 @@ class TutkainChooseEvaluationDialectCommand(TextCommand):
         dialect_name = DIALECTS.get(edn.Keyword(val), "Clojure")
         self.view.set_status("tutkain_evaluation_dialect", f"[Tutkain] Evaluating as {dialect_name}")
 
-    def run(self, edit):
+    def run(self):
         if self.view.syntax().scope == "source.clojure.clojure-common":
             self.view.window().show_quick_panel(
                 self.dialects,
                 lambda index: self.finish(self.view, index),
                 placeholder="Choose evaluation dialect"
             )
+
+
+class TutkainStopShadowReplsCommand(WindowCommand):
+    def handler(self, response):
+        if builds := response.get(edn.Keyword("stopped-ids")):
+            self.window.status_message(f"Stopped: {builds}")
+        else:
+            self.window.status_message("[Tutkain] No active Shadow CLJS REPLs.")
+
+    def run(self):
+        if client := state.client(self.window, edn.Keyword("clj")):
+            client.backchannel.send({"op": edn.Keyword("stop-repls", "shadow") }, self.handler)
