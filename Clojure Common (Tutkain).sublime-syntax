@@ -1,0 +1,7 @@
+%YAML 1.2
+---
+# https://www.sublimetext.com/docs/syntax.html
+name: Clojure Common (Tutkain)
+file_extensions: [cljc]
+scope: source.clojure.clojure-common
+extends: Packages/Tutkain/Clojure (Tutkain).sublime-syntax

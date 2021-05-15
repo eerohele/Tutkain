@@ -2,7 +2,7 @@
 ---
 # https://www.sublimetext.com/docs/syntax.html
 name: Clojure (Tutkain)
-file_extensions: [clj, cljc]
+file_extensions: [clj]
 scope: source.clojure
 extends: Packages/Tutkain/EDN (Tutkain).sublime-syntax
 
