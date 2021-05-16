@@ -13,7 +13,10 @@
   [x]
   (walk/postwalk
     #(cond
-       (map? %) (into (sorted-map) %)
+       (map? %) (try
+                  (into (sorted-map) %)
+                  (catch ClassCastException _
+                    %))
        :else %)
     x))
 
