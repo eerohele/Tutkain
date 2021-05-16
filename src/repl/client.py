@@ -215,17 +215,35 @@ class JVMClient(Client):
             backchannel_port = self.backchannel_opts.get("port", 0)
             self.write_line(f"""#?(:bb (do (prn {{:tag :ret :val "{{}}"}}) ((requiring-resolve 'clojure.core.server/io-prepl))) :clj (do (with-open [reader (-> (java.util.Base64/getDecoder) (.decode "{blob}") (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader "{os.path.abspath(path)}" "{os.path.basename(path)}")) (try (tutkain.repl/repl {{:port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))))""")
 
-        ret = edn.read_line(self.buffer)
+        line = self.buffer.readline()
 
-        if isinstance(ret, dict) and (host := ret.get(edn.Keyword("host"))):
-            port = ret.get(edn.Keyword("port"))
-            self.backchannel = Backchannel(host, port).connect()
-        elif isinstance(ret, dict) and (val := edn.read(ret.get(edn.Keyword("val")))) and isinstance(val, dict):
-            host = val.get(edn.Keyword("host"))
-            port = val.get(edn.Keyword("port"))
-            self.backchannel = Backchannel(host, port).connect()
+        if not line.startswith('{'):
+            self.recvq.put(edn.kwmap({
+                "tag": edn.Keyword("out"),
+                "val": "Tutkain failed to start. Here's why:"
+            }))
+
+            self.recvq.put(edn.kwmap({
+                "tag": edn.Keyword("err"),
+                "val": line
+            }))
+
+            self.recvq.put(edn.kwmap({
+                "tag": edn.Keyword("out"),
+                "val": "NOTE: Tutkain requires Clojure 1.10.0 or newer."
+            }))
         else:
-            self.recvq.put(ret)
+            ret = edn.read(line)
+
+            if (host := ret.get(edn.Keyword("host"))):
+                port = ret.get(edn.Keyword("port"))
+                self.backchannel = Backchannel(host, port).connect()
+            elif (val := edn.read(ret.get(edn.Keyword("val")))) and isinstance(val, dict):
+                host = val.get(edn.Keyword("host"))
+                port = val.get(edn.Keyword("port"))
+                self.backchannel = Backchannel(host, port).connect()
+            else:
+                self.recvq.put(ret)
 
         self.load_modules(self.backchannel)
         self.write_line(self.handshake_payloads["print_version"])
