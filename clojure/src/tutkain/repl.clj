@@ -84,7 +84,8 @@
   [{:keys [repl-in port] :or {port 0}}]
   (let [socket (ServerSocketChannel/open)
         address (InetSocketAddress. "localhost" port)
-        repl-thread (Thread/currentThread)]
+        repl-thread (Thread/currentThread)
+        lock (Object.)]
     (.bind socket address)
     (let [thread (Thread.
                    (fn []
@@ -94,9 +95,10 @@
                              out (Channels/newWriter socket-channel "UTF-8")
                              EOF (Object.)
                              out-fn (fn [message]
-                                      (.write out (pr-str (dissoc message :out-fn :in)))
-                                      (.write out "\n")
-                                      (.flush out))]
+                                      (locking lock
+                                        (.write out (pr-str (dissoc message :out-fn :in)))
+                                        (.write out "\n")
+                                        (.flush out)))]
                          (loop []
                            (when (.isOpen socket)
                              (let [message (read in false EOF)]
