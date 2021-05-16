@@ -127,7 +127,9 @@ DIALECTS = edn.kwmap({
 
 
 def get_dialect(view, point):
-    if eval_dialect := view.window().settings().get("tutkain_evaluation_dialect"):
+    if view.match_selector(point, "source.clojure.clojure-common") and (
+        eval_dialect := view.window().settings().get("tutkain_evaluation_dialect")
+    ):
         return edn.Keyword(eval_dialect)
     elif view.match_selector(point, "source.clojure.clojurescript"):
         return edn.Keyword("cljs")
