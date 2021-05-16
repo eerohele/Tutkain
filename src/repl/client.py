@@ -158,12 +158,17 @@ class JVMClient(Client):
     }
 
     modules = {
-        "lookup.clj": [],
-        "completions.clj": [],
-        "load_blob.clj": [],
-        "test.clj": [],
-        "cljs.clj": [edn.Symbol("cljs.core")],
-        "shadow.clj": [edn.Symbol("shadow.cljs.devtools.api")]
+        "base": {
+            "lookup.clj": [],
+            "completions.clj": [],
+            "load_blob.clj": [],
+            "test.clj": []
+        },
+
+        "extra": {
+            "cljs.clj": [edn.Symbol("cljs.core")],
+            "shadow.clj": [edn.Symbol("shadow.cljs.devtools.api")]
+        }
     }
 
     def write_line(self, line):
@@ -187,26 +192,52 @@ class JVMClient(Client):
 
         return bs
 
-    def modules_loaded(self, response):
-        if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
-            self.capabilities.add(response.get(edn.Keyword("filename")))
+    def extra_module_loaded(self, response):
+        filename = response.get(edn.Keyword("filename"))
+        self.attempted_modules.add(filename)
 
-        if response.get(edn.Keyword("filename")) == list(self.modules.keys())[-1]:
+        if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
+            self.capabilities.add(filename)
+
+        if len(self.attempted_modules) == len(self.modules["base"].keys()) + len(self.modules["extra"].keys()):
             self.ready = True
             self.done()
 
-    def load_modules(self, backchannel):
-        for filename, requires in self.modules.items():
+    def load_extra_modules(self):
+        for filename, requires in self.modules["extra"].items():
             path = os.path.join(self.source_root, filename)
 
             with open(path, "rb") as file:
-                backchannel.send({
+                self.backchannel.send({
                     "op": edn.Keyword("load-base64"),
                     "path": path,
                     "filename": filename,
                     "blob": base64.b64encode(file.read()).decode("utf-8"),
                     "requires": requires
-                }, self.modules_loaded)
+                }, self.extra_module_loaded)
+
+    def base_module_loaded(self, response):
+        filename = response.get(edn.Keyword("filename"))
+        self.attempted_modules.add(filename)
+
+        if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
+            self.capabilities.add(filename)
+
+        if len(self.capabilities) == len(self.modules["base"].keys()):
+            self.load_extra_modules()
+
+    def load_modules(self):
+        for filename, requires in self.modules["base"].items():
+            path = os.path.join(self.source_root, filename)
+
+            with open(path, "rb") as file:
+                self.backchannel.send({
+                    "op": edn.Keyword("load-base64"),
+                    "path": path,
+                    "filename": filename,
+                    "blob": base64.b64encode(file.read()).decode("utf-8"),
+                    "requires": requires
+                }, self.base_module_loaded)
 
     def handshake(self):
         log.debug({"event": "client/handshake", "data": self.sink_all()})
@@ -247,7 +278,7 @@ class JVMClient(Client):
             else:
                 self.recvq.put(ret)
 
-        self.load_modules(self.backchannel)
+        self.load_modules()
         self.write_line(self.handshake_payloads["print_version"])
         self.recvq.put(edn.read_line(self.buffer))
 
@@ -272,6 +303,7 @@ class JVMClient(Client):
         self.backchannel_opts = backchannel_opts
         self.wait = wait
         self.capabilities = set()
+        self.attempted_modules = set()
         self.ready = False
         self.done = done
 
