@@ -16,7 +16,7 @@ def conduct_handshake(server):
             edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
         })
 
-        for _ in range(6):
+        for _ in range(4):
             backchannel.recv()
 
         server.send({
