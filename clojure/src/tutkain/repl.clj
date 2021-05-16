@@ -41,23 +41,18 @@
     (InputStreamReader.)
     (LineNumberingPushbackReader.)))
 
-(defonce ^:private load-lock
-  (Object.))
-
 (defmethod handle :load-base64
   [{:keys [blob path filename requires] :as message}]
-  (future
-    (try
-      (run! require requires)
-      (with-open [reader (base64-reader blob)]
-        (try
-          (locking load-lock
-            (Compiler/load reader path filename))
-          (respond-to message {:filename filename :result :ok})
-          (catch Compiler$CompilerException _
-            (respond-to message {:filename filename :result :fail :reason :compiler-ex}))))
-      (catch FileNotFoundException _
-        (respond-to message {:filename filename :result :fail :reason :not-found})))))
+  (try
+    (run! require requires)
+    (with-open [reader (base64-reader blob)]
+      (try
+        (Compiler/load reader path filename)
+        (respond-to message {:filename filename :result :ok})
+        (catch Compiler$CompilerException _
+          (respond-to message {:filename filename :result :fail :reason :compiler-ex}))))
+    (catch FileNotFoundException _
+      (respond-to message {:filename filename :result :fail :reason :not-found}))))
 
 (defn pp-str
   [x]
