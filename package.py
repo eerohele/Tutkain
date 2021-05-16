@@ -127,7 +127,7 @@ DIALECTS = edn.kwmap({
 
 
 def get_dialect(view, point):
-    if eval_dialect := view.settings().get("tutkain_evaluation_dialect"):
+    if eval_dialect := view.window().settings().get("tutkain_evaluation_dialect"):
         return edn.Keyword(eval_dialect)
     elif view.match_selector(point, "source.clojure.clojurescript"):
         return edn.Keyword("cljs")
@@ -1078,25 +1078,24 @@ class TutkainStartShadowReplCommand(WindowCommand):
                 }, handler=lambda response: self.choose_build_id(client, response))
 
 
-class TutkainChooseEvaluationDialectCommand(TextCommand):
+class TutkainChooseEvaluationDialectCommand(WindowCommand):
     dialects = [
         ["clj", "Clojure"],
         ["cljs", "ClojureScript"]
     ]
 
-    def finish(self, view, index):
+    def finish(self, index):
         val = self.dialects[index][0]
-        self.view.settings().set("tutkain_evaluation_dialect", val)
+        self.window.settings().set("tutkain_evaluation_dialect", val)
         dialect_name = DIALECTS.get(edn.Keyword(val), "Clojure")
-        self.view.set_status("tutkain_evaluation_dialect", f"[Tutkain] Evaluating as {dialect_name}")
+        self.window.status_message(f"[Tutkain] Evaluating Clojure Common files as {dialect_name}")
 
     def run(self):
-        if self.view.syntax().scope == "source.clojure.clojure-common":
-            self.view.window().show_quick_panel(
-                self.dialects,
-                lambda index: self.finish(self.view, index),
-                placeholder="Choose evaluation dialect"
-            )
+        self.window.show_quick_panel(
+            self.dialects,
+            self.finish,
+            placeholder="Choose Clojure Common evaluation dialect"
+        )
 
 
 class TutkainStopShadowReplsCommand(WindowCommand):
