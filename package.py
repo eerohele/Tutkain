@@ -682,7 +682,7 @@ class TutkainEventListener(EventListener):
 
     def on_hover(self, view, point, hover_zone):
         if settings().get("lookup_on_hover"):
-            if view.match_selector(point, "source.clojure"):
+            if view.match_selector(point, "source.clojure & (meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified)"):
                 form = forms.find_adjacent(view, point)
                 lookup(view, form, lambda response: info.show_popup(view, point, response))
 
