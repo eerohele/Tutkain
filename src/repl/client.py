@@ -165,7 +165,7 @@ class JVMClient(Client):
             "test.clj": []
         },
 
-        "extra": {
+        "cljs": {
             "cljs.clj": [edn.Symbol("cljs.core")],
             "shadow.clj": [edn.Symbol("shadow.cljs.devtools.api")]
         }
@@ -192,19 +192,18 @@ class JVMClient(Client):
 
         return bs
 
-    def extra_module_loaded(self, response):
+    def cljs_module_loaded(self, response):
         filename = response.get(edn.Keyword("filename"))
         self.attempted_modules.add(filename)
 
         if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
             self.capabilities.add(filename)
 
-        if len(self.attempted_modules) == len(self.modules["base"].keys()) + len(self.modules["extra"].keys()):
-            self.ready = True
-            self.done()
+        if len(self.attempted_modules) == len(self.modules["cljs"].keys()):
+            self.ready_for_cljs = True
 
-    def load_extra_modules(self):
-        for filename, requires in self.modules["extra"].items():
+    def load_cljs_modules(self):
+        for filename, requires in self.modules["cljs"].items():
             path = os.path.join(self.source_root, filename)
 
             with open(path, "rb") as file:
@@ -214,17 +213,13 @@ class JVMClient(Client):
                     "filename": filename,
                     "blob": base64.b64encode(file.read()).decode("utf-8"),
                     "requires": requires
-                }, self.extra_module_loaded)
+                }, self.cljs_module_loaded)
 
     def base_module_loaded(self, response):
         filename = response.get(edn.Keyword("filename"))
-        self.attempted_modules.add(filename)
 
         if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
             self.capabilities.add(filename)
-
-        if len(self.capabilities) == len(self.modules["base"].keys()):
-            self.load_extra_modules()
 
     def load_modules(self):
         for filename, requires in self.modules["base"].items():
@@ -296,7 +291,7 @@ class JVMClient(Client):
 
         return self
 
-    def __init__(self, source_root, host, port, done=lambda: None, backchannel_opts={}, wait=5):
+    def __init__(self, source_root, host, port, backchannel_opts={}, wait=5):
         super(JVMClient, self).__init__(host, port, "tutkain.clojure.client")
         self.source_root = source_root
         self.backchannel = NoopBackchannel()
@@ -304,8 +299,7 @@ class JVMClient(Client):
         self.wait = wait
         self.capabilities = set()
         self.attempted_modules = set()
-        self.ready = False
-        self.done = done
+        self.ready_for_cljs = False
 
     def eval(self, code, file="NO_SOURCE_FILE", ns="user", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put

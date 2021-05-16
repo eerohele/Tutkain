@@ -457,7 +457,7 @@ class TutkainConnectCommand(WindowCommand):
             client = JVMClient(
                 source_root(), host, int(port), backchannel_opts={
                     "port": settings().get("backchannel").get("port")
-                }, done=lambda: self.window.status_message("Tutkain is ready.")
+                }
             )
 
             client.connect()
@@ -681,6 +681,16 @@ class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if view.settings().get("tutkain_repl_output_view"):
             state.set_repl_view(view)
+
+    def on_activated_async(self, view):
+        window = view.window()
+        syntax = view.syntax()
+        client = state.client(window, edn.Keyword("clj"))
+
+        if syntax and syntax.scope == "source.clojure.clojurescript" and (
+            client and not client.ready_for_cljs
+        ):
+            client.load_cljs_modules()
 
     def on_hover(self, view, point, hover_zone):
         if settings().get("lookup_on_hover"):
@@ -1068,9 +1078,9 @@ class TutkainStartShadowReplCommand(WindowCommand):
 
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
-        elif client and not client.ready:
+        elif client and not client.ready_for_cljs:
             self.window.status_message("ERR: Not ready to start shadow-cljs yet. Try again in a couple of seconds.")
-        elif client and client.ready and "shadow.clj" not in client.capabilities:
+        elif client and client.ready_for_cljs and "shadow.clj" not in client.capabilities:
             self.window.status_message("ERR: shadow-cljs not in classpath, can't initialize.")
         else:
             if build_id := self.get_project_build_id():
