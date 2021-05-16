@@ -607,11 +607,15 @@ class TutkainShowInformationCommand(TextCommand):
     def predicate(self, selector, form):
         return self.view.match_selector(form.begin(), selector)
 
-    def run(self, _, selector="meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified", forward=True):
+    def run(self, _, selector="meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified", seek_backward=False):
         start_point = self.view.sel()[0].begin()
 
-        if form := forms.seek_backward(self.view, start_point, lambda form: self.predicate(selector, form)):
-            lookup(self.view, form, lambda response: self.handler(form, response))
+        if seek_backward:
+            form = forms.seek_backward(self.view, start_point, lambda form: self.predicate(selector, form))
+        else:
+            form = forms.find_adjacent(self.view, start_point)
+
+        lookup(self.view, form, lambda response: self.handler(form, response))
 
 
 class TutkainGotoDefinitionCommand(TextCommand):
