@@ -167,7 +167,7 @@ class TestEvaluation(ViewTestCase):
 
         self.view.run_command("tutkain_show_information", {
             "selector": "variable.function",
-            "forward": False
+            "seek_backward": True
         })
 
         response = edn.read(self.backchannel.recv())
