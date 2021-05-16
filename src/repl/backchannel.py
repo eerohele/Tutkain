@@ -73,13 +73,16 @@ class Backchannel(object):
         self.sendq.put(op)
 
     def handle(self, response):
-        id = response.get(edn.Keyword("id"))
-
         try:
-            handler = self.handlers.get(id, self.recvq.put)
-            handler.__call__(response)
-        finally:
-            self.handlers.pop(id, None)
+            id = response.get(edn.Keyword("id"))
+
+            try:
+                handler = self.handlers.get(id, self.recvq.put)
+                handler.__call__(response)
+            finally:
+                self.handlers.pop(id, None)
+        except AttributeError as error:
+            log.error({"event": "error", "response": response, "error": error})
 
     def recv_loop(self):
         try:
