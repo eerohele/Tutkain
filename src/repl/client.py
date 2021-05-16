@@ -4,6 +4,8 @@ from inspect import cleandoc
 import base64
 import queue
 import os
+import pathlib
+import posixpath
 import select
 import socket
 
@@ -208,7 +210,7 @@ class JVMClient(Client):
 
     def handshake(self):
         log.debug({"event": "client/handshake", "data": self.sink_all()})
-        path = os.path.join(self.source_root, "repl.clj")
+        path = posixpath.join(pathlib.Path(self.source_root).as_posix(), "repl.clj")
 
         with open(path, "rb") as file:
             blob = base64.b64encode(file.read()).decode("utf-8")
