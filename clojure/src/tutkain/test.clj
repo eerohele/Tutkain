@@ -61,7 +61,7 @@
     (run! (fn [[sym _]] (ns-unmap ns sym)))))
 
 (defmethod handle :test
-  [{:keys [ns code file vars out-fn] :as message}]
+  [{:keys [ns code file vars] :as message}]
   (let [ns-sym (or (some-> ns symbol) 'user)]
     (try
       (clean-ns! (find-ns ns-sym))
