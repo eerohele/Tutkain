@@ -11,10 +11,9 @@
   [{:keys [code file] :as message}]
   (try
     (with-open [reader (LineNumberingPushbackReader. (StringReader. code))]
-      (locking eval-lock
-        (let [file-name (some-> file File. .getName)
-              val (Compiler/load reader file file-name)]
-          (respond-to message {:tag :ret :val (pr-str val)}))))
+      (let [file-name (some-> file File. .getName)
+            val (Compiler/load reader file file-name)]
+        (respond-to message {:tag :ret :val (pr-str val)})))
     (catch Throwable ex
       (respond-to message {:tag :ret
                            :val (pp-str (assoc (Throwable->map ex) :phase :execution))
