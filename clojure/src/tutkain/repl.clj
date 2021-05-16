@@ -41,12 +41,12 @@
     (InputStreamReader.)
     (LineNumberingPushbackReader.)))
 
-(def ^:private load-lock (Object.))
+(def eval-lock (Object.))
 
 (defmethod handle :load-base64
   [{:keys [blob path filename requires] :as message}]
   (future
-    (locking load-lock
+    (locking eval-lock
       (try
         (run! require requires)
         (with-open [reader (base64-reader blob)]
@@ -165,9 +165,10 @@
                              *source-path* (or (some-> @eval-context :file File. .getName) "NO_SOURCE_FILE")]
                      (try
                        (when-not (identical? form EOF)
-                         (eval
-                           (let [ns-sym# (some->> @eval-context :ns)]
-                             `(or (some->> '~ns-sym# find-ns ns-name in-ns) (ns ~ns-sym#))))
+                         (locking eval-lock
+                           (eval
+                             (let [ns-sym# (some->> @eval-context :ns)]
+                               `(or (some->> '~ns-sym# find-ns ns-name in-ns) (ns ~ns-sym#)))))
                          (let [start (System/nanoTime)
                                ret (eval form)
                                ms (quot (- (System/nanoTime) start) 1000000)]
