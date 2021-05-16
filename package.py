@@ -1034,7 +1034,7 @@ class TutkainStartShadowReplCommand(WindowCommand):
             print_loop.name = "tutkain.cljs.print_loop"
             print_loop.start()
 
-            self.window.status_message(f"[Tutkain] Started a REPL on Shadow CLJS build :{build_id.name}")
+            self.window.status_message(f"[Tutkain] Started a REPL on shadow-cljs build :{build_id.name}")
 
     def set_build_id(self, client, build_id):
         # build_id is -1 if the user dismisses the ST quick panel
@@ -1053,7 +1053,7 @@ class TutkainStartShadowReplCommand(WindowCommand):
             self.window.show_quick_panel(
                 items,
                 lambda index: self.set_build_id(client, edn.Keyword(items[index])),
-                placeholder="Choose Shadow CLJS build ID",
+                placeholder="Choose shadow-cljs build ID",
                 flags=sublime.MONOSPACE_FONT
             )
 
@@ -1066,9 +1066,9 @@ class TutkainStartShadowReplCommand(WindowCommand):
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
         elif client and not client.ready:
-            self.window.status_message("ERR: Not ready to start Shadow CLJS yet. Try again in a couple of seconds.")
+            self.window.status_message("ERR: Not ready to start shadow-cljs yet. Try again in a couple of seconds.")
         elif client and client.ready and "shadow.clj" not in client.capabilities:
-            self.window.status_message("ERR: Shadow CLJS not in classpath, can't initialize.")
+            self.window.status_message("ERR: shadow-cljs not in classpath, can't initialize.")
         else:
             if build_id := self.get_project_build_id():
                 self.set_build_id(client, edn.Keyword(build_id))
@@ -1104,7 +1104,7 @@ class TutkainStopShadowReplsCommand(WindowCommand):
         if builds := response.get(edn.Keyword("stopped-ids")):
             self.window.status_message(f"Stopped: {builds}")
         else:
-            self.window.status_message("[Tutkain] No active Shadow CLJS REPLs.")
+            self.window.status_message("[Tutkain] No active shadow-cljs REPLs.")
 
     def run(self):
         if client := state.client(self.window, edn.Keyword("clj")):

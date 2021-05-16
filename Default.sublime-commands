@@ -56,11 +56,11 @@
         "command": "tutkain_show_unsuccessful_tests"
     },
     {
-        "caption": "Tutkain: Start Shadow CLJS REPL",
+        "caption": "Tutkain: Start shadow-cljs REPL",
         "command": "tutkain_start_shadow_repl"
     },
     {
-        "caption": "Tutkain: Stop Shadow CLJS REPLs",
+        "caption": "Tutkain: Stop shadow-cljs REPLs",
         "command": "tutkain_stop_shadow_repls"
     },
     {

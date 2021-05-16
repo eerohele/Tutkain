@@ -47,7 +47,7 @@
   (format "tutkain/shadow-cljs/%s" (name build-id)))
 
 (defn repl
-  "Given a Shadow CLJS worker, relay, and build ID, start a Shadow CLJS REPL.
+  "Given a shadow-cljs worker, relay, and build ID, start a shadow-cljs REPL.
 
   The REPL reads from *in* and prints to *out*.
 
@@ -72,7 +72,7 @@
 (defmethod handle :shadow/start-repl
   [{:keys [build-id port] :or {port 0} :as message}]
   (let [server-name (build-id->server-name build-id)]
-    ;; TODO: If the user switches Shadow CLJS REPLs without disconnecting,
+    ;; TODO: If the user switches shadow-cljs REPLs without disconnecting,
     ;; the server for the previous REPL will keep running. Clean up?
     (server/stop-server server-name)
     (if-some [{:keys [supervisor relay]} (runtime/get-instance)]
