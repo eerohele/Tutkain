@@ -1,0 +1,100 @@
+(ns repl.yodawg
+  (:require
+   [clojure.edn :as edn]
+   [clojure.core.server :as server]
+   [clojure.spec.alpha :as spec]
+   [cognitect.transcriptor :as xr]
+   [tutkain.socket :as socket]
+   [tutkain.repl :as repl])
+  (:import
+   (java.net ConnectException)
+   (java.util.concurrent LinkedBlockingQueue TimeUnit)))
+
+(spec/def ::tag #{:ret :err :out :tap})
+(spec/def ::val string?)
+(spec/def ::ns string?)
+(spec/def ::ms int?)
+(spec/def ::form string?)
+
+(spec/def ::ret
+  (spec/keys :opt-un [::tag ::val ::ns ::ms ::form]))
+
+(def server-name "yodawg")
+
+(xr/on-exit #(server/stop-server server-name))
+
+(def server
+  (do
+    (server/stop-server server-name)
+    (server/start-server
+      {:name server-name
+       :port 0
+       :accept `repl/repl})))
+
+(def rrecvq (LinkedBlockingQueue.))
+(def brecvq (LinkedBlockingQueue.))
+
+(def rsendq
+  (socket/client
+    :host "localhost"
+    :port (.getLocalPort server)
+    :recvq rrecvq))
+
+(defn rsend
+  [code]
+  (.put rsendq code))
+
+(xr/on-exit #(rsend :repl/quit))
+
+(defn rrecv
+  []
+  (-> rrecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+
+(defn brecv
+  []
+  (-> brecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+
+(def backchannel-addr
+  (-> (rrecv) :val edn/read-string))
+
+(def bsendq
+  (socket/client
+    :host (:host backchannel-addr)
+    :port (:port backchannel-addr)
+    :recvq brecvq))
+
+(defn bsend
+  [message]
+  (.put bsendq message))
+
+(rsend '(inc 1))
+(rrecv)
+(xr/check! ::ret)
+
+(rsend '(inc 1))
+(xr/check! #{(-> *ns* ns-name str)} (:ns (rrecv)))
+
+(rsend '(/ 4 0))
+(rrecv)
+(xr/check! ::ret) ;; err
+
+(rsend '(tap> {:foo :bar}))
+(rrecv)
+(xr/check! ::ret) ;; retval
+(rrecv)
+(xr/check! ::ret) ;; tap
+
+(rsend '(Thread/sleep Integer/MAX_VALUE))
+(bsend {:op :interrupt})
+(rrecv)
+(xr/check! ::ret) ;; InterruptedException
+
+(rsend :repl/quit)
+
+(socket/client
+    :host (:host backchannel-addr)
+    :port (:port backchannel-addr)
+    :recvq brecvq)
+
+;; Can't connect to backchannel anymore after quitting the REPL
+(xr/check! (partial instance? ConnectException) *e)

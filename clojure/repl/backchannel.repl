@@ -3,41 +3,16 @@
   (:require
    [clojure.edn :as edn]
    [cognitect.transcriptor :as xr]
-   [tutkain.repl :as repl])
+   [tutkain.repl :as repl]
+   [tutkain.socket :as socket])
   (:import
-   (java.io BufferedReader InputStreamReader PrintWriter)
-   (java.net Socket)
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
-
-(defn client
-  [& {:keys [host port out-fn] :or {out-fn println}}]
-  (let [socket (Socket. host port)
-        output (.getOutputStream socket)
-        writer (PrintWriter. output true)
-        input (.getInputStream socket)
-        reader (BufferedReader. (InputStreamReader. input))
-        q (LinkedBlockingQueue.)]
-    (future
-      (loop []
-        (let [item (.take q)]
-          (when-not (= ::quit item)
-            (.println writer (pr-str item))
-            (recur))))
-
-      (.shutdownOutput socket))
-
-    (future
-      (loop []
-        (when-some [result (.readLine reader)]
-          (out-fn result)
-          (recur))))
-    q))
 
 (def recvq (LinkedBlockingQueue.))
 (def backchannel (repl/open-backchannel {:port 1337}))
 (.setSoTimeout (.socket backchannel) 1000)
 (def port (-> backchannel .getLocalAddress .getPort))
-(def sendq (client :host "localhost" :port port :out-fn #(.put recvq %)))
+(def sendq (socket/client :host "localhost" :port port :recvq recvq))
 
 (defn send
   [message]
@@ -50,4 +25,4 @@
 (send {:op :echo})
 (recv)
 (xr/check! #{{:op :echo}})
-(send ::quit)
+(send ::socket/quit)

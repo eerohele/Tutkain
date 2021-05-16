@@ -131,69 +131,71 @@
   main/repl-caught)
 
 (defn repl
-  [opts]
-  (let [EOF (Object.)
-        lock (Object.)
-        out *out*
-        out-fn (fn [message]
-                 (binding [*out* out
-                           *flush-on-newline* true
-                           *print-readably* true]
-                   (locking lock
-                     (prn message))))
-        tapfn #(out-fn {:tag :tap :val (pp-str %1)})
-        backchannel (open-backchannel (assoc opts :repl-in *in*))]
-    (main/with-bindings
-      (in-ns 'user)
-      (apply require main/repl-requires)
-      (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
-                *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
-                *print* #(out-fn {:tag :ret :val (pp-str %)})
-                *caught* #(out-fn {:tag :err :val (Throwable->str %)})]
-        (try
-          (out-fn {:tag :ret
-                   :val (pr-str {:host (-> backchannel .getLocalAddress .getHostName)
-                                 :port (-> backchannel .getLocalAddress .getPort)})})
-          (add-tap tapfn)
-          (loop []
-            (when
-              (try
-                (let [[form s] (read+string {:eof EOF :read-cond :allow} *in*)]
-                  (binding [*file* (or (some-> @eval-context :file) "NO_SOURCE_PATH")
-                            *source-path* (or (some-> @eval-context :file File. .getName) "NO_SOURCE_FILE")]
-                    (try
-                      (when-not (identical? form EOF)
-                        (eval
-                          (let [ns-sym# (some->> @eval-context :ns)]
-                            `(or (some->> '~ns-sym# find-ns ns-name in-ns) (ns ~ns-sym#))))
-                        (let [start (System/nanoTime)
-                              ret (eval form)
-                              ms (quot (- (System/nanoTime) start) 1000000)]
-                          (when-not (= :repl/quit ret)
-                            (set! *3 *2)
-                            (set! *2 *1)
-                            (set! *1 ret)
-                            (out-fn {:tag :ret
-                                     :val (pp-str ret)
-                                     :ns (str (.name *ns*))
-                                     :ms ms
-                                     :form s})
-                            true)))
-                      (catch Throwable ex
-                        (set! *e ex)
-                        (out-fn {:tag :err
-                                 :val (Throwable->str ex)
-                                 :ns (str (.name *ns*))
-                                 :form s})
-                        true))))
-                (catch Throwable ex
-                  (set! *e ex)
-                  (out-fn {:tag :ret
-                           :val (pp-str (assoc (Throwable->map ex) :phase :read-source))
-                           :ns (str (.name *ns*))
-                           :exception true})
-                  true))
-              (recur)))
-          (finally
-            (.close backchannel)
-            (remove-tap tapfn)))))))
+  ([]
+   (repl {}))
+  ([opts]
+   (let [EOF (Object.)
+         lock (Object.)
+         out *out*
+         out-fn (fn [message]
+                  (binding [*out* out
+                            *flush-on-newline* true
+                            *print-readably* true]
+                    (locking lock
+                      (prn message))))
+         tapfn #(out-fn {:tag :tap :val (pp-str %1)})
+         backchannel (open-backchannel (assoc opts :repl-in *in*))]
+     (main/with-bindings
+       (in-ns 'user)
+       (apply require main/repl-requires)
+       (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
+                 *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
+                 *print* #(out-fn {:tag :ret :val (pp-str %)})
+                 *caught* #(out-fn {:tag :err :val (Throwable->str %)})]
+         (try
+           (out-fn {:tag :ret
+                    :val (pr-str {:host (-> backchannel .getLocalAddress .getHostName)
+                                  :port (-> backchannel .getLocalAddress .getPort)})})
+           (add-tap tapfn)
+           (loop []
+             (when
+               (try
+                 (let [[form s] (read+string {:eof EOF :read-cond :allow} *in*)]
+                   (binding [*file* (or (some-> @eval-context :file) "NO_SOURCE_PATH")
+                             *source-path* (or (some-> @eval-context :file File. .getName) "NO_SOURCE_FILE")]
+                     (try
+                       (when-not (identical? form EOF)
+                         (eval
+                           (let [ns-sym# (some->> @eval-context :ns)]
+                             `(or (some->> '~ns-sym# find-ns ns-name in-ns) (ns ~ns-sym#))))
+                         (let [start (System/nanoTime)
+                               ret (eval form)
+                               ms (quot (- (System/nanoTime) start) 1000000)]
+                           (when-not (= :repl/quit ret)
+                             (set! *3 *2)
+                             (set! *2 *1)
+                             (set! *1 ret)
+                             (out-fn {:tag :ret
+                                      :val (pp-str ret)
+                                      :ns (str (.name *ns*))
+                                      :ms ms
+                                      :form s})
+                             true)))
+                       (catch Throwable ex
+                         (set! *e ex)
+                         (out-fn {:tag :err
+                                  :val (Throwable->str ex)
+                                  :ns (str (.name *ns*))
+                                  :form s})
+                         true))))
+                 (catch Throwable ex
+                   (set! *e ex)
+                   (out-fn {:tag :ret
+                            :val (pp-str (assoc (Throwable->map ex) :phase :read-source))
+                            :ns (str (.name *ns*))
+                            :exception true})
+                   true))
+               (recur)))
+           (finally
+             (.close backchannel)
+             (remove-tap tapfn))))))))
