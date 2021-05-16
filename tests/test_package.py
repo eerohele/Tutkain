@@ -161,6 +161,26 @@ class TestEvaluation(ViewTestCase):
         self.eval_context(column=3)
         self.assertEquals(":a\n", self.server.recv())
 
+    def test_lookup(self):
+        self.set_view_content("(rand)")
+
+        for n in range(1, 5):
+            self.set_selections((n, n))
+
+            self.view.run_command("tutkain_show_information", {
+                "selector": "variable.function"
+            })
+
+            response = edn.read(self.backchannel.recv())
+
+            self.assertEquals({
+                edn.Keyword("op"): edn.Keyword("lookup"),
+                edn.Keyword("named"): "rand",
+                edn.Keyword("ns"): None,
+                edn.Keyword("dialect"): edn.Keyword("clj"),
+                edn.Keyword("id"): response.get(edn.Keyword("id"))
+            }, response)
+
     def test_lookup_head(self):
         self.set_view_content("(map inc )")
         self.set_selections((9, 9))
