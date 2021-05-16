@@ -10,7 +10,10 @@
   "layout": "horizontal",
 
   // Enable or disable var info lookup on hover.
-  "lookup_on_hover": true,
+  //
+  // Disabled by default to prevent it from interfering with other packages
+  // (e.g. SublimeLSP).
+  "lookup_on_hover": false,
 
   // Enable or disable tap panel.
   //
