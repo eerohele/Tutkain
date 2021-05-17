@@ -682,14 +682,16 @@ class TutkainEventListener(EventListener):
             state.set_repl_view(view)
 
     def on_activated_async(self, view):
-        if settings().get("auto_switch_namespace", False):
-            syntax = view.syntax()
-
-            if syntax and syntax.scope in "source.clojure" and (
-                client := state.client(view.window(), edn.Keyword("clj"))
-            ):
+        if settings().get("auto_switch_namespace", False) and (syntax := view.syntax()):
+            if syntax.scope == "source.clojure":
+                client = state.client(view.window(), edn.Keyword("clj"))
                 ns = namespace.name(view) or "user"
-                code = f"(do (in-ns '{ns}) (set! *3 *2) (set! *2 *1))"
+                code = f"(do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1))"
+                client.eval(code, handler=lambda _: None)
+            elif syntax.scope == "source.clojure.clojurescript":
+                client = state.client(view.window(), edn.Keyword("cljs"))
+                ns = namespace.name(view) or "cljs.user"
+                code = f"(in-ns '{ns})"
                 client.eval(code, handler=lambda _: None)
 
     def on_hover(self, view, point, hover_zone):

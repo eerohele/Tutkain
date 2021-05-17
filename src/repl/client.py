@@ -328,4 +328,5 @@ class JSClient(Client):
         return self
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
+        self.handlers[code] = handler or self.recvq.put
         self.sendq.put(code)
