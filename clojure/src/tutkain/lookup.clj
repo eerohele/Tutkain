@@ -52,28 +52,29 @@
 
 (defn lookup
   [ns named]
-  (if (keyword? named)
-    (when-some [spec (some-> named spec/get-spec spec/describe pr-str)]
-      {:name named
-       :spec spec})
-    (let [{sym-name :name sym-ns :ns :as m} (sym-meta ns named)]
-      (some->
-        m
-        (select-keys [:name :file :column :line :arglists :doc :fnspec])
-        (assoc :ns (some-> sym-ns ns-name name))
-        (assoc :name sym-name)
-        (update :file resolve-file)
-        (update :arglists #(map pr-str %))
-        (remove-empty)))))
+  (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))
+        named (binding [*ns* ns] (read-string named))]
+    (if (keyword? named)
+      (when-some [spec (some-> named spec/get-spec spec/describe pr-str)]
+        {:name named
+         :spec spec})
+      (let [{sym-name :name sym-ns :ns :as m} (sym-meta ns named)]
+        (some->
+          m
+          (select-keys [:name :file :column :line :arglists :doc :fnspec])
+          (assoc :ns (some-> sym-ns ns-name name))
+          (assoc :name sym-name)
+          (update :file resolve-file)
+          (update :arglists #(map pr-str %))
+          (remove-empty))))))
 
 (defmulti info :dialect)
 
 (defmethod info :default
   [{:keys [named ns] :as message}]
   (try
-    (let [ns (the-ns (or (some-> ns symbol) 'user))]
-      (when-some [result (lookup ns (binding [*ns* ns] (read-string named)))]
-        (respond-to message {:info result})))
+    (when-some [result (lookup ns named)]
+      (respond-to message {:info result}))
     (catch Throwable ex
       (respond-to message {:ex (pp-str (Throwable->map ex))}))))
 

@@ -9,28 +9,31 @@
             (map #(vector alias %) (map first (ns-publics ns))))
     (ns-aliases *ns*)))
 
-(map (fn [[alias sym]] (lookup *ns* (symbol (str alias "/" sym)))) syms)
+(map (fn [[alias sym]] (lookup "repl.lookup" (str alias "/" sym))) syms)
 (xr/check! ::specs/infos)
 
-(map #(lookup *ns* %) (map first (ns-refers *ns*)))
+(map #(lookup "repl.lookup" (str %)) (map first (ns-refers *ns*)))
 (xr/check! ::specs/infos)
 
-(map #(lookup 'clojure.main %) (map first (ns-publics 'clojure.main)))
+(map #(lookup "clojure.main" (str %)) (map first (ns-publics 'clojure.main)))
 (xr/check! ::specs/infos)
 
-(lookup 'clojure.core 'let)
+(lookup "clojure.core" "let")
 (xr/check! ::specs/info)
 
-(lookup 'clojure.core :clojure.core.specs.alpha/binding-form)
+(lookup "clojure.core" ":clojure.core.specs.alpha/binding-form")
 (xr/check! ::specs/info)
 
 (require '[clojure.core.specs.alpha :as core.specs])
-(lookup 'user ::core.specs/local-name)
+(lookup "repl.lookup" "::core.specs/local-name")
 (xr/check! ::specs/info)
 
 (require '[clojure.spec.alpha :as spec])
-(lookup 'user 'clojure.spec.alpha)
+(lookup "repl.lookup" "clojure.spec.alpha")
 (xr/check! (spec/keys :req-un [::specs/name ::specs/doc ::specs/file ::specs/column ::specs/line]))
 
-(lookup 'user 'def)
+(lookup "user" "def")
+(xr/check! ::specs/info)
+
+(lookup "nope" "mapcat")
 (xr/check! ::specs/info)
