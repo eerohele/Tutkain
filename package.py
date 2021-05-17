@@ -40,9 +40,9 @@ from .api import edn
 
 def make_color_scheme(cache_dir):
     """
-    Add the tutkain.repl.standard-streams scope into the current color scheme.
+    Add the tutkain.repl.stderr scope into the current color scheme.
 
-    We want stdout/stderr messages in the same REPL output view as evaluation results, but we don't
+    We want stderr messages in the same REPL output view as evaluation results, but we don't
     want them to be use syntax highlighting. We can use view.add_regions() to add a scope to such
     messages such that they are not highlighted. Unfortunately, it is not possible to use
     view.add_regions() to only set the foreground color of a region. Furthermore, if we set the
@@ -51,12 +51,8 @@ def make_color_scheme(cache_dir):
 
     We therefore have to resort to this awful hack where every time the plugin is loaded or the
     color scheme changes, we generate a new color scheme in the Sublime Text cache directory. That
-    color scheme defines the tutkain.repl.stdout scope which has an almost-transparent background
+    color scheme defines the tutkain.repl.stderr scope which has an almost-transparent background
     color, creating the illusion that we're only setting the foreground color of the text.
-
-    Yeah. So, please go give this issue a thumbs-up:
-
-    https://github.com/sublimehq/sublime_text/issues/817
     """
     view = sublime.active_window().active_view()
 
