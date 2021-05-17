@@ -703,19 +703,17 @@ class TutkainEventListener(EventListener):
 
     def on_pre_close(self, view):
         if view and view.settings().get("tutkain_repl_output_view"):
-            window = view.window()
-
             for dialect in [edn.Keyword("cljs"), edn.Keyword("clj")]:
                 if client := state.view_client(view, dialect):
                     client.halt()
 
-                if window:
-                    window.destroy_output_panel(tap.panel_name)
-                    active_view = window.active_view()
+            if window := view.window():
+                window.destroy_output_panel(tap.panel_name)
+                active_view = window.active_view()
 
-                    if active_view:
-                        active_view.run_command("tutkain_clear_test_markers")
-                        window.focus_view(active_view)
+                if active_view:
+                    active_view.run_command("tutkain_clear_test_markers")
+                    window.focus_view(active_view)
 
             state.forget_repl_view(view)
 
