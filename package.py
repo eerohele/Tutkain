@@ -747,18 +747,20 @@ class TutkainInsertNewlineCommand(TextCommand):
 
 
 class TutkainIndentSexpCommand(TextCommand):
-    def run(self, edit, scope="outermost", prune=False):
-        for region in self.view.sel():
-            if region.empty():
-                if scope == "outermost":
-                    s = sexp.outermost(self.view, region.begin())
-                elif scope == "innermost":
-                    s = sexp.innermost(self.view, region.begin())
+    def get_target_region(self, region, scope):
+        if not region.empty():
+            return region
+        elif scope == "innermost" and (innermost := sexp.innermost(self.view, region.begin())):
+            return innermost.extent()
+        elif outermost := sexp.outermost(self.view, region.begin()):
+            return outermost.extent()
 
-                if s:
-                    indent.indent_region(self.view, edit, s.extent(), prune=prune)
-            else:
-                indent.indent_region(self.view, edit, region, prune=prune)
+    def run(self, edit, scope="outermost", prune=False):
+        assert scope in {"innermost", "outermost"}
+
+        for region in self.view.sel():
+            if target := self.get_target_region(region, scope):
+                indent.indent_region(self.view, edit, target, prune=prune)
 
 
 class TutkainPareditForwardCommand(TextCommand):
