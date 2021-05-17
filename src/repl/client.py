@@ -192,7 +192,7 @@ class JVMClient(Client):
 
         return bs
 
-    def cljs_module_loaded(self, response):
+    def cljs_module_loaded(self, response, on_done):
         filename = response.get(edn.Keyword("filename"))
         self.attempted_modules.add(filename)
 
@@ -201,8 +201,9 @@ class JVMClient(Client):
 
         if len(self.attempted_modules) == len(self.modules["cljs"].keys()):
             self.ready_for_cljs = True
+            on_done()
 
-    def load_cljs_modules(self):
+    def load_cljs_modules(self, on_done=lambda: None):
         for filename, requires in self.modules["cljs"].items():
             path = os.path.join(self.source_root, filename)
 
@@ -213,7 +214,7 @@ class JVMClient(Client):
                     "filename": filename,
                     "blob": base64.b64encode(file.read()).decode("utf-8"),
                     "requires": requires
-                }, self.cljs_module_loaded)
+                }, lambda response: self.cljs_module_loaded(response, on_done))
 
     def base_module_loaded(self, response):
         filename = response.get(edn.Keyword("filename"))
