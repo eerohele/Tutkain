@@ -15,7 +15,7 @@ def create(window, client):
     suffix = "" if view_count == 0 else f" ({view_count})"
 
     view = window.new_file()
-    view.set_name(f"REPL · {client.namespace} · {client.host}:{client.port}{suffix}")
+    view.set_name(f"REPL · {client.host}:{client.port}{suffix}")
     view.settings().set("line_numbers", False)
     view.settings().set("gutter", False)
     view.settings().set("is_widget", True)
