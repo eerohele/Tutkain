@@ -1,4 +1,6 @@
 {
+  "auto_switch_namespace": false,
+
   // Enable debug logging in Sublime Text console.
   "debug": false,
 
