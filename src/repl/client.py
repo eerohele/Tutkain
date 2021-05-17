@@ -126,7 +126,7 @@ class Client(ABC):
         if val := response.get(edn.Keyword("val")):
             return val.rstrip() + "\n"
 
-        for k in {"out", "err", "ex"}:
+        for k in {"out", "err", "ex", "summary"}:
             if x := response.get(edn.Keyword(k)):
                 return x
 
