@@ -4,7 +4,7 @@
   // If true, Tutkain automatically switches your current Clojure(Script)
   // namespace to the namespace defined by the last ns form in the current
   // view, or "user" if none.
-  "auto_switch_namespace": false,
+  "auto_switch_namespace": true,
 
   // Enable debug logging in Sublime Text console.
   "debug": false,
