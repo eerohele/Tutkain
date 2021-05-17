@@ -93,11 +93,8 @@ def settings():
 
 def plugin_loaded():
     start_logging(settings().get("debug", False))
-
     preferences = sublime.load_settings("Preferences.sublime-settings")
-
     cache_dir = os.path.join(sublime.cache_path(), "Tutkain")
-
     make_color_scheme(cache_dir)
     preferences.add_on_change("Tutkain", lambda: make_color_scheme(cache_dir))
 
@@ -133,12 +130,6 @@ def get_dialect(view, point):
         return edn.Keyword("clj")
 
 
-def source_root():
-    return os.path.join(
-        sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain"
-    )
-
-
 def evaluate(view, client, code, point=None, handler=None):
     if point:
         line, column = view.rowcol(point)
@@ -170,19 +161,29 @@ class TutkainClearOutputViewCommand(WindowCommand):
 
 
 class TutkainEvaluateFormCommand(TextCommand):
-    def run(self, edit, scope="outermost", ignore={"comment"}, inline_result=False):
-        self.view.window().status_message("tutkain_evaluate_form is deprecated; use tutkain_evaluate instead")
-        self.view.run_command("tutkain_evaluate", {"scope": scope, "ignore": ignore, "inline_result": inline_result})
+    def run(self, _, scope="outermost", ignore={"comment"}, inline_result=False):
+        self.view.window().status_message(
+            "tutkain_evaluate_form is deprecated; use tutkain_evaluate instead"
+        )
+
+        self.view.run_command("tutkain_evaluate", {
+            "scope": scope,
+            "ignore": ignore,
+            "inline_result": inline_result
+        })
 
 
 class TutkainEvaluateViewCommand(TextCommand):
-    def run(self, edit):
-        self.view.window().status_message("tutkain_evaluate_view is deprecated; use tutkain_evaluate instead")
+    def run(self, _):
+        self.view.window().status_message(
+            "tutkain_evaluate_view is deprecated; use tutkain_evaluate instead"
+        )
+
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
 
 class TutkainRunTests(TextCommand):
-    def run(self, edit, scope="ns"):
+    def run(self, _, scope="ns"):
         if scope == "ns":
             client = state.client(self.view.window(), edn.Keyword("clj"))
             test.run(self.view, client)
@@ -448,8 +449,12 @@ class TutkainConnectCommand(WindowCommand):
             active_view = self.window.active_view()
             tap.create_panel(self.window)
 
+            source_root = os.path.join(
+                sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain"
+            )
+
             client = JVMClient(
-                source_root(), host, int(port), backchannel_opts={
+                source_root, host, int(port), backchannel_opts={
                     "port": settings().get("backchannel").get("port")
                 }
             )
@@ -537,7 +542,7 @@ def completion_kinds():
 
 
 class TutkainShowPopupCommand(TextCommand):
-    def run(self, edit, item={}):
+    def run(self, _, item={}):
         info.show_popup(self.view, -1, {edn.Keyword("info"): edn.kwmap(item)})
 
 
@@ -677,10 +682,12 @@ class TutkainEventListener(EventListener):
             state.set_repl_view(view)
 
     def on_hover(self, view, point, hover_zone):
-        if settings().get("lookup_on_hover"):
-            if view.match_selector(point, "source.clojure & (meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified)"):
-                form = forms.find_adjacent(view, point)
-                lookup(view, form, lambda response: info.show_popup(view, point, response))
+        if settings().get("lookup_on_hover") and view.match_selector(
+            point,
+            "source.clojure & (meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified)"
+        ):
+            form = forms.find_adjacent(view, point)
+            lookup(view, form, lambda response: info.show_popup(view, point, response))
 
     def on_close(self, view):
         if view.settings().get("tutkain_repl_output_view"):
