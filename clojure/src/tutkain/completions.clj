@@ -1,7 +1,7 @@
 (ns tutkain.completions
   (:require
    [clojure.main :as main]
-   [tutkain.repl :refer [handle respond-to]])
+   [tutkain.backchannel :refer [handle respond-to]])
   (:import
    (clojure.lang Reflector)
    (java.util.jar JarFile)
@@ -273,23 +273,7 @@
                        :else (generic-candidates ns))]
       (sort-by :candidate (filter #(candidate? prefix %) candidates)))))
 
-(defmulti completions :dialect)
-
-(defmethod completions :default
+(defmethod handle :completions
   [{:keys [prefix ns] :as message}]
   (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))]
     (respond-to message {:completions (candidates prefix ns)})))
-
-(defmethod handle :completions
-  [message]
-  (completions message))
-
-(comment
-  (completions "main/" *ns*)
-  (time (dorun (completions ":a" *ns*)))
-  (time (dorun (completions "m" *ns*)))
-  (time (dorun (completions "clojure." *ns*)))
-  (time (dorun (completions "java." *ns*)))
-  (time (dorun (completions "java.r" *ns*)))
-  (time (dorun (completions "java.time.LocalDate/" *ns*)))
-  )

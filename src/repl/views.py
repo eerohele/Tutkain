@@ -1,8 +1,8 @@
 from .. import state
-from ...api import edn
+from .. import dialects
 
 
-def create(window, client):
+def create(window, dialect, client):
     num_groups = window.num_groups()
     target_group = num_groups - 1
 
@@ -12,10 +12,9 @@ def create(window, client):
             break
 
     view_count = len(window.views_in_group(target_group))
-    suffix = "" if view_count == 0 else f" ({view_count})"
 
     view = window.new_file()
-    view.set_name(f"REPL · {client.host}:{client.port}{suffix}")
+    view.set_name(f"REPL · {dialects.name(dialect)} · {client.host}:{client.port}")
     view.settings().set("line_numbers", False)
     view.settings().set("gutter", False)
     view.settings().set("is_widget", True)
@@ -28,7 +27,7 @@ def create(window, client):
     view.settings().set("indent_subsequent_lines", False)
     view.settings().set("detect_indentation", False)
     view.settings().set("auto_complete", False)
-    view.settings().set("tutkain_repl_output_view", True)
+    view.settings().set("tutkain_repl_view_dialect", dialect.name or "clj")
     view.settings().set("tutkain_repl_host", client.host)
     view.settings().set("tutkain_repl_port", client.port)
     view.settings().set("result_file_regex", r"""\s*\[.+?\"(.+?)" (\d+)\]""")
@@ -40,17 +39,13 @@ def create(window, client):
     return view
 
 
-def configure(window, client, view_id=None):
+def configure(window, client, dialect, view_id=None):
     view = view_id and next(
         filter(lambda view: view.id() == view_id, window.views()),
         None,
-    ) or create(window, client)
+    ) or create(window, dialect, client)
 
-    state.set_view_client(view, edn.Keyword("clj"), client)
-    state.set_repl_view(view)
+    state.set_view_client(view, dialect, client)
+    state.set_repl_view(view, dialect)
 
     return view
-
-
-def is_output_view(view):
-    return view.settings().get("tutkain_repl_output_view")

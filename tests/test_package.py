@@ -8,6 +8,24 @@ from .util import ViewTestCase
 
 
 def conduct_handshake(server):
+    # Client starts clojure.main/repl
+    server.recv()
+
+    # Client switches into the bootstrap namespace
+    server.recv()
+    server.send("nil\n")
+
+    # Client defines load-base64 function
+    server.recv()
+    server.send("#'tutkain.bootstrap/load-base64\n")
+
+    # Client loads modules
+    server.recv()
+    server.send("#'tutkain.format/pp-str")
+    server.recv()
+    server.send("#'tutkain.backchannel/open")
+    server.recv()
+    server.send("#'tutkain.repl/repl")
     server.recv()
 
     with Server() as backchannel:
@@ -45,8 +63,9 @@ class TestEvaluation(ViewTestCase):
 
         self.server = Server(greeting="user=> ").start()
         self.client = JVMClient(source_root(), self.server.host, self.server.port, wait=False).connect()
-        state.set_view_client(self.view, edn.Keyword("clj"), self.client)
-        state.set_repl_view(self.view)
+        dialect = edn.Keyword("clj")
+        state.set_view_client(self.view, dialect, self.client)
+        state.set_repl_view(self.view, dialect)
         self.backchannel = conduct_handshake(self.server)
 
     @classmethod
@@ -176,7 +195,6 @@ class TestEvaluation(ViewTestCase):
                 edn.Keyword("op"): edn.Keyword("lookup"),
                 edn.Keyword("named"): "rand",
                 edn.Keyword("ns"): None,
-                edn.Keyword("dialect"): edn.Keyword("clj"),
                 edn.Keyword("id"): response.get(edn.Keyword("id"))
             }, response)
 
@@ -195,6 +213,5 @@ class TestEvaluation(ViewTestCase):
             edn.Keyword("op"): edn.Keyword("lookup"),
             edn.Keyword("named"): "map",
             edn.Keyword("ns"): None,
-            edn.Keyword("dialect"): edn.Keyword("clj"),
             edn.Keyword("id"): response.get(edn.Keyword("id"))
         }, response)

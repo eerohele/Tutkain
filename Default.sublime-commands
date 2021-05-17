@@ -56,14 +56,6 @@
         "command": "tutkain_show_unsuccessful_tests"
     },
     {
-        "caption": "Tutkain: Start shadow-cljs REPL",
-        "command": "tutkain_start_shadow_repl"
-    },
-    {
-        "caption": "Tutkain: Stop shadow-cljs REPLs",
-        "command": "tutkain_stop_shadow_repls"
-    },
-    {
         "caption": "Tutkain: Choose Evaluation Dialect",
         "command": "tutkain_choose_evaluation_dialect",
     },

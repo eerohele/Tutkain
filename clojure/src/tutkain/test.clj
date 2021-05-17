@@ -4,7 +4,8 @@
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.walk :as walk]
-   [tutkain.repl :refer [handle pp-str respond-to]])
+   [tutkain.format :refer [pp-str]]
+   [tutkain.backchannel :refer [handle respond-to]])
   (:import
    (clojure.lang LineNumberingPushbackReader)
    (java.io File StringReader)))
@@ -95,12 +96,12 @@
                                                  pprint-expected
                                                  (update :actual #(with-out-str (stacktrace/print-stack-trace %)))
                                                  (assoc :var-meta @var-meta))))
-                                    :summary (swap! results assoc :summary (-> event (dissoc :file) str))
+                                    :summary (swap! results assoc :tag :ret :val (str (-> event (dissoc :file)) \newline))
                                     nil)))]
           (if (seq vars)
             (binding [test/*report-counters* (ref test/*initial-report-counters*)]
               (test/test-vars (map #(resolve (symbol ns %)) vars))
-              (swap! results assoc :summary (str (assoc @test/*report-counters* :type :summary))))
+              (swap! results assoc :tag :ret :val (str (assoc @test/*report-counters* :type :summary) \newline)))
             (test/run-tests ns-sym)))
         (respond-to message @results))
       (catch Throwable ex

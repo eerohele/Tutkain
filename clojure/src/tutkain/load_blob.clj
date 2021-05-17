@@ -1,6 +1,7 @@
 (ns tutkain.load-blob
   (:require
-   [tutkain.repl :refer [handle pp-str respond-to]])
+   [tutkain.format :refer [pp-str]]
+   [tutkain.backchannel :refer [handle respond-to]])
   (:import
    (clojure.lang Compiler LineNumberingPushbackReader)
    (java.io File StringReader)))

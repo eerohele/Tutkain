@@ -2,7 +2,8 @@
   (:require
    [clojure.java.io :as io]
    [clojure.spec.alpha :as spec]
-   [tutkain.repl :refer [handle pp-str respond-to]]))
+   [tutkain.format :refer [pp-str]]
+   [tutkain.backchannel :refer [handle respond-to]]))
 
 (set! *warn-on-reflection* true)
 
@@ -68,16 +69,10 @@
           (update :arglists #(map pr-str %))
           (remove-empty))))))
 
-(defmulti info :dialect)
-
-(defmethod info :default
+(defmethod handle :lookup
   [{:keys [named ns] :as message}]
   (try
     (when-some [result (lookup ns named)]
       (respond-to message {:info result}))
     (catch Throwable ex
       (respond-to message {:ex (pp-str (Throwable->map ex))}))))
-
-(defmethod handle :lookup
-  [message]
-  (info message))

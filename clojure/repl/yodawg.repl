@@ -72,7 +72,7 @@
 (xr/check! ::ret)
 
 (rsend '(inc 1))
-(xr/check! #{(-> *ns* ns-name str)} (:ns (rrecv)))
+(xr/check! #{"user"} (:ns (rrecv)))
 
 (rsend '(/ 4 0))
 (rrecv)

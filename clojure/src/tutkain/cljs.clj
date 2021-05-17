@@ -7,7 +7,7 @@
    [cljs.repl :as repl]
    [tutkain.completions :as completions]
    [tutkain.lookup :as lookup]
-   [tutkain.repl :refer [respond-to]])
+   [tutkain.backchannel :refer [handle respond-to]])
   (:import
    (clojure.lang ExceptionInfo)))
 
@@ -154,7 +154,7 @@
   [ns]
   (or (some-> ns symbol) 'cljs.user))
 
-(defmethod completions/completions :cljs
+(defmethod handle :completions
   [{:keys [ns prefix build-id] :as message}]
   (try
     (let [completions (candidates (compiler-env build-id) prefix (parse-ns ns))]
@@ -206,7 +206,7 @@
       arglists (assoc :arglists (format-arglists arglists))
       file (assoc :file (lookup/resolve-file file)))))
 
-(defmethod lookup/info :cljs
+(defmethod handle :lookup
   [{:keys [^String named ns build-id] :as message}]
   (try
     (let [env (compiler-env build-id)

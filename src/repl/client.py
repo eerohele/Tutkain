@@ -21,11 +21,60 @@ class Client(ABC):
         self.executor.submit(self.format_loop)
         return self
 
+    def sink_all(self):
+        bs = bytearray()
+        data = self.socket.recv(1024)
+        bs.extend(data)
+
+        while data:
+            readable, _, _ = select.select([self.socket], [], [], 0)
+
+            if self.socket in readable:
+                data = readable[0].recv(1024)
+                bs.extend(data)
+            else:
+                break
+
+        return bs
+
+    def write_line(self, line):
+        self.buffer.write(line)
+        self.buffer.write("\n")
+        self.buffer.flush()
+
+    def module_loaded(self, response):
+        if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
+            self.capabilities.add(response.get(edn.Keyword("filename")))
+
+    def load_modules(self, modules):
+        for filename in modules:
+            path = os.path.join(self.source_root, filename)
+
+            with open(path, "rb") as file:
+                self.backchannel.send({
+                    "op": edn.Keyword("load-base64"),
+                    "path": path,
+                    "filename": filename,
+                    "blob": base64.b64encode(file.read()).decode("utf-8")
+                }, self.module_loaded)
+
+    @abstractmethod
+    def handshake(self):
+        pass
+
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
         self.buffer = self.socket.makefile(mode="rw")
+
         log.debug({"event": "client/connect", "host": self.host, "port": self.port})
+
+        handshake = self.executor.submit(self.handshake)
+        handshake.add_done_callback(lambda _: self.start_workers())
+
+        if self.wait:
+            handshake.result(self.wait)
+
         return self
 
     def disconnect(self):
@@ -38,7 +87,11 @@ class Client(ABC):
             except OSError as e:
                 log.debug({"event": "error", "exception": e})
 
-    def __init__(self, host, port, name):
+    def source_path(self, filename):
+        return posixpath.join(pathlib.Path(self.source_root).as_posix(), filename)
+
+    def __init__(self, source_root, host, port, name, wait=5, backchannel_opts={}):
+        self.source_root = source_root
         self.host = host
         self.port = port
         self.name = name
@@ -48,11 +101,10 @@ class Client(ABC):
         self.handlers = {}
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
         self.namespace = "user"
-
-        self.disconnect_msg = {
-            edn.Keyword("tag"): edn.Keyword("ret"),
-            edn.Keyword("val"): ":tutkain/disconnected"
-        }
+        self.wait = wait
+        self.backchannel = NoopBackchannel()
+        self.backchannel_opts = backchannel_opts
+        self.capabilities = set()
 
     def __enter__(self):
         self.connect()
@@ -91,8 +143,10 @@ class Client(ABC):
         except OSError as error:
             log.error({"event": "error", "error": error})
         finally:
-            if self.disconnect_msg:
-                self.recvq.put(self.disconnect_msg)
+            self.recvq.put(edn.kwmap({
+                edn.Keyword("tag"): edn.Keyword("ret"),
+                edn.Keyword("val"): ":tutkain/disconnected"
+            }))
 
             # put a None into the queue to tell consumers to stop reading it.
             self.recvq.put(None)
@@ -119,16 +173,9 @@ class Client(ABC):
 
             return f"""{self.namespace}=> {first_line}{next_lines}"""
 
+    @abstractmethod
     def format(self, response):
-        if form := response.get(edn.Keyword("in")):
-            return self.format_form(form)
-
-        if val := response.get(edn.Keyword("val")):
-            return val.rstrip() + "\n"
-
-        for k in {"out", "err", "ex", "summary"}:
-            if x := response.get(edn.Keyword(k)):
-                return x
+        pass
 
     def format_loop(self):
         try:
@@ -157,93 +204,27 @@ class JVMClient(Client):
         "print_version": """#?(:bb (println "Babashka" (System/getProperty "babashka.version")) :clj (println "Clojure" (clojure-version)))"""
     }
 
-    modules = {
-        "base": {
-            "lookup.clj": [],
-            "completions.clj": [],
-            "load_blob.clj": [],
-            "test.clj": []
-        },
-
-        "cljs": {
-            "cljs.clj": [edn.Symbol("cljs.core")],
-            "shadow.clj": [edn.Symbol("shadow.cljs.devtools.api")]
-        }
-    }
-
-    def write_line(self, line):
-        self.buffer.write(line)
-        self.buffer.write("\n")
-        self.buffer.flush()
-
-    def sink_all(self):
-        bs = bytearray()
-        data = self.socket.recv(1024)
-        bs.extend(data)
-
-        while data:
-            readable, _, _ = select.select([self.socket], [], [], 0)
-
-            if self.socket in readable:
-                data = readable[0].recv(1024)
-                bs.extend(data)
-            else:
-                break
-
-        return bs
-
-    def cljs_module_loaded(self, response, on_done):
-        filename = response.get(edn.Keyword("filename"))
-        self.attempted_modules.add(filename)
-
-        if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
-            self.capabilities.add(filename)
-
-        if len(self.attempted_modules) == len(self.modules["cljs"].keys()):
-            self.ready_for_cljs = True
-            on_done()
-
-    def load_cljs_modules(self, on_done=lambda: None):
-        for filename, requires in self.modules["cljs"].items():
-            path = os.path.join(self.source_root, filename)
-
-            with open(path, "rb") as file:
-                self.backchannel.send({
-                    "op": edn.Keyword("load-base64"),
-                    "path": path,
-                    "filename": filename,
-                    "blob": base64.b64encode(file.read()).decode("utf-8"),
-                    "requires": requires
-                }, lambda response: self.cljs_module_loaded(response, on_done))
-
-    def base_module_loaded(self, response):
-        filename = response.get(edn.Keyword("filename"))
-
-        if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
-            self.capabilities.add(filename)
-
-    def load_modules(self):
-        for filename, requires in self.modules["base"].items():
-            path = os.path.join(self.source_root, filename)
-
-            with open(path, "rb") as file:
-                self.backchannel.send({
-                    "op": edn.Keyword("load-base64"),
-                    "path": path,
-                    "filename": filename,
-                    "blob": base64.b64encode(file.read()).decode("utf-8"),
-                    "requires": requires
-                }, self.base_module_loaded)
-
     def handshake(self):
         log.debug({"event": "client/handshake", "data": self.sink_all()})
-        path = posixpath.join(pathlib.Path(self.source_root).as_posix(), "repl.clj")
 
-        with open(path, "rb") as file:
-            blob = base64.b64encode(file.read()).decode("utf-8")
-            backchannel_port = self.backchannel_opts.get("port", 0)
-            self.write_line(f"""#?(:bb (do (prn {{:tag :ret :val "{{}}"}}) ((requiring-resolve 'clojure.core.server/io-prepl))) :clj (do (with-open [reader (-> (java.util.Base64/getDecoder) (.decode "{blob}") (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader "{path}" "{os.path.basename(path)}")) (try (tutkain.repl/repl {{:port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))))""")
+        # Start a promptless REPL so that we don't need to keep sinking the prompt.
+        self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
+        self.write_line("(ns tutkain.bootstrap)")
+        self.buffer.readline()
+        self.write_line("(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))")
+        self.buffer.readline()
 
+        for filename in ["format.clj", "backchannel.clj", "repl.clj"]:
+            path = self.source_path(filename)
+
+            with open(path, "rb") as file:
+                blob = base64.b64encode(file.read()).decode("utf-8")
+                self.write_line(f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")""")
+
+            self.buffer.readline()
+
+        backchannel_port = self.backchannel_opts.get("port", 0)
+        self.write_line(f"""(try (tutkain.repl/repl {{:port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))""")
         line = self.buffer.readline()
 
         if not line.startswith('{'):
@@ -274,7 +255,13 @@ class JVMClient(Client):
             else:
                 self.recvq.put(ret)
 
-        self.load_modules()
+        self.load_modules([
+            "lookup.clj",
+            "completions.clj",
+            "load_blob.clj",
+            "test.clj"
+        ])
+
         self.write_line(self.handshake_payloads["print_version"])
         self.recvq.put(edn.read_line(self.buffer))
 
@@ -282,23 +269,8 @@ class JVMClient(Client):
 
         return True
 
-    def connect(self):
-        super(JVMClient, self).connect()
-        handshake = self.executor.submit(self.handshake)
-        handshake.add_done_callback(lambda _: self.start_workers())
-
-        if self.wait:
-            handshake.result(self.wait)
-
-        return self
-
-    def __init__(self, source_root, host, port, backchannel_opts={}, wait=5):
-        super(JVMClient, self).__init__(host, port, "tutkain.clojure.client")
-        self.source_root = source_root
-        self.backchannel = NoopBackchannel()
-        self.backchannel_opts = backchannel_opts
-        self.wait = wait
-        self.capabilities = set()
+    def __init__(self, source_root, host, port, wait=5, backchannel_opts={}):
+        super(JVMClient, self).__init__(source_root, host, port, "tutkain.clojure.client", wait=wait, backchannel_opts=backchannel_opts)
         self.attempted_modules = set()
         self.ready_for_cljs = False
 
@@ -312,21 +284,75 @@ class JVMClient(Client):
             "column": column + 1
         }, lambda _: self.sendq.put(code))
 
+    def format(self, response):
+        if form := response.get(edn.Keyword("in")):
+            return self.format_form(form)
+        elif val := response.get(edn.Keyword("val")):
+            return val
+
     def halt(self):
         super(JVMClient, self).halt()
         self.backchannel.halt()
 
 
 class JSClient(Client):
-    def __init__(self, host, port):
-        super(JSClient, self).__init__(host, port, "tutkain.cljs.client")
-        self.disconnect_msg = None
+    def __init__(self, source_root, host, port, prompt_for_build_id):
+        super(JSClient, self).__init__(source_root, host, port, "tutkain.cljs.client", wait=False)
+        self.prompt_for_build_id = prompt_for_build_id
 
-    def connect(self):
-        super(JSClient, self).connect()
-        self.start_workers()
-        return self
+    def handshake(self):
+        log.debug({"event": "client/handshake", "data": self.buffer.readline()})
+        log.debug({"event": "client/handshake", "data": self.sink_all()})
+
+        # Start a promptless REPL so that we don't need to keep sinking the prompt.
+        self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
+        self.write_line("(ns tutkain.bootstrap)")
+        self.buffer.readline()
+        self.write_line("(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))")
+        self.buffer.readline()
+
+        for filename in ["format.clj", "backchannel.clj", "shadow.clj"]:
+            path = self.source_path(filename)
+
+            with open(path, "rb") as file:
+                blob = base64.b64encode(file.read()).decode("utf-8")
+                self.write_line(f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")""")
+
+            self.buffer.readline()
+
+        backchannel_port = self.backchannel_opts.get("port", 0)
+        self.write_line(f"""(try (tutkain.shadow/repl {{:port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))""")
+        build_id_options = edn.read_line(self.buffer)
+
+        self.prompt_for_build_id(
+            build_id_options,
+            lambda build_id: edn.write(self.buffer, build_id)
+        )
+
+        line = self.buffer.readline()
+        val = edn.read(line)
+        host = val.get(edn.Keyword("host"))
+        port = val.get(edn.Keyword("port"))
+        self.backchannel = Backchannel(host, port).connect()
+
+        self.load_modules([
+            "lookup.clj",
+            "completions.clj",
+            "cljs.clj",
+            "shadow.clj",
+        ])
+
+        self.write_line("""(println "ClojureScript" *clojurescript-version*)\n""")
+        self.recvq.put(edn.read_line(self.buffer))
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put
         self.sendq.put(code)
+
+    def format(self, response):
+        if form := response.get(edn.Keyword("in")):
+            return self.format_form(form)
+        elif response.get(edn.Keyword("tag")) == edn.Keyword("out"):
+            return response.get(edn.Keyword("val"))
+        elif val := response.get(edn.Keyword("val")):
+            return val + "\n"

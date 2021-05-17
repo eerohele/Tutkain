@@ -14,6 +14,7 @@ from sublime_plugin import (
     WindowCommand,
 )
 
+from .src import dialects
 from .src import selectors
 from .src import sexp
 from .src import state
@@ -112,13 +113,6 @@ def plugin_unloaded():
     preferences.clear_on_change("Tutkain")
 
 
-DIALECTS = edn.kwmap({
-    "clj": "Clojure",
-    "cljs": "ClojureScript",
-    "cljc": "Clojure Common",
-})
-
-
 def get_dialect(view, point):
     if view.match_selector(point, "source.clojure.clojure-common") and (
         eval_dialect := view.window().settings().get("tutkain_evaluation_dialect")
@@ -128,6 +122,16 @@ def get_dialect(view, point):
         return edn.Keyword("cljs")
     else:
         return edn.Keyword("clj")
+
+
+def get_view_dialect(view):
+    if syntax := view.syntax():
+        if syntax.scope == "source.clojure.clojure-common":
+            return edn.Keyword("cljc")
+        elif syntax.scope == "source.clojure.clojurescript":
+            return edn.Keyword("cljs")
+        elif syntax.scope == "source.clojure":
+            return edn.Keyword("clj")
 
 
 def evaluate(view, client, code, point=None, handler=None):
@@ -141,6 +145,40 @@ def evaluate(view, client, code, point=None, handler=None):
     client.eval(code, file, line, column, handler)
 
 
+def source_root():
+    return os.path.join(
+        sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain"
+    )
+
+
+def set_layout(window):
+    # Set up a two-row layout.
+    #
+    # TODO: Make configurable? This will clobber pre-existing layouts —
+    # maybe add a setting for toggling this bit?
+
+    # Only change the layout if the current layout has one row and one column.
+    if window.get_layout() == {
+        "cells": [[0, 0, 1, 1]],
+        "cols": [0.0, 1.0],
+        "rows": [0.0, 1.0],
+    }:
+        if settings().get("layout") == "vertical":
+            layout = {
+                "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
+                "cols": [0.0, 0.5, 1.0],
+                "rows": [0.0, 1.0],
+            }
+        else:
+            layout = {
+                "cells": [[0, 0, 1, 1], [0, 1, 1, 2]],
+                "cols": [0.0, 1.0],
+                "rows": [0.0, 0.75, 1.0],
+            }
+
+        window.set_layout(layout)
+
+
 class TutkainClearOutputViewCommand(WindowCommand):
     def clear_view(self, view):
         if view:
@@ -151,13 +189,14 @@ class TutkainClearOutputViewCommand(WindowCommand):
             inline.clear(self.window.active_view())
 
     def run(self):
-        view = state.repl_view(self.window)
+        for dialect in [edn.Keyword("clj"), edn.Keyword("cljs")]:
+            view = state.repl_view(self.window, dialect)
 
-        if view:
-            self.clear_view(view)
+            if view:
+                self.clear_view(view)
 
-        panel = self.window.find_output_panel(tap.panel_name)
-        panel and self.clear_view(panel)
+            panel = self.window.find_output_panel(tap.panel_name)
+            panel and self.clear_view(panel)
 
 
 class TutkainEvaluateFormCommand(TextCommand):
@@ -184,8 +223,11 @@ class TutkainEvaluateViewCommand(TextCommand):
 
 class TutkainRunTests(TextCommand):
     def run(self, _, scope="ns"):
+        dialect = edn.Keyword("clj")
+
         if scope == "ns":
-            client = state.client(self.view.window(), edn.Keyword("clj"))
+            client = state.client(self.view.window(), dialect)
+            dialects.focus_view(self.view, dialect)
             test.run(self.view, client)
         elif scope == "var":
             region = self.view.sel()[0]
@@ -193,7 +235,8 @@ class TutkainRunTests(TextCommand):
             test_var = test.current(self.view, point)
 
             if test_var:
-                client = state.client(self.view.window(), edn.Keyword("clj"))
+                client = state.client(self.view.window(), dialect)
+                dialects.focus_view(self.view, dialect)
                 test.run(self.view, client, test_vars=[test_var])
 
     def input(self, args):
@@ -226,9 +269,30 @@ class TutkainRunTestUnderCursorCommand(TextCommand):
         self.view.run_command("tutkain_run_tests", {"scope": "var"})
 
 
-class HostInputHandler(TextInputHandler):
+class DialectInputHandler(ListInputHandler):
     def __init__(self, window):
         self.window = window
+
+    def placeholder(self):
+        return "Choose dialect"
+
+    def list_items(self):
+        return [
+            sublime.ListInputItem("Clojure", "clj", details="A dynamic and functional Lisp that runs on the Java Virtual Machine."),
+            sublime.ListInputItem("ClojureScript", "cljs", annotation="shadow-cljs only", details="A compiler for Clojure that targets JavaScript."),
+        ]
+
+    def confirm(self, value):
+        self.dialect = value
+
+    def next_input(self, _):
+        return HostInputHandler(self.window, self.dialect)
+
+
+class HostInputHandler(TextInputHandler):
+    def __init__(self, window, dialect):
+        self.window = window
+        self.dialect = dialect
 
     def placeholder(self):
         return "Host"
@@ -240,12 +304,13 @@ class HostInputHandler(TextInputHandler):
         return "localhost"
 
     def next_input(self, args):
-        return PortInputHandler(self.window)
+        return PortInputHandler(self.window, self.dialect)
 
 
 class PortInputHandler(TextInputHandler):
-    def __init__(self, window):
+    def __init__(self, window, dialect):
         self.window = window
+        self.dialect = dialect
 
     def name(self):
         return "port"
@@ -257,7 +322,7 @@ class PortInputHandler(TextInputHandler):
         return text.isdigit()
 
     def initial_text(self):
-        alts = ports.discover(self.window)
+        alts = ports.discover(self.window, edn.Keyword(self.dialect))
 
         if alts:
             return alts[0][1]
@@ -323,13 +388,14 @@ class TutkainEvaluateCommand(TextCommand):
         assert scope in {"input", "form", "ns", "innermost", "outermost", "view"}
 
         point = self.view.sel()[0].begin()
-        point_dialect = get_dialect(self.view, point)
-        client = state.client(self.view.window(), point_dialect)
+        dialect = get_dialect(self.view, point)
+        client = state.client(self.view.window(), dialect)
 
         if client is None:
-            dialect_name = DIALECTS.get(point_dialect, "Clojure")
-            self.view.window().status_message(f"ERR: Not connected to a {dialect_name} REPL.")
+            self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
         else:
+            dialects.focus_view(self.view, dialect)
+
             if scope == "input":
                 view = self.view.window().show_input_panel(
                     "Input: ",
@@ -417,55 +483,48 @@ class EvaluationScopeInputHandler(ListInputHandler):
 
 
 class TutkainConnectCommand(WindowCommand):
-    def set_layout(self):
-        # Set up a two-row layout.
-        #
-        # TODO: Make configurable? This will clobber pre-existing layouts —
-        # maybe add a setting for toggling this bit?
+    def set_build_id(self, build_id, on_done):
+        # build_id is -1 if the user dismisses the ST quick panel
+        if build_id != -1:
+            on_done(build_id)
 
-        # Only change the layout if the current layout has one row and one column.
-        if self.window.get_layout() == {
-            "cells": [[0, 0, 1, 1]],
-            "cols": [0.0, 1.0],
-            "rows": [0.0, 1.0],
-        }:
-            if settings().get("layout") == "vertical":
-                layout = {
-                    "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
-                    "cols": [0.0, 0.5, 1.0],
-                    "rows": [0.0, 1.0],
-                }
-            else:
-                layout = {
-                    "cells": [[0, 0, 1, 1], [0, 1, 1, 2]],
-                    "cols": [0.0, 1.0],
-                    "rows": [0.0, 0.75, 1.0],
-                }
+    def choose_build_id(self, ids, on_done):
+        items = list(map(lambda id: id.name, ids))
 
-            self.window.set_layout(layout)
+        if items:
+            self.window.show_quick_panel(
+                items,
+                lambda index: self.set_build_id(edn.Keyword(items[index]), on_done),
+                placeholder="Choose shadow-cljs build ID",
+                flags=sublime.MONOSPACE_FONT
+            )
 
-    def run(self, host, port, view_id=None):
+    def get_project_build_id(self):
+        return self.window.project_data().get("settings", {}).get("Tutkain", {}).get("shadow-cljs", {}).get("build-id")
+
+    def run(self, dialect, host, port, view_id=None):
+        dialect = edn.Keyword(dialect)
+
         try:
             active_view = self.window.active_view()
             tap.create_panel(self.window)
 
-            source_root = os.path.join(
-                sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain"
-            )
-
-            client = JVMClient(
-                source_root, host, int(port), backchannel_opts={
-                    "port": settings().get("backchannel").get("port")
-                }
-            )
+            if dialect == edn.Keyword("cljs"):
+                # FIXME: Backchannel port option
+                client = JSClient(source_root(), host, int(port), self.choose_build_id)
+            else:
+                client = JVMClient(
+                    source_root(), host, int(port), backchannel_opts={
+                        "port": settings().get("clojure").get("backchannel").get("port")
+                    }
+                )
 
             client.connect()
-
-            self.set_layout()
-            view = views.configure(self.window, client, view_id)
+            set_layout(self.window)
+            view = views.configure(self.window, client, dialect, view_id)
 
             print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
-            print_loop.name = "tutkain.clojure.print_loop"
+            print_loop.name = f"tutkain.{dialect.name}.print_loop"
             print_loop.start()
 
             # Activate the output view and the view that was active prior to
@@ -484,20 +543,28 @@ class TutkainConnectCommand(WindowCommand):
             self.window.status_message(f"ERR: connection to {host}:{port} refused.")
 
     def input(self, args):
-        if "host" in args and "port" in args:
+        if "dialect" in args and "host" in args and "port" in args:
             return None
-        elif "host" in args:
-            return PortInputHandler(self.window)
+        elif "dialect" in args and "host" in args:
+            return PortInputHandler(self.window, args["dialect"])
+        elif "dialect" in args:
+            return HostInputHandler(self.window, args["dialect"])
         else:
-            return HostInputHandler(self.window)
+            return DialectInputHandler(self.window)
 
 
 class TutkainDisconnectCommand(WindowCommand):
     def run(self):
-        inline.clear(self.window.active_view())
+        active_view = self.window.active_view()
+        inline.clear(active_view)
         test.progress.stop()
-        view = state.repl_view(self.window)
-        view and view.close()
+
+        for group in range(self.window.num_groups() + 1):
+            if view := self.window.active_view_in_group(group):
+                if view.settings().get("tutkain_repl_view_dialect"):
+                    view and view.close()
+
+        self.window.focus_view(active_view)
 
 
 class TutkainNewScratchViewCommand(WindowCommand):
@@ -511,12 +578,13 @@ class TutkainNewScratchViewCommand(WindowCommand):
             view.close()
         else:
             syntax = list(self.syntaxes.values())[index]
+            name = list(self.syntaxes.keys())[index]
             view.assign_syntax(syntax)
+            view.set_name(f"*scratch* ({name})")
             self.window.focus_view(view)
 
     def run(self):
         view = self.window.new_file()
-        view.set_name("*scratch*")
         view.set_scratch(True)
 
         view.window().show_quick_panel(
@@ -571,7 +639,7 @@ class TutkainViewEventListener(ViewEventListener):
         if settings().get("auto_complete") and self.view.match_selector(
             point,
             "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
-        ) and (client := state.client(self.view.window(), edn.Keyword("clj"))):
+        ) and (client := state.client(self.view.window(), get_dialect(self.view, point))):
             if scope := selectors.expand_by_selector(self.view, point, "meta.symbol | constant.other.keyword"):
                 prefix = self.view.substr(scope)
 
@@ -580,8 +648,7 @@ class TutkainViewEventListener(ViewEventListener):
             client.backchannel.send({
                 "op": edn.Keyword("completions"),
                 "prefix": prefix,
-                "ns": namespace.name(self.view),
-                "dialect": get_dialect(self.view, point)
+                "ns": namespace.name(self.view)
             }, handler=lambda response: (
                 completion_list.set_completions(
                     map(self.completion_item, response.get(edn.Keyword("completions"), []))
@@ -592,12 +659,13 @@ class TutkainViewEventListener(ViewEventListener):
 
 
 def lookup(view, form, handler):
-    if not view.settings().get("tutkain_repl_output_view") and form and (client := state.client(view.window(), edn.Keyword("clj"))):
+    if not view.settings().get("tutkain_repl_view_dialect") and form and (
+        client := state.client(view.window(), get_dialect(view, form.begin()))
+    ):
         client.backchannel.send({
             "op": edn.Keyword("lookup"),
             "named": view.substr(form),
-            "ns": namespace.name(view),
-            "dialect": get_dialect(view, form.begin())
+            "ns": namespace.name(view)
         }, handler)
 
 
@@ -654,13 +722,15 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
 
 
 def reconnect(vs):
-    for view in filter(views.is_output_view, vs):
+    for view in filter(lambda v: v.settings().get("tutkain_repl_view_dialect"), vs):
+        dialect = view.settings().get("tutkain_repl_view_dialect")
         host = view.settings().get("tutkain_repl_host")
         port = view.settings().get("tutkain_repl_port")
 
         if host and port:
             view.window().run_command(
-                "tutkain_connect", {"host": host, "port": port, "view_id": view.id()}
+                # FIXME: dialect
+                "tutkain_connect", {"dialect": dialect, "host": host, "port": port, "view_id": view.id()}
             )
 
 
@@ -678,8 +748,8 @@ class TutkainEventListener(EventListener):
         inline.clear(view)
 
     def on_activated(self, view):
-        if view.settings().get("tutkain_repl_output_view"):
-            state.set_repl_view(view)
+        if dialect := view.settings().get("tutkain_repl_view_dialect"):
+            state.set_repl_view(view, edn.Keyword(dialect))
 
     def on_activated_async(self, view):
         if settings().get("auto_switch_namespace", False) and (syntax := view.syntax()):
@@ -703,7 +773,7 @@ class TutkainEventListener(EventListener):
             lookup(view, form, lambda response: info.show_popup(view, point, response))
 
     def on_close(self, view):
-        if view.settings().get("tutkain_repl_output_view"):
+        if view.settings().get("tutkain_repl_view_dialect"):
             window = sublime.active_window()
             num_groups = window.num_groups()
 
@@ -715,10 +785,11 @@ class TutkainEventListener(EventListener):
                 })
 
     def on_pre_close(self, view):
-        if view and view.settings().get("tutkain_repl_output_view"):
-            for dialect in [edn.Keyword("cljs"), edn.Keyword("clj")]:
-                if client := state.view_client(view, dialect):
-                    client.halt()
+        if view and (dialect := view.settings().get("tutkain_repl_view_dialect")):
+            dialect = edn.Keyword(dialect)
+
+            if client := state.view_client(view, dialect):
+                client.halt()
 
             if window := view.window():
                 window.destroy_output_panel(tap.panel_name)
@@ -728,7 +799,7 @@ class TutkainEventListener(EventListener):
                     active_view.run_command("tutkain_clear_test_markers")
                     window.focus_view(active_view)
 
-            state.forget_repl_view(view)
+            state.forget_repl_view(view, dialect)
 
 
 class TutkainExpandSelectionCommand(TextCommand):
@@ -746,11 +817,13 @@ class TutkainExpandSelectionCommand(TextCommand):
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
     def run(self):
-        client = state.client(self.window, edn.Keyword("clj"))
+        dialect = edn.Keyword("clj")
+        client = state.client(self.window, dialect)
 
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
         else:
+            dialects.focus_view(self.view, dialect)
             client.backchannel.send({"op": edn.Keyword("interrupt")})
 
 
@@ -1028,75 +1101,6 @@ class TutkainShowUnsuccessfulTestsCommand(TextCommand):
             )
 
 
-class TutkainStartShadowReplCommand(WindowCommand):
-    def connect(self, build_id, response):
-        if response.get(edn.Keyword("status")) == edn.Keyword("fail"):
-            reason = response.get(edn.Keyword("reason"))
-
-            if reason == edn.Keyword("no-server"):
-                self.window.status_message("ERR: shadow-cljs server not running")
-            elif reason == edn.Keyword("no-worker"):
-                self.window.status_message(f"ERR: shadow-cljs watch for :{build_id.name} not running")
-        else:
-            view = state.repl_view(self.window)
-
-            host = response.get(edn.Keyword("host"))
-            port = response.get(edn.Keyword("port"))
-            client = JSClient(host, int(port))
-
-            client.connect()
-            state.set_view_client(view, edn.Keyword("cljs"), client)
-
-            print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
-            print_loop.name = "tutkain.cljs.print_loop"
-            print_loop.start()
-
-            self.window.status_message(f"[Tutkain] Started a REPL on shadow-cljs build :{build_id.name}")
-
-    def set_build_id(self, client, build_id):
-        # build_id is -1 if the user dismisses the ST quick panel
-        if build_id != -1:
-            client.backchannel.options["shadow-build-id"] = build_id
-
-            client.backchannel.send({
-                "op": edn.Keyword("start-repl", "shadow"),
-                "build-id": build_id
-            }, lambda response: self.connect(build_id, response))
-
-    def choose_build_id(self, client, response):
-        items = list(map(lambda id: id.name, response.get(edn.Keyword("ids"), [])))
-
-        if items:
-            self.window.show_quick_panel(
-                items,
-                lambda index: self.set_build_id(client, edn.Keyword(items[index])),
-                placeholder="Choose shadow-cljs build ID",
-                flags=sublime.MONOSPACE_FONT
-            )
-
-    def get_project_build_id(self):
-        return self.window.project_data().get("settings", {}).get("Tutkain", {}).get("shadow-cljs", {}).get("build-id")
-
-    def start(self, client):
-        if "shadow.clj" not in client.capabilities:
-            self.window.status_message("ERR: shadow-cljs not in classpath, can't initialize.")
-        elif build_id := self.get_project_build_id():
-            self.set_build_id(client, edn.Keyword(build_id))
-        else:
-            client.backchannel.send({
-                "op": edn.Keyword("choose-build-id", "shadow")
-            }, handler=lambda response: self.choose_build_id(client, response))
-
-    def run(self):
-        client = state.client(self.window, edn.Keyword("clj"))
-
-        if client is None:
-            self.window.status_message("ERR: Not connected to a REPL.")
-        else:
-            self.window.status_message("[Tutkain] Initializing ClojureScript support...")
-            client.load_cljs_modules(on_done=lambda: self.start(client))
-
-
 class TutkainChooseEvaluationDialectCommand(WindowCommand):
     dialects = [
         ["clj", "Clojure"],
@@ -1106,8 +1110,7 @@ class TutkainChooseEvaluationDialectCommand(WindowCommand):
     def finish(self, index):
         val = self.dialects[index][0]
         self.window.settings().set("tutkain_evaluation_dialect", val)
-        dialect_name = DIALECTS.get(edn.Keyword(val), "Clojure")
-        self.window.status_message(f"[Tutkain] Evaluating Clojure Common files as {dialect_name}")
+        self.window.status_message(f"[Tutkain] Evaluating Clojure Common files as {dialects.name(edn.Keyword(val))}")
 
     def run(self):
         self.window.show_quick_panel(
@@ -1115,17 +1118,3 @@ class TutkainChooseEvaluationDialectCommand(WindowCommand):
             self.finish,
             placeholder="Choose Clojure Common evaluation dialect"
         )
-
-
-class TutkainStopShadowReplsCommand(WindowCommand):
-    def handler(self, response):
-        if builds := response.get(edn.Keyword("stopped-ids")):
-            self.window.status_message(f"Stopped: {builds}")
-        else:
-            self.window.status_message("[Tutkain] No active shadow-cljs REPLs.")
-
-    def run(self):
-        if client := state.client(self.window, edn.Keyword("clj")):
-            client.backchannel.send({
-                "op": edn.Keyword("stop-repls", "shadow")
-            }, self.handler)

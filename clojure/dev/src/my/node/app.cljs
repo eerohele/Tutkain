@@ -14,12 +14,9 @@
   (.readFileSync fs path #js {:encoding "utf-8"}))
 
 (comment
-  (let [lines (string/split (read-file "/etc/hosts") #"\n")]
-    (->>
-      lines
-      (sequence
-        (comp
-          (remove #(string/starts-with? % "#"))
-          (map #(string/split % #"\s+"))))
-      (sort)))
+  (into (sorted-set)
+    (comp
+      (remove #(string/starts-with? % "#"))
+      (map #(string/split % #"\s+")))
+    (string/split (read-file "/etc/hosts") #"\n"))
   ,)

@@ -1,5 +1,5 @@
 {:nrepl false
- :socket-repl false
+ :socket-repl {:port 10000}
  :deps {:aliases [:dev :shadow-cljs]}
  :dev-http {8000 "resources/public"}
  :builds {:browser {:target :browser

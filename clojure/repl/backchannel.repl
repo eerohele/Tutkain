@@ -3,13 +3,13 @@
   (:require
    [clojure.edn :as edn]
    [cognitect.transcriptor :as xr]
-   [tutkain.repl :as repl]
+   [tutkain.backchannel :as backchannel]
    [tutkain.socket :as socket])
   (:import
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
 (def recvq (LinkedBlockingQueue.))
-(def backchannel (repl/open-backchannel {:port 1337}))
+(def backchannel (backchannel/open "tutkain/backchannel.repl" {:port 1337}))
 (.setSoTimeout (.socket backchannel) 1000)
 (def port (-> backchannel .getLocalAddress .getPort))
 (def sendq (socket/client :host "localhost" :port port :recvq recvq))

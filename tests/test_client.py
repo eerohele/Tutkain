@@ -19,7 +19,24 @@ class TestJVMClient(TestCase):
     def test_smoke(self):
         with Server(greeting="user=> ") as server:
             with JVMClient(source_root(), server.host, server.port, wait=False) as client:
-                # Client starts sub-REPL
+                # Client starts clojure.main/repl
+                server.recv()
+
+                # Client switches into the bootstrap namespace
+                server.recv()
+                server.send("nil\n")
+
+                # Client defines load-base64 function
+                server.recv()
+                server.send("#'tutkain.bootstrap/load-base64\n")
+
+                # Client loads modules
+                server.recv()
+                server.send("#'tutkain.format/pp-str")
+                server.recv()
+                server.send("#'tutkain.backchannel/open")
+                server.recv()
+                server.send("#'tutkain.repl/repl")
                 server.recv()
 
                 with Server() as backchannel:
@@ -54,7 +71,7 @@ class TestJVMClient(TestCase):
                     })
 
                     self.assertEquals({
-                        "printable": "Clojure 1.11.0-alpha1\n",
+                        "printable": "Clojure 1.11.0-alpha1",
                         "response": {
                             edn.Keyword("tag"): edn.Keyword("out"),
                             edn.Keyword("val"): "Clojure 1.11.0-alpha1"
@@ -97,7 +114,7 @@ class TestJVMClient(TestCase):
                     server.send(response)
 
                     self.assertEquals(
-                        {"printable": "2\n", "response": response},
+                        {"printable": "2", "response": response},
                         client.printq.get(timeout=1)
                     )
 
