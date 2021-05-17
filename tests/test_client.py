@@ -71,7 +71,6 @@ class TestJVMClient(TestCase):
                             "op": edn.Keyword("set-eval-context"),
                             "id": id,
                             "file": "NO_SOURCE_FILE",
-                            "ns": edn.Symbol("user"),
                             "line": 1,
                             "column": 1
                         }),

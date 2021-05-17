@@ -68,7 +68,7 @@ class Client(ABC):
         log.debug({"event": "thread/exit"})
 
     @abstractmethod
-    def eval(self, code, file="NO_SOURCE_FILE", ns="user", line=0, column=0, handler=None):
+    def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         pass
 
     def handle(self, item):
@@ -301,13 +301,12 @@ class JVMClient(Client):
         self.attempted_modules = set()
         self.ready_for_cljs = False
 
-    def eval(self, code, file="NO_SOURCE_FILE", ns="user", line=0, column=0, handler=None):
+    def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put
 
         self.backchannel.send({
             "op": edn.Keyword("set-eval-context"),
             "file": file,
-            "ns": edn.Symbol(ns),
             "line": line + 1,
             "column": column + 1
         }, lambda _: self.sendq.put(code))
@@ -327,8 +326,5 @@ class JSClient(Client):
         self.start_workers()
         return self
 
-    def eval(self, code, file="NO_SOURCE_FILE", ns="user", line=0, column=0, handler=None):
-        in_ns = f"(in-ns '{ns})"
-        self.handlers[in_ns] = lambda _: None
-        self.sendq.put(in_ns)
+    def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.sendq.put(code)

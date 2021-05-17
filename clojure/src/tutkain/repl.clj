@@ -60,7 +60,7 @@
     (-> x pprint/pprint with-out-str)))
 
 (def ^:private eval-context
-  (atom {:file nil :ns 'user}))
+  (atom {:file nil}))
 
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn- set-column!
@@ -74,10 +74,10 @@
       (.set reader column))))
 
 (defmethod handle :set-eval-context
-  [{:keys [in ns file line column] :or {line 0 column 0} :as message}]
+  [{:keys [in file line column] :or {line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (let [new-context (swap! eval-context assoc :file file :ns ns)]
+  (let [new-context (swap! eval-context assoc :file file)]
     (respond-to message new-context)))
 
 (defn open-backchannel
@@ -161,9 +161,6 @@
                              *source-path* (or (some-> @eval-context :file File. .getName) "NO_SOURCE_FILE")]
                      (try
                        (when-not (identical? form EOF)
-                         (eval
-                           (let [ns-sym# (some->> @eval-context :ns)]
-                             `(or (some->> '~ns-sym# find-ns ns-name in-ns) (ns ~ns-sym#))))
                          (let [start (System/nanoTime)
                                ret (eval form)
                                ms (quot (- (System/nanoTime) start) 1000000)]

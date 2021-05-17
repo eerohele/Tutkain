@@ -68,7 +68,6 @@ class TestEvaluation(ViewTestCase):
              "id": id,
              "op": edn.Keyword("set-eval-context"),
              "file": file,
-             "ns": edn.Symbol(ns),
              "line": line,
              "column": column,
         })

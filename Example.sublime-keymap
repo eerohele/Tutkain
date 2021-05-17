@@ -97,11 +97,26 @@
         "args": {"code": "((requiring-resolve 'clojure.inspector/inspect) $0)", "scope": "outermost"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
+
     {
         "keys": ["ctrl+p", "ctrl+m"],
         "command": "tutkain_evaluate",
         "args": {"code": "(macroexpand-1 '$0)", "scope": "innermost"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    {
+        "keys": ["ctrl+p", "ctrl+u"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "(in-ns 'cljs.user)"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure.clojurescript"}]
+    },
+
+    {
+        "keys": ["ctrl+p", "ctrl+u"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "(in-ns 'user)"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure - source.clojure.clojurescript"}]
     },
 
     // Prompt for a value for the symbol under the first caret and def it

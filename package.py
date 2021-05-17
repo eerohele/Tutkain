@@ -150,10 +150,8 @@ def evaluate(view, client, code, point=None, handler=None):
         line, column = 0, 0
 
     file = view.file_name() or "NO_SOURCE_FILE"
-    ns = namespace.name(view) or "user"
-    client.namespace = ns
     client.recvq.put({edn.Keyword("in"): code})
-    client.eval(code, file, ns, line, column, handler)
+    client.eval(code, file, line, column, handler)
 
 
 class TutkainClearOutputViewCommand(WindowCommand):
