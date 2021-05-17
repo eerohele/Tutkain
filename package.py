@@ -719,7 +719,7 @@ class TutkainEventListener(EventListener):
 
 
 class TutkainExpandSelectionCommand(TextCommand):
-    def run(self, edit):
+    def run(self, _):
         view = self.view
         selections = view.sel()
 
@@ -764,12 +764,12 @@ class TutkainIndentSexpCommand(TextCommand):
 
 
 class TutkainPareditForwardCommand(TextCommand):
-    def run(self, edit, extend=False):
+    def run(self, _, extend=False):
         paredit.move(self.view, True, extend)
 
 
 class TutkainPareditBackwardCommand(TextCommand):
-    def run(self, edit, extend=False):
+    def run(self, _, extend=False):
         paredit.move(self.view, False, extend)
 
 
@@ -955,14 +955,14 @@ class TutkainNavigateReplHistoryCommand(TextCommand):
 
 
 class TutkainClearTestMarkersCommand(TextCommand):
-    def run(self, edit):
+    def run(self, _):
         self.view.erase_regions(test.region_key(self.view, "passes"))
         self.view.erase_regions(test.region_key(self.view, "failures"))
         self.view.erase_regions(test.region_key(self.view, "errors"))
 
 
 class TutkainOpenDiffWindowCommand(TextCommand):
-    def run(self, edit, reference="", actual=""):
+    def run(self, _, reference="", actual=""):
         self.view.window().run_command("new_window")
 
         window = sublime.active_window()
@@ -995,7 +995,7 @@ class TutkainShowUnsuccessfulTestsCommand(TextCommand):
         preview = self.view.substr(self.view.line(region)).lstrip()
         return f"{line}: {preview}"
 
-    def run(self, args):
+    def run(self, _):
         view = self.view
         failures = test.regions(view, "failures")
         errors = test.regions(view, "errors")
@@ -1113,4 +1113,6 @@ class TutkainStopShadowReplsCommand(WindowCommand):
 
     def run(self):
         if client := state.client(self.window, edn.Keyword("clj")):
-            client.backchannel.send({"op": edn.Keyword("stop-repls", "shadow") }, self.handler)
+            client.backchannel.send({
+                "op": edn.Keyword("stop-repls", "shadow")
+            }, self.handler)
