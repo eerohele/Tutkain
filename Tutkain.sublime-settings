@@ -1,5 +1,5 @@
 {
-  // Enable automatic namespace switching.
+  // Toggle automatic namespace switching.
   //
   // If true, Tutkain automatically switches your current Clojure(Script)
   // namespace to the namespace defined by the last ns form in the current
@@ -16,19 +16,19 @@
   // - "vertical"
   "layout": "horizontal",
 
-  // Enable or disable var info lookup on hover.
+  // Toggle var info lookup on hover.
   //
   // Disabled by default to prevent it from interfering with other packages
   // (e.g. SublimeLSP).
   "lookup_on_hover": false,
 
-  // Enable or disable tap panel.
+  // Toggle tap panel.
   //
   // If the tap panel is enabled, calling clojure.core/tap> will pretty-print the the function
   // argument in a Sublime Text output panel. Useful for debugging.
   "tap_panel": false,
 
-  // Enable or disable auto-completion.
+  // Toggle auto-completion.
   //
   // If you use something like clojure-lsp, you might want to turn this off to
   // prevent Tutkain's auto-completion from interfering with clojure-lsp's
