@@ -26,6 +26,14 @@
         "command": "tutkain_disconnect"
     },
 
+    // Evaluate the ns forms in the current view.
+    {
+        "keys": ["ctrl+c", "ctrl+n"],
+        "command": "tutkain_evaluate",
+        "args": {"scope": "ns"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
     // Evaluate view.
     {
         "keys": ["ctrl+c", "ctrl+k"],
@@ -124,6 +132,15 @@
         "keys": ["ctrl+p", "ctrl+e"],
         "command": "tutkain_evaluate",
         "args": {"scope": "input", "snippet": "(def $FORMS[0] $1)$0"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}],
+    },
+
+
+    // Prompt for a namespace to switch to
+    {
+        "keys": ["ctrl+p", "ctrl+n"],
+        "command": "tutkain_evaluate",
+        "args": {"scope": "input", "snippet": "(in-ns '$1)$0"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}],
     },
 
