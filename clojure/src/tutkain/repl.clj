@@ -22,8 +22,8 @@
 (defmulti handle :op)
 
 (defmethod handle :echo
-  [{:keys [out-fn] :as message}]
-  (out-fn message))
+  [message]
+  (respond-to message {:op :echo}))
 
 (defmethod handle :default
   [message]
