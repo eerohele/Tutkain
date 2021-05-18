@@ -351,7 +351,14 @@ class JSClient(Client):
         ])
 
         self.write_line("""(println "ClojureScript" *clojurescript-version*)\n""")
-        self.recvq.put(edn.read_line(self.buffer))
+        ret = edn.read_line(self.buffer)
+        self.handle(ret)
+
+        if ret.get(edn.Keyword("tag")) != edn.Keyword("err"):
+            self.handle(edn.read_line(self.buffer))
+            log.debug({"event": "client/handshake", "data": self.buffer.readline()})
+
+        return True
 
     def switch_namespace(self, ns):
         code = f"(in-ns '{ns})"
