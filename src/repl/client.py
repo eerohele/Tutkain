@@ -233,8 +233,8 @@ class JVMClient(Client):
 
         if not line.startswith('{'):
             self.recvq.put(edn.kwmap({
-                "tag": edn.Keyword("out"),
-                "val": "Tutkain failed to start. Here's why:"
+                "tag": edn.Keyword("err"),
+                "val": "Couldn't connect to Clojure REPL."
             }))
 
             self.recvq.put(edn.kwmap({
@@ -243,7 +243,7 @@ class JVMClient(Client):
             }))
 
             self.recvq.put(edn.kwmap({
-                "tag": edn.Keyword("out"),
+                "tag": edn.Keyword("err"),
                 "val": "NOTE: Tutkain requires Clojure 1.10.0 or newer."
             }))
         else:
