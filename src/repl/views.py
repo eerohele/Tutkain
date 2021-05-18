@@ -2,6 +2,13 @@ from .. import state
 from .. import dialects
 
 
+def active_repl_view(window):
+    for group in range(window.num_groups() + 1):
+        if view := window.active_view_in_group(group):
+            if view.settings().get("tutkain_repl_view_dialect"):
+                return view
+
+
 def create(window, dialect, client):
     num_groups = window.num_groups()
     target_group = num_groups - 1

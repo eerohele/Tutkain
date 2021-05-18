@@ -559,10 +559,8 @@ class TutkainDisconnectCommand(WindowCommand):
         inline.clear(active_view)
         test.progress.stop()
 
-        for group in range(self.window.num_groups() + 1):
-            if view := self.window.active_view_in_group(group):
-                if view.settings().get("tutkain_repl_view_dialect"):
-                    view and view.close()
+        if view := views.active_repl_view(self.window):
+            view and view.close()
 
         self.window.focus_view(active_view)
 
