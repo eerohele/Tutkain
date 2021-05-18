@@ -351,12 +351,30 @@ class JSClient(Client):
         ])
 
         self.write_line("""(println "ClojureScript" *clojurescript-version*)\n""")
-        ret = edn.read_line(self.buffer)
-        self.handle(ret)
+        line = self.buffer.readline()
 
-        if ret.get(edn.Keyword("tag")) != edn.Keyword("err"):
-            self.handle(edn.read_line(self.buffer))
-            log.debug({"event": "client/handshake", "data": self.buffer.readline()})
+        if not line.startswith('{'):
+            self.recvq.put(edn.kwmap({
+                "tag": edn.Keyword("err"),
+                "val": "Couldn't connect to ClojureScript REPL. Here's why:"
+            }))
+
+            self.recvq.put(edn.kwmap({
+                "tag": edn.Keyword("err"),
+                "val": line
+            }))
+
+            self.recvq.put(edn.kwmap({
+                "tag": edn.Keyword("err"),
+                "val": "Is the shadow-cljs watch running for the build ID you chose?"
+            }))
+        else:
+            ret = edn.read(line)
+            self.handle(ret)
+
+            if ret.get(edn.Keyword("tag")) != edn.Keyword("err"):
+                self.handle(edn.read_line(self.buffer))
+                log.debug({"event": "client/handshake", "data": self.buffer.readline()})
 
         return True
 
