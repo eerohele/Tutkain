@@ -815,7 +815,7 @@ class TutkainInterruptEvaluationCommand(WindowCommand):
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
         else:
-            dialects.focus_view(self.view, dialect)
+            dialects.focus_view(self.window.active_view(), dialect)
             client.backchannel.send({"op": edn.Keyword("interrupt")})
 
 
