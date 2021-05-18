@@ -752,17 +752,11 @@ class TutkainEventListener(EventListener):
             state.set_repl_view(view, edn.Keyword(dialect))
 
     def on_activated_async(self, view):
-        if settings().get("auto_switch_namespace", False) and (syntax := view.syntax()):
-            if syntax.scope == "source.clojure":
-                if client := state.client(view.window(), edn.Keyword("clj")):
-                    ns = namespace.name(view) or "user"
-                    code = f"(do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1))"
-                    client.eval(code, handler=lambda _: None)
-            elif syntax.scope == "source.clojure.clojurescript":
-                if client := state.client(view.window(), edn.Keyword("cljs")):
-                    ns = namespace.name(view) or "cljs.user"
-                    code = f"(in-ns '{ns})"
-                    client.eval(code, handler=lambda _: None)
+        if settings().get("auto_switch_namespace", True):
+            if (dialect := get_view_dialect(view)) and (client := state.client(view.window(), dialect)):
+                default_ns = "cljs.user" if dialect == edn.Keyword("cljs") else "user"
+                ns = namespace.name(view) or default_ns
+                client.switch_namespace(ns)
 
     def on_hover(self, view, point, hover_zone):
         if settings().get("lookup_on_hover") and view.match_selector(

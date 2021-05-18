@@ -123,6 +123,10 @@ class Client(ABC):
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         pass
 
+    @abstractmethod
+    def switch_namespace(self, ns):
+        pass
+
     def handle(self, item):
         if ns := item.get(edn.Keyword("ns")):
             self.namespace = ns
@@ -274,6 +278,10 @@ class JVMClient(Client):
         self.attempted_modules = set()
         self.ready_for_cljs = False
 
+    def switch_namespace(self, ns):
+        code = f"(do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1))"
+        self.eval(code, handler=lambda _: None)
+
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put
 
@@ -344,6 +352,10 @@ class JSClient(Client):
 
         self.write_line("""(println "ClojureScript" *clojurescript-version*)\n""")
         self.recvq.put(edn.read_line(self.buffer))
+
+    def switch_namespace(self, ns):
+        code = f"(in-ns '{ns})"
+        self.eval(code, handler=lambda _: None)
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put
