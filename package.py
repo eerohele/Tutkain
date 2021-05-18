@@ -750,9 +750,7 @@ class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if dialect := view.settings().get("tutkain_repl_view_dialect"):
             state.set_repl_view(view, edn.Keyword(dialect))
-
-    def on_activated_async(self, view):
-        if settings().get("auto_switch_namespace", True):
+        elif settings().get("auto_switch_namespace", True):
             if (dialect := get_view_dialect(view)) and (client := state.client(view.window(), dialect)):
                 default_ns = "cljs.user" if dialect == edn.Keyword("cljs") else "user"
                 ns = namespace.name(view) or default_ns
