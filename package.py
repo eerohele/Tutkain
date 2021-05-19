@@ -189,14 +189,11 @@ class TutkainClearOutputViewCommand(WindowCommand):
             inline.clear(self.window.active_view())
 
     def run(self):
-        for dialect in [edn.Keyword("clj"), edn.Keyword("cljs")]:
-            view = state.repl_view(self.window, dialect)
+        if view := views.active_repl_view(self.window):
+            self.clear_view(view)
 
-            if view:
-                self.clear_view(view)
-
-            panel = self.window.find_output_panel(tap.panel_name)
-            panel and self.clear_view(panel)
+        panel = self.window.find_output_panel(tap.panel_name)
+        panel and self.clear_view(panel)
 
 
 class TutkainEvaluateFormCommand(TextCommand):
