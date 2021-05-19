@@ -22,9 +22,23 @@ class Client(ABC):
         return self
 
     def sink_until_prompt(self):
-        chars = []
-        while chars[-3:] != [b"=", b">", b" "]:
-            chars.append(self.socket.recv(1))
+        bs = bytearray()
+        data = self.socket.recv(1024)
+        bs.extend(data)
+
+        while data:
+            readable, _, _ = select.select([self.socket], [], [], 0)
+
+            if self.socket in readable:
+                data = readable[0].recv(1024)
+                bs.extend(data)
+
+                if bs[-3:] == bytearray(b"=> "):
+                    break
+            else:
+                break
+
+        return bs
 
     def write_line(self, line):
         self.buffer.write(line)
