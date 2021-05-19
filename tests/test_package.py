@@ -135,6 +135,14 @@ class TestEvaluation(ViewTestCase):
         self.eval_context()
         self.assertEquals("((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.server.recv())
 
+    def test_eval_in_ns(self):
+        self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
+        self.eval_context()
+        # Clients sends ns first
+        self.assertTrue(self.server.recv().startswith("^:tutkain/internal"))
+        self.eval_context()
+        self.assertEquals("(reset)\n", self.server.recv())
+
     def test_ns(self):
         self.set_view_content("(ns foo.bar) (ns baz.quux) (defn x [y] y)")
         self.set_selections((0, 0))

@@ -393,6 +393,9 @@ class TutkainEvaluateCommand(TextCommand):
         else:
             dialects.focus_view(self.view, dialect)
 
+            if ns is not None:
+                client.switch_namespace(ns)
+
             if scope == "input":
                 view = self.view.window().show_input_panel(
                     "Input: ",
