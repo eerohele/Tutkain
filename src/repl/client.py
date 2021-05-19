@@ -21,21 +21,10 @@ class Client(ABC):
         self.executor.submit(self.format_loop)
         return self
 
-    def sink_all(self):
-        bs = bytearray()
-        data = self.socket.recv(1024)
-        bs.extend(data)
-
-        while data:
-            readable, _, _ = select.select([self.socket], [], [], 0)
-
-            if self.socket in readable:
-                data = readable[0].recv(1024)
-                bs.extend(data)
-            else:
-                break
-
-        return bs
+    def sink_until_prompt(self):
+        chars = []
+        while chars[-3:] != [b"=", b">", b" "]:
+            chars.append(self.socket.recv(1))
 
     def write_line(self, line):
         self.buffer.write(line)
@@ -212,7 +201,7 @@ class JVMClient(Client):
     }
 
     def handshake(self):
-        log.debug({"event": "client/handshake", "data": self.sink_all()})
+        log.debug({"event": "client/handshake", "data": self.sink_until_prompt()})
 
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
         self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
@@ -312,8 +301,7 @@ class JSClient(Client):
         self.prompt_for_build_id = prompt_for_build_id
 
     def handshake(self):
-        log.debug({"event": "client/handshake", "data": self.buffer.readline()})
-        log.debug({"event": "client/handshake", "data": self.sink_all()})
+        log.debug({"event": "client/handshake", "data": self.sink_until_prompt()})
 
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
         self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
