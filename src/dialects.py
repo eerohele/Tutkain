@@ -7,11 +7,39 @@ DIALECT_NAMES = edn.kwmap({
     "clj": "Clojure",
     "cljs": "ClojureScript",
     "cljc": "Clojure Common",
+    "bb": "Babashka"
 })
 
 
 def name(dialect):
     return DIALECT_NAMES.get(dialect)
+
+
+def for_point(view, point):
+    if view.match_selector(point, "source.clojure.clojure-common") and (
+        eval_dialect := view.window().settings().get(
+            "tutkain_evaluation_dialect"
+        )
+    ):
+        return edn.Keyword(eval_dialect)
+    if view.match_selector(point, "source.clojure.clojurescript"):
+        return edn.Keyword("cljs")
+    if view.match_selector(point, "source.clojure.babashka"):
+        return edn.Keyword("bb")
+
+    return edn.Keyword("clj")
+
+
+def for_view(view):
+    if syntax := view.syntax():
+        if syntax.scope == "source.clojure.clojure-common":
+            return edn.Keyword("cljc")
+        if syntax.scope == "source.clojure.clojurescript":
+            return edn.Keyword("cljs")
+        if syntax.scope == "source.clojure.babashka":
+            return edn.Keyword("bb")
+        if syntax.scope == "source.clojure":
+            return edn.Keyword("clj")
 
 
 def focus_view(view, dialect):

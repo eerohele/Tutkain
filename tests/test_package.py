@@ -1,7 +1,7 @@
 from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
 from Tutkain.src.repl import views
-from Tutkain.src.repl.client import JVMClient, JSClient
+from Tutkain.src.repl.client import BabashkaClient, JVMClient, JSClient
 from Tutkain.src import state
 
 from .mock import Server
@@ -233,114 +233,190 @@ class TestJVMClient(ViewTestCase):
         }, response)
 
 
-class TestJSClient(ViewTestCase):
+# class TestJSClient(ViewTestCase):
+#     @classmethod
+#     def conduct_handshake(self):
+#         server = self.server
+
+#         # Client starts clojure.main/repl
+#         server.recv()
+
+#         # Client switches into the bootstrap namespace
+#         server.recv()
+#         server.send("nil\n")
+
+#         # Client defines load-base64 function
+#         server.recv()
+#         server.send("#'tutkain.bootstrap/load-base64\n")
+
+#         # Client loads modules
+#         server.recv()
+#         server.send("#'tutkain.format/pp-str")
+#         server.recv()
+#         server.send("#'tutkain.backchannel/open")
+#         server.recv()
+#         server.send("#'tutkain.repl/repl")
+
+#         # Client starts REPL
+#         server.recv()
+
+#         # Server sends build ID list
+#         server.send([
+#             edn.Keyword("browser"),
+#             edn.Keyword("node-script"),
+#             edn.Keyword("npm")
+#         ])
+
+#         # Client responds with build ID
+#         server.recv()
+
+#         with Server() as backchannel:
+#             server.send({
+#                 edn.Keyword("host"): "localhost",
+#                 edn.Keyword("port"): backchannel.port
+#             })
+
+#             for _ in range(4):
+#                 backchannel.recv()
+
+#             # Client sends version print
+#             server.recv()
+
+#             server.send({
+#                 edn.Keyword("tag"): edn.Keyword("out"),
+#                 edn.Keyword("val"): "ClojureScript 1.10.844"
+#             })
+
+#             server.send({
+#                 edn.Keyword("tag"): edn.Keyword("out"),
+#                 edn.Keyword("val"): "\\n"
+#             })
+
+#             server.send({
+#                 edn.Keyword("tag"): edn.Keyword("ret"),
+#                 edn.Keyword("val"): "nil",
+#                 edn.Keyword("ns"): "cljs.user",
+#                 edn.Keyword("ms"): 0,
+#                 edn.Keyword("form"): """(println "ClojureScript" *clojurescript-version*)"""
+#             })
+
+#             # TODO: Add test for no runtime
+
+#             return backchannel
+
+#     @classmethod
+#     def prompt_for_build_id(self, _, f):
+#         return f(edn.Keyword("node-script"))
+
+#     @classmethod
+#     def setUpClass(self):
+#         super().setUpClass(syntax="ClojureScript (Tutkain).sublime-syntax")
+#         start_logging(False)
+
+#         def write_greeting(buf):
+#             buf.write("shadow-cljs - REPL - see (help)\n")
+#             buf.flush()
+#             buf.write("To quit, type: :repl/quit\n")
+#             buf.flush()
+#             buf.write("shadow.user=> ")
+#             buf.flush()
+
+#         self.server = Server(greeting=write_greeting)
+
+#         self.server.start()
+
+#         self.client = JSClient(
+#             source_root(),
+#             self.server.host,
+#             self.server.port,
+#             self.prompt_for_build_id
+#         ).connect()
+
+#         dialect = edn.Keyword("cljs")
+#         state.set_view_client(self.view, dialect, self.client)
+#         repl_view = views.configure(self.view.window(), self.client, dialect)
+#         state.set_repl_view(repl_view, dialect)
+#         self.backchannel = self.conduct_handshake()
+
+#     @classmethod
+#     def tearDownClass(self):
+#         super(TestJSClient, self).tearDownClass()
+#         stop_logging()
+
+#         if self.server:
+#             self.server.stop()
+
+#         if self.client:
+#             self.client.halt()
+
+#     def test_innermost(self):
+#         self.set_view_content("(map inc (range 10))")
+#         self.set_selections((9, 9))
+#         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+#         self.assertEquals("(range 10)\n", self.server.recv())
+
+
+class TestBabashkaClient(ViewTestCase):
     @classmethod
     def conduct_handshake(self):
         server = self.server
 
-        # Client starts clojure.main/repl
+        # Client starts io-prepl
         server.recv()
 
-        # Client switches into the bootstrap namespace
-        server.recv()
-        server.send("nil\n")
-
-        # Client defines load-base64 function
-        server.recv()
-        server.send("#'tutkain.bootstrap/load-base64\n")
-
-        # Client loads modules
-        server.recv()
-        server.send("#'tutkain.format/pp-str")
-        server.recv()
-        server.send("#'tutkain.backchannel/open")
-        server.recv()
-        server.send("#'tutkain.repl/repl")
-
-        # Client starts REPL
+        # Client sends version print
         server.recv()
 
-        # Server sends build ID list
-        server.send([
-            edn.Keyword("browser"),
-            edn.Keyword("node-script"),
-            edn.Keyword("npm")
-        ])
+        server.send({
+            edn.Keyword("tag"): edn.Keyword("out"),
+            edn.Keyword("val"): """Babashka 0.3.6""",
+        })
 
-        # Client responds with build ID
-        server.recv()
-
-        with Server() as backchannel:
-            server.send({
-                edn.Keyword("host"): "localhost",
-                edn.Keyword("port"): backchannel.port
-            })
-
-            for _ in range(4):
-                backchannel.recv()
-
-            # Client sends version print
-            server.recv()
-
-            server.send({
-                edn.Keyword("tag"): edn.Keyword("out"),
-                edn.Keyword("val"): "ClojureScript 1.10.844"
-            })
-
-            server.send({
-                edn.Keyword("tag"): edn.Keyword("out"),
-                edn.Keyword("val"): "\\n"
-            })
-
-            server.send({
-                edn.Keyword("tag"): edn.Keyword("ret"),
-                edn.Keyword("val"): "nil",
-                edn.Keyword("ns"): "cljs.user",
-                edn.Keyword("ms"): 0,
-                edn.Keyword("form"): """(println "ClojureScript" *clojurescript-version*)"""
-            })
-
-            # TODO: Add test for no runtime
-
-            return backchannel
-
-    @classmethod
-    def prompt_for_build_id(self, _, f):
-        return f(edn.Keyword("node-script"))
+        server.send({
+            edn.Keyword("tag"): edn.Keyword("ret"),
+            edn.Keyword("val"): "nil",
+            edn.Keyword("ns"): "user",
+            edn.Keyword("ms"): 0,
+            edn.Keyword("form"): """(println "Babashka" (System/getProperty "babashka.version"))""",
+        })
 
     @classmethod
     def setUpClass(self):
-        super().setUpClass(syntax="ClojureScript (Tutkain).sublime-syntax")
+        super().setUpClass(syntax="Babashka (Tutkain).sublime-syntax")
         start_logging(False)
 
         def write_greeting(buf):
-            buf.write("shadow-cljs - REPL - see (help)\n")
+            buf.write("Babashka v0.3.6 REPL.\n")
             buf.flush()
-            buf.write("To quit, type: :repl/quit\n")
+            buf.write("Use :repl/quit or :repl/exit to quit the REPL.\n")
             buf.flush()
-            buf.write("shadow.user=> ")
+            buf.write("Clojure rocks, Bash reaches.\n")
+            buf.flush()
+            buf.write("\n")
+            buf.flush()
+            buf.write("user=> ")
             buf.flush()
 
         self.server = Server(greeting=write_greeting)
 
         self.server.start()
 
-        self.client = JSClient(
+        self.client = BabashkaClient(
             source_root(),
             self.server.host,
-            self.server.port,
-            self.prompt_for_build_id
+            self.server.port
         ).connect()
 
-        dialect = edn.Keyword("cljs")
+        dialect = edn.Keyword("bb")
         state.set_view_client(self.view, dialect, self.client)
         repl_view = views.configure(self.view.window(), self.client, dialect)
         state.set_repl_view(repl_view, dialect)
-        self.backchannel = self.conduct_handshake()
+        self.conduct_handshake()
 
+    # TODO: Extract into base class
     @classmethod
     def tearDownClass(self):
-        super(TestJSClient, self).tearDownClass()
+        super().tearDownClass()
         stop_logging()
 
         if self.server:

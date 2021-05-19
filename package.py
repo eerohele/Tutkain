@@ -24,7 +24,7 @@ from .src import inline
 from .src import paredit
 from .src import namespace
 from .src import test
-from .src.repl.client import JVMClient, JSClient
+from .src.repl.client import BabashkaClient, JVMClient, JSClient
 from .src.repl import info
 from .src.repl import history
 from .src.repl import tap
@@ -111,27 +111,6 @@ def plugin_unloaded():
 
     preferences = sublime.load_settings("Preferences.sublime-settings")
     preferences.clear_on_change("Tutkain")
-
-
-def get_dialect(view, point):
-    if view.match_selector(point, "source.clojure.clojure-common") and (
-        eval_dialect := view.window().settings().get("tutkain_evaluation_dialect")
-    ):
-        return edn.Keyword(eval_dialect)
-    elif view.match_selector(point, "source.clojure.clojurescript"):
-        return edn.Keyword("cljs")
-    else:
-        return edn.Keyword("clj")
-
-
-def get_view_dialect(view):
-    if syntax := view.syntax():
-        if syntax.scope == "source.clojure.clojure-common":
-            return edn.Keyword("cljc")
-        elif syntax.scope == "source.clojure.clojurescript":
-            return edn.Keyword("cljs")
-        elif syntax.scope == "source.clojure":
-            return edn.Keyword("clj")
 
 
 def evaluate(view, client, code, point=None, handler=None):
@@ -277,6 +256,7 @@ class DialectInputHandler(ListInputHandler):
         return [
             sublime.ListInputItem("Clojure", "clj", details="A dynamic and functional Lisp that runs on the Java Virtual Machine."),
             sublime.ListInputItem("ClojureScript", "cljs", annotation="shadow-cljs only", details="A compiler for Clojure that targets JavaScript."),
+            sublime.ListInputItem("Babashka", "bb", details="A fast, native Clojure scripting runtime.")
         ]
 
     def confirm(self, value):
@@ -364,7 +344,7 @@ class TutkainEvaluateCommand(TextCommand):
             "op": edn.Keyword("load"),
             "code": code,
             "file": file,
-            "dialect": get_dialect(self.view, 0)
+            "dialect": dialects.for_point(self.view, 0)
         }, handler=client.recvq.put)
 
     def handler(self, region, client, response, inline_result):
@@ -385,7 +365,7 @@ class TutkainEvaluateCommand(TextCommand):
         assert scope in {"input", "form", "ns", "innermost", "outermost", "view"}
 
         point = self.view.sel()[0].begin()
-        dialect = get_dialect(self.view, point)
+        dialect = dialects.for_point(self.view, point)
         client = state.client(self.view.window(), dialect)
 
         if client is None:
@@ -512,6 +492,8 @@ class TutkainConnectCommand(WindowCommand):
             if dialect == edn.Keyword("cljs"):
                 # FIXME: Backchannel port option
                 client = JSClient(source_root(), host, int(port), self.choose_build_id)
+            elif dialect == edn.Keyword("bb"):
+                client = BabashkaClient(source_root(), host, int(port))
             else:
                 client = JVMClient(
                     source_root(), host, int(port), backchannel_opts={
@@ -637,7 +619,7 @@ class TutkainViewEventListener(ViewEventListener):
         if settings().get("auto_complete") and self.view.match_selector(
             point,
             "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
-        ) and (client := state.client(self.view.window(), get_dialect(self.view, point))):
+        ) and (client := state.client(self.view.window(), dialects.for_point(self.view, point))):
             if scope := selectors.expand_by_selector(self.view, point, "meta.symbol | constant.other.keyword"):
                 prefix = self.view.substr(scope)
 
@@ -658,7 +640,7 @@ class TutkainViewEventListener(ViewEventListener):
 
 def lookup(view, form, handler):
     if not view.settings().get("tutkain_repl_view_dialect") and form and (
-        client := state.client(view.window(), get_dialect(view, form.begin()))
+        client := state.client(view.window(), dialects.for_point(view, form.begin()))
     ):
         client.backchannel.send({
             "op": edn.Keyword("lookup"),
@@ -749,7 +731,7 @@ class TutkainEventListener(EventListener):
         if dialect := view.settings().get("tutkain_repl_view_dialect"):
             state.set_repl_view(view, edn.Keyword(dialect))
         elif settings().get("auto_switch_namespace", True):
-            if (dialect := get_view_dialect(view)) and (client := state.client(view.window(), dialect)):
+            if (dialect := dialects.for_view(view)) and (client := state.client(view.window(), dialect)):
                 default_ns = "cljs.user" if dialect == edn.Keyword("cljs") else "user"
                 ns = namespace.name(view) or default_ns
                 client.switch_namespace(ns)

@@ -1,0 +1,7 @@
+%YAML 1.2
+---
+# https://www.sublimetext.com/docs/syntax.html
+name: Babashka (Tutkain)
+file_extensions: [bb]
+scope: source.clojure.babashka
+extends: Packages/Tutkain/Clojure (Tutkain).sublime-syntax

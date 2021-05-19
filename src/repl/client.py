@@ -23,19 +23,15 @@ class Client(ABC):
 
     def sink_until_prompt(self):
         bs = bytearray()
-        data = self.socket.recv(1024)
-        bs.extend(data)
+        poller = select.poll()
+        poller.register(self.socket, select.POLLIN)
 
-        while data:
-            readable, _, _ = select.select([self.socket], [], [], 0)
+        while True:
+            for _, event in poller.poll():
+                if event == select.POLLIN:
+                    bs.extend(self.socket.recv(32))
 
-            if self.socket in readable:
-                data = readable[0].recv(1024)
-                bs.extend(data)
-
-                if bs[-3:] == bytearray(b"=> "):
-                    break
-            else:
+            if bs[-3:] == bytearray(b"=> "):
                 break
 
         return bs
@@ -381,6 +377,35 @@ class JSClient(Client):
                 self.handle(edn.read_line(self.buffer))
                 log.debug({"event": "client/handshake", "data": self.buffer.readline()})
 
+        return True
+
+    def switch_namespace(self, ns):
+        code = f"^:tutkain/internal (in-ns '{ns})"
+        self.eval(code)
+
+    def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
+        self.handlers[code] = handler or self.recvq.put
+        self.sendq.put(code)
+
+    def format(self, response):
+        if form := response.get(edn.Keyword("in")):
+            return self.format_form(form)
+        elif response.get(edn.Keyword("tag")) == edn.Keyword("out"):
+            return response.get(edn.Keyword("val"))
+        elif val := response.get(edn.Keyword("val")):
+            return val
+
+
+class BabashkaClient(Client):
+    def __init__(self, source_root, host, port):
+        super().__init__(source_root, host, port, "tutkain.bb.client", wait=False)
+
+    def handshake(self):
+        log.debug({"event": "client/handshake", "data": self.sink_until_prompt()})
+        self.write_line(f"""((requiring-resolve 'clojure.core.server/io-prepl))""")
+        self.write_line("""(println "Babashka" (System/getProperty "babashka.version"))""")
+        self.recvq.put(edn.read_line(self.buffer))
+        self.buffer.readline()
         return True
 
     def switch_namespace(self, ns):
