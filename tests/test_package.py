@@ -1,5 +1,6 @@
 from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
+from Tutkain.src.repl import views
 from Tutkain.src.repl.client import JVMClient
 from Tutkain.src import state
 
@@ -65,7 +66,8 @@ class TestEvaluation(ViewTestCase):
         self.client = JVMClient(source_root(), self.server.host, self.server.port, wait=False).connect()
         dialect = edn.Keyword("clj")
         state.set_view_client(self.view, dialect, self.client)
-        state.set_repl_view(self.view, dialect)
+        repl_view = views.configure(self.view.window(), self.client, dialect)
+        state.set_repl_view(repl_view, dialect)
         self.backchannel = conduct_handshake(self.server)
 
     @classmethod
