@@ -151,8 +151,8 @@ class Client(ABC):
             log.error({"event": "error", "error": error})
         finally:
             self.recvq.put(edn.kwmap({
-                edn.Keyword("tag"): edn.Keyword("ret"),
-                edn.Keyword("val"): ":tutkain/disconnected"
+                "tag": edn.Keyword("ret"),
+                "val": ":tutkain/disconnected"
             }))
 
             # put a None into the queue to tell consumers to stop reading it.
