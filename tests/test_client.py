@@ -17,7 +17,11 @@ class TestJVMClient(TestCase):
         stop_logging()
 
     def test_smoke(self):
-        with Server(greeting="user=> ") as server:
+        def write_greeting(buf):
+            buf.write("user=> ")
+            buf.flush()
+
+        with Server(greeting=write_greeting) as server:
             with JVMClient(source_root(), server.host, server.port, wait=False) as client:
                 # Client starts clojure.main/repl
                 server.recv()

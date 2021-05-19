@@ -353,7 +353,7 @@ class JSClient(Client):
             "shadow.clj",
         ])
 
-        self.write_line("""(println "ClojureScript" *clojurescript-version*)\n""")
+        self.write_line("""(println "ClojureScript" *clojurescript-version*)""")
         line = self.buffer.readline()
 
         if not line.startswith('{'):

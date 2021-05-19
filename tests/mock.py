@@ -6,7 +6,7 @@ from Tutkain.api import edn
 
 
 class Server(object):
-    def __init__(self, port=0, greeting="", timeout=1):
+    def __init__(self, port=0, greeting=lambda _: None, timeout=1):
         self.conn = None
         self.executor = futures.ThreadPoolExecutor()
         self.greeting = greeting
@@ -26,11 +26,9 @@ class Server(object):
 
     def wait(self):
         self.conn, _ = self.socket.accept()
-
-        if self.greeting:
-            self.conn.sendall(self.greeting.encode("UTF-8"))
-
-        return self.conn.makefile(mode="rw")
+        buffer = self.conn.makefile(mode="rw")
+        self.greeting(buffer)
+        return buffer
 
     def start(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -8,14 +8,14 @@ from unittest import TestCase
 
 class ViewTestCase(TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(self, syntax="Clojure (Tutkain).sublime-syntax"):
         sublime.run_command("new_window")
         self.view = sublime.active_window().new_file()
         self.view.set_name("tutkain.clj")
         self.view.set_scratch(True)
         self.view.sel().clear()
         self.view.window().focus_view(self.view)
-        self.view.assign_syntax("Clojure (Tutkain).sublime-syntax")
+        self.view.assign_syntax(syntax)
 
     @classmethod
     def tearDownClass(self):
