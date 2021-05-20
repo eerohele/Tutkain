@@ -77,7 +77,7 @@
      (try
        (prn (sort (api/get-build-ids)))
        (let [build-id (read)
-             backchannel (backchannel/open "tutkain.cljs/backchannel"
+             backchannel (backchannel/open
                            (assoc opts
                              :xform-in #(assoc % :build-id build-id :in *in*)
                              :xform-out #(dissoc % :in)))

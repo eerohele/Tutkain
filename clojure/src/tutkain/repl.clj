@@ -43,7 +43,7 @@
                       (prn message))))
          tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})
          repl-thread (Thread/currentThread)
-         backchannel (backchannel/open "tutkain.clj/backchannel"
+         backchannel (backchannel/open
                        (assoc opts
                          :xform-in #(assoc % :in *in* :repl-thread repl-thread)
                          :xform-out #(dissoc % :in)))]

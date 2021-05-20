@@ -5,6 +5,7 @@
    (java.lang.reflect Field)
    (java.net InetSocketAddress)
    (java.nio.channels Channels ServerSocketChannel)
+   (java.util.concurrent.atomic AtomicInteger)
    (java.util Base64)))
 
 (defn respond-to
@@ -72,8 +73,25 @@
   [k]
   (get @eval-ctx k))
 
+(def ^:private thread-counter
+  (AtomicInteger.))
+
 (defn open
-  [thread-name {:keys [port xform-in xform-out] :or {port 0 xform-in identity xform-out identity}}]
+  "Open a backchannel that listens for editor tooling messages on a socket.
+
+  Editor tooling messages are EDN messages that look like nREPL ops. For
+  example:
+
+    {:op :load-base64 :blob \"...\" :file \"foo.clj\"}
+
+  To add a new op, implement the tutkain.backchannel/handle multimethod.
+
+  Options:
+    :port    The TCP port the backchannel listens on.
+
+  Other options are subject to change."
+  [{:keys [port xform-in xform-out]
+    :or {port 0 xform-in identity xform-out identity}}]
   (let [socket (ServerSocketChannel/open)
         address (InetSocketAddress. "localhost" port)
         lock (Object.)]
@@ -99,7 +117,7 @@
                        (finally
                          (.close socket)))))]
       (doto thread
-        (.setName thread-name)
+        (.setName (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter)))
         (.setDaemon true)
         (.start))
       socket)))
