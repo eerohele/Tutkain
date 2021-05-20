@@ -42,9 +42,10 @@
                     (locking lock
                       (prn message))))
          tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})
+         repl-thread (Thread/currentThread)
          backchannel (backchannel/open "tutkain.clj/backchannel"
                        (assoc opts
-                         :xform-in #(assoc % :in *in*)
+                         :xform-in #(assoc % :in *in* :repl-thread repl-thread)
                          :xform-out #(dissoc % :in)))]
      (main/with-bindings
        (in-ns 'user)

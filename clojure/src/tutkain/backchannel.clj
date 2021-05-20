@@ -63,6 +63,11 @@
   (let [new-context (swap! eval-ctx assoc :file file)]
     (respond-to message new-context)))
 
+(defmethod handle :interrupt
+  [{:keys [repl-thread]}]
+  (assert repl-thread)
+  (.interrupt repl-thread))
+
 (defn eval-context
   [k]
   (get @eval-ctx k))
@@ -71,7 +76,6 @@
   [thread-name {:keys [port xform-in xform-out] :or {port 0 xform-in identity xform-out identity}}]
   (let [socket (ServerSocketChannel/open)
         address (InetSocketAddress. "localhost" port)
-        repl-thread (Thread/currentThread)
         lock (Object.)]
     (.bind socket address)
     (let [thread (Thread.
@@ -90,9 +94,7 @@
                            (when (.isOpen socket)
                              (let [message (read in false EOF)]
                                (when-not (identical? EOF message)
-                                 (case (:op message)
-                                   :interrupt (.interrupt repl-thread)
-                                   (handle (assoc (xform-in message) :out-fn out-fn)))
+                                 (handle (assoc (xform-in message) :out-fn out-fn))
                                  (recur))))))
                        (finally
                          (.close socket)))))]
