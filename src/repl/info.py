@@ -1,7 +1,9 @@
 import html
 import inspect
+import os
 import re
 import sublime
+import tempfile
 
 from urllib.parse import urlparse
 from zipfile import ZipFile
@@ -9,32 +11,22 @@ from zipfile import ZipFile
 from ...api import edn
 
 
-def show(view, line, column):
+def rename(view, name):
     if view is not None:
         if view.is_loading():
-            sublime.set_timeout(lambda: show(view, line, column), 100)
+            sublime.set_timeout(lambda: rename(view, name), 100)
         else:
-            view.sel().clear()
-            point = view.text_point(line, column)
-            view.show_at_center(point)
-            view.sel().add(point)
+            view.set_name(name)
 
 
 def goto(window, location):
     if location:
         resource = location["resource"]
-        line = location["line"]
-        column = location["column"]
+        line = location["line"] + 1
+        column = location["column"] + 1
 
-        if not resource.scheme or resource.scheme == "file":
-            if resource.path:
-                view = window.find_open_file(resource.path)
-
-                if not view:
-                    view = window.open_file(resource.path)
-
-                window.focus_view(view)
-                show(view, line, column)
+        if not resource.scheme or resource.scheme == "file" and resource.path:
+            view = window.open_file(f"{resource.path}:{line}:{column}", flags=sublime.ENCODED_POSITION)
         elif resource.scheme == "jar" and "!" in resource.path:
             parts = resource.path.split("!")
             jar_url = urlparse(parts[0])
@@ -43,20 +35,22 @@ def goto(window, location):
             path = parts[1][1:] if parts[1].startswith("/") else parts[1]
             archive = ZipFile(jar_url.path, "r")
             source_file = archive.read(path)
-
             view_name = jar_url.path + "!/" + path
-            view = next((v for v in window.views() if v.name() == view_name), None)
+            descriptor, path = tempfile.mkstemp()
 
-            if view is None:
-                view = window.new_file()
-                view.set_name(view_name)
-                view.run_command("append", {"characters": source_file.decode()})
+            try:
+                with os.fdopen(descriptor, "w") as file:
+                    file.write(source_file.decode())
+
+                # TODO: Add setting?
+                flags = sublime.ENCODED_POSITION | sublime.ADD_TO_SELECTION | sublime.SEMI_TRANSIENT | sublime.CLEAR_TO_RIGHT
+                view = window.open_file(f"{path}:{line}:{column}", flags=flags)
                 view.assign_syntax("Clojure (Tutkain).sublime-syntax")
                 view.set_scratch(True)
                 view.set_read_only(True)
-
-            window.focus_view(view)
-            show(view, line, column)
+                rename(view, view_name)
+            finally:
+                os.remove(path)
 
 
 def parse_location(info):
