@@ -130,14 +130,11 @@ class Client(ABC):
         if ns := item.get(edn.Keyword("ns")):
             self.namespace = ns
 
-        if form := item.get(edn.Keyword("form")):
-            if form.startswith("^:tutkain/internal"):
-                pass
-            elif handler := self.handlers.get(form):
-                try:
-                    handler.__call__(item)
-                finally:
-                    self.handlers.pop(form, None)
+        if (form := item.get(edn.Keyword("form"))) and (handler := self.handlers.get(form)):
+            try:
+                handler.__call__(item)
+            finally:
+                self.handlers.pop(form, None)
         else:
             self.recvq.put(item)
 
@@ -281,8 +278,8 @@ class JVMClient(Client):
         self.ready_for_cljs = False
 
     def switch_namespace(self, ns):
-        code = f"^:tutkain/internal (do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1))"
-        self.eval(code)
+        code = f"(do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1))"
+        self.eval(code, handler=lambda _: None)
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put
@@ -380,8 +377,8 @@ class JSClient(Client):
         return True
 
     def switch_namespace(self, ns):
-        code = f"^:tutkain/internal (in-ns '{ns})"
-        self.eval(code)
+        code = f"(in-ns '{ns})"
+        self.eval(code, handler=lambda _: None)
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.handlers[code] = handler or self.recvq.put
