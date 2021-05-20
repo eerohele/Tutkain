@@ -119,12 +119,16 @@
     (for [^File file (file-seq (File. path))]
       (.replace ^String (.getPath file) path ""))))
 
-(def classfiles
-  (delay
-    (for [prop (filter #(System/getProperty %1) ["sun.boot.class.path" "java.ext.dirs" "java.class.path"])
-          path (.split (System/getProperty prop) File/pathSeparator)
-          ^String file (path-files path) :when (and (.endsWith file ".class") (not (.contains file "__")))]
-      file)))
+(def class-files
+  (->>
+    ["sun.boot.class.path" "java.ext.dirs" "java.class.path"]
+    (sequence
+      (comp
+        (keep #(some-> ^String % System/getProperty (.split File/pathSeparator)))
+        cat
+        (mapcat path-files)
+        (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__"))))))
+    delay))
 
 (defn- classname [^String file]
   (.. file (replace ".class" "") (replace File/separator ".")))
@@ -156,7 +160,7 @@
           (filter #(re-find #"^[^\$]+\.class" %))
           (map classname)
           (map annotate-class))
-        @classfiles)
+        @class-files)
       (sort-by :candidate))))
 
 (def nested-classes
@@ -167,7 +171,7 @@
           (filter #(re-find #"^[^\$]+(\$[^\d]\w*)+\.class" %))
           (map classname)
           (map annotate-class))
-        @classfiles)
+        @class-files)
       (sort-by :candidate))))
 
 (defn resolve-class
