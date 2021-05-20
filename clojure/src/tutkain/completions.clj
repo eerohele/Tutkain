@@ -170,13 +170,18 @@
         @classfiles)
       (sort-by :candidate))))
 
-(defn resolve-class [ns sym]
+(defn resolve-class
+  "Given an ns symbol and a symbol, if the symbol resolves to a class in the
+  context of the given namespace, return that class."
+  [ns sym]
   (try (let [val (ns-resolve ns sym)]
          (when (class? val) val))
     (catch Exception e
       (when (not= ClassNotFoundException
               (class (main/repl-exception e)))
         (throw e)))))
+
+(comment (resolve-class 'clojure.core 'String) ,)
 
 (defn annotate-var [var]
   (let [{macro :macro arglists :arglists var-name :name doc :doc} (meta var)
@@ -226,7 +231,18 @@
   [class]
   (map #(hash-map :candidate % :type :static-method) (static-members class)))
 
+(defn scoped?
+  "Given a string prefix, return true if it's scoped.
+
+  A prefix is scoped if it contains, but does not start with, a forward slash."
+  [^String prefix]
+  (and (not (.startsWith prefix "/")) (.contains prefix "/")))
+
 (defn scoped-candidates
+  "Given a scoped string prefix (e.g. \"set/un\" for clojure.set/union) and an
+  ns symbol, return auto-completion candidates that match the prefix.
+
+  Searches static class members and ns public vars."
   [^String prefix ns]
   (when-let [prefix-scope (first (.split prefix "/"))]
     (let [scope (symbol prefix-scope)
@@ -234,9 +250,11 @@
                        (static-member-candidates class)
                        (when-let [ns (or (find-ns scope) (scope (ns-aliases ns)))]
                          (ns-public-var-candidates ns)))]
-      (map #(update % :candidate (fn [c] (str scope "/" c))) candidates))))
+      (map (fn [candidate] (update candidate :candidate #(str scope "/" %))) candidates))))
 
 (defn candidate?
+  "Given a string prefix and a candidate map, return true if the candidate
+  starts with the prefix."
   [^String prefix {:keys [^String candidate]}]
   (.startsWith candidate prefix))
 
@@ -245,24 +263,20 @@
   (let [candidate? (partial candidate? prefix)]
     (sequence
       (comp
+        ;; Ignore nested classes if the prefix does not contain a dollar sign.
         (remove #(and (not (.contains prefix "$")) (.contains ^String (:candidate %) "$")))
+        ;; The class candidate list is long and sorted, so instead of filtering
+        ;; the entire list, we drop until we get the first candidate, then take
+        ;; until the first class that's not a candidate.
         (drop-while (complement candidate?))
         (take-while candidate?))
       @class-candidate-list)))
 
-(defn generic-candidates
-  [ns]
-  (concat
-    (special-form-candidates)
-    (ns-candidates ns)
-    (ns-var-candidates ns)
-    (ns-class-candidates ns)))
-
-(defn scoped?
-  [^String prefix]
-  (and (not (.startsWith prefix "/")) (.contains prefix "/")))
-
 (defn candidates
+  "Given a string prefix and ns symbol, return auto-completion candidates for
+  the string.
+
+  See the comment form below for an example."
   [^String prefix ns]
   (when (seq prefix)
     (let [candidates (cond
@@ -270,8 +284,16 @@
                        (.startsWith prefix ".") (ns-java-method-candidates ns)
                        (scoped? prefix) (scoped-candidates prefix ns)
                        (.contains prefix ".") (concat (ns-candidates ns) (class-candidates prefix))
-                       :else (generic-candidates ns))]
+                       :else (concat (special-form-candidates)
+                               (ns-candidates ns)
+                               (ns-var-candidates ns)
+                               (ns-class-candidates ns)))]
       (sort-by :candidate (filter #(candidate? prefix %) candidates)))))
+
+(comment
+  (candidates "ran" 'clojure.core)
+  (time (dorun (candidates "m" 'clojure.core)))
+  ,)
 
 (defmethod handle :completions
   [{:keys [prefix ns] :as message}]

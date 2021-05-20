@@ -9,10 +9,15 @@
    (java.util Base64)))
 
 (defn respond-to
+  "Respond to a backchannel op message."
   [{:keys [id out-fn]} response]
   (out-fn (cond-> response id (assoc :id id))))
 
-(defmulti handle :op)
+(defmulti handle
+  "Handle a backchannel op message.
+
+  Dispatches on :op."
+  :op)
 
 (defmethod handle :echo
   [message]
