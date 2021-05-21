@@ -17,16 +17,21 @@
   {:candidate (str kw) :type :keyword})
 
 (defn all-keywords
+  "Return every interned keyword in the runtime."
   []
   (let [^Field field (.getDeclaredField clojure.lang.Keyword "table")]
     (.setAccessible field true)
     (map keyword (.keySet ^ConcurrentHashMap (.get field nil)))))
+
+(comment (all-keywords),)
 
 (defn- resolve-namespace
   [sym aliases]
   (get aliases sym (find-ns sym)))
 
 (defn qualified-auto-resolved-keywords
+  "Given a list of keywords and a list of ns aliases, return all available
+  qualified auto-resolved keyword candidates."
   [keywords aliases]
   (mapcat (fn [[ns-alias _]]
             (let [ns-alias-name (str (resolve-namespace (symbol ns-alias) aliases))]
@@ -39,6 +44,8 @@
     aliases))
 
 (defn unqualified-auto-resolved-keywords
+  "Given a list of keywords and an ns symbol, return all unqualified
+  auto-resolved keywords in the context of that namespace."
   [keywords ns]
   (sequence
     (comp
@@ -47,25 +54,44 @@
       (map annotate-keyword))
     keywords))
 
+(comment (unqualified-auto-resolved-keywords (all-keywords) 'clojure.main),)
+
 (defn keyword-namespace-aliases
+  "Given a map of ns alias to ns, return a list of keyword namespace alias
+  candidates."
   [aliases]
   (map (comp annotate-keyword #(str "::" (name %)) name first) aliases))
 
-(defn single-colon-keywords
+(comment (keyword-namespace-aliases (ns-aliases 'clojure.main)),)
+
+(defn simple-keywords
+  "Given a list of keywords, return a list of simple keyword candidates."
   [keywords]
   (map annotate-keyword keywords))
 
+(comment (simple-keywords (all-keywords)),)
+
 (defn keyword-candidates
+  "Given a list of keywords, a map of ns alias to ns symbol, and a context
+  ns, return the keyword candidates available in that context."
   [keywords aliases ns]
   (concat
     (qualified-auto-resolved-keywords keywords aliases)
     (unqualified-auto-resolved-keywords keywords ns)
     (keyword-namespace-aliases aliases)
-    (single-colon-keywords keywords)))
+    (simple-keywords keywords)))
+
+(comment
+  (keyword-candidates (all-keywords) (ns-aliases 'clojure.main) 'clojure.main)
+  )
 
 (defn namespaces
+  "Given an ns symbol, return a list of ns symbols available in the context of
+  that ns."
   [ns]
   (concat (map ns-name (all-ns)) (keys (ns-aliases ns))))
+
+(comment (namespaces 'clojure.main),)
 
 (defn ns-public-vars
   [ns]
@@ -76,14 +102,20 @@
   (filter var? (vals (ns-map ns))))
 
 (defn ns-classes
+  "Given an ns symbol, return every class imported into that namespace."
   [ns]
   (keys (ns-imports ns)))
 
+(comment (ns-classes 'clojure.main),)
+
 (defn- static?
+  "Given a member of a class, return true if it is a static member."
   [^Member member]
   (-> member .getModifiers Modifier/isStatic))
 
 (defn ns-java-methods
+  "Given an ns symbol, return all Java methods that are available in the
+  context of that ns."
   [ns]
   (sequence
     (comp
@@ -94,7 +126,10 @@
       (distinct))
     (ns-imports ns)))
 
+(comment (ns-java-methods 'clojure.main))
+
 (defn static-members
+  "Given a class, return all static members of that class."
   [^Class class]
   (sequence
     (comp
@@ -102,6 +137,8 @@
       (map #(.getName ^Member %))
       (dedupe))
     (concat (.getMethods class) (.getDeclaredFields class))))
+
+(comment (static-members java.lang.String),)
 
 (defn path-files [^String path]
   (cond
@@ -201,39 +238,56 @@
   '[def if do let quote var fn loop recur throw try monitor-enter monitor-exit dot new set!])
 
 (defn special-form-candidates
+  "Return all Clojure special form candidates."
   []
   (map #(hash-map :candidate (name %) :type :special-form :ns "clojure.core") special-forms))
 
-(defn annotate-namespace
-  [ns]
-  {:candidate (name ns) :type :namespace})
-
 (defn ns-candidates
+  "Given an ns symbol, return all namespace candidates that are available in
+  the context of that namespace."
   [ns]
   (map #(let [doc (some-> % find-ns meta :doc)]
-          (cond-> (annotate-namespace %)
+          (cond-> {:candidate (name %) :type :namespace}
             doc (assoc :doc doc)))
     (namespaces ns)))
 
+(comment (ns-candidates 'clojure.main),)
+
 (defn ns-var-candidates
+  "Given an ns symbol, return all vars that are available in the context of
+  that namespace."
   [ns]
   (map annotate-var (ns-vars ns)))
 
 (defn ns-public-var-candidates
+  "Given an ns symbol, return all public var candidates in that namespace."
   [ns]
   (map annotate-var (ns-public-vars ns)))
 
+(comment (ns-public-var-candidates 'clojure.set),)
+
 (defn ns-class-candidates
+  "Given an ns symbol, return all class candidates that are imported into that
+  namespace."
   [ns]
   (map #(hash-map :candidate (name %) :type :class) (ns-classes ns)))
 
+(comment (ns-class-candidates 'clojure.main),)
+
 (defn ns-java-method-candidates
+  "Given an ns symbol, return all Java method candidates that are available in
+  the context of that namespace."
   [ns]
   (map #(hash-map :candidate % :type :method) (ns-java-methods ns)))
 
+(comment (ns-java-method-candidates 'clojure.core),)
+
 (defn static-member-candidates
+  "Given a class, return all static member candidates for that class."
   [class]
   (map #(hash-map :candidate % :type :static-method) (static-members class)))
+
+(comment (static-member-candidates java.lang.String),)
 
 (defn scoped?
   "Given a string prefix, return true if it's scoped.
