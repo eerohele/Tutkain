@@ -145,7 +145,7 @@ class TestJVMClient(ViewTestCase):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
         self.eval_context()
         # Clients sends ns first
-        self.assertTrue(self.server.recv().startswith("^:tutkain/internal"))
+        self.assertTrue(self.server.recv().startswith("(do (or (some->> "))
         self.eval_context()
         self.assertEquals("(reset)\n", self.server.recv())
 
