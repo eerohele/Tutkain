@@ -1,4 +1,4 @@
-**Note**: You might want to check back later. I'm currently rewriting large parts of Tutkain. I will drop nREPL support and focus on socket REPL support instead.
+**IMPORTANT**: Tutkain v0.7.0 (alpha, released on 2021-05-21) drops support for nREPL and targets the Clojure socket REPL instead. If you used the nREPL version of Tutkain and want to keep using it, fork Tutkain at 3a87a3ceafaf3731f9febe9c42888f647d79948f.
 
 ----
 
