@@ -780,8 +780,8 @@ class TutkainExpandSelectionCommand(TextCommand):
             if not region.empty() or selectors.ignore(view, region.begin()):
                 view.run_command("expand_selection", {"to": "scope"})
             else:
-                form = forms.find_adjacent(view, region.begin())
-                form and selections.add(form)
+                if form := forms.find_adjacent(view, region.begin()):
+                    selections.add(form)
 
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
