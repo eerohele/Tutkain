@@ -718,9 +718,6 @@ class TutkainEventListener(EventListener):
     def on_init(self, views):
         reconnect(views)
 
-    def on_load_project_async(self, window):
-        reconnect(window.views())
-
     def on_modified_async(self, view):
         inline.clear(view)
 
