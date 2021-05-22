@@ -169,7 +169,6 @@ class TestJVMClient(ViewTestCase):
             edn.Keyword("op"): edn.Keyword("load"),
             edn.Keyword("code"): "(ns foo.bar) (defn x [y] y)",
             edn.Keyword("file"): None,
-            edn.Keyword("dialect"): edn.Keyword("clj"),
             edn.Keyword("id"): response.get(edn.Keyword("id"))
         }, response)
 
