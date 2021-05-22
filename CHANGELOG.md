@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.7.1 (alpha) - 2021-05-22
+
+- Fix ClojureScript auto-completion
+
 ## 0.7.0 (alpha) - 2021-05-21
 
 - BREAKING: Tutkain can now only connect to the [socket REPL](https://clojure.org/reference/repl_and_main#_launching_a_socket_server). It no longer supports nREPL.
