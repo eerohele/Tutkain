@@ -1,0 +1,65 @@
+(ns repl.load-blob
+  (:require
+   [clojure.edn :as edn]
+   [clojure.spec.alpha :as spec]
+   [cognitect.transcriptor :as xr]
+   [tutkain.backchannel :as backchannel]
+   [tutkain.load-blob])
+  (:import
+   (java.util.concurrent LinkedBlockingQueue TimeUnit)))
+
+(spec/def ::tag
+  #{:ret :err})
+
+(spec/def ::val
+  string?)
+
+(spec/def ::ret
+  (spec/keys :req-un [::tag ::val]))
+
+(spec/def ::exception true?)
+
+(spec/def ::ex-ret
+  (spec/keys :req-un [::exception]))
+
+(spec/def ::ex
+  (spec/merge ::ret ::ex-ret))
+
+(def recvq (LinkedBlockingQueue.))
+
+(defn recv
+  []
+  (-> recvq (.poll 1 TimeUnit/SECONDS)))
+
+(backchannel/handle
+  {:op :load
+   :file nil
+   :code "(defn square [x] (* x x))"
+   :out-fn #(.put recvq %)})
+
+(recv)
+(xr/check! ::ret)
+
+(backchannel/handle
+  {:op :load
+   :file "/my/path/math.clj"
+   :code "(defn square [x] (* x x))"
+   :out-fn #(.put recvq %)})
+
+(recv)
+(xr/check! ::ret)
+
+(backchannel/handle
+  {:op :load
+   :file "/my/path/math.clj"
+   :code "(defn square [x] (* x x)" ;; no closing paren
+   :out-fn #(.put recvq %)})
+
+(def ex (recv))
+(xr/check! ::ex ex)
+(xr/check!
+  #{#:clojure.error{:phase :read-source
+                    :line 2
+                    :column 1
+                    :source "/my/path/math.clj"}}
+  (-> ex :val edn/read-string :via first :data))
