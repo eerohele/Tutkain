@@ -338,13 +338,10 @@ class TutkainEvaluateCommand(TextCommand):
         return self.without_discard_macro(eval_region)
 
     def evaluate_view(self, client, code):
-        file = self.view.file_name()
-
         client.backchannel.send({
             "op": edn.Keyword("load"),
             "code": code,
-            "file": file,
-            "dialect": dialects.for_point(self.view, 0)
+            "file": self.view.file_name()
         }, handler=client.recvq.put)
 
     def handler(self, region, client, response, inline_result):
