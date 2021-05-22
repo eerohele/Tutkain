@@ -59,7 +59,6 @@
 (xr/check! ::ex ex)
 (xr/check!
   #{#:clojure.error{:phase :read-source
-                    :line 2
-                    :column 1
                     :source "/my/path/math.clj"}}
-  (-> ex :val edn/read-string :via first :data))
+  (-> ex :val edn/read-string :via first :data
+    (select-keys [:clojure.error/phase :clojure.error/source])))
