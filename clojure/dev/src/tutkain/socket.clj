@@ -10,20 +10,28 @@
         output (.getOutputStream socket)
         writer (PrintWriter. output true)
         input (.getInputStream socket)
-        reader (BufferedReader. (InputStreamReader. input))
+        reader (-> input InputStreamReader. BufferedReader.)
         q (LinkedBlockingQueue.)]
+    (future
+      (loop []
+        (when-not (.isClosed socket)
+          (when-some [result (.readLine reader)]
+            (.put recvq result)
+            (recur)))))
+
     (future
       (loop []
         (let [item (.take q)]
           (when-not (= ::quit item)
             (.println writer (pr-str item))
             (recur))))
-
-      (.shutdownOutput socket))
-
-    (future
-      (loop []
-        (when-some [result (.readLine reader)]
-          (.put recvq result)
-          (recur))))
+      (.shutdownInput socket))
     q))
+
+(comment
+  (def recvq (LinkedBlockingQueue.))
+  (def sendq (client :host "localhost" :port 1235 :recvq recvq))
+  (.put sendq "Hello")
+  (.take recvq)
+  (.put sendq ::quit)
+  )

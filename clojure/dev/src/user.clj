@@ -2,8 +2,13 @@
   (:require [cognitect.transcriptor :as xr]))
 
 (defn run-tests
-  [& _]
+  []
   (run! xr/run (xr/repl-files "repl")))
+
+(defn -main
+  [& _]
+  (run-tests)
+  (shutdown-agents))
 
 (comment
   (run-tests)
