@@ -91,10 +91,11 @@
 
 (rsend :repl/quit)
 
-(socket/client
+(try
+  (socket/client
     :host (:host backchannel-addr)
     :port (:port backchannel-addr)
     :recvq brecvq)
-
-;; Can't connect to backchannel anymore after quitting the REPL
-(xr/check! (partial instance? ConnectException) *e)
+  (catch ConnectException _
+    ;; Can't connect to backchannel anymore after quitting the REPL
+    (xr/check! any?)))
