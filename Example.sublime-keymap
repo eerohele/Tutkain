@@ -14,13 +14,13 @@
         "command": "cancel_build"
     },
 
-    // Connect to nREPL server.
+    // Connect to a socket server.
     {
         "keys": ["ctrl+c", "ctrl+x"],
         "command": "tutkain_connect"
     },
 
-    // Disconnect from nREPL server.
+    // Disconnect from a socket server.
     {
         "keys": ["ctrl+c", "ctrl+d"],
         "command": "tutkain_disconnect"
@@ -34,7 +34,7 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
-    // Evaluate view.
+    // Evaluate the currently active view (Clojure only).
     {
         "keys": ["ctrl+c", "ctrl+k"],
         "command": "tutkain_evaluate",
@@ -61,8 +61,8 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
-    // Evaluate current selections or the outermost form and show the result both in the REPL view
-    // and inline, right after the evaluated form
+    // Evaluate the outermost form and show the result both in the REPL view
+    // and inline, right after the evaluated form.
     {
         "keys": ["ctrl+c", "ctrl+a"],
         "command": "tutkain_evaluate",
@@ -85,20 +85,22 @@
         "args": {"scope": "input"}
     },
 
-    // Print last exception
+    // Print the stack trace of the last exception.
     {
         "keys": ["ctrl+c", "ctrl++"],
         "command": "tutkain_evaluate",
         "args": {"code": "*e"}
     },
 
-    // Parameterize evaluations
+    // Pretty-print the value of the form under the caret.
     {
         "keys": ["ctrl+p", "ctrl+p"],
         "command": "tutkain_evaluate",
-        "args": {"code": "((requiring-resolve 'clojure.pprint/pprint) $0)", "scope": "innermost"},
+        "args": {"code": "((requiring-resolve 'clojure.pprint/pprint) $0)", "scope": "form"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
+
+    // Inspect the return value of the outermost S-expression under the caret.
     {
         "keys": ["ctrl+p", "ctrl+i"],
         "command": "tutkain_evaluate",
@@ -106,6 +108,7 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // Macroexpand the innermost S-expression under the caret.
     {
         "keys": ["ctrl+p", "ctrl+m"],
         "command": "tutkain_evaluate",
@@ -113,6 +116,7 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // Switch to the cljs.user namespace (ClojureScript).
     {
         "keys": ["ctrl+p", "ctrl+u"],
         "command": "tutkain_evaluate",
@@ -120,6 +124,7 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure.clojurescript"}]
     },
 
+    // Switch to the user namespace (Clojure).
     {
         "keys": ["ctrl+p", "ctrl+u"],
         "command": "tutkain_evaluate",
@@ -127,7 +132,7 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure - source.clojure.clojurescript"}]
     },
 
-    // Prompt for a value for the symbol under the first caret and def it
+    // Prompt for a value for the symbol under the first caret and def it.
     {
         "keys": ["ctrl+p", "ctrl+e"],
         "command": "tutkain_evaluate",
@@ -135,8 +140,7 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}],
     },
 
-
-    // Prompt for a namespace to switch to
+    // Prompt for a namespace to switch to.
     {
         "keys": ["ctrl+p", "ctrl+n"],
         "command": "tutkain_evaluate",
@@ -151,7 +155,7 @@
         "args": {"ns": "user", "code": "(reset)"},
     },
 
-    // Clear the result view and the output view.
+    // Clear the currently active REPL view.
     {
         "keys": ["ctrl+c", "ctrl+z"],
         "command": "tutkain_clear_output_view"
@@ -165,7 +169,7 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
-    // Evaluate teh current view and run the clojure.test test under the cursor.
+    // Evaluate the current view and run the clojure.test deftest under the cursor.
     {
         "keys": ["ctrl+c", "ctrl+v"],
         "command": "tutkain_run_tests",
@@ -175,8 +179,8 @@
 
     // Show unsuccessful tests.
     //
-    // After running tests, run this command to show a list of unsuccessful tests (failures and
-    // errors) and navigate between them.
+    // After running tests, run this command to show a list of unsuccessful
+    // tests (failures and errors) and navigate between them.
     {
         "keys": ["ctrl+c", "ctrl+u"],
         "command": "tutkain_show_unsuccessful_tests",
@@ -187,7 +191,7 @@
     {
         "keys": ["ctrl+c", "ctrl+r"],
         "command": "tutkain_interrupt_evaluation",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure - source.clojure.clojurescript"}]
     },
 
     // Open new scratch view.
