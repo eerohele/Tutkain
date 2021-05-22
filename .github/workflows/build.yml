@@ -1,0 +1,35 @@
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11.0.5'
+
+      - uses: DeLaGuardo/setup-clojure@3.3
+        with:
+          cli: '1.10.3.810'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
+
+      - name: Cache Git dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/.gitlibs
+          key: ${{ runner.os }}-gitlibs-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-gitlibs
+
+      - name: Run Clojure tests
+        run: clojure -X:dev:shadow-cljs user/-main
