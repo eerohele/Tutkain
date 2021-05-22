@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.7.2 (alpha) - 2021-05-22
+
+- Fix **Tutkain: Evaluate** » **Active view** return value printing
+
 ## 0.7.1 (alpha) - 2021-05-22
 
 - Fix ClojureScript auto-completion
