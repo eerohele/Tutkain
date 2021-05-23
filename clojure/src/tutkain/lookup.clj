@@ -10,6 +10,7 @@
 ;; Adapted from nrepl.util.lookup
 
 (defn special-sym-meta
+  "Given a Clojure special form, return metadata for that special form."
   [sym]
   (let [f (requiring-resolve 'clojure.repl/special-doc)]
     (assoc (f sym)
@@ -18,12 +19,21 @@
       :special-form "true")))
 
 (defn fnspec
+  "Given a var, return a description of the fnspec of that var, if any."
   [v]
   (into {}
     (keep #(some->> (get (spec/get-spec v) %) spec/describe pr-str (vector %)))
     [:args :ret :fn]))
 
 (defn sym-meta
+  "Given an ns symbol and a symbol, return the metadata for the var that symbol
+  names.
+
+  If the symbol names a namespace, use the path of the first intern mapping in
+  that namespace as the :file value.
+
+  If the symbol names a function that has an fnspec, describe the fnspec under
+  the :fnspec key."
   [ns sym]
   (if-some [found-ns (find-ns sym)]
     (merge (meta found-ns)
@@ -47,11 +57,19 @@
     m))
 
 (defn resolve-file
+  "Given the value of the :file key of a var metadata map, resolve the file
+  path against the current classpath."
   [file]
   (let [s (str file)]
     (or (some-> s io/resource str) s)))
 
 (defn lookup
+  "Given an ns symbol and a string representation of a clojure.lang.Named
+  instance, return selected metadata of the var it names.
+
+  If the Named is a keyword that names a spec, describe the spec.
+
+  Otherwise, if it's a symbol, describe the var that symbol names."
   [ns named]
   (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))
         named (binding [*ns* ns] (read-string named))]
