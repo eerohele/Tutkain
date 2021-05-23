@@ -6,9 +6,7 @@
    [cljs.repl :as repl]
    [tutkain.completions :as completions]
    [tutkain.lookup :as lookup]
-   [tutkain.backchannel :refer [handle respond-to]])
-  (:import
-   (clojure.lang ExceptionInfo)))
+   [tutkain.backchannel :refer [handle respond-to]]))
 
 (set! *warn-on-reflection* true)
 
