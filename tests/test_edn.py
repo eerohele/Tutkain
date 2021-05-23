@@ -1,19 +1,20 @@
-from unittest import TestCase
-from .util import start_client, stop_client, start_server
+"""Unit tests for the EDN module."""
 
+from unittest import TestCase
 from Tutkain.api import edn
+from .util import start_client, stop_client, start_server
 
 
 class TestEdn(TestCase):
     @classmethod
-    def setUpClass(self):
-        self.server, self.stop_event = start_server()
-        self.client = start_client(self.server)
+    def setUpClass(cls):
+        cls.server, cls.stop_event = start_server()
+        cls.client = start_client(cls.server)
 
     @classmethod
-    def tearDownClass(self):
-        self.stop_event.set()
-        stop_client(self.client)
+    def tearDownClass(cls):
+        cls.stop_event.set()
+        stop_client(cls.client)
 
     def setUp(self):
         self.buffer = self.client.makefile(mode="rw")
@@ -21,8 +22,7 @@ class TestEdn(TestCase):
     def test_character(self):
         self.buffer.write("\\newline")
         self.buffer.flush()
-        s = self.buffer.read(8)
-        self.assertEquals("\n", edn.read(s))
+        self.assertEqual("\n", edn.read(self.buffer.read(8)))
 
     def test_roundtrip(self):
         for val in [
@@ -49,4 +49,4 @@ class TestEdn(TestCase):
             {edn.Keyword("a"): [{edn.Keyword("b"): edn.Keyword("c")}]},
         ]:
             edn.write(self.buffer, val)
-            self.assertEquals(val, edn.read_line(self.buffer))
+            self.assertEqual(val, edn.read_line(self.buffer))
