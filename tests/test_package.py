@@ -146,7 +146,6 @@ class TestJVMClient(ViewTestCase):
         self.eval_context()
         # Clients sends ns first
         self.assertTrue(self.server.recv().startswith("(do (or (some->> "))
-        self.eval_context()
         self.assertEquals("(reset)\n", self.server.recv())
 
     def test_ns(self):
