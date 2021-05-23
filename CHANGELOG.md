@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.7.3 (alpha) - 2021-05-23
+
+- Fix exception stack trace line and column numbers
+- Don't send eval context (file, line & column) before ns switch
+
 ## 0.7.2 (alpha) - 2021-05-22
 
 - Fix **Tutkain: Evaluate** » **Active view** return value printing
