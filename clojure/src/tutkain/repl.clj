@@ -35,6 +35,7 @@
    (let [EOF (Object.)
          lock (Object.)
          out *out*
+         in *in*
          out-fn (fn [message]
                   (binding [*out* out
                             *flush-on-newline* true
@@ -45,7 +46,7 @@
          repl-thread (Thread/currentThread)
          backchannel (backchannel/open
                        (assoc opts
-                         :xform-in #(assoc % :in *in* :repl-thread repl-thread)
+                         :xform-in #(assoc % :in in :repl-thread repl-thread)
                          :xform-out #(dissoc % :in)))]
      (main/with-bindings
        (in-ns 'user)
@@ -62,7 +63,7 @@
            (loop []
              (when
                (try
-                 (let [[form s] (read+string {:eof EOF :read-cond :allow} *in*)]
+                 (let [[form s] (read+string {:eof EOF :read-cond :allow} in)]
                    (binding [*file* (or (backchannel/eval-context :file) "NO_SOURCE_PATH")
                              *source-path* (or (some-> (backchannel/eval-context :file) File. .getName) "NO_SOURCE_FILE")]
                      (try
