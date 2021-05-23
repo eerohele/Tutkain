@@ -1,7 +1,6 @@
 (ns tutkain.cljs
   (:refer-clojure :exclude [ns-aliases])
   (:require
-   [clojure.string :as string]
    [cljs.analyzer :as analyzer]
    [cljs.analyzer.api :as analyzer.api]
    [cljs.repl :as repl]
@@ -89,7 +88,7 @@
   (get (ns-aliases env ns) alias))
 
 (defn ^:private var-type
-  [{:keys [macro fn-var tag] :as x}]
+  [{:keys [macro fn-var tag]}]
   (cond
     (= tag 'cljs.core/MultiFn) :multimethod
     macro :macro
@@ -143,26 +142,14 @@
                      :else (concat (local-candidates env ns) (core-candidates env) (ns-alias-candidates env ns)))]
     (sort-by :candidate (filter #(completions/candidate? prefix %) candidates))))
 
-(defn ^:private no-shadow?
-  [ex]
-  ;; For now, fail silently if the error is that the shadow-cljs watch
-  ;; isn't running.
-  (string/starts-with? (some-> ex Throwable->map :via first :at first name)
-    "shadow.cljs.devtools.server.runtime"))
-
 (defn ^:private parse-ns
   [ns]
   (or (some-> ns symbol) 'cljs.user))
 
 (defmethod handle :completions
   [{:keys [ns prefix build-id] :as message}]
-  (try
-    (let [completions (candidates (compiler-env build-id) prefix (parse-ns ns))]
-      (respond-to message {:completions completions}))
-    (catch ExceptionInfo ex
-      (if (no-shadow? ex)
-        (respond-to message {:completions []})
-        (throw ex)))))
+  (let [completions (candidates (compiler-env build-id) prefix (parse-ns ns))]
+    (respond-to message {:completions completions})))
 
 (comment
   (candidates (compiler-env :browser) "c" 'cljs.core)
