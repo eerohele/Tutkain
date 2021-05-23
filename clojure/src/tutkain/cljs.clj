@@ -105,8 +105,12 @@
 (defn scoped-candidates
   [env ^String prefix ns]
   (when-some [alias (some-> prefix (.split "/") first symbol)]
-    (map (fn [v] (update (annotate-var v) :candidate #(str alias "/" %)))
-      (remove :private (vals (some->> (ns-alias->ns-sym env ns alias) (analyzer.api/ns-interns env)))))))
+    (sequence
+      (comp
+        (map val)
+        (remove :private)
+        (map (fn [v] (update (annotate-var v) :candidate #(str alias "/" %)))))
+      (some->> (ns-alias->ns-sym env ns alias) (analyzer.api/ns-interns env)))))
 
 (defn ^:private core-candidates
   [env]
