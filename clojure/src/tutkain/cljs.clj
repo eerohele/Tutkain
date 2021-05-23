@@ -64,12 +64,16 @@
     :keywordize-keys :else :gen-class})
 
 (defn all-keywords
+  "Given a compiler environment, return a list of all of the keywords the
+  compiler knows about."
   [env]
   (into language-keywords
     (filter keyword?)
     (keys (::analyzer/constant-table @env))))
 
 (defn ns-candidates
+  "Given a compiler environment, return all namespace auto-completion
+  candidates."
   [env]
   (map completions/annotate-namespace (analyzer.api/all-ns env)))
 
@@ -78,6 +82,8 @@
   (:requires (analyzer.api/find-ns env ns)))
 
 (defn ns-alias-candidates
+  "Given a compiler environment and an ns symbol, return all namespace alias
+  auto-completion candidates available in the given namespace."
   [env ns]
   (map completions/annotate-namespace (map first (ns-aliases env ns))))
 
@@ -101,6 +107,8 @@
     (seq doc) (assoc :doc doc)))
 
 (defn scoped-candidates
+  "Given a compiler environment, a string prefix, and an ns symbol, return all
+  scoped candidates that match the given prefix."
   [env ^String prefix ns]
   (when-some [alias (some-> prefix (.split "/") first symbol)]
     (sequence
@@ -111,6 +119,8 @@
       (some->> (ns-alias->ns-sym env ns alias) (analyzer.api/ns-interns env)))))
 
 (defn ^:private core-candidates
+  "Given a compiler environment, return all auto-completion candidates in
+  cljs.core."
   [env]
   (sequence
     (comp
@@ -130,6 +140,8 @@
     (analyzer.api/ns-interns env ns)))
 
 (defn ^:private keyword-candidates
+  "Given a compiler environment and an ns symbol, return all keyword
+  auto-completion candidates in the context of the namespace."
   [env ns]
   (completions/keyword-candidates
     (all-keywords env)
@@ -137,6 +149,8 @@
     ns))
 
 (defn candidates
+  "Given a compiler environment, a string prefix, and an ns symbol, return all
+  applicable auto-completion candidates for the prefix."
   [env ^String prefix ns]
   (assert (symbol? ns))
   (let [candidates (cond
@@ -164,6 +178,8 @@
   ,)
 
 (defn special-sym-meta
+  "Given a symbol that names a ClojureScript special form, return metadata for
+  that special form."
   [sym]
   (when-some [{:keys [doc forms]} (get repl/special-doc-map sym)]
     {:name (symbol "cljs.core" (str sym))
@@ -191,6 +207,8 @@
       (or (special-sym-meta sym) (core-sym-meta env sym) (ns-sym-meta env ns sym)))))
 
 (defn info
+  "Given a compiler environment, a symbol that names a clojure.lang.Named
+  instance, and an ns symbol, return selected metadata for the named var."
   [env named ns]
   (let [{:keys [arglists file] :as ret} (sym-meta env ns named)]
     (cond-> (select-keys ret [:arglists :doc :file :line :column :name])
