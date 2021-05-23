@@ -195,11 +195,6 @@
 
 (defmethod handle :lookup
   [{:keys [^String named ns build-id] :as message}]
-  (try
-    (let [env (compiler-env build-id)
-          named (symbol named)]
-      (respond-to message {:info (info env named (parse-ns ns))}))
-    (catch ExceptionInfo ex
-      (if (no-shadow? ex)
-        (respond-to message {:info nil})
-        (throw ex)))))
+  (let [env (compiler-env build-id)
+        named (symbol named)]
+    (respond-to message {:info (info env named (parse-ns ns))})))
