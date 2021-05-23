@@ -119,7 +119,9 @@
       (map annotate-var))
     (analyzer.api/ns-interns env 'cljs.core)))
 
-(defn ^:private local-candidates
+(defn ^:private ns-var-candidates
+  "Given a compiler environment and an ns symbol, return all var
+  auto-completion candidates in the namespace."
   [env ns]
   (sequence
     (comp
@@ -141,7 +143,7 @@
                      (.startsWith prefix ":") (keyword-candidates env ns)
                      (completions/scoped? prefix) (scoped-candidates env prefix ns)
                      (.contains prefix ".") (ns-candidates env)
-                     :else (concat (local-candidates env ns) (core-candidates env) (ns-alias-candidates env ns)))]
+                     :else (concat (ns-var-candidates env ns) (core-candidates env) (ns-alias-candidates env ns)))]
     (sort-by :candidate (filter #(completions/candidate? prefix %) candidates))))
 
 (defn ^:private parse-ns
