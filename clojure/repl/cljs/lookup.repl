@@ -29,3 +29,6 @@
 ;; special forms
 (cljs/info (env) 'def 'my.browser.app)
 (xr/check! ::specs/info)
+
+(cljs/info (env) 'cljs.pprint 'my.browser.app)
+(xr/check! ::specs/info)

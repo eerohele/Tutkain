@@ -204,7 +204,13 @@
   (let [sym (symbol (name named))]
     (if (qualified-symbol? named)
       (qualified-sym-meta env ns (symbol (namespace named)) sym)
-      (or (special-sym-meta sym) (core-sym-meta env sym) (ns-sym-meta env ns sym)))))
+      (if-some [found-ns (find-ns sym)]
+        (merge (meta found-ns)
+          {:name sym
+           :file (->> sym (analyzer.api/ns-interns env) vals first :file)
+           :line 0
+           :column 0})
+        (or (special-sym-meta sym) (core-sym-meta env sym) (ns-sym-meta env ns sym))))))
 
 (defn info
   "Given a compiler environment, a symbol that names a clojure.lang.Named
