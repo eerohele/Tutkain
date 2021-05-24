@@ -203,10 +203,6 @@ class Client(ABC):
 
 
 class JVMClient(Client):
-    handshake_payloads = {
-        "print_version": """#?(:bb (println "Babashka" (System/getProperty "babashka.version")) :clj (println "Clojure" (clojure-version)))"""
-    }
-
     def handshake(self):
         log.debug({"event": "client/handshake", "data": self.sink_until_prompt()})
 
@@ -265,7 +261,7 @@ class JVMClient(Client):
             "test.clj"
         ])
 
-        self.write_line(self.handshake_payloads["print_version"])
+        self.write_line("""(println "Clojure" (clojure-version))""")
         self.recvq.put(edn.read_line(self.buffer))
 
         log.debug({"event": "client/handshake", "data": self.buffer.readline()})

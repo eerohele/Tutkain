@@ -57,7 +57,7 @@ class TestJVMClient(TestCase):
                         self.assertEquals(filename, response.get(edn.Keyword("filename")))
 
                     self.assertEquals(
-                        JVMClient.handshake_payloads["print_version"],
+                        """(println "Clojure" (clojure-version))""",
                         server.recv().rstrip()
                     )
 
@@ -71,7 +71,7 @@ class TestJVMClient(TestCase):
                         edn.Keyword("val"): "nil",
                         edn.Keyword("ns"): "user",
                         edn.Keyword("ms"): 0,
-                        edn.Keyword("form"): JVMClient.handshake_payloads["print_version"]
+                        edn.Keyword("form"): """(println "Clojure" (clojure-version))"""
                     })
 
                     self.assertEquals({
