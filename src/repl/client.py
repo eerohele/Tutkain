@@ -270,8 +270,6 @@ class JVMClient(Client):
 
     def __init__(self, source_root, host, port, wait=5, backchannel_opts={}):
         super(JVMClient, self).__init__(source_root, host, port, "tutkain.clojure.client", wait=wait, backchannel_opts=backchannel_opts)
-        self.attempted_modules = set()
-        self.ready_for_cljs = False
 
     def switch_namespace(self, ns):
         code = f"(do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1))"
