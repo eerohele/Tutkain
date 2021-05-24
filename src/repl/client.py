@@ -197,6 +197,7 @@ class Client(ABC):
         log.debug({"event": "client/halt"})
         self.recvq.put(None)
         self.sendq.put(":repl/quit")
+        self.executor.shutdown()
 
     def __exit__(self, type, value, traceback):
         self.halt()
