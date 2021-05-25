@@ -89,5 +89,7 @@
          (repl-impl/do-repl worker relay *in* close-signal spec))
        (catch ExceptionInfo ex
          (prn {:tag :err :val (Throwable->str ex)}))
+       (catch AssertionError ex
+         (prn {:tag :err :val (Throwable->str ex)}))
        (finally
          (async/>!! close-signal true))))))
