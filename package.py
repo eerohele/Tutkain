@@ -774,11 +774,15 @@ class TutkainExpandSelectionCommand(TextCommand):
         selections = view.sel()
 
         for region in selections:
-            if not region.empty() or selectors.ignore(view, region.begin()):
+            point = region.begin()
+
+            if not region.empty() or selectors.ignore(view, point):
                 view.run_command("expand_selection", {"to": "scope"})
             else:
-                if form := forms.find_adjacent(view, region.begin()):
+                if form := forms.find_adjacent(view, point):
                     selections.add(form)
+                else:
+                    view.run_command("expand_selection", {"to": "brackets"})
 
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
