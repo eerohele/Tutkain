@@ -57,6 +57,9 @@ class TestJVMClient(ViewTestCase):
 
             server.recv()
 
+            # Clojure version info is printed on the client
+            self.client.printq.get(timeout=5)
+
             return backchannel
 
     @classmethod
@@ -89,6 +92,9 @@ class TestJVMClient(ViewTestCase):
 
         if self.client:
             self.client.halt()
+
+    def get_print(self):
+        return self.client.printq.get(timeout=5)
 
     def eval_context(self, ns="user", file="NO_SOURCE_FILE", line=1, column=1):
         actual = edn.read(self.backchannel.recv())
@@ -127,13 +133,25 @@ class TestJVMClient(ViewTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=10)
         self.assertEquals("(range 10)\n", self.server.recv())
+        self.assertEquals({
+            'printable': 'user=> (range 10)\n',
+            'response': {edn.Keyword("in"): '(range 10)'}
+        }, self.get_print())
 
     def test_form(self):
         self.set_view_content("42 84")
         self.set_selections((0, 0), (3, 3))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.eval_context()
+        self.assertEquals({
+            'printable': 'user=> 42\n',
+            'response': {edn.Keyword("in"): '42'}
+        }, self.get_print())
         self.eval_context(column=4)
+        self.assertEquals({
+            'printable': 'user=> 84\n',
+            'response': {edn.Keyword("in"): '84'}
+        }, self.get_print())
         self.assertEquals("42\n", self.server.recv())
         self.assertEquals("84\n", self.server.recv())
 
@@ -147,8 +165,13 @@ class TestJVMClient(ViewTestCase):
     def test_eval_in_ns(self):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
         self.eval_context()
+        self.assertEquals({
+            'printable': 'user=> (reset)\n',
+            'response': {edn.Keyword("in"): '(reset)'}
+        }, self.get_print())
         # Clients sends ns first
-        self.assertTrue(self.server.recv().startswith("(do (or (some->> "))
+        ret = self.server.recv()
+        self.assertTrue(ret.startswith("(do (or (some->> "))
         self.assertEquals("(reset)\n", self.server.recv())
 
     def test_ns(self):
@@ -156,8 +179,16 @@ class TestJVMClient(ViewTestCase):
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "ns"})
         self.eval_context(ns="baz.quux")
+        self.assertEquals({
+            'printable': 'user=> (ns foo.bar)\n',
+            'response': {edn.Keyword("in"): '(ns foo.bar)'}
+        }, self.get_print())
         self.assertEquals("(ns foo.bar)\n", self.server.recv())
         self.eval_context(ns="baz.quux", column=14)
+        self.assertEquals({
+            'printable': 'user=> (ns baz.quux)\n',
+            'response': {edn.Keyword("in"): '(ns baz.quux)'}
+        }, self.get_print())
         self.assertEquals("(ns baz.quux)\n", self.server.recv())
 
     def test_view(self):
@@ -179,21 +210,37 @@ class TestJVMClient(ViewTestCase):
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=3)
+        self.assertEquals({
+            'printable': 'user=> (inc 1)\n',
+            'response': {edn.Keyword("in"): '(inc 1)'}
+        }, self.get_print())
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
         self.eval_context(column=3)
+        self.assertEquals({
+            'printable': 'user=> (inc 1)\n',
+            'response': {edn.Keyword("in"): '(inc 1)'}
+        }, self.get_print())
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.set_view_content("(inc #_(dec 2) 4)")
         self.set_selections((14, 14))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=8)
+        self.assertEquals({
+            'printable': 'user=> (dec 2)\n',
+            'response': {edn.Keyword("in"): '(dec 2)'}
+        }, self.get_print())
         self.assertEquals("(dec 2)\n", self.server.recv())
         self.set_view_content("#_:a")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.eval_context(column=3)
+        self.assertEquals({
+            'printable': 'user=> :a\n',
+            'response': {edn.Keyword("in"): ':a'}
+        }, self.get_print())
         self.assertEquals(":a\n", self.server.recv())
 
     def test_lookup(self):
@@ -232,6 +279,28 @@ class TestJVMClient(ViewTestCase):
             edn.Keyword("ns"): None,
             edn.Keyword("id"): response.get(edn.Keyword("id"))
         }, response)
+
+    def test_issue_46(self):
+        code = """(apply str (repeat 9126 "x"))"""
+        self.set_view_content(code)
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.eval_context()
+
+        self.assertEqual(
+            {"printable": f"user=> {code}\n",
+             "response": {edn.Keyword("in"): code}},
+            self.get_print()
+        )
+
+        retval = "x" * 9126
+        response = edn.kwmap({"tag": edn.Keyword("ret"), "val": retval})
+        self.assertEquals(code + "\n", self.server.recv())
+        self.server.send(response)
+        self.assertEqual({
+            "printable": retval,
+            "response": response
+        }, self.get_print())
 
 
 class TestJSClient(ViewTestCase):
