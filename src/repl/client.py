@@ -267,8 +267,7 @@ class JVMClient(Client):
         super().connect()
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
         self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
-        handshake = self.executor.submit(self.handshake)
-        handshake.result()
+        self.handshake()
         self.start_workers()
         return self
 
