@@ -6,7 +6,6 @@ import queue
 import os
 import pathlib
 import posixpath
-import select
 import socket
 
 from .backchannel import Backchannel, NoopBackchannel
@@ -23,19 +22,12 @@ class Client(ABC):
 
     def sink_until_prompt(self):
         bs = bytearray()
-        poller = select.poll()
-        poller.register(self.socket, select.POLLIN)
 
-        try:
-            while True:
-                for _, event in poller.poll():
-                    if event == select.POLLIN:
-                        bs.extend(self.socket.recv(32))
+        while True:
+            bs.extend(self.socket.recv(1))
 
-                if bs[-3:] == bytearray(b"=> "):
-                    break
-        finally:
-            poller.unregister(self.socket)
+            if bs[-3:] == bytearray(b"=> "):
+                break
 
         return bs
 
