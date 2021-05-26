@@ -483,10 +483,10 @@ class TutkainConnectCommand(WindowCommand):
         return self.window.project_data().get("settings", {}).get("Tutkain", {}).get("shadow-cljs", {}).get("build-id")
 
     def get_or_create_view(self, view_id):
-        return view_id and next(
+        return next(
             filter(lambda view: view.id() == view_id, self.window.views()),
             None,
-        ) or self.window.new_file()
+        ) if view_id else self.window.new_file()
 
     def run(self, dialect, host, port, view_id=None):
         dialect = edn.Keyword(dialect)
