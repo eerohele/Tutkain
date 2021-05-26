@@ -16,8 +16,15 @@ class TestJVMClient(TestCase):
     def tearDownClass(self):
         stop_logging()
 
-    def handshake(self, server):
-        with JVMClient(source_root(), server.host, server.port) as client:
+    def test_smoke(self):
+        def write_greeting(buf):
+            buf.write("user=> ")
+            buf.flush()
+
+        with Server(greeting=write_greeting) as server:
+            client = JVMClient(source_root(), server.host, server.port)
+
+            server.executor.submit(client.connect)
             # Client starts clojure.main/repl
             server.recv()
 
@@ -117,12 +124,5 @@ class TestJVMClient(TestCase):
                     client.printq.get(timeout=1)
                 )
 
+            client.halt()
             self.assertEquals(":repl/quit\n", server.recv())
-
-    def test_smoke(self):
-        def write_greeting(buf):
-            buf.write("user=> ")
-            buf.flush()
-
-        with Server(greeting=write_greeting) as server:
-            server.executor.submit(self.handshake, server)
