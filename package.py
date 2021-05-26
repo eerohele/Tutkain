@@ -479,11 +479,18 @@ class TutkainConnectCommand(WindowCommand):
     def get_project_build_id(self):
         return self.window.project_data().get("settings", {}).get("Tutkain", {}).get("shadow-cljs", {}).get("build-id")
 
+    def get_or_create_view(self, view_id):
+        return view_id and next(
+            filter(lambda view: view.id() == view_id, self.window.views()),
+            None,
+        ) or self.window.new_file()
+
     def run(self, dialect, host, port, view_id=None):
         dialect = edn.Keyword(dialect)
 
         try:
             active_view = self.window.active_view()
+            view = self.get_or_create_view(view_id)
             tap.create_panel(self.window)
 
             if dialect == edn.Keyword("cljs"):
@@ -500,7 +507,9 @@ class TutkainConnectCommand(WindowCommand):
 
             client.connect()
             set_layout(self.window)
-            view = views.configure(self.window, client, dialect, view_id)
+            views.configure(view, dialect, client)
+            state.set_view_client(view, dialect, client)
+            state.set_repl_view(view, dialect)
 
             print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
             print_loop.name = f"tutkain.{dialect.name}.print_loop"
@@ -511,6 +520,7 @@ class TutkainConnectCommand(WindowCommand):
             self.window.focus_view(view)
             self.window.focus_view(active_view)
         except TimeoutError:
+            view.close()
             sublime.error_message(cleandoc("""
                 Timed out trying to connect to socket REPL server.
 
@@ -519,6 +529,7 @@ class TutkainConnectCommand(WindowCommand):
                 See https://tutkain.flowthing.me/#starting-a-socket-repl for more information.
                 """))
         except ConnectionRefusedError:
+            view.close()
             self.window.status_message(f"ERR: connection to {host}:{port} refused.")
 
     def input(self, args):

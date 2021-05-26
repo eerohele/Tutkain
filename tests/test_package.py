@@ -72,7 +72,9 @@ class TestJVMClient(ViewTestCase):
         self.client = JVMClient(source_root(), self.server.host, self.server.port, wait=False).connect()
         dialect = edn.Keyword("clj")
         state.set_view_client(self.view, dialect, self.client)
-        repl_view = views.configure(self.view.window(), self.client, dialect)
+        repl_view = self.view.window().new_file()
+        views.configure(repl_view, dialect, self.client)
+        state.set_view_client(repl_view, dialect, self.client)
         state.set_repl_view(repl_view, dialect)
         self.backchannel = self.conduct_handshake()
 
@@ -332,7 +334,9 @@ class TestJSClient(ViewTestCase):
 
         dialect = edn.Keyword("cljs")
         state.set_view_client(self.view, dialect, self.client)
-        repl_view = views.configure(self.view.window(), self.client, dialect)
+        repl_view = self.view.window().new_file()
+        views.configure(repl_view, dialect, self.client)
+        state.set_view_client(repl_view, dialect, self.client)
         state.set_repl_view(repl_view, dialect)
         self.backchannel = self.conduct_handshake()
 
@@ -407,7 +411,9 @@ class TestBabashkaClient(ViewTestCase):
 
         dialect = edn.Keyword("bb")
         state.set_view_client(self.view, dialect, self.client)
-        repl_view = views.configure(self.view.window(), self.client, dialect)
+        repl_view = self.view.window().new_file()
+        views.configure(repl_view, dialect, self.client)
+        state.set_view_client(repl_view, dialect, self.client)
         state.set_repl_view(repl_view, dialect)
         self.conduct_handshake()
 

@@ -1,4 +1,3 @@
-from .. import state
 from .. import dialects
 
 
@@ -9,7 +8,8 @@ def active_repl_view(window):
                 return view
 
 
-def create(window, dialect, client):
+def configure(view, dialect, client):
+    window = view.window()
     num_groups = window.num_groups()
     target_group = num_groups - 1
 
@@ -20,7 +20,6 @@ def create(window, dialect, client):
 
     view_count = len(window.views_in_group(target_group))
 
-    view = window.new_file()
     view.set_name(f"REPL · {dialects.name(dialect)} · {client.host}:{client.port}")
     view.settings().set("line_numbers", False)
     view.settings().set("gutter", False)
@@ -43,17 +42,5 @@ def create(window, dialect, client):
     view.set_scratch(True)
     view.assign_syntax("REPL (Tutkain).sublime-syntax")
     window.set_view_index(view, target_group, view_count)
-
-    return view
-
-
-def configure(window, client, dialect, view_id=None):
-    view = view_id and next(
-        filter(lambda view: view.id() == view_id, window.views()),
-        None,
-    ) or create(window, dialect, client)
-
-    state.set_view_client(view, dialect, client)
-    state.set_repl_view(view, dialect)
 
     return view
