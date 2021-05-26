@@ -54,8 +54,10 @@ def read_string(b, _):
 
                 if ch == "t":
                     ch = "\t"
-                elif ch in {"n", "r"}:
+                elif ch == "n":
                     ch = "\n"
+                elif ch == "r":
+                    ch = ""
 
             s.write(ch)
 
