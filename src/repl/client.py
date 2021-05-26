@@ -268,7 +268,6 @@ class JVMClient(Client):
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
         self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
         self.handshake()
-        self.start_workers()
         return self
 
     def switch_namespace(self, ns):
