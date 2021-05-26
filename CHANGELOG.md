@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Fix `tap_panel` setting
+
 ## 0.7.4 (alpha) - 2021-05-26
 
 - Fix scratch view syntax paths

@@ -494,7 +494,9 @@ class TutkainConnectCommand(WindowCommand):
         try:
             active_view = self.window.active_view()
             view = self.get_or_create_view(view_id)
-            tap.create_panel(self.window)
+
+            if settings().get("tap_panel"):
+                tap.create_panel(self.window)
 
             if dialect == edn.Keyword("cljs"):
                 def prompt(ids, on_done):
