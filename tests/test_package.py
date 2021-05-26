@@ -342,7 +342,7 @@ class TestJSClient(ViewTestCase):
 
     @classmethod
     def tearDownClass(self):
-        super(TestJSClient, self).tearDownClass()
+        super().tearDownClass()
         stop_logging()
 
         if self.server:

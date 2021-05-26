@@ -261,7 +261,7 @@ class JVMClient(Client):
         self.start_workers()
 
     def __init__(self, source_root, host, port, backchannel_opts={}):
-        super(JVMClient, self).__init__(source_root, host, port, "tutkain.clojure.client", backchannel_opts=backchannel_opts)
+        super().__init__(source_root, host, port, "tutkain.clojure.client", backchannel_opts=backchannel_opts)
 
     def connect(self):
         super().connect()
@@ -294,13 +294,13 @@ class JVMClient(Client):
             return val
 
     def halt(self):
-        super(JVMClient, self).halt()
+        super().halt()
         self.backchannel.halt()
 
 
 class JSClient(Client):
     def __init__(self, source_root, host, port, prompt_for_build_id):
-        super(JSClient, self).__init__(source_root, host, port, "tutkain.cljs.client")
+        super().__init__(source_root, host, port, "tutkain.cljs.client")
         self.prompt_for_build_id = prompt_for_build_id
 
     def connect(self):
