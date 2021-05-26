@@ -2,6 +2,8 @@ on: [push]
 
 env:
   UNITTESTING_TAG: master
+  SUBLIME_TEXT_VERSION: 4
+  SUBLIME_TEXT_ARCH: x64
 
 jobs:
   linux:
