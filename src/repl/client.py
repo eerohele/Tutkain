@@ -61,19 +61,16 @@ class Client(ABC):
     def handshake(self):
         pass
 
+    def probe(self):
+        # TODO: Configurable timeout?
+        self.executor.submit(self.sink_until_prompt).result(timeout=5)
+
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
         self.buffer = self.socket.makefile(mode="rw")
-
         log.debug({"event": "client/connect", "host": self.host, "port": self.port})
-
-        handshake = self.executor.submit(self.handshake)
-        handshake.add_done_callback(lambda _: self.start_workers())
-
-        if self.wait:
-            handshake.result(self.wait)
-
+        log.debug({"event": "client/handshake", "data": self.probe()})
         return self
 
     def disconnect(self):
@@ -89,7 +86,7 @@ class Client(ABC):
     def source_path(self, filename):
         return posixpath.join(pathlib.Path(self.source_root).as_posix(), filename)
 
-    def __init__(self, source_root, host, port, name, wait=5, backchannel_opts={}):
+    def __init__(self, source_root, host, port, name, backchannel_opts={}):
         self.source_root = source_root
         self.host = host
         self.port = port
@@ -100,7 +97,6 @@ class Client(ABC):
         self.handlers = {}
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
         self.namespace = "user"
-        self.wait = wait
         self.backchannel = NoopBackchannel()
         self.backchannel_opts = backchannel_opts
         self.capabilities = set()
@@ -205,10 +201,6 @@ class Client(ABC):
 
 class JVMClient(Client):
     def handshake(self):
-        log.debug({"event": "client/handshake", "data": self.sink_until_prompt()})
-
-        # Start a promptless REPL so that we don't need to keep sinking the prompt.
-        self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
         self.write_line("(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))")
@@ -266,11 +258,19 @@ class JVMClient(Client):
         self.recvq.put(edn.read_line(self.buffer))
 
         log.debug({"event": "client/handshake", "data": self.buffer.readline()})
+        self.start_workers()
 
-        return True
+    def __init__(self, source_root, host, port, backchannel_opts={}):
+        super(JVMClient, self).__init__(source_root, host, port, "tutkain.clojure.client", backchannel_opts=backchannel_opts)
 
-    def __init__(self, source_root, host, port, wait=5, backchannel_opts={}):
-        super(JVMClient, self).__init__(source_root, host, port, "tutkain.clojure.client", wait=wait, backchannel_opts=backchannel_opts)
+    def connect(self):
+        super().connect()
+        # Start a promptless REPL so that we don't need to keep sinking the prompt.
+        self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
+        handshake = self.executor.submit(self.handshake)
+        handshake.result()
+        self.start_workers()
+        return self
 
     def switch_namespace(self, ns):
         code = f"(do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1))"
@@ -300,14 +300,25 @@ class JVMClient(Client):
 
 class JSClient(Client):
     def __init__(self, source_root, host, port, prompt_for_build_id):
-        super(JSClient, self).__init__(source_root, host, port, "tutkain.cljs.client", wait=False)
+        super(JSClient, self).__init__(source_root, host, port, "tutkain.cljs.client")
         self.prompt_for_build_id = prompt_for_build_id
 
-    def handshake(self):
-        log.debug({"event": "client/handshake", "data": self.sink_until_prompt()})
-
+    def connect(self):
+        super().connect()
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
         self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
+        self.write_line("""(sort (shadow.cljs.devtools.api/get-build-ids))""")
+        build_id_options = edn.read_line(self.buffer)
+
+        self.executor.submit(
+            self.prompt_for_build_id,
+            build_id_options,
+            lambda index: self.handshake(build_id_options[index])
+        )
+
+        return self
+
+    def handshake(self, build_id):
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
         self.write_line("(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))")
@@ -323,13 +334,7 @@ class JSClient(Client):
             self.buffer.readline()
 
         backchannel_port = self.backchannel_opts.get("port", 0)
-        self.write_line(f"""(try (tutkain.shadow/repl {{:port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))""")
-        build_id_options = edn.read_line(self.buffer)
-
-        self.prompt_for_build_id(
-            build_id_options,
-            lambda build_id: edn.write(self.buffer, build_id)
-        )
+        self.write_line(f"""(try (tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))""")
 
         line = self.buffer.readline()
         val = edn.read(line)
@@ -370,7 +375,7 @@ class JSClient(Client):
                 self.handle(edn.read_line(self.buffer))
                 log.debug({"event": "client/handshake", "data": self.buffer.readline()})
 
-        return True
+        self.start_workers()
 
     def switch_namespace(self, ns):
         code = f"(in-ns '{ns})"
@@ -392,15 +397,19 @@ class JSClient(Client):
 
 class BabashkaClient(Client):
     def __init__(self, source_root, host, port):
-        super().__init__(source_root, host, port, "tutkain.bb.client", wait=False)
+        super().__init__(source_root, host, port, "tutkain.bb.client")
 
     def handshake(self):
-        log.debug({"event": "client/handshake", "data": self.sink_until_prompt()})
-        self.write_line(f"""((requiring-resolve 'clojure.core.server/io-prepl))""")
+        self.write_line("""((requiring-resolve 'clojure.core.server/io-prepl))""")
         self.write_line("""(println "Babashka" (System/getProperty "babashka.version"))""")
         self.recvq.put(edn.read_line(self.buffer))
         self.buffer.readline()
-        return True
+        self.start_workers()
+
+    def connect(self):
+        super().connect()
+        self.handshake()
+        return self
 
     def switch_namespace(self, ns):
         code = f"(in-ns '{ns})"

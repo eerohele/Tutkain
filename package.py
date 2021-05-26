@@ -460,21 +460,24 @@ class EvaluationScopeInputHandler(ListInputHandler):
 
 
 class TutkainConnectCommand(WindowCommand):
-    def set_build_id(self, build_id, on_done):
-        # build_id is -1 if the user dismisses the ST quick panel
-        if build_id != -1:
-            on_done(build_id)
+    def set_build_id(self, view, index, on_done):
+        if index == -1:
+            view.close()
+        else:
+            on_done(index)
 
-    def choose_build_id(self, ids, on_done):
+    def choose_build_id(self, view, ids, on_done):
         items = list(map(lambda id: id.name, ids))
 
         if items:
             self.window.show_quick_panel(
                 items,
-                lambda index: self.set_build_id(edn.Keyword(items[index]), on_done),
+                lambda index: self.set_build_id(view, index, on_done),
                 placeholder="Choose shadow-cljs build ID",
                 flags=sublime.MONOSPACE_FONT
             )
+
+        return True
 
     def get_project_build_id(self):
         return self.window.project_data().get("settings", {}).get("Tutkain", {}).get("shadow-cljs", {}).get("build-id")
@@ -494,8 +497,11 @@ class TutkainConnectCommand(WindowCommand):
             tap.create_panel(self.window)
 
             if dialect == edn.Keyword("cljs"):
+                def prompt(ids, on_done):
+                    self.choose_build_id(view, ids, on_done)
+
                 # FIXME: Backchannel port option
-                client = JSClient(source_root(), host, int(port), self.choose_build_id)
+                client = JSClient(source_root(), host, int(port), prompt)
             elif dialect == edn.Keyword("bb"):
                 client = BabashkaClient(source_root(), host, int(port))
             else:

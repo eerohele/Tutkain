@@ -68,16 +68,14 @@
 (defn repl
   ([]
    (repl {}))
-  ([opts]
+  ([{:keys [build-id] :as opts}]
    (let [lock (Object.)
          close-signal (async/promise-chan)
          out-fn #(binding [*flush-on-newline* true]
                    (locking lock
                      (prn %)))]
      (try
-       (prn (sort (api/get-build-ids)))
-       (let [build-id (read)
-             backchannel (backchannel/open
+       (let [backchannel (backchannel/open
                            (assoc opts
                              :xform-in #(assoc % :build-id build-id :in *in*)
                              :xform-out #(dissoc % :in)))

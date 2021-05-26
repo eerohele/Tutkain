@@ -69,7 +69,8 @@ class TestJVMClient(ViewTestCase):
             buf.flush()
 
         self.server = Server(greeting=write_greeting).start()
-        self.client = JVMClient(source_root(), self.server.host, self.server.port, wait=False).connect()
+        self.client = JVMClient(source_root(), self.server.host, self.server.port)
+        self.server.executor.submit(self.client.connect)
         dialect = edn.Keyword("clj")
         state.set_view_client(self.view, dialect, self.client)
         repl_view = self.view.window().new_file()
@@ -241,6 +242,16 @@ class TestJSClient(ViewTestCase):
         # Client starts clojure.main/repl
         server.recv()
 
+        # Client requests build IDs
+        server.recv()
+
+        # Server sends build ID list
+        server.send([
+            edn.Keyword("browser"),
+            edn.Keyword("node-script"),
+            edn.Keyword("npm")
+        ])
+
         # Client switches into the bootstrap namespace
         server.recv()
         server.send("nil\n")
@@ -260,15 +271,6 @@ class TestJSClient(ViewTestCase):
         # Client starts REPL
         server.recv()
 
-        # Server sends build ID list
-        server.send([
-            edn.Keyword("browser"),
-            edn.Keyword("node-script"),
-            edn.Keyword("npm")
-        ])
-
-        # Client responds with build ID
-        server.recv()
 
         with Server() as backchannel:
             server.send({
@@ -305,10 +307,6 @@ class TestJSClient(ViewTestCase):
             return backchannel
 
     @classmethod
-    def prompt_for_build_id(self, _, f):
-        return f(edn.Keyword("node-script"))
-
-    @classmethod
     def setUpClass(self):
         super().setUpClass(syntax="ClojureScript (Tutkain).sublime-syntax")
         start_logging(False)
@@ -329,8 +327,10 @@ class TestJSClient(ViewTestCase):
             source_root(),
             self.server.host,
             self.server.port,
-            self.prompt_for_build_id
-        ).connect()
+            lambda _, on_done: on_done(1)
+        )
+
+        self.server.executor.submit(self.client.connect)
 
         dialect = edn.Keyword("cljs")
         state.set_view_client(self.view, dialect, self.client)
@@ -407,8 +407,9 @@ class TestBabashkaClient(ViewTestCase):
             source_root(),
             self.server.host,
             self.server.port
-        ).connect()
+        )
 
+        self.server.executor.submit(self.client.connect)
         dialect = edn.Keyword("bb")
         state.set_view_client(self.view, dialect, self.client)
         repl_view = self.view.window().new_file()
