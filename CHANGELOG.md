@@ -1,8 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
+## 0.7.5 (alpha) - 2021-05-26
 
+- Fix Clojure REPL error when reading long forms
 - Fix `tap_panel` setting
 
 ## 0.7.4 (alpha) - 2021-05-26
