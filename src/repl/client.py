@@ -26,13 +26,16 @@ class Client(ABC):
         poller = select.poll()
         poller.register(self.socket, select.POLLIN)
 
-        while True:
-            for _, event in poller.poll():
-                if event == select.POLLIN:
-                    bs.extend(self.socket.recv(32))
+        try:
+            while True:
+                for _, event in poller.poll():
+                    if event == select.POLLIN:
+                        bs.extend(self.socket.recv(32))
 
-            if bs[-3:] == bytearray(b"=> "):
-                break
+                if bs[-3:] == bytearray(b"=> "):
+                    break
+        finally:
+            poller.unregister(self.socket)
 
         return bs
 
