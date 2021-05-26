@@ -84,7 +84,7 @@ class TestJVMClient(ViewTestCase):
 
     @classmethod
     def tearDownClass(self):
-        super(TestJVMClient, self).tearDownClass()
+        super().tearDownClass()
         stop_logging()
 
         if self.server:
