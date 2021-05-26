@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.7.6 (alpha) - 2021-05-26
+
+- Restore Windows compatibility
+
 ## 0.7.5 (alpha) - 2021-05-26
 
 - Fix Clojure REPL error when reading long forms
