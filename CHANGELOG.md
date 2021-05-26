@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.7.4 (alpha) - 2021-05-26
+
+- Fix scratch view syntax paths
+- Add ClojureScript ns symbol lookup support
+- Try harder to clean up after disconnect
+- Show error when connecting to a shadow-cljs build whose watch is not running
+- Fix expand selection in empty S-expressions #45
+- Try harder to clean up when pressing Esc in shadow-cljs build select
+
 ## 0.7.3 (alpha) - 2021-05-23
 
 - Fix exception stack trace line and column numbers
