@@ -161,14 +161,14 @@
     ["sun.boot.class.path" "java.ext.dirs" "java.class.path"]
     (sequence
       (comp
-        (keep #(some-> ^String % System/getProperty (.split File/pathSeparator)))
+        (keep #(some-> ^String % System/getProperty (.split "/")))
         cat
         (mapcat path-files)
         (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__"))))))
     delay))
 
 (defn- classname [^String file]
-  (.. file (replace ".class" "") (replace File/separator ".")))
+  (.. file (replace ".class" "") (replace "/" ".")))
 
 (defn annotate-class
   [class-name]
