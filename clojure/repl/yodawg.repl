@@ -93,6 +93,9 @@
 
 (rsend :repl/quit)
 
+(rrecv)
+(xr/check! nil?) ;; times out
+
 (try
   (socket/client
     :host (:host backchannel-addr)
