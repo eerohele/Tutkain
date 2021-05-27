@@ -404,7 +404,7 @@ class TutkainEvaluateCommand(TextCommand):
             elif scope == "view":
                 syntax = self.view.syntax()
 
-                if syntax and not syntax.scope == "source.clojure":
+                if syntax and not syntax.scope in {"source.clojure", "source.clojure.clojure-common"}:
                     self.view.window().status_message(
                         "Active view has incompatible syntax; can't evaluate."
                     )

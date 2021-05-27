@@ -195,6 +195,21 @@ class TestJVMClient(ViewTestCase):
             edn.Keyword("id"): response.get(edn.Keyword("id"))
         }, response)
 
+    def test_view_common(self):
+        self.view.assign_syntax("Packages/Tutkain/Clojure Common (Tutkain).sublime-syntax")
+        self.set_view_content("(ns foo.bar) (defn x [y] y)")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"scope": "view"})
+
+        response = edn.read(self.backchannel.recv())
+
+        self.assertEquals({
+            edn.Keyword("op"): edn.Keyword("load"),
+            edn.Keyword("code"): "(ns foo.bar) (defn x [y] y)",
+            edn.Keyword("file"): None,
+            edn.Keyword("id"): response.get(edn.Keyword("id"))
+        }, response)
+
     def test_discard(self):
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
