@@ -25,9 +25,8 @@ def get_dialect(view: View) -> Union[edn.Keyword, None]:
 
 def active_repl_view(window: Window) -> Union[View, None]:
     for group in range(window.num_groups() + 1):
-        if view := window.active_view_in_group(group):
-            if view.settings().get("tutkain_repl_view_dialect"):
-                return view
+        if (view := window.active_view_in_group(group)) and get_dialect(view):
+            return view
 
 
 def configure(view, dialect, client):
