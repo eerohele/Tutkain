@@ -1,7 +1,9 @@
 from .. import dialects
+from sublime import View, Window
+from typing import Union
 
 
-def active_repl_view(window):
+def active_repl_view(window: Window) -> Union[View, None]:
     for group in range(window.num_groups() + 1):
         if view := window.active_view_in_group(group):
             if view.settings().get("tutkain_repl_view_dialect"):
