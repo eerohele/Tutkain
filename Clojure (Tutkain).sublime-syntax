@@ -165,7 +165,7 @@ contexts:
     - match: 'defmacro{{end}}'
       scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.macro.clojure
       set: fn-tail
-    - match: '((?:.+?/)?deftest){{end}}'
+    - match: '((?:.+?/)?(deftest|defspec)){{end}}'
       captures:
         1: meta.reader-form.clojure meta.symbol.clojure meta.deftest.clojure keyword.declaration.function.clojure
       set: deftest-tail
