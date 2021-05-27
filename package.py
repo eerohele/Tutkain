@@ -725,7 +725,7 @@ def reconnect(vs):
         host = views.get_host(view)
         port = views.get_port(view)
 
-        if host and port:
+        if dialect and host and port:
             view.window().run_command(
                 "tutkain_connect", {
                     "dialect": dialect.name,
