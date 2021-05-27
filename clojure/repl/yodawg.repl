@@ -94,15 +94,14 @@
 (rsend :repl/quit)
 
 
-(when-not (.startsWith (System/getProperty "os.name") "Windows")
-  (try
-    (socket/client
-      :host (:host backchannel-addr)
-      :port (:port backchannel-addr)
-      :recvq brecvq)
-    false
-    (catch ConnectException _
-      ;; Can't connect to backchannel anymore after quitting the REPL
-      true))
+(try
+  (socket/client
+    :host (:host backchannel-addr)
+    :port (:port backchannel-addr)
+    :recvq brecvq)
+  (.startsWith (System/getProperty "os.name") "Windows")
+  (catch ConnectException _
+    ;; Can't connect to backchannel anymore after quitting the REPL
+    true))
 
-  (xr/check! true?))
+(xr/check! true?)
