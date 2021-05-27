@@ -1,6 +1,26 @@
+from ...api import edn
 from .. import dialects
 from sublime import View, Window
 from typing import Union
+
+
+def get_host(view: View) -> Union[str, None]:
+    """Given a Tutkain REPL view, return the hostname associated with the
+    view."""
+    return view.settings().get("tutkain_repl_host")
+
+
+def get_port(view: View) -> Union[int, None]:
+    """Given a Tutkain REPL view, return the port number associated with the
+    view."""
+    return view.settings().get("tutkain_repl_port")
+
+
+def get_dialect(view: View) -> Union[edn.Keyword, None]:
+    """Given a Tutkain REPL view, return the dialect associated with the REPL
+    view."""
+    if dialect := view.settings().get("tutkain_repl_view_dialect"):
+        return edn.Keyword(dialect)
 
 
 def active_repl_view(window: Window) -> Union[View, None]:

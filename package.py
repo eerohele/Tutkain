@@ -720,15 +720,19 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
 
 
 def reconnect(vs):
-    for view in filter(lambda v: v.settings().get("tutkain_repl_view_dialect"), vs):
-        dialect = view.settings().get("tutkain_repl_view_dialect")
-        host = view.settings().get("tutkain_repl_host")
-        port = view.settings().get("tutkain_repl_port")
+    for view in filter(views.get_dialect, vs):
+        dialect = views.get_dialect(view)
+        host = views.get_host(view)
+        port = views.get_port(view)
 
         if host and port:
             view.window().run_command(
-                # FIXME: dialect
-                "tutkain_connect", {"dialect": dialect, "host": host, "port": port, "view_id": view.id()}
+                "tutkain_connect", {
+                    "dialect": dialect.name,
+                    "host": host,
+                    "port": port,
+                    "view_id": view.id()
+                }
             )
 
 
