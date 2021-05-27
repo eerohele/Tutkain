@@ -11,8 +11,8 @@ DIALECT_NAMES = edn.kwmap({
 })
 
 
-def name(dialect):
-    return DIALECT_NAMES.get(dialect)
+def name(dialect: edn.Keyword) -> str:
+    return DIALECT_NAMES.get(dialect, "")
 
 
 def for_point(view, point):
