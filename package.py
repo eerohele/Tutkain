@@ -560,7 +560,7 @@ class TutkainDisconnectCommand(WindowCommand):
         test.progress.stop()
 
         if view := views.active_repl_view(self.window):
-            view and view.close()
+            view.close()
 
         self.window.focus_view(active_view)
 
