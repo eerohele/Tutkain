@@ -99,7 +99,7 @@
     :host (:host backchannel-addr)
     :port (:port backchannel-addr)
     :recvq brecvq)
-  (.startsWith (System/getProperty "os.name") "Windows")
+  false
   (catch ConnectException _
     ;; Can't connect to backchannel anymore after quitting the REPL
     true))
