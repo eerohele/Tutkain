@@ -33,7 +33,10 @@ def for_point(view, point):
 def for_view(view):
     if syntax := view.syntax():
         if syntax.scope == "source.clojure.clojure-common":
-            return edn.Keyword("cljc")
+            return edn.Keyword(view.window().settings().get(
+                "tutkain_evaluation_dialect",
+                "clj"
+            ))
         if syntax.scope == "source.clojure.clojurescript":
             return edn.Keyword("cljs")
         if syntax.scope == "source.clojure.babashka":
