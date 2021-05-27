@@ -1,3 +1,5 @@
+import queue
+
 from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
 from Tutkain.src.repl import views
@@ -134,6 +136,12 @@ class TestJVMClient(ViewTestCase):
 
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.assertEquals("(inc 2)\n", self.server.recv())
+
+    def test_outermost_empty(self):
+        self.set_view_content("")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
+        self.assertRaises(queue.Empty, lambda: self.server.recv().get_nowait())
 
     def test_innermost(self):
         self.set_view_content("(map inc (range 10))")

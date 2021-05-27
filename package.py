@@ -422,15 +422,17 @@ class TutkainEvaluateCommand(TextCommand):
             else:
                 for region in self.view.sel():
                     eval_region = self.get_eval_region(region, scope, ignore)
-                    code = self.view.substr(eval_region)
 
-                    evaluate(
-                        self.view,
-                        client,
-                        code,
-                        eval_region.begin(),
-                        lambda response: self.handler(eval_region, client, response, inline_result)
-                    )
+                    if not eval_region.empty():
+                        code = self.view.substr(eval_region)
+
+                        evaluate(
+                            self.view,
+                            client,
+                            code,
+                            eval_region.begin(),
+                            lambda response: self.handler(eval_region, client, response, inline_result)
+                        )
 
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):
