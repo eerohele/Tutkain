@@ -254,3 +254,12 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.assertEquals("", self.selection(0))
         self.shrink()
         self.assertEquals("", self.selection(0))
+
+    def test_comment_after_open(self):
+        self.set_view_content("[;;foo\n]")
+        self.set_selections((0, 0))
+        self.expand()
+        self.assertEquals("[;;foo\n]", self.selection(0))
+        self.set_selections((1, 1))
+        self.expand()
+        self.assertEquals(";;", self.selection(0))
