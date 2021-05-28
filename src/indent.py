@@ -122,9 +122,9 @@ IGNORE_SELECTORS = "punctuation.definition.string | string | comment.line"
 
 
 def indent_region(view, edit, region, prune=False):
-    new_lines = []
-
     if region and not view.match_selector(region.begin(), IGNORE_SELECTORS):
+        new_lines = []
+
         for line in view.lines(region):
             replacee = line
 
