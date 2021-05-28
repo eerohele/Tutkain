@@ -129,14 +129,11 @@ def indent_region(view, edit, region, prune=False):
             replacee = line
 
             if new_lines:
-                previous = new_lines.pop()
-                if previous:
+                if previous := new_lines.pop():
                     begin = previous.end()
                     end = begin + line.size()
                     replacee = Region(begin, end)
 
-            replacer = get_indented_string(view, replacee, prune=prune)
-
-            if replacer:
+            if replacer := get_indented_string(view, replacee, prune=prune):
                 view.replace(edit, replacee, replacer)
                 new_lines.append(view.full_line(replacee.begin()))
