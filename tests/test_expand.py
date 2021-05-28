@@ -3,7 +3,10 @@ from .util import ViewTestCase
 
 class TestExpandSelectionCommand(ViewTestCase):
     def expand(self):
-        self.view.run_command("tutkain_expand_selection")
+        self.view.window().run_command("tutkain_expand_selection")
+
+    def shrink(self):
+        self.view.window().run_command("soft_undo")
 
     def test_before_lparen(self):
         self.set_view_content("(foo)")
@@ -227,3 +230,27 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.assertEquals("(  a  )", self.selection(0))
         self.expand()
         self.assertEquals("[ (  a  ) ]", self.selection(0))
+
+    def test_shrink(self):
+        self.set_view_content("(a (b (c) d) e)")
+        self.set_selections((7, 7))
+        self.expand()
+        self.assertEquals("c", self.selection(0))
+        self.expand()
+        self.assertEquals("(c)", self.selection(0))
+        self.expand()
+        self.assertEquals("(b (c) d)", self.selection(0))
+        self.expand()
+        self.assertEquals("(a (b (c) d) e)", self.selection(0))
+        self.expand()
+        self.assertEquals("(a (b (c) d) e)", self.selection(0))
+        self.shrink()
+        self.assertEquals("(b (c) d)", self.selection(0))
+        self.shrink()
+        self.assertEquals("(c)", self.selection(0))
+        self.shrink()
+        self.assertEquals("c", self.selection(0))
+        self.shrink()
+        self.assertEquals("", self.selection(0))
+        self.shrink()
+        self.assertEquals("", self.selection(0))

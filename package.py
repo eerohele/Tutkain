@@ -793,21 +793,27 @@ class TutkainEventListener(EventListener):
             state.forget_repl_view(view, dialect)
 
 
-class TutkainExpandSelectionCommand(TextCommand):
-    def run(self, _):
-        view = self.view
-        selections = view.sel()
+class TutkainExpandSelectionImplCommand(TextCommand):
+    """Internal, do not use. Use the tutkain_expand_selection window command
+    instead."""
+    def run(self, _, point):
+        if form := forms.find_adjacent(self.view, point):
+            self.view.sel().add(form)
+        else:
+            self.view.run_command("expand_selection", {"to": "brackets"})
 
-        for region in selections:
+
+class TutkainExpandSelectionCommand(WindowCommand):
+    def run(self):
+        view = self.window.active_view()
+
+        for region in view.sel():
             point = region.begin()
 
             if not region.empty() or selectors.ignore(view, point):
                 view.run_command("expand_selection", {"to": "scope"})
             else:
-                if form := forms.find_adjacent(view, point):
-                    selections.add(form)
-                else:
-                    view.run_command("expand_selection", {"to": "brackets"})
+                view.run_command("tutkain_expand_selection_impl", {"point": region.begin()})
 
 
 class TutkainInterruptEvaluationCommand(WindowCommand):
