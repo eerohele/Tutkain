@@ -40,3 +40,13 @@
 
 (lookup/resolve-file nil)
 (xr/check! nil?)
+
+(def public-vars
+  (sequence
+    (comp
+      (mapcat ns-publics)
+      (map second))
+    (all-ns)))
+
+(xr/check! ::specs/infos
+  (distinct (keep #(lookup (-> % .ns ns-name) (-> % .sym name)) public-vars)))
