@@ -637,7 +637,7 @@ class TutkainViewEventListener(ViewEventListener):
         if settings().get("auto_complete") and self.view.match_selector(
             point,
             "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
-        ) and (client := state.client(self.view.window(), dialects.for_point(self.view, point))):
+        ) and (dialect := dialects.for_point(self.view, point)) and (client := state.client(self.view.window(), dialect)):
             if scope := selectors.expand_by_selector(self.view, point, "meta.symbol | constant.other.keyword"):
                 prefix = self.view.substr(scope)
 
