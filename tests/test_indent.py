@@ -485,3 +485,29 @@ class TestIndentRegionCommand(ViewTestCase):
             """,
             selections=[(3, 3), (12, 12)],
         )
+
+    def test_string(self):
+        text = """
+        (defn f
+          "Example:
+
+              (f x)
+              ;;=> y
+          "
+          [x]
+          ,,,)"""
+
+        for n in range(63):
+            self.becomes(text, text, selections=[(n, n)])
+
+        text = """
+        (defn get-foos
+          [tx baz]
+          (sql/query tx ["SELECT *
+                          FROM [foo]
+                          WHERE bar
+                          NOT IN ('quux', ?);"
+                         baz]))"""
+
+        for n in range(173):
+            self.becomes(text, text, selections=[(n, n)])

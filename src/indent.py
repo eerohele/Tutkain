@@ -111,6 +111,8 @@ def get_indented_string(view, region, prune=False):
 
     string = prune_region(view, region) if prune else view.substr(region)
 
+    if view.match_selector(region.begin(), "string"):
+        return view.substr(region)
     if open_bracket:
         indentation = determine_indentation(view, open_bracket)
         return indentation + string.lstrip(" ")
