@@ -60,8 +60,9 @@
   "Given the value of the :file key of a var metadata map, resolve the file
   path against the current classpath."
   [file]
-  (let [s (str file)]
-    (or (some-> s io/resource str) s)))
+  (when file
+    (let [s (str file)]
+      (or (some-> s io/resource str) s))))
 
 (defn lookup
   "Given an ns symbol and a string representation of a clojure.lang.Named

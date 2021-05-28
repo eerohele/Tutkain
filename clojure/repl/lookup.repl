@@ -1,7 +1,7 @@
 (ns repl.lookup
   (:require
    [cognitect.transcriptor :as xr]
-   [tutkain.lookup :refer [lookup]]
+   [tutkain.lookup :as lookup :refer [lookup]]
    [tutkain.lookup.specs :as specs]))
 
 (def syms
@@ -37,3 +37,6 @@
 
 (lookup "nope" "mapcat")
 (xr/check! ::specs/info)
+
+(lookup/resolve-file nil)
+(xr/check! nil?)

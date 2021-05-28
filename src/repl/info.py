@@ -54,9 +54,9 @@ def goto(window, location):
 
 
 def parse_location(info):
-    if info:
+    if info and (file := info.get(edn.Keyword("file"))):
         return {
-            "resource": urlparse(info.get(edn.Keyword("file"), "")),
+            "resource": urlparse(file),
             "line": int(info.get(edn.Keyword("line"), "1")) - 1,
             "column": int(info.get(edn.Keyword("column"), "1")) - 1,
         }
