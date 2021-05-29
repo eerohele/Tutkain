@@ -263,3 +263,14 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.set_selections((1, 1))
         self.expand()
         self.assertEquals(";;", self.selection(0))
+
+    def test_issue_48(self):
+        self.set_view_content("[state @state-ref]")
+        self.set_selections((8, 8))
+        self.expand()
+        self.assertEquals("@state-ref", self.selection(0))
+        self.expand()
+        self.assertEquals("state @state-ref", self.selection(0))
+        self.expand()
+        self.assertEquals("[state @state-ref]", self.selection(0))
+
