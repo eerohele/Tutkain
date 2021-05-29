@@ -274,3 +274,12 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.expand()
         self.assertEquals("[state @state-ref]", self.selection(0))
 
+    def test_tagged_literal(self):
+        self.set_view_content("(foo #bar/baz [:quux 1])")
+        self.set_selections((5, 5))
+        self.expand()
+        self.assertEquals("#bar/baz", self.selection(0))
+        self.expand()
+        self.assertEquals("foo #bar/baz [:quux 1]", self.selection(0))
+        self.expand()
+        self.assertEquals("(foo #bar/baz [:quux 1])", self.selection(0))
