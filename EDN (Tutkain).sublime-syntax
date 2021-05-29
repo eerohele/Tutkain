@@ -291,7 +291,8 @@ contexts:
         4: punctuation.definition.string.begin.edn
         5: punctuation.definition.string.end.edn
         6: invalid.illegal.uuid.edn
-    - match: '(#{{qualified_symbol}}){{whitespace}}'
+    - match: '(#{{qualified_symbol}}){{end}}'
+      scope: meta.reader-form.edn
       captures:
         1: keyword.operator.macro.edn
         3: punctuation.definition.symbol.namespace.edn

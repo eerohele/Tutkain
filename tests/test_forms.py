@@ -47,7 +47,7 @@ class TestForms(ViewTestCase):
         self.set_view_content("""(foo #?(:cljs bar) baz)""")
         self.assertEquals(forms.find_next(self.view, 4), Region(5, 18))
         self.set_view_content("""(foo #bar/baz quux)""")
-        self.assertEquals(forms.find_next(self.view, 4), Region(5, 18))
+        self.assertEquals(forms.find_next(self.view, 4), Region(5, 13))
         self.set_view_content("""(inc 1)\n ;; bar""")
         self.assertEquals(forms.find_next(self.view, 7), None)
         self.set_view_content('"a b"')
