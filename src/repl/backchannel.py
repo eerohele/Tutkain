@@ -40,7 +40,6 @@ class Backchannel(object):
         self.host = host
         self.port = port
         self.sendq = queue.Queue()
-        self.recvq = queue.Queue()
         self.handlers = {}
         self.message_id = itertools.count(1)
 
@@ -71,7 +70,7 @@ class Backchannel(object):
             id = response.get(edn.Keyword("id"))
 
             try:
-                handler = self.handlers.get(id, self.recvq.put)
+                handler = self.handlers.get(id)
                 handler.__call__(response)
             finally:
                 self.handlers.pop(id, None)
