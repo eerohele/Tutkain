@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [send])
   (:require
    [clojure.edn :as edn]
+   [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.backchannel :as backchannel]
    [tutkain.socket :as socket])
@@ -25,5 +26,29 @@
   (-> recvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
 
 (send {:op :echo})
+
 (recv)
 (xr/check! #{{:op :echo}})
+
+(defmethod backchannel/handle :error
+  [_]
+  (throw (ex-info "Boom!" {:data :data})))
+
+(spec/def ::tag #{:ret})
+(spec/def ::exception? true?)
+(spec/def ::val string?)
+
+(spec/def ::ret
+  (spec/keys :req-un [::tag ::exception ::val]))
+
+(send {:op :error})
+(recv)
+(xr/check! ::ret)
+
+;; Backchannel continues to work after handler throws an error
+(send {:op :echo})
+(recv)
+
+(send {:op :quit})
+(.isOpen backchannel)
+(xr/check! false?)

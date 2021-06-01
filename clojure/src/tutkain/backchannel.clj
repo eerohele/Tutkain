@@ -1,4 +1,6 @@
 (ns tutkain.backchannel
+  (:require
+    [tutkain.format :as format])
   (:import
    (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
    (java.io ByteArrayInputStream InputStreamReader)
@@ -117,8 +119,18 @@
                            (when (.isOpen socket)
                              (let [message (read in false EOF)]
                                (when-not (identical? EOF message)
-                                 (handle (assoc (xform-in message) :out-fn out-fn))
-                                 (recur))))))
+                                 (let [recur? (case (:op message)
+                                                :quit false
+                                                (let [message (assoc (xform-in message) :out-fn out-fn)]
+                                                  (try
+                                                    (handle message)
+                                                    true
+                                                    (catch Throwable ex
+                                                      (respond-to message {:tag :ret
+                                                                           :exception true
+                                                                           :val (format/pp-str (Throwable->map ex))})
+                                                      true))))]
+                                   (when recur? (recur))))))))
                        (finally
                          (.close socket)))))]
       (doto thread

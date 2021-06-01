@@ -35,8 +35,9 @@ class Backchannel(object):
             except OSError as e:
                 log.debug({"event": "error", "exception": e})
 
-    def __init__(self, host, port):
+    def __init__(self, client, host, port):
         self.stop_event = Event()
+        self.client = client
         self.host = host
         self.port = port
         self.sendq = queue.Queue()
@@ -67,13 +68,18 @@ class Backchannel(object):
 
     def handle(self, response):
         try:
-            id = response.get(edn.Keyword("id"))
+            if not isinstance(response, dict):
+                self.client.recvq.put(response)
+            elif response.get(edn.Keyword("exception")):
+                self.client.recvq.put(response)
+            else:
+                id = response.get(edn.Keyword("id"))
 
-            try:
-                handler = self.handlers.get(id)
-                handler.__call__(response)
-            finally:
-                self.handlers.pop(id, None)
+                try:
+                    handler = self.handlers.get(id)
+                    handler.__call__(response)
+                finally:
+                    self.handlers.pop(id, None)
         except AttributeError as error:
             log.error({"event": "error", "response": response, "error": error})
 

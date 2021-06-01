@@ -234,11 +234,11 @@ class JVMClient(Client):
 
             if (host := ret.get(edn.Keyword("host"))):
                 port = ret.get(edn.Keyword("port"))
-                self.backchannel = Backchannel(host, port).connect()
+                self.backchannel = Backchannel(self, host, port).connect()
             elif (val := edn.read(ret.get(edn.Keyword("val")))) and isinstance(val, dict):
                 host = val.get(edn.Keyword("host"))
                 port = val.get(edn.Keyword("port"))
-                self.backchannel = Backchannel(host, port).connect()
+                self.backchannel = Backchannel(self, host, port).connect()
             else:
                 self.recvq.put(ret)
 
@@ -333,7 +333,7 @@ class JSClient(Client):
         val = edn.read(line)
         host = val.get(edn.Keyword("host"))
         port = val.get(edn.Keyword("port"))
-        self.backchannel = Backchannel(host, port).connect()
+        self.backchannel = Backchannel(self, host, port).connect()
 
         self.load_modules([
             "lookup.clj",

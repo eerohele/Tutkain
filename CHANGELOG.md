@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Fix sexp detection when open bracket is immediately followed by a comment
 - Fix expand selection when the caret is between `@` and a symbol
 - Improve expand selection for tagged literals
+- Stability improvements
 
 ## 0.7.6 (alpha) - 2021-05-26
 
