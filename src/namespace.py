@@ -7,7 +7,7 @@ def find_regions(view):
 
 def name(view):
     if regions := find_regions(view):
-        return view.substr(regions[-1])
+        return view.substr(regions[0])
 
 
 def forms(view):
