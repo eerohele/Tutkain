@@ -498,6 +498,13 @@ class TestParedit(ViewTestCase):
         self.assertEquals("(a (b) c) (d (e) f)", self.view_content())
         self.assertEquals(self.selections(), [(4, 4), (14, 14)])
 
+    def test_forward_barf_dangle(self):
+        self.set_view_content("""[["/foo"\n  {:bar :baz}\n  ["/quux"]]]""")
+        self.set_selections((2, 2))
+        self.view.run_command("tutkain_paredit_forward_barf")
+        self.assertEquals("""[["/foo"\n  {:bar :baz}]\n ["/quux"]]""", self.view_content())
+        self.assertEquals(self.selections(), [(2, 2)])
+
     # TODO: I'm not asserting selections here because I haven't figured out how to ensure the
     # "correct" cursor position after running Paredit commands. It's especially tricky when
     # whitespace pruning is involved.
