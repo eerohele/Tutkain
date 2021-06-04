@@ -1,16 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
+## 0.8.0 (alpha) - 2021-06-04
 
+- Add support for shrinking selections #13 #47
+- Prevent Tutkain from reindenting multiline strings
 - Enable **Tutkain: Evaluate** » **Active View** for `.cljc` views
 - Enable **Tutkain: Run Test Under Cursor** for `defspec`s
 - Fix dialect detection for `.cljc` views
 - Prevent Tutkain from evaluating empty regions
 - Fix Java class/module auto-completion on Windows
 - Prevent goto definition for targets whose file path is unknown
-- Add support for shrinking selections #13 #47
-- Prevent Tutkain from reindenting multiline strings
 - Fix sexp detection when open bracket is immediately followed by a comment
 - Fix expand selection when the caret is between `@` and a symbol
 - Improve expand selection for tagged literals
