@@ -27,3 +27,8 @@ class TestFindDeclaration(ViewTestCase):
             """(ns ^{:config '{:some-keyword some-symbol}} foo.bar)"""
         )
         self.assertEquals("foo.bar", namespace.name(self.view))
+
+        self.set_view_content(
+            """(ns foo.bar) (ns baz.quux)"""
+        )
+        self.assertEquals("foo.bar", namespace.name(self.view))
