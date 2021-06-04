@@ -194,8 +194,14 @@ def forward_barf(view, edit):
         if innermost and form:
             point = innermost.close.begin()
             char = view.substr(point)
+
+            if previous_form := forms.find_previous(view, form.begin()):
+                new_close_pos = previous_form.end()
+            else:
+                new_close_pos = form.begin() - 1
+
             view.erase(edit, Region(point, point + 1))
-            insert_point = max(form.begin() - 1, innermost.open.end())
+            insert_point = max(new_close_pos, innermost.open.end())
             view.insert(edit, insert_point, char)
 
             # If we inserted the close char next to the open char, add a
@@ -203,8 +209,20 @@ def forward_barf(view, edit):
             if insert_point - 1 == innermost.open.begin():
                 view.insert(edit, insert_point + 1, " ")
 
-            view.run_command(
-                "tutkain_indent_sexp", {"scope": "innermost", "prune": True}
+            # Reindent the form we barfed from
+            indent.indent_region(
+                view,
+                edit,
+                sexp.innermost(view, innermost.open.end(), edge=False).extent(),
+                prune=True
+            )
+
+            # Reindent the form we barfed
+            indent.indent_region(
+                view,
+                edit,
+                forms.find_next(view, insert_point + 1),
+                prune=True
             )
 
 
