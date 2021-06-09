@@ -35,11 +35,10 @@
   [keywords aliases]
   (mapcat (fn [[ns-alias _]]
             (let [ns-alias-name (str (resolve-namespace (symbol ns-alias) aliases))]
-              (sequence
-                (comp
-                  (filter #(= (namespace %) ns-alias-name))
-                  (map #(str "::" ns-alias "/" (name %)))
-                  (map annotate-keyword))
+              (eduction
+                (filter #(= (namespace %) ns-alias-name))
+                (map #(str "::" ns-alias "/" (name %)))
+                (map annotate-keyword)
                 keywords)))
     aliases))
 
@@ -47,11 +46,10 @@
   "Given a list of keywords and an ns symbol, return all unqualified
   auto-resolved keywords in the context of that namespace."
   [keywords ns]
-  (sequence
-    (comp
-      (filter #(= (namespace %) (str ns)))
-      (map #(str "::" (name %)))
-      (map annotate-keyword))
+  (eduction
+    (filter #(= (namespace %) (str ns)))
+    (map #(str "::" (name %)))
+    (map annotate-keyword)
     keywords))
 
 (comment (unqualified-auto-resolved-keywords (all-keywords) 'clojure.main),)
@@ -117,13 +115,12 @@
   "Given an ns symbol, return all Java methods that are available in the
   context of that ns."
   [ns]
-  (sequence
-    (comp
-      (map val)
-      (mapcat #(.getMethods ^Class %))
-      (filter static?)
-      (map #(->> ^Member % .getName (str ".")))
-      (distinct))
+  (eduction
+    (map val)
+    (mapcat #(.getMethods ^Class %))
+    (filter static?)
+    (map #(->> ^Member % .getName (str ".")))
+    (distinct)
     (ns-imports ns)))
 
 (comment (ns-java-methods 'clojure.main))
@@ -131,11 +128,10 @@
 (defn static-members
   "Given a class, return all static members of that class."
   [^Class class]
-  (sequence
-    (comp
-      (filter static?)
-      (map #(.getName ^Member %))
-      (dedupe))
+  (eduction
+    (filter static?)
+    (map #(.getName ^Member %))
+    (dedupe)
     (concat (.getMethods class) (.getDeclaredFields class))))
 
 (comment (static-members java.lang.String),)
@@ -159,12 +155,11 @@
 (def class-files
   (->>
     ["sun.boot.class.path" "java.ext.dirs" "java.class.path"]
-    (sequence
-      (comp
-        (keep #(some-> ^String % System/getProperty (.split "/")))
-        cat
-        (mapcat path-files)
-        (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__"))))))
+    (eduction
+      (keep #(some-> ^String % System/getProperty (.split "/")))
+      cat
+      (mapcat path-files)
+      (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__")))))
     delay))
 
 (defn- classname [^String file]
@@ -181,33 +176,30 @@
         (->>
           (Reflector/invokeStaticMethod module-finder "ofSystem" (into-array Object []))
           .findAll
-          (sequence
-            (comp
-              (mapcat #(-> % .open .list .iterator iterator-seq))
-              (map classname)
-              (map annotate-class)))
+          (eduction
+            (mapcat #(-> % .open .list .iterator iterator-seq))
+            (map classname)
+            (map annotate-class))
           (sort-by :candidate)))
       (catch ClassNotFoundException _))))
 
 (def top-level-classes
   (future
     (->>
-      (sequence
-        (comp
-          (filter #(re-find #"^[^\$]+\.class" %))
-          (map classname)
-          (map annotate-class))
+      (eduction
+        (filter #(re-find #"^[^\$]+\.class" %))
+        (map classname)
+        (map annotate-class)
         @class-files)
       (sort-by :candidate))))
 
 (def nested-classes
   (future
     (->>
-      (sequence
-        (comp
-          (filter #(re-find #"^[^\$]+(\$[^\d]\w*)+\.class" %))
-          (map classname)
-          (map annotate-class))
+      (eduction
+        (filter #(re-find #"^[^\$]+(\$[^\d]\w*)+\.class" %))
+        (map classname)
+        (map annotate-class)
         @class-files)
       (sort-by :candidate))))
 
@@ -323,15 +315,14 @@
 (defn class-candidates
   [^String prefix]
   (let [candidate? (partial candidate? prefix)]
-    (sequence
-      (comp
-        ;; Ignore nested classes if the prefix does not contain a dollar sign.
-        (remove #(and (not (.contains prefix "$")) (.contains ^String (:candidate %) "$")))
-        ;; The class candidate list is long and sorted, so instead of filtering
-        ;; the entire list, we drop until we get the first candidate, then take
-        ;; until the first class that's not a candidate.
-        (drop-while (complement candidate?))
-        (take-while candidate?))
+    (eduction
+      ;; Ignore nested classes if the prefix does not contain a dollar sign.
+      (remove #(and (not (.contains prefix "$")) (.contains ^String (:candidate %) "$")))
+      ;; The class candidate list is long and sorted, so instead of filtering
+      ;; the entire list, we drop until we get the first candidate, then take
+      ;; until the first class that's not a candidate.
+      (drop-while (complement candidate?))
+      (take-while candidate?)
       @class-candidate-list)))
 
 (defn candidates

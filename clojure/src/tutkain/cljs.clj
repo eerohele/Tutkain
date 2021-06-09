@@ -111,32 +111,29 @@
   scoped candidates that match the given prefix."
   [env ^String prefix ns]
   (when-some [alias (some-> prefix (.split "/") first symbol)]
-    (sequence
-      (comp
-        (map val)
-        (remove :private)
-        (map (fn [v] (update (annotate-var v) :candidate #(str alias "/" %)))))
+    (eduction
+      (map val)
+      (remove :private)
+      (map (fn [v] (update (annotate-var v) :candidate #(str alias "/" %))))
       (some->> (ns-alias->ns-sym env ns alias) (analyzer.api/ns-interns env)))))
 
 (defn ^:private core-candidates
   "Given a compiler environment, return all auto-completion candidates in
   cljs.core."
   [env]
-  (sequence
-    (comp
-      (map val)
-      (remove :private)
-      (map annotate-var))
+  (eduction
+    (map val)
+    (remove :private)
+    (map annotate-var)
     (analyzer.api/ns-interns env 'cljs.core)))
 
 (defn ^:private ns-var-candidates
   "Given a compiler environment and an ns symbol, return all var
   auto-completion candidates in the namespace."
   [env ns]
-  (sequence
-    (comp
-      (map val)
-      (map annotate-var))
+  (eduction
+    (map val)
+    (map annotate-var)
     (analyzer.api/ns-interns env ns)))
 
 (defn ^:private keyword-candidates
