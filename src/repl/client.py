@@ -41,7 +41,7 @@ class Client(ABC):
             self.capabilities.add(response.get(edn.Keyword("filename")))
 
     def load_modules(self, modules):
-        for filename in modules:
+        for filename, requires in modules:
             path = os.path.join(self.source_root, filename)
 
             with open(path, "rb") as file:
@@ -49,7 +49,8 @@ class Client(ABC):
                     "op": edn.Keyword("load-base64"),
                     "path": path,
                     "filename": filename,
-                    "blob": base64.b64encode(file.read()).decode("utf-8")
+                    "blob": base64.b64encode(file.read()).decode("utf-8"),
+                    "requires": requires
                 }, self.module_loaded)
 
     @abstractmethod
@@ -244,10 +245,14 @@ class JVMClient(Client):
                 self.recvq.put(ret)
 
         self.load_modules([
-            "lookup.clj",
-            "completions.clj",
-            "load_blob.clj",
-            "test.clj"
+            ("lookup.clj", []),
+            ("completions.clj", []),
+            ("load_blob.clj", []),
+            ("test.clj", []),
+            ("analyzer.clj", [
+                edn.Symbol("clojure.tools.reader"),
+                edn.Symbol("clojure.tools.analyzer.jvm")
+            ])
         ])
 
         self.write_line("""(println "Clojure" (clojure-version))""")
@@ -337,10 +342,10 @@ class JSClient(Client):
         self.backchannel = Backchannel(self, host, port).connect()
 
         self.load_modules([
-            "lookup.clj",
-            "completions.clj",
-            "cljs.clj",
-            "shadow.clj",
+            ("lookup.clj", []),
+            ("completions.clj", []),
+            ("cljs.clj", []),
+            ("shadow.clj", []),
         ])
 
         self.write_line("""(println "ClojureScript" *clojurescript-version*)""")

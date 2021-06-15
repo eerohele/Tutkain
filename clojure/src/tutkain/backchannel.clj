@@ -3,7 +3,7 @@
     [tutkain.format :as format])
   (:import
    (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
-   (java.io ByteArrayInputStream InputStreamReader)
+   (java.io ByteArrayInputStream InputStreamReader FileNotFoundException)
    (java.lang.reflect Field)
    (java.net InetSocketAddress)
    (java.nio.channels Channels ServerSocketChannel)
@@ -42,19 +42,23 @@
     (LineNumberingPushbackReader.)))
 
 (defmethod handle :load-base64
-  [{:keys [blob path filename] :as message}]
-  (with-open [reader (base64-reader blob)]
-    (try
-      (Compiler/load reader path filename)
-      (respond-to message {:filename filename :result :ok})
-      (catch Compiler$CompilerException ex
-        (respond-to message {:filename filename :result :fail :reason :compiler-ex :ex (Throwable->map ex)})))))
+  [{:keys [blob path filename requires] :as message}]
+  (try
+    (some->> requires (run! require))
+    (with-open [reader (base64-reader blob)]
+      (try
+        (Compiler/load reader path filename)
+        (respond-to message {:filename filename :result :ok})
+        (catch Compiler$CompilerException ex
+          (respond-to message {:filename filename :result :fail :reason :compiler-ex :ex (Throwable->map ex)}))))
+    (catch FileNotFoundException ex
+      (respond-to message {:filename filename :result :fail :reason :not-found :ex (Throwable->map ex)}))))
 
 (def ^:private eval-ctx
   (atom {:file nil}))
 
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
-(defn- set-column!
+(defn set-column!
   [^LineNumberingPushbackReader reader column]
   (when-let [field (->> LineNumberingPushbackReader
                      (.getDeclaredFields)

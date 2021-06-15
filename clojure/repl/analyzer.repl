@@ -1,0 +1,110 @@
+(ns repl.analyzer
+  (:require
+   [clojure.set :as set]
+   [clojure.spec.alpha :as spec]
+   [cognitect.transcriptor :as xr]
+   [tutkain.analyzer :as analyzer]))
+
+(spec/def ::op
+  #{:const :map :def})
+
+(spec/def ::type
+  #{:number :map :keyword :string})
+
+(spec/def ::form
+  any?)
+
+(spec/def ::line nat-int?)
+(spec/def ::end-line nat-int?)
+(spec/def ::column nat-int?)
+(spec/def ::end-column nat-int?)
+
+(spec/def ::env
+  (spec/keys :opt-un [::line ::end-line ::column ::end-column]))
+
+(spec/def ::node
+  (spec/keys
+    :req-un [::op]
+    :opt-un [::type ::form ::env]))
+
+;; Analyze multiple forms
+(analyzer/string->nodes "/path/to/my.clj" *ns* 0 0 "1 2")
+(xr/check! (spec/coll-of ::node :min-count 2))
+
+;; Line and column number
+(def nodes (set (analyzer/string->nodes "/path/to/my.clj" *ns* 1 2 "(def x 1)")))
+(xr/check! (spec/coll-of ::node) nodes)
+(xr/check! (partial set/subset? #{{:line 1 :column 2 :end-column 11}})
+  (set/project (map :env nodes) [:line :column :end-column]))
+
+(set
+  (analyzer/local-symbol-positions
+    {:file "/path/to/my.clj"
+     :ns *ns*
+     :context "(defn f [x] (inc x))"
+     :form 'x
+     :start-line 0
+     :start-column 0
+     :line 0
+     :column 9
+     :end-column 10}))
+
+(xr/check!
+  (partial set/subset? #{{:form 'x :line 0 :column 9 :end-column 10}
+                         {:form 'x :line 0 :column 17 :end-column 18}}))
+
+(set
+  (analyzer/local-symbol-positions
+    {:file "/path/to/my.clj"
+     :ns *ns*
+     ;; newline doesn't mess up :end-column
+     :context "(defn f [x] (doto x\n  inc))"
+     :form 'x
+     :start-line 0
+     :start-column 0
+     :line 0
+     :column 18
+     :end-column 19}))
+
+(xr/check!
+  (partial set/subset? #{{:form 'x :line 0 :column 9 :end-column 10}
+                         {:form 'x :line 0 :column 18 :end-column 19}}))
+
+(into #{}
+  (mapcat
+    (fn [[form [column end-column]]]
+      (analyzer/local-symbol-positions
+        {:file "/path/to/my.clj"
+         :ns *ns*
+         :context "(defn f [{:keys [x y z]}] (+ x y z))"
+         :form form
+         :start-line 0
+         :start-column 0
+         :line 0
+         :column column
+         :end-column end-column})))
+  {'x [17 18] 'y [19 20] 'z [21 22]})
+
+(xr/check!
+  (partial set/subset?
+    #{{:line 0 :column 17 :form 'x :end-column 18}
+      {:line 0 :column 29 :form 'x :end-column 30}
+      {:line 0 :column 19 :form 'y :end-column 20}
+      {:line 0 :column 31 :form 'y :end-column 32}
+      {:line 0 :column 21 :form 'z :end-column 22}
+      {:line 0 :column 33 :form 'z :end-column 34}}))
+
+(->>
+  "(defn f [x] (+ x (let [x 2] (inc x)) x))"
+  (analyzer/string->nodes "/path/to/my.clj" *ns* 0 0)
+  analyzer/index-by-position)
+
+(xr/check!
+  (spec/every-kv
+    (spec/keys :req-un [::line
+                        ::form
+                        ::column
+                        ::end-column])
+    simple-symbol?
+    :min-count 6
+    :max-count 6))
