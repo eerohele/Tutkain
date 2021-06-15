@@ -210,6 +210,9 @@ def outermost(view, point, edge=True, ignore={}):
     previous = find_open(view, move_inside(view, point, edge))
 
     while previous and point >= 0:
+        if previous.region and view.rowcol(previous.region.begin())[1] == 0:
+            return make_sexp(view, previous)
+
         current = find_open(view, point)
 
         if previous and (

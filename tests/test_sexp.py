@@ -245,3 +245,11 @@ class TestSexp(ViewTestCase):
         self.view.run_command("tutkain_cycle_collection_type")
         self.assertEquals("#{a b} #{c d}", self.view_content())
         self.assertEquals([(0, 0), (7, 7)], self.selections())
+
+    def test_outermost_first_col(self):
+        self.set_view_content("""(defn f
+(let [x 1]
+  (inc x))
+)""")
+
+        self.assertEquals(sexp.outermost(self.view, 9).extent(), Region(8, 29))
