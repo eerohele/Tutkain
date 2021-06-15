@@ -6,6 +6,10 @@
   [x]
   (* x x))
 
+(defn f
+  [x]
+  (+ x (let [x 2] (inc x)) x))
+
 (defn foo
   [a b]
   (* (other/sum a b) (other/sum a b)))

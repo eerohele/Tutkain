@@ -1,5 +1,6 @@
 from concurrent.futures import TimeoutError
 from inspect import cleandoc
+from functools import partial
 import json
 import os
 import sublime
@@ -736,12 +737,42 @@ def reconnect(vs):
             )
 
 
+def add_local_symbol_regions(view, tuples):
+    """Given a set of tuples containing the begin and end point of a Region,
+    add a region for each local symbol delimited by the points."""
+    if regions := [sublime.Region(begin, end) for begin, end in tuples]:
+        view.add_regions(
+            "tutkain_local_symbols",
+            regions,
+            "region.cyanish",
+            flags=sublime.DRAW_SOLID_UNDERLINE | sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
+        )
+
+
+def symbol_at_point(view, point):
+    """Given a view and a point, return the Clojure symbol at the point."""
+    if view.match_selector(
+        point,
+        "meta.symbol - (meta.special-form | variable.function | keyword.declaration.function)"
+    ):
+        return selectors.expand_by_selector(view, point, "meta.symbol")
+
+
 class TutkainEventListener(EventListener):
     def on_init(self, views):
         reconnect(views)
 
     def on_modified_async(self, view):
         inline.clear(view)
+
+    def on_selection_modified_async(self, view):
+        if settings().get("highlight_local_symbols", True) and (sel := view.sel()):
+            point = sel[0].begin()
+
+            if symbol := symbol_at_point(view, point):
+                fetch_local_symbols(view, point, symbol, partial(add_local_symbol_regions, view))
+            else:
+                view.erase_regions("tutkain_local_symbols")
 
     def on_deactivated_async(self, view):
         inline.clear(view)
@@ -1119,3 +1150,78 @@ class TutkainChooseEvaluationDialectCommand(WindowCommand):
             self.finish,
             placeholder="Choose Clojure Common evaluation dialect"
         )
+
+
+class TutkainAddRegionsCommand(TextCommand):
+    """Implementation detail; do not use."""
+
+    def run(self, _, view_id, regions):
+        if self.view.id() == view_id:
+            regions = [sublime.Region(begin, end) for begin, end in regions]
+            s = self.view.sel()
+            s.clear()
+            s.add_all(regions)
+
+
+def handle_locals_response(view, handler, response):
+    if positions := response.get(edn.Keyword("positions")):
+        handler(positions_to_tuples(view, positions))
+
+
+def fetch_local_symbols(view, point, form, handler):
+    if (
+        dialect := dialects.for_point(view, point)
+    ) and (
+        client := state.client(view.window(), dialect)
+    ) and (
+        "analyzer.clj" in client.capabilities
+    ) and (
+        outermost := sexp.outermost(view, point, edge=False)
+    ):
+        line, column = view.rowcol(form.begin())
+        end_column = column + form.size()
+        start_line, start_column = view.rowcol(outermost.open.begin())
+
+        client.backchannel.send({
+            "op": edn.Keyword("local-symbols"),
+            "file": view.file_name() or "NO_SOURCE_FILE",
+            "ns": namespace.name(view),
+            "context": view.substr(outermost.extent()),
+            "form": edn.Symbol(view.substr(form)),
+            "start-line": start_line + 1,
+            "start-column": start_column + 1,
+            "line": line + 1,
+            "column": column + 1,
+            "end-column": end_column + 1
+        }, partial(handle_locals_response, view, handler))
+
+
+def positions_to_tuples(view, positions):
+    regions = []
+
+    if positions:
+        for position in positions:
+            line = position.get(edn.Keyword("line")) - 1
+            column = position.get(edn.Keyword("column")) - 1
+            end_column = position.get(edn.Keyword("end-column")) - 1
+            begin = view.text_point(line, column)
+            end = begin + end_column - column
+            regions.append((begin, end))
+
+    return regions
+
+
+class TutkainSelectLocalSymbolsCommand(TextCommand):
+    def handler(self, regions):
+        # TODO: Why?
+        self.view.run_command("tutkain_add_regions", {
+            "view_id": self.view.id(),
+            "regions": regions
+        })
+
+    def run(self, _):
+        if sel := self.view.sel():
+            point = sel[0].begin()
+
+            if symbol := symbol_at_point(self.view, point):
+                fetch_local_symbols(self.view, point, symbol, self.handler)

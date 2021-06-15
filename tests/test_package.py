@@ -41,7 +41,7 @@ class TestJVMClient(ViewTestCase):
                 edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
             })
 
-            for _ in range(4):
+            for _ in range(5):
                 backchannel.recv()
 
             server.send({

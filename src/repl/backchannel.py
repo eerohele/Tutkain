@@ -72,6 +72,8 @@ class Backchannel(object):
                 self.client.recvq.put(response)
             elif response.get(edn.Keyword("exception")):
                 self.client.recvq.put(response)
+            elif response.get(edn.Keyword("debug")):
+                log.debug({"event": "info", "message": response.get(edn.Keyword("val"))})
             else:
                 id = response.get(edn.Keyword("id"))
 
