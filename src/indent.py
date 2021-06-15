@@ -7,10 +7,10 @@ from . import sexp
 
 
 def determine_indentation(view, open_bracket):
-    end = open_bracket.end()
+    end = open_bracket.region.end()
     line = view.line(end)
     indentation = " " * (end - line.begin())
-    region = view.find(r"\S", open_bracket.end())
+    region = view.find(r"\S", open_bracket.region.end())
     point = region.begin()
 
     if view.match_selector(point, "meta.special-form | variable | keyword.declaration | keyword.control | storage.type | entity.name"):
@@ -45,7 +45,7 @@ def insert_newline_and_indent(view, edit):
         if selectors.inside_comment(view, point):
             view.run_command("insert", {"characters": "\n;; "})
         else:
-            _, open_bracket = sexp.find_open(view, point)
+            open_bracket = sexp.find_open(view, point)
 
             if open_bracket is None:
                 view.insert(edit, point, "\n")
@@ -119,7 +119,7 @@ def prune_region(view, region):
 
 
 def get_indented_string(view, region, prune=False):
-    _, open_bracket = sexp.find_open(view, region.begin())
+    open_bracket = sexp.find_open(view, region.begin())
 
     string = prune_region(view, region) if prune else view.substr(region)
 

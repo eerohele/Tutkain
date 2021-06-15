@@ -1,9 +1,30 @@
+from dataclasses import dataclass
 from . import selectors
 from sublime import CLASS_WORD_START, Region
 
 
 OPEN = {"(": ")", "[": "]", "{": "}"}
 CLOSE = {")": "(", "]": "[", "}": "{"}
+
+BEGIN_SELECTORS = """punctuation.section.parens.begin
+| punctuation.section.brackets.begin
+| punctuation.section.braces.begin"""
+
+END_SELECTORS = """punctuation.section.parens.end
+| punctuation.section.brackets.end
+| punctuation.section.braces.end"""
+
+CHAR_TO_SELECTOR = {
+    "(": "punctuation.section.parens.begin",
+    "[": "punctuation.section.brackets.begin",
+    "{": "punctuation.section.braces.begin"
+}
+
+BEGIN_TO_END_SELECTOR = {
+    "punctuation.section.parens.begin": "punctuation.section.parens.end",
+    "punctuation.section.brackets.begin": "punctuation.section.brackets.end",
+    "punctuation.section.braces.begin": "punctuation.section.braces.end"
+}
 
 
 class Sexp:
@@ -47,46 +68,51 @@ class Sexp:
         return other and self.extent() == other.extent()
 
 
+@dataclass(eq=True, frozen=True)
+class Open:
+    selector: str
+    region: Region
+
+
 def find_open(view, start_point):
-    point = start_point
+    point = start_point - 1
     stack = 0
 
-    while point > 0:
-        char = view.substr(point - 1)
-
-        if char in CLOSE and not selectors.ignore(view, point - 1):
-            stack += 1
-            point -= 1
-        elif stack > 0 and char in OPEN and not selectors.ignore(view, point - 1):
+    while point >= 0:
+        if stack == 0 and view.match_selector(point, BEGIN_SELECTORS):
+            char = view.substr(point)
+            region = Region(point, point + 1)
+            return Open(CHAR_TO_SELECTOR[char], region)
+        elif stack > 0 and view.match_selector(point, BEGIN_SELECTORS):
             stack -= 1
             point -= 1
-        elif stack == 0 and char in OPEN and not selectors.ignore(view, point - 1):
-            return char, Region(point - 1, point)
+        elif view.match_selector(point, END_SELECTORS):
+            stack += 1
+            point -= 1
         else:
             point -= 1
 
-    return None, None
+    return None
 
 
-def find_close(view, start_point, close=None):
-    point = start_point
-    stack = 0
-    max_point = view.size()
-
-    if close is None:
+def find_close(view, opening):
+    if opening is None:
         return None
 
-    while point < max_point:
-        char = view.substr(point)
+    point = opening.region.end()
+    stack = 0
+    max_point = view.size()
+    end_selector = BEGIN_TO_END_SELECTOR[opening.selector]
 
-        if char == CLOSE[close] and not selectors.ignore(view, point):
+    while point < max_point:
+        if stack == 0 and view.match_selector(point, end_selector):
+            return Region(point, point + 1)
+        elif view.match_selector(point, opening.selector):
             stack += 1
             point += 1
-        elif stack > 0 and char == close and not selectors.ignore(view, point):
+        elif stack > 0 and view.match_selector(point, end_selector):
             stack -= 1
             point += 1
-        elif stack == 0 and char == close and not selectors.ignore(view, point):
-            return Region(point, point + 1)
         else:
             point += 1
 
@@ -158,12 +184,9 @@ def innermost(view, start_point, edge=True):
         # TODO: Is a string a sexp?
         return Sexp(view, Region(begin, begin + 1), Region(end, end + 1))
     else:
-        char, open_region = find_open(view, point)
-
-        if char:
-            close_region = find_close(view, open_region.end(), close=OPEN.get(char))
-
-            return Sexp(view, open_region, close_region)
+        if punctuation := find_open(view, point):
+            close_region = find_close(view, punctuation)
+            return Sexp(view, punctuation.region, close_region)
 
 
 def walk_outward(view, point, edge=True):
@@ -178,22 +201,25 @@ def head_word(view, point):
     return view.substr(view.word(view.find_by_class(point, True, CLASS_WORD_START)))
 
 
+def make_sexp(view, begin):
+    close_region = find_close(view, begin)
+    return Sexp(view, begin.region, close_region)
+
+
 def outermost(view, point, edge=True, ignore={}):
     previous = find_open(view, move_inside(view, point, edge))
 
-    while previous[0] and point >= 0:
+    while previous and point >= 0:
         current = find_open(view, point)
 
-        if previous[0] and (
-            not current[0] or (ignore and head_word(view, current[1].begin()) in ignore)
-        ):
-            open_region = previous[1]
-            close_region = find_close(
-                view, open_region.end(), close=OPEN.get(previous[0])
+        if previous and (
+            not current or (
+                ignore and head_word(view, current.region.begin()) in ignore
             )
-            return Sexp(view, open_region, close_region)
+        ):
+            return make_sexp(view, previous)
         else:
-            point = previous[1].begin()
+            point = previous.region.begin()
             previous = current
 
 
