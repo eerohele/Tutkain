@@ -9,20 +9,20 @@ from .util import ViewTestCase
 class TestSexp(ViewTestCase):
     def test_find_open(self):
         self.set_view_content("(a)")
-        self.assertEquals((None, None), sexp.find_open(self.view, 0))
-        self.assertEquals(("(", Region(0, 1)), sexp.find_open(self.view, 1))
-        self.assertEquals((None, None), sexp.find_open(self.view, 3))
+        self.assertEquals(None, sexp.find_open(self.view, 0))
+        self.assertEquals(sexp.Open("punctuation.section.parens.begin", Region(0, 1)), sexp.find_open(self.view, 1))
+        self.assertEquals(None, sexp.find_open(self.view, 3))
         self.set_view_content("(a [b] c)")
-        self.assertEquals(("[", Region(3, 4)), sexp.find_open(self.view, 4))
-        self.assertEquals(("(", Region(0, 1)), sexp.find_open(self.view, 6))
+        self.assertEquals(sexp.Open("punctuation.section.brackets.begin", Region(3, 4)), sexp.find_open(self.view, 4))
+        self.assertEquals(sexp.Open("punctuation.section.parens.begin", Region(0, 1)), sexp.find_open(self.view, 6))
 
     def test_find_close(self):
         self.set_view_content("(a)")
-        self.assertEquals(None, sexp.find_close(self.view, 0))
-        self.assertEquals(Region(2, 3), sexp.find_close(self.view, 1, close=")"))
+        self.assertEquals(None, sexp.find_close(self.view, None))
+        self.assertEquals(Region(2, 3), sexp.find_close(self.view, sexp.Open("punctuation.section.parens.begin", Region(0, 1))))
         self.set_view_content("(a [b] c)")
-        self.assertEquals(Region(5, 6), sexp.find_close(self.view, 4, close="]"))
-        self.assertEquals(Region(8, 9), sexp.find_close(self.view, 6, close=")"))
+        self.assertEquals(Region(5, 6), sexp.find_close(self.view, sexp.Open("punctuation.section.brackets.begin", Region(4, 5))))
+        self.assertEquals(Region(8, 9), sexp.find_close(self.view, sexp.Open("punctuation.section.parens.begin", Region(6, 7))))
 
     def test_inside_string(self):
         content = ' "x" '
