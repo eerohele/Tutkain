@@ -91,21 +91,6 @@
 
 (comment (namespaces 'clojure.main),)
 
-(defn ns-public-vars
-  [ns]
-  (vals (ns-publics ns)))
-
-(defn ns-vars
-  [ns]
-  (filter var? (vals (ns-map ns))))
-
-(defn ns-classes
-  "Given an ns symbol, return every class imported into that namespace."
-  [ns]
-  (keys (ns-imports ns)))
-
-(comment (ns-classes 'clojure.main),)
-
 (defn- static?
   "Given a member of a class, return true if it is a static member."
   [^Member member]
@@ -253,12 +238,21 @@
   "Given an ns symbol, return all vars that are available in the context of
   that namespace."
   [ns]
-  (map annotate-var (ns-vars ns)))
+  (sequence
+    (comp
+      (map val)
+      (filter var?)
+      (map annotate-var))
+    (ns-map ns)))
 
 (defn ns-public-var-candidates
   "Given an ns symbol, return all public var candidates in that namespace."
   [ns]
-  (map annotate-var (ns-public-vars ns)))
+  (sequence
+    (comp
+      (map val)
+      (map annotate-var))
+    (ns-publics ns)))
 
 (comment (ns-public-var-candidates 'clojure.set),)
 
@@ -266,7 +260,11 @@
   "Given an ns symbol, return all class candidates that are imported into that
   namespace."
   [ns]
-  (map #(hash-map :candidate (name %) :type :class) (ns-classes ns)))
+  (sequence
+    (comp
+      (map key)
+      (map #(hash-map :candidate (name %) :type :class)))
+    (ns-imports ns)))
 
 (comment (ns-class-candidates 'clojure.main),)
 
