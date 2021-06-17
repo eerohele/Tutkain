@@ -10,23 +10,29 @@
    [tutkain.completions :as completions :refer [candidates]]
    [tutkain.completions.specs :as specs]))
 
+(defn prefixed-candidates
+  [spec prefix]
+  (spec/and spec
+    (fn [candidates]
+      (every? #(.startsWith ^String (:candidate %) prefix) candidates))))
+
 ;; Tests
 
 (candidates "" *ns*)
 (xr/check! empty?)
 
 (candidates ":a" 'clojure.core)
-(xr/check! ::specs/completions)
+(xr/check! (prefixed-candidates ::specs/completions ":a"))
 
 (candidates "::s" *ns*)
-(xr/check! ::specs/completions)
+(xr/check! (prefixed-candidates ::specs/completions "::s"))
 
 (candidates "::spec/" *ns*)
-(xr/check! ::specs/completions)
+(xr/check! (prefixed-candidates ::specs/completions "::spec/"))
 
 :foo/bar
 (candidates ":foo/" *ns*)
-(xr/check! ::specs/completions)
+(xr/check! (prefixed-candidates ::specs/completions ":foo/"))
 
 (spec/def ::pass? #{true})
 
@@ -39,10 +45,10 @@
 (xr/check! (spec/keys :req-un [::pass?]))
 
 (candidates "a" 'clojure.core)
-(xr/check! ::specs/symbol-completions)
+(xr/check! (prefixed-candidates ::specs/symbol-completions "a"))
 
 (candidates "spec/" 'clojure.main)
-(xr/check! ::specs/symbol-completions)
+(xr/check! (prefixed-candidates ::specs/symbol-completions "spec/"))
 
 (def sym-names
   (sequence
@@ -54,7 +60,7 @@
 (def sym-candidates
   (mapcat #(candidates (subs % 0 1) *ns*) sym-names))
 
-(xr/check! ::specs/symbol-completions sym-candidates)
+(xr/check! (spec/coll-of ::specs/symbol-completion :min-count (count sym-names)) sym-candidates)
 
 (assert (set/subset? #{{:candidate "java.util.ArrayList" :type :class}
                        {:candidate "java.util.Date" :type :class}}
@@ -66,14 +72,15 @@
                        {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :static-method}}
           (set (candidates "java.time.LocalDate/" *ns*))))
 
-(let [imported-classes (set (map second (mapcat ns-imports (all-ns))))]
-  (mapcat #(candidates (str (.getName %) "/") *ns*) imported-classes))
+(def imported-classes (set (map second (mapcat ns-imports (all-ns)))))
+(mapcat #(candidates (str (.getName %) "/") *ns*) imported-classes)
 
-(xr/check! (spec/coll-of ::specs/completion :min-count 1))
+(xr/check! (spec/coll-of ::specs/completion :min-count (count imported-classes)))
 
-(xr/check! ::specs/completions (candidates ".g" *ns*))
+(candidates ".g" *ns*)
+(xr/check! (prefixed-candidates ::specs/completions ".g"))
+
 (candidates "java.util.Date/" *ns*)
-
 (xr/check! ::specs/completions (candidates "java.util.Spliterator$" *ns*))
 (assert (every? #(.contains (:candidate %) "$") (candidates "java.util.Spliterator$" *ns*)))
 

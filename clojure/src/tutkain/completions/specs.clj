@@ -21,7 +21,7 @@
   (spec/keys :req-un [::candidate ::type]))
 
 (spec/def ::completions
-  (spec/nilable (spec/coll-of ::completion :kind sequential? :distinct true :min-count 1)))
+  (spec/coll-of ::completion :kind sequential? :distinct true :min-count 1))
 
 (spec/def ::arglists (spec/coll-of string?))
 (spec/def ::doc string?)
@@ -30,7 +30,7 @@
   (spec/merge ::completion (spec/keys :opt-un [::arglists ::doc])))
 
 (spec/def ::symbol-completions
-  (spec/coll-of ::symbol-completion :kind sequential?))
+  (spec/coll-of ::symbol-completion :kind sequential? :min-count 1))
 
 (spec/def ::function-completion
   (spec/keys :req-un [::candidate ::type ::arglists] :opt-un [::doc]))
