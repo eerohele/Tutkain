@@ -5,7 +5,8 @@
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.backchannel :as backchannel]
-   [tutkain.socket :as socket])
+   [tutkain.socket :as socket]
+   [tutkain.test])
   (:import
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
