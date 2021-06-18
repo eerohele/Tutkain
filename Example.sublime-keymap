@@ -287,6 +287,15 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // If your caret is on a symbol that is bound in the local scope (outermost S-expression),
+    // select all usages of that symbol.
+    //
+    // Clojure only, and only if clojure.tools.analyzer.jvm is in the classpath.
+    {
+        "keys": ["ctrl+x", "ctrl+r"],
+        "command": "tutkain_select_usages"
+    },
+
     // Paredit commands
     //
     // Documentation TBD.

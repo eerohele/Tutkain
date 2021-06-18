@@ -1211,7 +1211,7 @@ def positions_to_tuples(view, positions):
     return regions
 
 
-class TutkainSelectLocalSymbolsCommand(TextCommand):
+class TutkainSelectUsagesCommand(TextCommand):
     def handler(self, regions):
         # TODO: Why?
         self.view.run_command("tutkain_add_regions", {
