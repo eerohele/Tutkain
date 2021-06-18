@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+- Use first instead of last ns form for ns auto-switch
+- Avoid dangling paren after forward barf
+- Optimize finding the outermost S-expression under the cursor
+- Add support for highlighting local symbols
+
+  Clojure only; requires clojure.tools.analyzer.jvm to be in the classpath.
+
+- Fix error when setting thread-bound dynamic variables in clojure.test tests #53
+
+## 0.8.0 (alpha) - 2021-04-06
+
 - Enable **Tutkain: Evaluate** » **Active View** for `.cljc` views
 - Enable **Tutkain: Run Test Under Cursor** for `defspec`s
 - Fix dialect detection for `.cljc` views
