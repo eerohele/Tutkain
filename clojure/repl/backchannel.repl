@@ -55,7 +55,17 @@
        :file "/path/to/my/test.clj"
        :code "(ns my.test (:require [clojure.test :refer [deftest is]]))
 (deftest assert (is (true? *assert*)))"})
+
+(spec/def ::fail empty?)
+(spec/def ::type #{:pass})
+(spec/def ::line #{2})
+(spec/def ::pass (spec/coll-of (spec/keys :req-un [::type ::line])))
+
+(spec/def ::test-results
+  (spec/keys :req-un [::fail ::pass ::error]))
+
 (recv)
+(xr/check! ::test-results)
 
 (send {:op :quit})
 (.isOpen backchannel)
