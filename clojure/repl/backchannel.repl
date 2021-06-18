@@ -49,6 +49,14 @@
 (send {:op :echo})
 (recv)
 
+;; Backchannel has access to the same bindings as the REPL thread
+(send {:op :test
+       :ns "my.test"
+       :file "/path/to/my/test.clj"
+       :code "(ns my.test (:require [clojure.test :refer [deftest is]]))
+(deftest assert (is (true? *assert*)))"})
+(recv)
+
 (send {:op :quit})
 (.isOpen backchannel)
 (xr/check! false?)

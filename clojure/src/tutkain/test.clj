@@ -66,7 +66,7 @@
   (let [ns-sym (or (some-> ns symbol) 'user)]
     (try
       (clean-ns! (find-ns ns-sym))
-      (Compiler/load (LineNumberingPushbackReader. (StringReader. code)) file (-> file File. .getName))
+      (Compiler/load (LineNumberingPushbackReader. (StringReader. code)) file (some-> file File. .getName))
       (let [results (atom {:fail [] :pass [] :error []})
             var-meta (atom nil)]
         (binding [test/report (fn [event*]
