@@ -108,7 +108,7 @@
         lock (Object.)]
     (.bind socket address)
     (let [thread (Thread.
-                   (fn []
+                   (bound-fn []
                      (try
                        (let [socket-channel (.accept socket)
                              in (LineNumberingPushbackReader. (Channels/newReader socket-channel "UTF-8"))
