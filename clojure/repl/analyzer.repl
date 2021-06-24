@@ -38,7 +38,7 @@
   (set/project (map :env nodes) [:line :column :end-column]))
 
 (set
-  (analyzer/local-symbol-positions
+  (analyzer/local-positions
     {:file "/path/to/my.clj"
      :ns *ns*
      :context "(defn f [x] (inc x))"
@@ -54,7 +54,7 @@
                          {:form 'x :line 0 :column 17 :end-column 18}}))
 
 (set
-  (analyzer/local-symbol-positions
+  (analyzer/local-positions
     {:file "/path/to/my.clj"
      :ns *ns*
      ;; newline doesn't mess up :end-column
@@ -73,7 +73,7 @@
 (into #{}
   (mapcat
     (fn [[form [column end-column]]]
-      (analyzer/local-symbol-positions
+      (analyzer/local-positions
         {:file "/path/to/my.clj"
          :ns *ns*
          :context "(defn f [{:keys [x y z]}] (+ x y z))"

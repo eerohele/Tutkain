@@ -35,11 +35,11 @@
   // auto-completion.
   "auto_complete": true,
 
-  // If true, when your caret is on top of a local symbol (let-bound symbol, fn
-  // arg, etc.), highlight instances of that symbol within the current context.
+  // If true, when your caret is on top of a local (let-bound symbol, fn arg,
+  // etc.), highlight instances of that local within the current context.
   //
   // Requires clojure.tools.analyzer.jvm in your classpath.
-  "highlight_local_symbols": true,
+  "highlight_locals": true,
 
   "clojure": {
     // Backchannel settings.

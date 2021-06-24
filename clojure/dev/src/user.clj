@@ -19,13 +19,13 @@
 (comment
   (require
     '[clojure.repl :as repl]
-    '[tutkain.analyzer :refer [local-symbol-positions]]
+    '[tutkain.analyzer :refer [local-positions]]
     '[tutkain.completions :refer [candidates]])
 
   (quick-bench (candidates "java." 'clojure.core))
 
   (quick-bench
-    (local-symbol-positions
+    (local-positions
       {:file "clojure/core.clj"
        :ns (the-ns 'clojure.core)
        :context (with-out-str (repl/source clojure.core/doseq))

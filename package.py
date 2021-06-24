@@ -741,12 +741,12 @@ def reconnect(vs):
             )
 
 
-def add_local_symbol_regions(view, tuples):
+def add_local_regions(view, tuples):
     """Given a set of tuples containing the begin and end point of a Region,
     add a region for each local symbol delimited by the points."""
     if regions := [sublime.Region(begin, end) for begin, end in tuples]:
         view.add_regions(
-            "tutkain_local_symbols",
+            "tutkain_locals",
             regions,
             "region.cyanish",
             flags=sublime.DRAW_SOLID_UNDERLINE | sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
@@ -770,13 +770,13 @@ class TutkainEventListener(EventListener):
         inline.clear(view)
 
     def on_selection_modified_async(self, view):
-        if settings().get("highlight_local_symbols", True) and (sel := view.sel()):
+        if settings().get("highlight_locals", True) and (sel := view.sel()):
             point = sel[0].begin()
 
             if symbol := symbol_at_point(view, point):
-                fetch_local_symbols(view, point, symbol, partial(add_local_symbol_regions, view))
+                fetch_locals(view, point, symbol, partial(add_local_regions, view))
             else:
-                view.erase_regions("tutkain_local_symbols")
+                view.erase_regions("tutkain_locals")
 
     def on_deactivated_async(self, view):
         inline.clear(view)
@@ -1172,7 +1172,7 @@ def handle_locals_response(view, handler, response):
         handler(positions_to_tuples(view, positions))
 
 
-def fetch_local_symbols(view, point, form, handler):
+def fetch_locals(view, point, form, handler):
     if (
         dialect := dialects.for_point(view, point)
     ) and (
@@ -1187,7 +1187,7 @@ def fetch_local_symbols(view, point, form, handler):
         start_line, start_column = view.rowcol(outermost.open.begin())
 
         client.backchannel.send({
-            "op": edn.Keyword("local-symbols"),
+            "op": edn.Keyword("locals"),
             "file": view.file_name() or "NO_SOURCE_FILE",
             "ns": namespace.name(view),
             "context": view.substr(outermost.extent()),
@@ -1228,4 +1228,4 @@ class TutkainSelectUsagesCommand(TextCommand):
             point = sel[0].begin()
 
             if symbol := symbol_at_point(self.view, point):
-                fetch_local_symbols(self.view, point, symbol, self.handler)
+                fetch_locals(self.view, point, symbol, self.handler)
