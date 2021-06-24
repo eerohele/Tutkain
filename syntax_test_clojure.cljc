@@ -2479,19 +2479,85 @@
   (ns foo.bar
     (:require
 ;    ^^^^^^^^ meta.statement.require.clojure
-     [baz.quux]
+     [a.b :as c :refer [d] :rename {e f}]
+;    ^ punctuation.section.brackets.begin.edn
+;     ^^^ meta.namespace.clojure
+;         ^^^ meta.reader-form.edn constant.other.keyword.unqualified.clojure
+;             ^ meta.reader-form.edn meta.symbol.edn
+;               ^^^^^^ meta.reader-form.edn constant.other.keyword.unqualified.clojure
+;                      ^ punctuation.section.brackets.begin.edn
+;                       ^ meta.reader-form.edn meta.symbol.edn
+;                        ^ punctuation.section.brackets.end.edn
+;                          ^^^^^^^ meta.reader-form.edn constant.other.keyword.unqualified.clojure
+;                                  ^ punctuation.section.braces.begin.edn
+;                                   ^ meta.reader-form.edn meta.symbol.edn
+;                                     ^ meta.reader-form.edn meta.symbol.edn
+;                                      ^ punctuation.section.braces.end.edn
+;                                       ^ punctuation.section.brackets.end.edn
      qux.zot
-;    ^^^^^^^ meta.symbol.edn - variable.function.clojure
+;    ^^^^^^^ meta.symbol.edn meta.namespace.clojure - variable.function.clojure
+     (a.b :as c :refer (d) :rename {e f})
+;    ^ punctuation.section.parens.begin.edn
+;     ^^^ meta.namespace.clojure
+;         ^^^ meta.reader-form.edn constant.other.keyword.unqualified.clojure
+;             ^ meta.reader-form.edn meta.symbol.edn
+;               ^^^^^^ meta.reader-form.edn constant.other.keyword.unqualified.clojure
+;                      ^ punctuation.section.parens.begin.edn
+;                       ^ meta.reader-form.edn meta.symbol.edn
+;                        ^ punctuation.section.parens.end.edn
+;                          ^^^^^^^ meta.reader-form.edn constant.other.keyword.unqualified.clojure
+;                                  ^ punctuation.section.braces.begin.edn
+;                                   ^ meta.reader-form.edn meta.symbol.edn
+;                                     ^ meta.reader-form.edn meta.symbol.edn
+;                                      ^ punctuation.section.braces.end.edn
+;                                       ^ punctuation.section.parens.end.edn
      ))
+
+  (ns foo.bar
+    (:require [a.b :only [c d]]))
+;                         ^ meta.reader-form.edn meta.symbol.edn
+;                          ^ - meta.reader-form.edn - meta.symbol.edn
+;                           ^ meta.reader-form.edn meta.symbol.edn
+
+  (ns foo.bar
+    (:use a.b))
+;    ^^^^ meta.statement.use.clojure
+;         ^^^ meta.reader-form.edn meta.symbol.edn meta.namespace.clojure
+
+  (ns foo.bar
+    (:use (a.b c)))
+;    ^^^^ meta.statement.use.clojure
+;          ^^^ meta.reader-form.edn meta.symbol.edn meta.namespace.clojure
+;              ^ meta.reader-form.edn meta.symbol.edn
+
+
+  (ns foo.bar
+    (:import MyClass))
+;    ^^^^^^^ meta.statement.import.clojure
+;            ^^^^^^^ meta.reader-form.edn meta.symbol.edn meta.class.clojure
 
   (ns foo.bar
     (:import
 ;    ^^^^^^^ meta.statement.import.clojure
-     (java.time LocalDate)))
+     (java.time LocalDate LocalDateTime)))
 ;    ^ punctuation.section.parens.begin.edn
 ;     ^^^^^^^^^ - meta.function-call.clojure
 ;     ^^^^^^^^^ - variable.function.clojure
-;                        ^ punctuation.section.parens.end.edn
+;               ^^^^^^^^^ meta.class.clojure
+;                        ^ - meta.class.clojure
+;                         ^^^^^^^^^^^^^ meta.class.clojure
+;                                      ^ punctuation.section.parens.end.edn - meta.class.clojure
+(ns foo.bar
+  (:import
+;  ^^^^^^^ meta.statement.import.clojure
+     [java.time LocalDate LocalDateTime]))
+;    ^ punctuation.section.brackets.begin.edn
+;     ^^^^^^^^^ - meta.function-call.clojure
+;     ^^^^^^^^^ - variable.function.clojure
+;               ^^^^^^^^^ meta.class.clojure
+;                        ^ - meta.class.clojure
+;                         ^^^^^^^^^^^^^ meta.class.clojure
+;                                      ^ punctuation.section.brackets.end.edn - meta.class.clojure
   (ns foo.bar
     (:require
 ;    ^^^^^^^ meta.statement.require.clojure
@@ -2499,8 +2565,12 @@
 ;    ^ punctuation.section.parens.begin.edn
 ;     ^^^^^^^ - meta.function-call.clojure
 ;     ^^^^^^^ - variable.function.clojure
-;             ^^^ constant.other.keyword.unqualified.edn
-;                      ^ punctuation.section.parens.end.edn
+;             ^^^ constant.other.keyword.unqualified.clojure
+  (ns foo.bar
+    (:require
+;    ^^^^^^^ meta.statement.require.clojure
+     (foo.bar :refer :all)))
+;                    ^^^^ constant.other.keyword.unqualified.clojure
 
   (ns foo.bar (:import :require))
 ;              ^^^^^^^ meta.statement.import.clojure
@@ -2522,7 +2592,14 @@
 
   (ns foo.bar
     (:refer-clojure :exclude [map]))
- ;                  ^^^^^^^^ constant.other.keyword.unqualified.edn
+ ;                  ^^^^^^^^ constant.other.keyword.unqualified.clojure
+ ;                           ^ punctuation.section.brackets.begin.edn
+ ;                            ^^^ meta.symbol.edn - meta.namespace.clojure
+ ;                               ^ punctuation.section.brackets.end.edn
+
+  (ns foo.bar
+    (:gen-class))
+;    ^^^^^^^^^^ constant.other.keyword.unqualified.edn
 
 ; # deftest
 

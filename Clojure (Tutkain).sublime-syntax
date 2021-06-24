@@ -139,6 +139,7 @@ contexts:
       set:
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.namespace.clojure
+          # meta_scope: meta.ns-form.clojure
           set: ns-tail
         - include: list-tail
     - match: 'defmulti{{end}}'
@@ -248,45 +249,181 @@ contexts:
       scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.other.clojure
       set: list-tail
 
-  require-list:
+  refer-only-exclude:
+    - match: '(:refer|:only|:exclude){{end}}'
+      scope: meta.reader-form.edn constant.other.keyword.unqualified.clojure
+      push:
+        - match: ':all{{end}}'
+          scope: meta.reader-form.edn constant.other.keyword.unqualified.clojure
+          pop: true
+        - match: '\['
+          scope: punctuation.section.brackets.begin.edn
+          push:
+            - meta_scope: meta.ns.refer-only-exclude.clojure
+            - match: '\]'
+              scope: punctuation.section.brackets.end.edn
+              pop: 2
+            - include: metadata
+            - include: comment
+            - match: '{{symbol}}'
+              scope: meta.reader-form.edn meta.symbol.edn
+        - match: '\('
+          scope: punctuation.section.parens.begin.edn
+          push:
+            - meta_scope: meta.ns.refer-only-exclude.clojure
+            - match: '\)'
+              scope: punctuation.section.parens.end.edn
+              pop: 2
+            - include: metadata
+            - include: comment
+            - match: '{{symbol}}'
+              scope: meta.reader-form.edn meta.symbol.edn
+
+  rename:
+    - match: ':rename{{end}}'
+      scope: meta.reader-form.edn constant.other.keyword.unqualified.clojure
+      push:
+        - match: '{{symbol}}'
+          scope: meta.reader-form.edn meta.symbol.edn
+        - match: '\{'
+          scope: punctuation.section.braces.begin.edn
+          push:
+            - meta_scope: meta.ns.rename.clojure
+            - match: '\}'
+              scope: punctuation.section.braces.end.edn
+              pop: 2
+            - include: metadata
+            - include: comment
+            - match: '{{symbol}}'
+              scope: meta.reader-form.edn meta.symbol.edn
+
+  as:
+    - match: ':as{{end}}'
+      scope: meta.reader-form.edn constant.other.keyword.unqualified.clojure
+      push:
+        - match: '{{symbol}}'
+          scope: meta.reader-form.edn meta.symbol.edn
+          push:
+          - match: '{{whitespace}}'
+            pop: 2
+        - include: metadata
+        - include: comment
+
+  require:
+    - match: '{{symbol}}'
+      scope: meta.reader-form.edn meta.symbol.edn meta.namespace.clojure
+    - include: as
+    - include: refer-only-exclude
+    - include: rename
+    - include: metadata
+    - include: comment
+
+  requires:
+    - match: '{{symbol}}'
+      scope: meta.reader-form.edn meta.symbol.edn meta.namespace.clojure
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       push:
         - include: list-end
+        - include: require
+    - match: '\['
+      scope: punctuation.section.brackets.begin.edn
+      push:
+        - match: '\]'
+          scope: punctuation.section.brackets.end.edn
+          pop: true
+        - include: require
+
+  import:
+    - match: '{{symbol}}'
+      scope: meta.reader-form.edn meta.symbol.edn meta.package.clojure
+      push:
+        - match: '{{whitespace}}'
+          push:
+            - match: '{{symbol}}'
+              scope: meta.reader-form.edn meta.symbol.edn meta.class.clojure
+            - match: '\)'
+              scope: punctuation.section.parens.end.edn
+              pop: 3
+            - match: '\]'
+              scope: punctuation.section.brackets.end.edn
+              pop: 3
+    - include: metadata
+    - include: comment
+
+  imports:
+    - match: '{{symbol}}'
+      scope: meta.reader-form.edn meta.symbol.edn meta.class.clojure
+    - match: '\('
+      scope: punctuation.section.parens.begin.edn
+      push:
+        - include: list-end
+        - include: import
+    - match: '\['
+      scope: punctuation.section.brackets.begin.edn
+      push:
+        - match: '\]'
+          scope: punctuation.section.brackets.end.edn
+          pop: true
+        - include: import
+
+  require-head:
+    - match: ':require{{end}}'
+      scope: meta.reader-form.clojure meta.statement.require.clojure constant.other.keyword.unqualified.clojure
+      set:
+        - include: list-end
         - include: metadata
         - include: comment
+        - include: requires
+        - include: reader-conditional
         - include: symbol
-        - include: keywords
+        - include: discard
+        - include: unqualified_keyword
+    - match: ':use{{end}}'
+      scope: meta.reader-form.clojure meta.statement.use.clojure constant.other.keyword.unqualified.clojure
+      set:
+        - include: list-end
+        - include: metadata
+        - include: comment
+        - include: requires
+        - include: reader-conditional
+        - include: symbol
+        - include: discard
+        - include: unqualified_keyword
+
+  import-head:
+    - match: ':import{{end}}'
+      scope: meta.reader-form.clojure meta.statement.import.clojure constant.other.keyword.unqualified.clojure
+      set:
+        - include: list-end
+        - include: metadata
+        - include: comment
+        - include: imports
+        - include: reader-conditional
+        - include: symbol
+        - include: discard
+        - include: unqualified_keyword
+
+  refer-clojure-head:
+    - match: ':refer-clojure{{end}}'
+      scope: meta.reader-form.clojure meta.statement.refer-clojure.clojure constant.other.keyword.unqualified.clojure
+      set:
+        - include: list-end
+        - include: metadata
+        - include: comment
+        - include: refer-only-exclude
+        - include: reader-conditional
+        - include: symbol
+        - include: discard
 
   ns-tail:
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       push:
       - include: list-end
-      - match: '(:require|:refer-clojure|:use){{end}}'
-        scope: meta.reader-form.clojure meta.statement.require.clojure constant.other.keyword.unqualified.clojure
-        set:
-          - include: list-end
-          - include: metadata
-          - include: comment
-          - include: vector
-          - include: require-list
-          - include: reader-conditional
-          - include: symbol
-          - include: discard
-          - include: unqualified_keyword
-      - match: ':import{{end}}'
-        scope: meta.reader-form.clojure meta.statement.import.clojure constant.other.keyword.unqualified.clojure
-        set:
-          - include: list-end
-          - include: metadata
-          - include: comment
-          - include: vector
-          - include: require-list
-          - include: reader-conditional
-          - include: symbol
-          - include: discard
-          - include: unqualified_keyword
+      - include: require-head
+      - include: import-head
+      - include: refer-clojure-head
       - include: list-tail
     - include: list-tail
 
