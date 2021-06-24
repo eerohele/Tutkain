@@ -56,9 +56,9 @@
       (filter second))
     nodes))
 
-(defn local-symbol-positions
-  "Given a map of data about a local symbol, find all positions in :context
-  where the local symbol is used. Keys:
+(defn local-positions
+  "Given a map of data about a local, find all positions in :context where the
+  local is used. Keys:
 
   :context -- The code string where the local symbol is used.
   :form -- The form whose positions to search.
@@ -83,9 +83,9 @@
   [ns]
   (or (some-> ns symbol find-ns) (the-ns 'user)))
 
-(defmethod handle :local-symbols
+(defmethod handle :locals
   [message]
   (try
-    (respond-to message {:positions (local-symbol-positions (update message :ns parse-namespace))})
+    (respond-to message {:positions (local-positions (update message :ns parse-namespace))})
     (catch Throwable ex
       (respond-to message {:tag :ret :debug true :val (pr-str (Throwable->map ex))}))))
