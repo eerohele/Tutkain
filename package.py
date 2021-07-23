@@ -511,7 +511,8 @@ class TutkainConnectCommand(WindowCommand):
             else:
                 client = JVMClient(
                     source_root(), host, int(port), backchannel_opts={
-                        "port": settings().get("clojure").get("backchannel").get("port")
+                        "port": settings().get("clojure").get("backchannel").get("port"),
+                        "bind_address": settings().get("clojure").get("backchannel").get("bind_address", "localhost")
                     }
                 )
 

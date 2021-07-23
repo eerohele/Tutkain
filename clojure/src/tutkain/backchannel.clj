@@ -94,13 +94,14 @@
   To add a new op, implement the tutkain.backchannel/handle multimethod.
 
   Options:
-    :port    The TCP port the backchannel listens on.
+    :port         The TCP port the backchannel listens on.
+    :bind-address The TCP bind address.
 
   Other options are subject to change."
-  [{:keys [port xform-in xform-out]
-    :or {port 0 xform-in identity xform-out identity}}]
+  [{:keys [port bind-address xform-in xform-out]
+    :or {port 0 bind-address "localhost" xform-in identity xform-out identity}}]
   (let [socket (ServerSocketChannel/open)
-        address (InetSocketAddress. "localhost" port)
+        address (InetSocketAddress. ^String bind-address port)
         lock (Object.)]
     (.bind socket address)
     (let [thread (Thread.
