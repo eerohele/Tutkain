@@ -4,8 +4,16 @@ All notable changes to this project will be documented in this file.
 ## UNRELEASED
 
 - Add backchannel `bind_address` setting #57
+- Use first instead of last ns form for ns auto-switch
+- Avoid dangling paren after forward barf
+- Optimize finding the outermost S-expression under the cursor
+- Add support for highlighting/selecting local symbols
 
-## 0.8.0 (alpha) - 2021-06-04
+  Clojure only; requires clojure.tools.analyzer.jvm to be in the classpath.
+
+- Fix error when setting thread-bound dynamic variables in clojure.test tests #53
+
+## 0.8.0 (alpha) - 2021-04-06
 
 - Add support for shrinking selections #13 #47
 - Prevent Tutkain from reindenting multiline strings
