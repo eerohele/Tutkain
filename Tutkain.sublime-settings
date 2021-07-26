@@ -50,7 +50,9 @@
       // NOTE: If you use a fixed port number, you can only open a single
       // connection from Tutkain to a socket REPL server. This is because
       // Tutkain currently uses one backchannel per REPL connection.
-      "port": 0
+      "port": 0,
+      // Bind address for backchannel.
+      "bind_address": "localhost"
     },
   }
 }
