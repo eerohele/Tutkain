@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Add backchannel `bind_address` setting #57
+
 ## 0.8.0 (alpha) - 2021-06-04
 
 - Add support for shrinking selections #13 #47
