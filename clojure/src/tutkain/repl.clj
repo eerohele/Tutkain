@@ -47,14 +47,14 @@
      (main/with-bindings
        (in-ns 'user)
        (apply require main/repl-requires)
-       (let [backchannel (backchannel/open
-                           (assoc opts
-                             :xform-in #(assoc % :in in :repl-thread repl-thread)
-                             :xform-out #(dissoc % :in)))]
-         (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
-                   *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
-                   *print* #(out-fn {:tag :ret :val (format/pp-str %)})
-                   *caught* #(out-fn {:tag :err :val (format/Throwable->str %)})]
+       (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
+                 *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
+                 *print* #(out-fn {:tag :ret :val (format/pp-str %)})
+                 *caught* #(out-fn {:tag :err :val (format/Throwable->str %)})]
+         (let [backchannel (backchannel/open
+                             (assoc opts
+                               :xform-in #(assoc % :in in :repl-thread repl-thread)
+                               :xform-out #(dissoc % :in)))]
            (try
              (out-fn {:tag :ret
                       :val (pr-str {:host (-> backchannel .getLocalAddress .getHostName)
