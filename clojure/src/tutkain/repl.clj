@@ -11,16 +11,13 @@
   prn)
 
 (def ^:dynamic ^:experimental *caught*
-  "A function you can use as the :caught arg of clojure.main/repl.
-  For example:
-
-  Prints exceptions such that Tutkain can print them correctly."
+  "A function you can use as the :caught arg of clojure.main/repl."
   main/repl-caught)
 
 (defn repl
   "Tutkain's main read-eval-print loop.
 
-  Like io-prepl, with these differences:
+  Like clojure.core.server/io-prepl, with these differences:
 
   - Starts a backchannel socket server that Tutkain uses for editor tooling
     (auto-completion, metadata lookup, etc.)

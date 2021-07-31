@@ -17,7 +17,7 @@
   {:candidate (str kw) :type :keyword})
 
 (defn all-keywords
-  "Return every interned keyword in the runtime."
+  "Return every interned keyword in the Clojure runtime."
   []
   (let [^Field field (.getDeclaredField clojure.lang.Keyword "table")]
     (.setAccessible field true)
@@ -111,7 +111,7 @@
 (comment (ns-java-methods 'clojure.main))
 
 (defn static-members
-  "Given a class, return all static members of that class."
+  "Given a java.lang.Class instance, return all static members of that class."
   [^Class class]
   (eduction
     (filter static?)
@@ -155,6 +155,10 @@
   {:candidate (name class-name) :type :class})
 
 (def system-module-resources
+  "A future that, on JDK11 and newer, holds a seq of all classes in every Java
+  module in the current JDK.
+
+  On < JDK11, holds nil."
   (future
     (try
       (when-some [module-finder (Class/forName "java.lang.module.ModuleFinder")]
@@ -190,7 +194,7 @@
 
 (defn resolve-class
   "Given an ns symbol and a symbol, if the symbol resolves to a class in the
-  context of the given namespace, return that class."
+  context of the given namespace, return that class (java.lang.Class)."
   [ns sym]
   (try (let [val (ns-resolve ns sym)]
          (when (class? val) val))
@@ -269,8 +273,8 @@
 (comment (ns-class-candidates 'clojure.main),)
 
 (defn ns-java-method-candidates
-  "Given an ns symbol, return all Java method candidates that are available in
-  the context of that namespace."
+  "Given an ns symbol, return all Java method candidates that are imported into
+  that namespace."
   [ns]
   (map #(hash-map :candidate % :type :method) (ns-java-methods ns)))
 
@@ -294,7 +298,7 @@
   "Given a scoped string prefix (e.g. \"set/un\" for clojure.set/union) and an
   ns symbol, return auto-completion candidates that match the prefix.
 
-  Searches static class members and ns public vars."
+  Searches Java static class members and public vars in Clojure namespaces."
   [^String prefix ns]
   (when-let [prefix-scope (first (.split prefix "/"))]
     (let [scope (symbol prefix-scope)
@@ -325,9 +329,9 @@
 
 (defn candidates
   "Given a string prefix and ns symbol, return auto-completion candidates for
-  the string.
+  the string prefix.
 
-  See the comment form below for an example."
+  See the comment form below for examples."
   [^String prefix ns]
   (when (seq prefix)
     (let [candidates (cond
