@@ -347,7 +347,7 @@ class TutkainEvaluateCommand(TextCommand):
     def handler(self, region, client, response, inline_result):
         if inline_result and edn.Keyword("val") in response:
             inline.clear(self.view)
-            inline.show(self.view, region.end(), response[edn.Keyword("val")])
+            inline.show(self.view, region.end(), response[edn.Keyword("val")], inline_result)
         else:
             client.recvq.put(response)
 
