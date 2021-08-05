@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 
   Clojure only; requires clojure.tools.analyzer.jvm to be in the classpath.
 
-- Fix error when setting thread-bound dynamic variables in clojure.test tests #53
+- Fix errors when setting thread-bound dynamic variables in clojure.test tests #53
 - Fix `:tutkain/disconnect` when printing from Clojure test
 
 ## 0.8.0 (alpha) - 2021-04-06
