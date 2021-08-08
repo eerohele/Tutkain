@@ -625,8 +625,11 @@ class TutkainViewEventListener(ViewEventListener):
 
             details = f"""<a href="{sublime.command_url("tutkain_show_popup", args={"item": d})}">More</a>"""
 
+        candidate = item.get(edn.Keyword("candidate"))
+
         return sublime.CompletionItem(
-            item.get(edn.Keyword("candidate")),
+            trigger=candidate + " ",
+            completion=candidate,
             kind=completion_kinds().get(item.get(edn.Keyword("type")).name, sublime.KIND_AMBIGUOUS),
             annotation=" ".join(item.get(edn.Keyword("arglists"), [])),
             details=details,
