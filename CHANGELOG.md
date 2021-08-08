@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
-- Add backchannel `bind_address` setting #57
+- Add backchannel `bind_address` setting #57 (thx @dmitrydprog!)
 - Use first instead of last ns form for ns auto-switch
 - Avoid dangling paren after forward barf
 - Optimize finding the outermost S-expression under the cursor
@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix errors when setting thread-bound dynamic variables in clojure.test tests #53
 - Fix `:tutkain/disconnect` when printing from Clojure test
+- Prevent auto-completion popup from disappearing when manually typing the entire prefix #60 (thx @dmitrydprog!)
 
 ## 0.8.0 (alpha) - 2021-04-06
 
