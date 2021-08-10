@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 - Use first instead of last ns form for ns auto-switch
 - Avoid dangling paren after forward barf
 - Optimize finding the outermost S-expression under the cursor
-- Add support for highlighting/selecting local symbols
+- Add support for highlighting/selecting locals (via the `tutkain_select_locals` command).
 
   Clojure only; requires clojure.tools.analyzer.jvm to be in the classpath.
 
