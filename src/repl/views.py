@@ -45,7 +45,6 @@ def configure(view, dialect, client):
     view.settings().set("line_numbers", False)
     view.settings().set("gutter", False)
     view.settings().set("is_widget", True)
-    view.settings().set("scroll_past_end", False)
     view.settings().set("show_definitions", False)
     view.settings().set("translate_tabs_to_spaces", False)
     view.settings().set("auto_indent", False)
