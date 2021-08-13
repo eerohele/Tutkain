@@ -135,7 +135,7 @@ def run_tests(view, client, test_vars):
     client.backchannel.send({
         "op": edn.Keyword("test"),
         "ns": namespace.name(view),
-        "code": binascii.b2a_base64(code.encode("utf-8"), newline=False).decode("utf-8"), # base64.b64encode(code.encode("utf-8")).decode("utf-8"),
+        "code": base64.encode(code),
         "file": view.file_name(),
         "vars": test_vars
     }, handler=handler)

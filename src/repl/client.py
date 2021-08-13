@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from inspect import cleandoc
-import base64
 import queue
 import os
 import pathlib
@@ -11,6 +10,7 @@ import socket
 from .backchannel import Backchannel, NoopBackchannel
 from ...api import edn
 from ..log import log
+from . import base64
 
 
 class Client(ABC):
@@ -49,7 +49,7 @@ class Client(ABC):
                     "op": edn.Keyword("load-base64"),
                     "path": path,
                     "filename": filename,
-                    "blob": base64.b64encode(file.read()).decode("utf-8"),
+                    "blob": base64.encode(file.read()),
                     "requires": requires
                 }, self.module_loaded)
 
@@ -206,7 +206,7 @@ class JVMClient(Client):
             path = self.source_path(filename)
 
             with open(path, "rb") as file:
-                blob = base64.b64encode(file.read()).decode("utf-8")
+                blob = base64.encode(file.read())
                 self.write_line(f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")""")
 
             self.buffer.readline()
@@ -327,7 +327,7 @@ class JSClient(Client):
             path = self.source_path(filename)
 
             with open(path, "rb") as file:
-                blob = base64.b64encode(file.read()).decode("utf-8")
+                blob = base64.encode(file.read())
                 self.write_line(f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")""")
 
             self.buffer.readline()
