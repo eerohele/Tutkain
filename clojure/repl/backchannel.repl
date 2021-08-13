@@ -8,6 +8,7 @@
    [tutkain.socket :as socket]
    [tutkain.test])
   (:import
+   (java.util Base64)
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
 (def recvq (LinkedBlockingQueue.))
@@ -50,12 +51,18 @@
 (send {:op :echo})
 (recv)
 
+(def base64-encoder (Base64/getEncoder))
+
+(defn string->base64
+  [string]
+  (.encodeToString base64-encoder (.getBytes string)))
+
 ;; Backchannel has access to the same bindings as the REPL thread
 (send {:op :test
        :ns "my.test"
        :file "/path/to/my/test.clj"
-       :code "(ns my.test (:require [clojure.test :refer [deftest is]]))
-(deftest assert (is (true? *assert*)))"})
+       :code (string->base64 "(ns my.test (:require [clojure.test :refer [deftest is]]))
+(deftest assert (is (true? *assert*)))")})
 
 (spec/def ::fail empty?)
 (spec/def ::type #{:pass})
