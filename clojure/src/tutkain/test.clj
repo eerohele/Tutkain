@@ -5,10 +5,7 @@
    [clojure.test :as test]
    [clojure.walk :as walk]
    [tutkain.format :refer [pp-str]]
-   [tutkain.backchannel :refer [handle respond-to]])
-  (:import
-   (clojure.lang LineNumberingPushbackReader)
-   (java.io File StringReader)))
+   [tutkain.backchannel :refer [base64-reader handle respond-to]]))
 
 (defn organize
   [x]
@@ -63,10 +60,14 @@
 
 (defmethod handle :test
   [{:keys [ns code file vars] :as message}]
-  (let [ns-sym (or (some-> ns symbol) 'user)]
+  (let [filename (some-> file File. .getName)
+        ns-sym (or (some-> ns symbol) 'user)]
     (try
       (clean-ns! (find-ns ns-sym))
-      (Compiler/load (LineNumberingPushbackReader. (StringReader. code)) file (some-> file File. .getName))
+
+      (with-open [reader (base64-reader code)]
+        (Compiler/load reader file filename))
+
       (let [results (atom {:fail [] :pass [] :error []})
             var-meta (atom nil)]
         (binding [test/report (fn [event*]

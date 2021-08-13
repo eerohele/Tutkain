@@ -32,7 +32,7 @@
 (def ^:private base64-decoder
   (Base64/getDecoder))
 
-(defn ^:private base64-reader
+(defn base64-reader
   [blob]
   (->
     base64-decoder

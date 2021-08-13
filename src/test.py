@@ -1,3 +1,4 @@
+import base64
 import os
 import sublime
 
@@ -129,10 +130,12 @@ def run_tests(view, client, test_vars):
         client.recvq.put(response)
         progress.stop()
 
+    code = view.substr(sublime.Region(0, view.size()))
+
     client.backchannel.send({
         "op": edn.Keyword("test"),
         "ns": namespace.name(view),
-        "code": view.substr(sublime.Region(0, view.size())),
+        "code": base64.b64encode(code.encode("utf-8")).decode("utf-8"),
         "file": view.file_name(),
         "vars": test_vars
     }, handler=handler)
