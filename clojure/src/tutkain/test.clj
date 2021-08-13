@@ -5,7 +5,9 @@
    [clojure.test :as test]
    [clojure.walk :as walk]
    [tutkain.format :refer [pp-str]]
-   [tutkain.backchannel :refer [base64-reader handle respond-to]]))
+   [tutkain.backchannel :refer [base64-reader handle respond-to]])
+  (:import
+   (java.io File)))
 
 (defn organize
   [x]
