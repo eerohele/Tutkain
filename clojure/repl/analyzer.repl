@@ -3,7 +3,11 @@
    [clojure.set :as set]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
-   [tutkain.analyzer :as analyzer]))
+   [tutkain.analyzer :as analyzer])
+  (:import
+   (clojure.lang LineNumberingPushbackReader)
+   (java.io StringReader)
+   (java.util Base64)))
 
 (spec/def ::op
   #{:const :map :def})
@@ -27,12 +31,22 @@
     :req-un [::op]
     :opt-un [::type ::form ::env]))
 
+(defn string->reader
+  [string]
+  (-> string StringReader. LineNumberingPushbackReader.))
+
+(def base64-encoder (Base64/getEncoder))
+
+(defn string->base64
+  [string]
+  (.encodeToString base64-encoder (.getBytes string)))
+
 ;; Analyze multiple forms
-(analyzer/string->nodes "/path/to/my.clj" *ns* 0 0 "1 2")
+(analyzer/reader->nodes "/path/to/my.clj" *ns* 0 0 (string->reader "1 2"))
 (xr/check! (spec/coll-of ::node :min-count 2))
 
 ;; Line and column number
-(def nodes (set (analyzer/string->nodes "/path/to/my.clj" *ns* 1 2 "(def x 1)")))
+(def nodes (set (analyzer/reader->nodes "/path/to/my.clj" *ns* 1 2 (string->reader "(def x 1)"))))
 (xr/check! (spec/coll-of ::node) nodes)
 (xr/check! (partial set/subset? #{{:line 1 :column 2 :end-column 11}})
   (set/project (map :env nodes) [:line :column :end-column]))
@@ -41,7 +55,7 @@
   (analyzer/local-positions
     {:file "/path/to/my.clj"
      :ns *ns*
-     :context "(defn f [x] (inc x))"
+     :context (string->base64 "(defn f [x] (inc x))")
      :form 'x
      :start-line 0
      :start-column 0
@@ -58,7 +72,7 @@
     {:file "/path/to/my.clj"
      :ns *ns*
      ;; newline doesn't mess up :end-column
-     :context "(defn f [x] (doto x\n  inc))"
+     :context (string->base64 "(defn f [x] (doto x\n  inc))")
      :form 'x
      :start-line 0
      :start-column 0
@@ -76,7 +90,7 @@
       (analyzer/local-positions
         {:file "/path/to/my.clj"
          :ns *ns*
-         :context "(defn f [{:keys [x y z]}] (+ x y z))"
+         :context (string->base64 "(defn f [{:keys [x y z]}] (+ x y z))")
          :form form
          :start-line 0
          :start-column 0
@@ -96,7 +110,8 @@
 
 (->>
   "(defn f [x] (+ x (let [x 2] (inc x)) x))"
-  (analyzer/string->nodes "/path/to/my.clj" *ns* 0 0)
+  string->reader
+  (analyzer/reader->nodes "/path/to/my.clj" *ns* 0 0)
   analyzer/index-by-position)
 
 (xr/check!
