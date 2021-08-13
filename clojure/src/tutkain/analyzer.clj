@@ -6,10 +6,7 @@
    [clojure.tools.analyzer.passes.source-info :as source-info]
    [clojure.tools.analyzer.passes.uniquify :as uniquify]
    [clojure.tools.reader :as reader]
-   [tutkain.backchannel :as bc :refer [handle respond-to]])
-  (:import
-   (clojure.lang LineNumberingPushbackReader)
-   (java.io StringReader)))
+   [tutkain.backchannel :as bc :refer [base64-reader handle respond-to]]))
 
 (def ^:private analyzer-passes
   (passes/schedule #{#'source-info/source-info #'uniquify/uniquify-locals}))
@@ -17,17 +14,17 @@
 (def ^:private reader-opts
   {:features #{:clj :t.a.jvm} :read-cond :allow})
 
-(defn string->nodes
-  "Given a file path, namespace, line, column, and a code string, read the
-  string in the context of the file and the namespace, and return a lazy
-  sequence of ASTs nodes resulting from analyzing the code."
-  [path ns line column string]
+(defn reader->nodes
+  "Given a file path, namespace, line, column, and a
+  LineNumberingPushbackReader, read code from the reader in the context of the
+  file and the namespace, and return a lazy sequence of ASTs nodes resulting
+  from analyzing the code."
+  [path ns line column reader]
   (binding [analyzer.jvm/run-passes analyzer-passes
             *ns* ns
             *file* path]
     (let [eof (Object.)
-          reader (doto
-                   (LineNumberingPushbackReader. (StringReader. string))
+          reader (doto reader
                    (.setLineNumber (int line))
                    (bc/set-column! (int column)))]
       (sequence
@@ -70,14 +67,15 @@
   :column -- The column number where :form begins.
   :end-column -- The column number where :form ends."
   [{:keys [context form file ns start-line start-column line column end-column]}]
-  (let [nodes (string->nodes file ns start-line start-column context)
-        position->unique-name (index-by-position nodes)
-        position {:form form :line line :column column :end-column end-column}]
-    (when-some [unique-name (get position->unique-name position)]
-      (eduction
-        (filter #(= unique-name (:name %)))
-        (map node->position)
-        nodes))))
+  (with-open [reader (base64-reader context)]
+    (let [nodes (reader->nodes file ns start-line start-column reader)
+          position->unique-name (index-by-position nodes)
+          position {:form form :line line :column column :end-column end-column}]
+      (when-some [unique-name (get position->unique-name position)]
+        (eduction
+          (filter #(= unique-name (:name %)))
+          (map node->position)
+          nodes)))))
 
 (defn ^:private parse-namespace
   [ns]

@@ -15,6 +15,7 @@ from sublime_plugin import (
     WindowCommand,
 )
 
+from .src import base64
 from .src import dialects
 from .src import selectors
 from .src import sexp
@@ -1185,12 +1186,13 @@ def fetch_locals(view, point, form, handler):
         line, column = view.rowcol(form.begin())
         end_column = column + form.size()
         start_line, start_column = view.rowcol(outermost.open.begin())
+        context = view.substr(outermost.extent())
 
         client.backchannel.send({
             "op": edn.Keyword("locals"),
             "file": view.file_name() or "NO_SOURCE_FILE",
             "ns": namespace.name(view),
-            "context": view.substr(outermost.extent()),
+            "context": base64.encode(context),
             "form": edn.Symbol(view.substr(form)),
             "start-line": start_line + 1,
             "start-column": start_column + 1,
