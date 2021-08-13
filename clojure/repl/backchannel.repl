@@ -69,5 +69,6 @@
 (xr/check! ::test-results)
 
 (send {:op :quit})
+(Thread/sleep 3000)
 (.isOpen backchannel)
 (xr/check! false?)
