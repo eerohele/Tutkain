@@ -1192,7 +1192,7 @@ def fetch_locals(view, point, form, handler):
             "op": edn.Keyword("locals"),
             "file": view.file_name() or "NO_SOURCE_FILE",
             "ns": namespace.name(view),
-            "context": base64.encode(context),
+            "context": base64.encode(context.encode("utf-8")),
             "form": edn.Symbol(view.substr(form)),
             "start-line": start_line + 1,
             "start-column": start_column + 1,
