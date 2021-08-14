@@ -1,7 +1,7 @@
-import binascii
 import os
 import sublime
 
+from . import base64
 from . import forms
 from . import namespace
 from . import sexp

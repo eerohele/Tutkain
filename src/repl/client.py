@@ -10,7 +10,7 @@ import socket
 from .backchannel import Backchannel, NoopBackchannel
 from ...api import edn
 from ..log import log
-from . import base64
+from .. import base64
 
 
 class Client(ABC):
