@@ -4,6 +4,7 @@ from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
 from Tutkain.src.repl import views
 from Tutkain.src.repl.client import BabashkaClient, JVMClient, JSClient
+from Tutkain.src import base64
 from Tutkain.src import state
 
 from .mock import Server
@@ -198,7 +199,7 @@ class TestJVMClient(ViewTestCase):
 
         self.assertEquals({
             edn.Keyword("op"): edn.Keyword("load"),
-            edn.Keyword("code"): "(ns foo.bar) (defn x [y] y)",
+            edn.Keyword("code"): base64.encode("(ns foo.bar) (defn x [y] y)".encode("utf-8")),
             edn.Keyword("file"): None,
             edn.Keyword("id"): response.get(edn.Keyword("id"))
         }, response)
@@ -213,7 +214,7 @@ class TestJVMClient(ViewTestCase):
 
         self.assertEquals({
             edn.Keyword("op"): edn.Keyword("load"),
-            edn.Keyword("code"): "(ns foo.bar) (defn x [y] y)",
+            edn.Keyword("code"): base64.encode("(ns foo.bar) (defn x [y] y)".encode("utf-8")),
             edn.Keyword("file"): None,
             edn.Keyword("id"): response.get(edn.Keyword("id"))
         }, response)

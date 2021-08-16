@@ -1,15 +1,14 @@
 (ns tutkain.load-blob
   (:require
    [tutkain.format :refer [pp-str]]
-   [tutkain.backchannel :refer [handle respond-to]])
+   [tutkain.backchannel :refer [base64-reader handle respond-to]])
   (:import
-   (clojure.lang Compiler LineNumberingPushbackReader)
-   (java.io File StringReader)))
+   (java.io File)))
 
 (defmethod handle :load
   [{:keys [code file] :as message}]
   (try
-    (with-open [reader (LineNumberingPushbackReader. (StringReader. code))]
+    (with-open [reader (base64-reader code)]
       (let [file-name (some-> file File. .getName)
             val (Compiler/load reader (or file "NO_SOURCE_FILE") file-name)]
         (respond-to message {:tag :ret
@@ -18,3 +17,4 @@
       (respond-to message {:tag :ret
                            :val (pp-str (assoc (Throwable->map ex) :phase :execution))
                            :exception true}))))
+

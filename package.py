@@ -342,7 +342,7 @@ class TutkainEvaluateCommand(TextCommand):
     def evaluate_view(self, client, code):
         client.backchannel.send({
             "op": edn.Keyword("load"),
-            "code": code,
+            "code": base64.encode(code.encode("utf-8")),
             "file": self.view.file_name()
         }, handler=client.recvq.put)
 
