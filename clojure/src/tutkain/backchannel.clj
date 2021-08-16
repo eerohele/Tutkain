@@ -1,6 +1,7 @@
 (ns tutkain.backchannel
   (:require
-    [tutkain.format :as format])
+   [clojure.edn :as edn]
+   [tutkain.format :as format])
   (:import
    (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
    (java.io ByteArrayInputStream InputStreamReader FileNotFoundException)
@@ -122,7 +123,7 @@
                                         (.flush out)))]
                          (loop []
                            (when (.isOpen socket)
-                             (let [message (read in false EOF)]
+                             (let [message (edn/read {:eof EOF} in)]
                                (when-not (identical? EOF message)
                                  (let [recur? (case (:op message)
                                                 :quit false
