@@ -142,7 +142,7 @@ class TestJVMClient(ViewTestCase):
         self.set_view_content("")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
-        self.assertRaises(queue.Empty, lambda: self.server.recv().get_nowait())
+        self.assertRaises(queue.Empty, lambda: self.server.recvq.get_nowait())
 
     def test_innermost(self):
         self.set_view_content("(map inc (range 10))")
