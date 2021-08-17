@@ -84,6 +84,6 @@
 (defmethod handle :locals
   [message]
   (try
-    (respond-to message {:positions (local-positions (update message :ns parse-namespace))})
+    (respond-to message {:positions (-> message (update :form symbol) (update :ns parse-namespace) local-positions)})
     (catch Throwable ex
       (respond-to message {:tag :ret :debug true :val (pr-str (Throwable->map ex))}))))

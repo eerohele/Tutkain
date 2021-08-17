@@ -1188,18 +1188,19 @@ def fetch_locals(view, point, form, handler):
         start_line, start_column = view.rowcol(outermost.open.begin())
         context = view.substr(outermost.extent())
 
-        client.backchannel.send({
-            "op": edn.Keyword("locals"),
-            "file": view.file_name() or "NO_SOURCE_FILE",
-            "ns": namespace.name(view),
-            "context": base64.encode(context.encode("utf-8")),
-            "form": edn.Symbol(view.substr(form)),
-            "start-line": start_line + 1,
-            "start-column": start_column + 1,
-            "line": line + 1,
-            "column": column + 1,
-            "end-column": end_column + 1
-        }, partial(handle_locals_response, view, handler))
+        if local := view.substr(form).strip():
+            client.backchannel.send({
+                "op": edn.Keyword("locals"),
+                "file": view.file_name() or "NO_SOURCE_FILE",
+                "ns": namespace.name(view),
+                "context": base64.encode(context.encode("utf-8")),
+                "form": local,
+                "start-line": start_line + 1,
+                "start-column": start_column + 1,
+                "line": line + 1,
+                "column": column + 1,
+                "end-column": end_column + 1
+            }, partial(handle_locals_response, view, handler))
 
 
 def positions_to_tuples(view, positions):
