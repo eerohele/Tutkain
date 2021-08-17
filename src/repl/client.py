@@ -41,7 +41,7 @@ class Client(ABC):
             self.capabilities.add(response.get(edn.Keyword("filename")))
 
     def load_modules(self, modules):
-        for filename, requires in modules:
+        for filename, requires in modules.items():
             path = os.path.join(self.source_root, filename)
 
             with open(path, "rb") as file:
@@ -244,16 +244,16 @@ class JVMClient(Client):
             else:
                 self.recvq.put(ret)
 
-        self.load_modules([
-            ("lookup.clj", []),
-            ("completions.clj", []),
-            ("load_blob.clj", []),
-            ("test.clj", []),
-            ("analyzer.clj", [
+        self.load_modules({
+            "lookup.clj": [],
+            "completions.clj": [],
+            "load_blob.clj": [],
+            "test.clj": [],
+            "analyzer.clj": [
                 edn.Symbol("clojure.tools.reader"),
                 edn.Symbol("clojure.tools.analyzer.jvm")
-            ])
-        ])
+            ]
+        })
 
         self.write_line("""(println "Clojure" (clojure-version))""")
         self.recvq.put(edn.read_line(self.buffer))
