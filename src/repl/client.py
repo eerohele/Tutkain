@@ -341,12 +341,12 @@ class JSClient(Client):
         port = val.get(edn.Keyword("port"))
         self.backchannel = Backchannel(self, host, port).connect()
 
-        self.load_modules([
-            ("lookup.clj", []),
-            ("completions.clj", []),
-            ("cljs.clj", []),
-            ("shadow.clj", []),
-        ])
+        self.load_modules({
+            "lookup.clj": [],
+            "completions.clj": [],
+            "cljs.clj": [],
+            "shadow.clj": [],
+        })
 
         self.write_line("""(println "ClojureScript" *clojurescript-version*)""")
         line = self.buffer.readline()
