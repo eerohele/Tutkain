@@ -298,6 +298,16 @@ class TestJVMClient(ViewTestCase):
             "response": response
         }, self.get_print())
 
+    def test_evaluate_dialect(self):
+        self.view.run_command("tutkain_evaluate", {"code": "(random-uuid)", "dialect": "cljs"})
+        # The server receives no message because the evaluation uses a
+        # different dialect than the server.
+        self.assertRaises(queue.Empty, lambda: self.server.recvq.get_nowait())
+        self.view.run_command("tutkain_evaluate", {"code": """(Integer/parseInt "42")""", "dialect": "clj"})
+        self.eval_context()
+        self.assertEquals("""(Integer/parseInt "42")\n""", self.server.recv())
+        self.get_print()
+
 
 class TestJSClient(ViewTestCase):
     @classmethod

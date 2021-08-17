@@ -360,11 +360,16 @@ class TutkainEvaluateCommand(TextCommand):
     def noop(*args):
         pass
 
-    def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, snippet=None, inline_result=False):
+    def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, snippet=None, inline_result=False, dialect=None):
         assert scope in {"input", "form", "ns", "innermost", "outermost", "view"}
 
         point = self.view.sel()[0].begin()
-        dialect = dialects.for_point(self.view, point)
+
+        if dialect is None:
+            dialect = dialects.for_point(self.view, point)
+        else:
+            dialect = edn.Keyword(dialect)
+
         client = state.client(self.view.window(), dialect)
 
         if client is None:

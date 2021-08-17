@@ -14,6 +14,17 @@ All notable changes to this project will be documented in this file.
 - Fix errors when setting thread-bound dynamic variables in clojure.test tests #53
 - Fix `:tutkain/disconnect` when printing from Clojure test
 - Prevent auto-completion popup from disappearing when manually typing the entire prefix #60 (thx @dmitrydprog!)
+- Add `dialect` arg to `tutkain_evaluate` command
+
+  Instead of picking up the evaluation dialect from the currently active view, you can set it explicitly. For example:
+
+  ```json
+  {
+      "keys": ["f19"],
+      "command": "tutkain_evaluate",
+      "args": {"ns": "user", "code": "(reset)", "dialect": "clj"},
+  },
+  ```
 
 ## 0.8.0 (alpha) - 2021-04-06
 
