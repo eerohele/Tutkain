@@ -6,6 +6,7 @@
    [tutkain.backchannel :as backchannel]
    [tutkain.load-blob])
   (:import
+   (java.util Base64)
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
 (spec/def ::tag
@@ -31,10 +32,20 @@
   []
   (-> recvq (.poll 1 TimeUnit/SECONDS)))
 
+(defn string->reader
+  [string]
+  (-> string StringReader. LineNumberingPushbackReader.))
+
+(def base64-encoder (Base64/getEncoder))
+
+(defn string->base64
+  [string]
+  (.encodeToString base64-encoder (.getBytes string)))
+
 (backchannel/handle
   {:op :load
    :file nil
-   :code "(defn square [x] (* x x))"
+   :code (string->base64 "(defn square [x] (* x x))")
    :out-fn #(.put recvq %)})
 
 (recv)
@@ -43,7 +54,7 @@
 (backchannel/handle
   {:op :load
    :file "/my/path/math.clj"
-   :code "(defn square [x] (* x x))"
+   :code (string->base64 "(defn square [x] (* x x))")
    :out-fn #(.put recvq %)})
 
 (recv)
@@ -52,7 +63,7 @@
 (backchannel/handle
   {:op :load
    :file "/my/path/math.clj"
-   :code "(defn square [x] (* x x)" ;; no closing paren
+   :code (string->base64 "(defn square [x] (* x x)") ;; no closing paren
    :out-fn #(.put recvq %)})
 
 (def ex (recv))
