@@ -6,6 +6,8 @@
    [tutkain.backchannel :as backchannel]
    [tutkain.load-blob])
   (:import
+   (clojure.lang LineNumberingPushbackReader)
+   (java.io StringReader)
    (java.util Base64)
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
