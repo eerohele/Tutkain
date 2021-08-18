@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 - Optimize finding the outermost S-expression under the cursor
 - Add support for highlighting/selecting locals (via the `tutkain_select_locals` command).
 
-  Clojure only; requires clojure.tools.analyzer.jvm to be in the classpath.
+  Clojure only; requires [clojure.tools.analyzer.jvm](https://github.com/clojure/tools.analyzer.jvm) to be in the classpath.
 
 - Fix errors when setting thread-bound dynamic variables in clojure.test tests #53
 - Fix `:tutkain/disconnect` when printing from Clojure test
