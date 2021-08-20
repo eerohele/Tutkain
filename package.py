@@ -484,9 +484,6 @@ class TutkainConnectCommand(WindowCommand):
                 flags=sublime.MONOSPACE_FONT
             )
 
-    def get_project_build_id(self):
-        return self.window.project_data().get("settings", {}).get("Tutkain", {}).get("shadow-cljs", {}).get("build-id")
-
     def get_or_create_view(self, view_id):
         return next(
             filter(lambda view: view.id() == view_id, self.window.views()),
