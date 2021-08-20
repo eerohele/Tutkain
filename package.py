@@ -46,7 +46,7 @@ def make_color_scheme(cache_dir):
     Add the tutkain.repl.stderr scope into the current color scheme.
 
     We want stderr messages in the same REPL output view as evaluation results, but we don't
-    want them to be use syntax highlighting. We can use view.add_regions() to add a scope to such
+    want them to use syntax highlighting. We can use view.add_regions() to add a scope to such
     messages such that they are not highlighted. Unfortunately, it is not possible to use
     view.add_regions() to only set the foreground color of a region. Furthermore, if we set the
     background color of the scope to use exactly the same color as the global background color of
