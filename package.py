@@ -476,17 +476,13 @@ class TutkainConnectCommand(WindowCommand):
             on_done(index)
 
     def choose_build_id(self, view, ids, on_done):
-        items = list(map(lambda id: id.name, ids))
-
-        if items:
+        if items := list(map(lambda id: id.name, ids)):
             self.window.show_quick_panel(
                 items,
                 lambda index: self.set_build_id(view, index, on_done),
                 placeholder="Choose shadow-cljs build ID",
                 flags=sublime.MONOSPACE_FONT
             )
-
-        return True
 
     def get_project_build_id(self):
         return self.window.project_data().get("settings", {}).get("Tutkain", {}).get("shadow-cljs", {}).get("build-id")
