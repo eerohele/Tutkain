@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
+## 0.9.0 (alpha) - 2021-08-21
 
 - Fix auto-completion and doc popups when connected to both Clojure and ClojureScript socket REPLs
 - Add backchannel `bind_address` setting #57 (thx @dmitrydprog!)
