@@ -44,8 +44,8 @@
    :end-column (-> form str count (+ column))})
 
 (defn index-by-position
-  "Given a sequence of AST nodes, return a map where the key is the position
-  of the node and the val is the unique name of the node."
+  "Given a sequence of tools.analyzer AST nodes, return a map where the key is
+  the position of the node and the val is the unique name of the node."
   [nodes]
   (into {}
     (comp
@@ -57,15 +57,17 @@
   "Given a map of data about a local, find all positions in :context where the
   local is used. Keys:
 
-  :context -- The code string where the local symbol is used.
-  :form -- The form whose positions to search.
+  :context -- The Base64-encoded code string where the local is used.
+  :form -- The form (symbol) whose positions to search.
   :file (Optional) -- The path to the file that contains :context.
   :ns (Optional) -- The namespace that contains :context.
   :start-line -- The line number where :context begins.
   :start-column -- The column number where :context begins.
   :line -- The line number of :form.
   :column -- The column number where :form begins.
-  :end-column -- The column number where :form ends."
+  :end-column -- The column number where :form ends.
+
+  See analyzer.repl for examples."
   [{:keys [context form file ns start-line start-column line column end-column]}]
   (with-open [reader (base64-reader context)]
     (let [nodes (reader->nodes file ns start-line start-column reader)
