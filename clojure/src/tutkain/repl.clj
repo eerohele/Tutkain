@@ -53,16 +53,18 @@
                                :xform-in #(assoc % :in in :repl-thread repl-thread)
                                :xform-out #(dissoc % :in)))]
            (try
-             (out-fn {:tag :ret
-                      :val (pr-str {:host (-> backchannel .getLocalAddress .getHostName)
-                                    :port (-> backchannel .getLocalAddress .getPort)})})
+             (let [address (.getLocalAddress backchannel)]
+               (out-fn {:tag :ret
+                        :val (pr-str {:host (.getHostName address)
+                                      :port (.getPort address)})}))
              (add-tap tapfn)
              (loop []
                (when
                  (try
-                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)]
-                     (binding [*file* (or (backchannel/eval-context :file) "NO_SOURCE_PATH")
-                               *source-path* (or (some-> (backchannel/eval-context :file) File. .getName) "NO_SOURCE_FILE")]
+                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
+                         file (backchannel/eval-context :file)]
+                     (binding [*file* (or file "NO_SOURCE_PATH")
+                               *source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")]
                        (try
                          (when-not (identical? form EOF)
                            (let [start (System/nanoTime)
