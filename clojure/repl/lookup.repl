@@ -1,6 +1,8 @@
 (ns repl.lookup
   (:require
+   [clojure.edn :as edn]
    [cognitect.transcriptor :as xr]
+   [tutkain.backchannel :as backchannel]
    [tutkain.lookup :as lookup :refer [lookup]]
    [tutkain.lookup.specs :as specs]))
 
@@ -50,3 +52,16 @@
 
 (xr/check! ::specs/infos
   (distinct (keep #(lookup (-> % .ns ns-name) (-> % .sym name)) public-vars)))
+
+(->
+  {:op :lookup
+   :dialect :clj
+   :named "mapcat"
+   :ns "user"
+   :out-fn prn}
+  backchannel/handle
+  with-out-str
+  edn/read-string
+  :info)
+
+(xr/check! ::specs/info)

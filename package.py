@@ -659,12 +659,15 @@ class TutkainViewEventListener(ViewEventListener):
 
 def lookup(view, form, handler):
     if not view.settings().get("tutkain_repl_view_dialect") and form and (
-        client := state.client(view.window(), dialects.for_point(view, form.begin()))
+        dialect := dialects.for_point(view, form.begin())
+    ) and (
+        client := state.client(view.window(), dialect)
     ):
         client.backchannel.send({
             "op": edn.Keyword("lookup"),
             "named": view.substr(form),
-            "ns": namespace.name(view)
+            "ns": namespace.name(view),
+            "dialect": dialect
         }, handler)
 
 

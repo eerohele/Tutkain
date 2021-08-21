@@ -1,8 +1,10 @@
 (ns repl.cljs.lookup
   (:require
+   [clojure.edn :as edn]
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as server]
    [shadow.cljs.devtools.api :as shadow]
+   [tutkain.backchannel :as backchannel]
    [tutkain.lookup.specs :as specs]
    [tutkain.cljs :as cljs]))
 
@@ -31,4 +33,18 @@
 (xr/check! ::specs/info)
 
 (cljs/info (env) 'cljs.pprint 'my.browser.app)
+(xr/check! ::specs/info)
+
+(->
+  {:op :lookup
+   :build-id build-id
+   :dialect :cljs
+   :named "mapcat"
+   :ns "cljs.user"
+   :out-fn prn}
+  backchannel/handle
+  with-out-str
+  edn/read-string
+  :info)
+
 (xr/check! ::specs/info)

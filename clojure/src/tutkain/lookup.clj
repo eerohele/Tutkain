@@ -88,10 +88,16 @@
           (update :arglists #(map pr-str %))
           (remove-empty))))))
 
-(defmethod handle :lookup
+(defmulti info :dialect)
+
+(defmethod info :clj
   [{:keys [named ns] :as message}]
   (try
     (when-some [result (lookup ns named)]
       (respond-to message {:info result}))
     (catch Throwable ex
       (respond-to message {:ex (pp-str (Throwable->map ex))}))))
+
+(defmethod handle :lookup
+  [message]
+  (info message))

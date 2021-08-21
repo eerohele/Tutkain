@@ -261,6 +261,7 @@ class TestJVMClient(ViewTestCase):
                 edn.Keyword("op"): edn.Keyword("lookup"),
                 edn.Keyword("named"): "rand",
                 edn.Keyword("ns"): None,
+                edn.Keyword("dialect"): edn.Keyword("clj"),
                 edn.Keyword("id"): response.get(edn.Keyword("id"))
             }, response)
 
@@ -279,6 +280,7 @@ class TestJVMClient(ViewTestCase):
             edn.Keyword("op"): edn.Keyword("lookup"),
             edn.Keyword("named"): "map",
             edn.Keyword("ns"): None,
+            edn.Keyword("dialect"): edn.Keyword("clj"),
             edn.Keyword("id"): response.get(edn.Keyword("id"))
         }, response)
 

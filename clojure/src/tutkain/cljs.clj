@@ -218,7 +218,7 @@
       arglists (assoc :arglists (format-arglists arglists))
       file (assoc :file (lookup/resolve-file file)))))
 
-(defmethod handle :lookup
+(defmethod lookup/info :cljs
   [{:keys [^String named ns build-id] :as message}]
   (let [env (compiler-env build-id)
         named (symbol named)]
