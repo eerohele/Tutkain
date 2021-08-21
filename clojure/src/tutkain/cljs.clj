@@ -161,7 +161,7 @@
   [ns]
   (or (some-> ns symbol) 'cljs.user))
 
-(defmethod handle :completions
+(defmethod completions/completions :cljs
   [{:keys [ns prefix build-id] :as message}]
   (let [completions (candidates (compiler-env build-id) prefix (parse-ns ns))]
     (respond-to message {:completions completions})))

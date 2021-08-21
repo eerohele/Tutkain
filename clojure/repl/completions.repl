@@ -1,5 +1,6 @@
 (ns repl.completions
   (:require
+   [clojure.edn :as edn]
    [clojure.set :as set]
    [clojure.spec.alpha :as spec]
    [clojure.spec.test.alpha :as test]
@@ -7,14 +8,9 @@
    [clojure.test.check.generators :as gen]
    [clojure.test.check.properties :as prop]
    [cognitect.transcriptor :as xr]
+   [tutkain.backchannel :as backchannel]
    [tutkain.completions :as completions :refer [candidates]]
-   [tutkain.completions.specs :as specs]))
-
-(defn prefixed-candidates
-  [spec prefix]
-  (spec/and spec
-    (fn [candidates]
-      (every? #(.startsWith ^String (:candidate %) prefix) candidates))))
+   [tutkain.completions.specs :as specs :refer [prefixed-candidates]]))
 
 ;; Tests
 
@@ -97,3 +93,16 @@
   (test/summarize-results))
 
 (xr/check! #{{:total 1 :check-passed 1}})
+
+(->
+  {:op :completions
+   :dialect :clj
+   :prefix "x"
+   :ns "user"
+   :out-fn prn}
+  backchannel/handle
+  with-out-str
+  edn/read-string
+  :completions)
+
+(xr/check! (prefixed-candidates ::specs/symbol-completions "x"))

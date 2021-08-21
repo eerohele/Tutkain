@@ -1,11 +1,13 @@
 (ns repl.cljs.completions
   (:require
+   [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.set :as set]
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as server]
    [shadow.cljs.devtools.api :as shadow]
-   [tutkain.completions.specs :as specs]
+   [tutkain.backchannel :as backchannel]
+   [tutkain.completions.specs :as specs :refer [prefixed-candidates]]
    [tutkain.cljs :as cljs]))
 
 (def build-id :browser)
@@ -77,3 +79,17 @@
 
 (set (cljs/candidates (env) "write-t" 'cljs.pprint))
 (xr/check! #(set/subset? #{{:candidate "write-token" :type :multimethod}} %))
+
+(->
+  {:op :completions
+   :build-id build-id
+   :dialect :cljs
+   :prefix "random-u"
+   :ns "cljs.user"
+   :out-fn prn}
+  backchannel/handle
+  with-out-str
+  edn/read-string
+  :completions)
+
+(xr/check! (prefixed-candidates ::specs/symbol-completions "r"))

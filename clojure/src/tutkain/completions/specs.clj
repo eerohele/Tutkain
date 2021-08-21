@@ -43,3 +43,9 @@
 
 (spec/def ::ns
   (spec/with-gen (partial instance? clojure.lang.Namespace) #(gen/elements (all-ns))))
+
+(defn prefixed-candidates
+  [spec prefix]
+  (spec/and spec
+    (fn [candidates]
+      (every? #(.startsWith ^String (:candidate %) prefix) candidates))))

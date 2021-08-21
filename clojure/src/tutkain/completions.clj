@@ -350,7 +350,13 @@
   (time (dorun (candidates "m" 'clojure.core)))
   ,)
 
-(defmethod handle :completions
+(defmulti completions :dialect)
+
+(defmethod completions :clj
   [{:keys [prefix ns] :as message}]
   (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))]
     (respond-to message {:completions (candidates prefix ns)})))
+
+(defmethod handle :completions
+  [message]
+  (completions message))

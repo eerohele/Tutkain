@@ -646,7 +646,8 @@ class TutkainViewEventListener(ViewEventListener):
             client.backchannel.send({
                 "op": edn.Keyword("completions"),
                 "prefix": prefix,
-                "ns": namespace.name(self.view)
+                "ns": namespace.name(self.view),
+                "dialect": dialect
             }, handler=lambda response: (
                 completion_list.set_completions(
                     map(self.completion_item, response.get(edn.Keyword("completions"), []))
