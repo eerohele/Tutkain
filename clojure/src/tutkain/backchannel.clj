@@ -119,9 +119,11 @@
                          (loop []
                            (when (.isOpen socket)
                              (when-some [message (try
-                                                   ;; If we can't read from the socket, exit the loop.
                                                    (edn/read {:eof EOF} in)
-                                                   (catch java.net.SocketException _))]
+                                                   ;; If we can't read from the socket, exit the loop.
+                                                   (catch java.net.SocketException _)
+                                                   ;; If the remote host closes the connection, exit the loop.
+                                                   (catch java.io.IOException _))]
                                (when-not (identical? EOF message)
                                  (let [recur? (case (:op message)
                                                 :quit false
