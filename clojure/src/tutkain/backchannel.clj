@@ -61,13 +61,8 @@
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn set-column!
   [^LineNumberingPushbackReader reader column]
-  (when-let [field (->> LineNumberingPushbackReader
-                     (.getDeclaredFields)
-                     (filter #(= "_columnNumber" (.getName ^Field %)))
-                     first)]
-    (-> ^Field field
-      (doto (.setAccessible true))
-      (.set reader column))))
+  (when-let [field (.getDeclaredField LineNumberingPushbackReader "_columnNumber")]
+    (-> ^Field field (doto (.setAccessible true)) (.set reader column))))
 
 (defmethod handle :set-eval-context
   [{:keys [in file line column] :or {line 0 column 0} :as message}]
