@@ -118,7 +118,10 @@
                                         (.flush out)))]
                          (loop []
                            (when (.isOpen socket)
-                             (let [message (edn/read {:eof EOF} in)]
+                             (when-some [message (try
+                                                   ;; If we can't read from the socket, exit the loop.
+                                                   (edn/read {:eof EOF} in)
+                                                   (catch java.net.SocketException _))]
                                (when-not (identical? EOF message)
                                  (let [recur? (case (:op message)
                                                 :quit false
