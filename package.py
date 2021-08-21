@@ -57,12 +57,10 @@ def make_color_scheme(cache_dir):
     color scheme defines the tutkain.repl.stderr scope which has an almost-transparent background
     color, creating the illusion that we're only setting the foreground color of the text.
     """
-    view = sublime.active_window().active_view()
-
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
 
-    if view:
+    if view := sublime.active_window().active_view():
         color_scheme = view.settings().get("color_scheme")
 
         if color_scheme:
@@ -301,9 +299,7 @@ class PortInputHandler(TextInputHandler):
         return text.isdigit()
 
     def initial_text(self):
-        alts = ports.discover(self.window, edn.Keyword(self.dialect))
-
-        if alts:
+        if alts := ports.discover(self.window, edn.Keyword(self.dialect)):
             return alts[0][1]
         else:
             return ""
