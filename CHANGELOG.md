@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+- Fix auto-completion and doc popups when connected to both Clojure and ClojureScript socket REPLs
 - Add backchannel `bind_address` setting #57 (thx @dmitrydprog!)
 - Use first instead of last ns form for ns auto-switch
 - Avoid dangling paren after forward barf
