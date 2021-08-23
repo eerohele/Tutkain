@@ -1111,28 +1111,50 @@ class TutkainOpenDiffWindowCommand(TextCommand):
 
 
 class TutkainShowUnsuccessfulTestsCommand(TextCommand):
-    def get_preview(self, region):
-        line = self.view.rowcol(region.begin())[0] + 1
-        preview = self.view.substr(self.view.line(region)).lstrip()
-        return f"{line}: {preview}"
+
+    def result_line(self, result):
+        begin, _ = result["region"]
+
+        return self.view.rowcol(begin)[0] + 1
+
+    def result_quick_panel_item(self, result):
+        trigger = result["name"]
+        details = f"Line {self.result_line(result)}"
+
+        annotation_kind = None
+
+        # We use a custom kind for errors and failures.
+        # https://www.sublimetext.com/docs/api_reference.html#type-kind_info
+
+        if result["type"] == "fail":
+            annotation_kind = ("Fail", (sublime.KIND_ID_COLOR_REDISH, "F", ""))
+        elif result["type"] == "error":
+            annotation_kind = ("Error", (sublime.KIND_ID_COLOR_YELLOWISH, "E", ""))
+        else:
+            annotation_kind = (str(result["type"]), sublime.KIND_AMBIGUOUS)
+
+        annotation, kind = annotation_kind
+
+        return sublime.QuickPanelItem(trigger, details, annotation, kind)
 
     def run(self, _):
         view = self.view
-        failures = test.regions(view, "failures")
-        errors = test.regions(view, "errors")
-        regions = failures + errors
 
-        if regions:
-            regions.sort()
+        if unsuccessful := test.unsuccessful(view):
 
             def goto(i):
-                view.set_viewport_position(view.text_to_layout(regions[i].begin()))
+                if i != -1:
+                    begin, _ = unsuccessful[i]["region"]
+
+                    view.set_viewport_position(view.text_to_layout(begin))
+
+            items = [self.result_quick_panel_item(result) for result in unsuccessful]
 
             view.window().show_quick_panel(
-                [self.get_preview(region) for region in regions],
+                items,
                 goto,
                 flags=sublime.MONOSPACE_FONT,
-                on_highlight=goto,
+                on_highlight=goto
             )
 
 

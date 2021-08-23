@@ -9,6 +9,9 @@ from .progress import ProgressBar
 from ..api import edn
 
 
+RESULTS_SETTINGS_KEY = "tutkain_clojure_test_results"
+
+
 progress = ProgressBar("[Tutkain] Running tests...")
 
 
@@ -50,10 +53,55 @@ def regions(view, result_type):
     return view.get_regions(region_key(view, result_type))
 
 
-def add_markers(view, response):
-    view.run_command("tutkain_clear_test_markers")
+def results(view):
+    """
+    Returns test results persisted in settings.
+    """
+    return view.settings().get(RESULTS_SETTINGS_KEY, [])
+
+
+def unsuccessful(view):
+    """
+    Returns unsuccessful test results, fail and error, persisted in settings.
+    """
+
+    def result_line(result):
+        begin, _ = result["region"]
+
+        return view.rowcol(begin)[0] + 1
+
+    def unsuccessful_type(result):
+        return result["type"] == "fail" or result["type"] == "error"
+
+    l = list(filter(unsuccessful_type, results(view)))
+
+    # Results must be sorted by line.
+    l.sort(key=result_line)
+
+    return l
+
+
+def response_results(view, response):
+    """
+    Returns a dict with "fail", "error" and "pass" keys.
+
+    "fail" and "error" are lists of dict with keys:
+      - "name"
+      - "type"
+      - "region"
+      - "expected"
+      - "actual"
+
+    "pass" is a list of dict with keys:
+      - "name"
+      - "type"
+      - "region"
+    """
 
     results = {"fail": {}, "error": {}, "pass": {}}
+
+    def var_meta_name(result):
+        return result[edn.Keyword("var-meta")][edn.Keyword("name")]
 
     if edn.Keyword("fail") in response:
         for result in response[edn.Keyword("fail")]:
@@ -61,6 +109,7 @@ def add_markers(view, response):
             point = view.text_point(line, 0)
 
             results["fail"][line] = {
+                "name": var_meta_name(result),
                 "type": result[edn.Keyword("type")],
                 "region": sublime.Region(point, point),
                 "expected": result[edn.Keyword("expected")],
@@ -74,6 +123,7 @@ def add_markers(view, response):
             point = view.text_point(line, column)
 
             results["error"][line] = {
+                "name": var_meta_name(result),
                 "type": result[edn.Keyword("type")],
                 "region": forms.find_next(view, point),
                 "expected": result[edn.Keyword("expected")],
@@ -88,9 +138,40 @@ def add_markers(view, response):
             # Only add pass for line if there's no fail for the same line.
             if line not in results["fail"]:
                 results["pass"][line] = {
+                    "name": var_meta_name(result),
                     "type": result[edn.Keyword("type")],
                     "region": sublime.Region(point, point),
                 }
+
+    return results
+
+
+def serializable_results(results):
+    """
+    Returns a list of results suitable for persistence.
+
+    A result is a dict with keys "name", "type", and "region".
+
+    Where:
+        - "name" is the name of the test var;
+        - "type" is one of "pass", "fail", or "error"
+        - "region" is encoded as a tuple(begin, end).
+    """
+
+    def serialize(result):
+        return {
+            "name": result["name"].name,
+            "type": result["type"].name,
+            "region": result["region"].to_tuple()
+        }
+
+    return [serialize(result)
+            for result_type in ["pass", "fail", "error"]
+            for result in results[result_type].values()]
+
+
+def add_markers(view, results):
+    view.run_command("tutkain_clear_test_markers")
 
     passes = results["pass"].values()
     if passes:
@@ -126,7 +207,12 @@ def add_markers(view, response):
 
 def run_tests(view, client, test_vars):
     def handler(response):
-        add_markers(view, response)
+        results = response_results(view, response)
+
+        # Persist results so it's possible to create UIs to present it later.
+        view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
+
+        add_markers(view, results)
         client.recvq.put(response)
         progress.stop()
 
