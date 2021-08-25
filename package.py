@@ -1080,6 +1080,7 @@ class TutkainClearTestMarkersCommand(TextCommand):
         self.view.erase_regions(test.region_key(self.view, "passes"))
         self.view.erase_regions(test.region_key(self.view, "failures"))
         self.view.erase_regions(test.region_key(self.view, "errors"))
+        self.view.settings().erase(test.RESULTS_SETTINGS_KEY)
 
 
 class TutkainOpenDiffWindowCommand(TextCommand):
