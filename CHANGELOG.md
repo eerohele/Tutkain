@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Improve the UI of the **Tutkain: Show Unsuccessful Tests** command #65 (thx @pedrorgirardi)
+
 ## 0.9.0 (alpha) - 2021-08-21
 
 - Fix auto-completion and doc popups when connected to both Clojure and ClojureScript socket REPLs
