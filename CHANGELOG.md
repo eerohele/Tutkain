@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## UNRELEASED
 
 - Improve the UI of the **Tutkain: Show Unsuccessful Tests** command #65 (thx @pedrorgirardi)
+- Improve locals highlighting when destructuring a namespaced keyword #55
 
 ## 0.9.0 (alpha) - 2021-08-21
 
