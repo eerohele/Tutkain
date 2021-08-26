@@ -37,6 +37,11 @@ def find(view, start_point, selector, forward=True):
 
 
 def expand_by_selector(view, start_point, selector):
+    # If the scope at start_point doesn't match the selector, abort
+    # immediately.
+    if not view.match_selector(start_point, selector):
+        return None
+
     point = start_point
     max_point = view.size()
     begin = 0
