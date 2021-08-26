@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 
 - Improve the UI of the **Tutkain: Show Unsuccessful Tests** command #65 (thx @pedrorgirardi)
 - Improve locals highlighting when destructuring a namespaced keyword #55
+- Fix support for `tutkain_connect` `host` argument
+
+  For example, say you specify a key binding like this:
+
+  ```json
+  {
+      "keys": ["ctrl+c", "ctrl+x"],
+      "command": "tutkain_connect",
+      "args": {"host": "localhost"}
+  },
+  ```
+
+  Then Tutkain no longer prompts you for the hostname when connecting.
 
 ## 0.9.0 (alpha) - 2021-08-21
 

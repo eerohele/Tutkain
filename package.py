@@ -246,8 +246,9 @@ class TutkainRunTestUnderCursorCommand(TextCommand):
 
 
 class DialectInputHandler(ListInputHandler):
-    def __init__(self, window):
+    def __init__(self, window, host=None):
         self.window = window
+        self.host = host
 
     def placeholder(self):
         return "Choose dialect"
@@ -263,7 +264,10 @@ class DialectInputHandler(ListInputHandler):
         self.dialect = value
 
     def next_input(self, _):
-        return HostInputHandler(self.window, self.dialect)
+        if host is not None:
+            return PortInputHandler(self.window, self.dialect)
+        else:
+            return HostInputHandler(self.window, self.dialect)
 
 
 class HostInputHandler(TextInputHandler):
@@ -546,6 +550,8 @@ class TutkainConnectCommand(WindowCommand):
             return PortInputHandler(self.window, args["dialect"])
         elif "dialect" in args:
             return HostInputHandler(self.window, args["dialect"])
+        elif "host" in args:
+            return DialectInputHandler(self.window, host=args["host"])
         else:
             return DialectInputHandler(self.window)
 
