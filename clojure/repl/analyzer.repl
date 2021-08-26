@@ -123,3 +123,37 @@
     simple-symbol?
     :min-count 6
     :max-count 6))
+
+(set
+  (analyzer/local-positions
+  {:file "/path/to/my.clj"
+   :ns *ns*
+   :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
+   :form 'baz
+   :start-line 0
+   :start-column 0
+   :line 0
+   :column 30
+   :end-column 33}))
+
+(xr/check!
+  (partial set/subset?
+    #{{:line 0 :column 19 :form 'baz :end-column 26}
+      {:line 0 :column 30 :form 'baz :end-column 33}}))
+
+(set
+  (analyzer/local-positions
+  {:file "/path/to/my.clj"
+   :ns *ns*
+   :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
+   :form 'bar/baz
+   :start-line 0
+   :start-column 0
+   :line 0
+   :column 19
+   :end-column 26}))
+
+(xr/check!
+  (partial set/subset?
+    #{{:line 0 :column 19 :form 'baz :end-column 26}
+      {:line 0 :column 30 :form 'baz :end-column 33}}))

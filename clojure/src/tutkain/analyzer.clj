@@ -37,11 +37,13 @@
 (defn node->position
   "Given an tools.analyzer node, return the position information for that
   node."
-  [{form :form {:keys [line column]} :env}]
+  [{form :form {:keys [line column end-column] :as env} :env}]
   {:line line
    :column column
    :form form
-   :end-column (-> form str count (+ column))})
+   :end-column (if (zero? end-column)
+                 (-> form str count (+ column))
+                 end-column)})
 
 (defn index-by-position
   "Given a sequence of tools.analyzer AST nodes, return a map where the key is
@@ -72,7 +74,7 @@
   (with-open [reader (base64-reader context)]
     (let [nodes (reader->nodes file ns start-line start-column reader)
           position->unique-name (index-by-position nodes)
-          position {:form form :line line :column column :end-column end-column}]
+          position {:form (-> form name symbol) :line line :column column :end-column end-column}]
       (when-some [unique-name (get position->unique-name position)]
         (eduction
           (filter #(= unique-name (:name %)))
