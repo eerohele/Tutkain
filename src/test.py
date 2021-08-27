@@ -170,8 +170,6 @@ def serializable_results(results):
 
 
 def add_markers(view, results):
-    view.run_command("tutkain_clear_test_markers")
-
     passes = results["pass"].values()
     if passes:
         view.add_regions(
@@ -206,6 +204,7 @@ def add_markers(view, results):
 
 def run_tests(view, client, test_vars):
     def handler(response):
+        view.run_command("tutkain_clear_test_markers")
         results = response_results(view, response)
 
         # Persist results so it's possible to create UIs to present it later.
