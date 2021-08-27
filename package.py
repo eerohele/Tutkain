@@ -264,7 +264,7 @@ class DialectInputHandler(ListInputHandler):
         self.dialect = value
 
     def next_input(self, _):
-        if host is not None:
+        if self.host is not None:
             return PortInputHandler(self.window, self.dialect)
         else:
             return HostInputHandler(self.window, self.dialect)
