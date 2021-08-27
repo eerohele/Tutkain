@@ -136,7 +136,9 @@ class TestJVMClient(ViewTestCase):
         self.eval_context(column=18)
 
         self.assertEquals("(inc 1)\n", self.server.recv())
+        self.assertEquals(self.print_item("user", "(inc 1)"), self.get_print())
         self.assertEquals("(inc 2)\n", self.server.recv())
+        self.assertEquals(self.print_item("user", "(inc 2)"), self.get_print())
 
     def test_outermost_empty(self):
         self.set_view_content("")
@@ -169,6 +171,10 @@ class TestJVMClient(ViewTestCase):
         self.view.run_command("tutkain_evaluate", {"code": "((requiring-resolve 'clojure.data/diff) $0 $1)"})
         self.eval_context()
         self.assertEquals("((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.server.recv())
+        self.assertEquals(
+            self.print_item("user", "((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})"),
+            self.get_print()
+        )
 
     def test_eval_in_ns(self):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
