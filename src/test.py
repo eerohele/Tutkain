@@ -1,4 +1,3 @@
-import os
 import sublime
 
 from . import base64
