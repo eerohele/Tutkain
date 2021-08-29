@@ -61,7 +61,7 @@
     (run! (fn [[sym _]] (ns-unmap ns sym)))))
 
 (defmethod handle :test
-  [{:keys [ns code file vars] :as message}]
+  [{:keys [ns code file vars handle-exception] :as message}]
   (let [filename (some-> file File. .getName)
         ns-sym (or (some-> ns symbol) 'user)]
     (try
@@ -111,4 +111,9 @@
         (respond-to message {:tag :ret
                              :ns (str (.name *ns*))
                              :val (pp-str (assoc (Throwable->map ex) :phase :execution))
-                             :exception true})))))
+                             :exception true
+                             
+                             ;; True if the client wants to handle the exception.
+                             ;; The client doesn't handle exceptions by default,
+                             ;; but the client can explicitly request to do so.
+                             :handle-exception (boolean handle-exception)})))))

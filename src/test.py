@@ -228,7 +228,11 @@ def run_tests(view, client, test_vars):
         "ns": namespace.name(view),
         "code": base64.encode(code.encode("utf-8")),
         "file": view.file_name(),
-        "vars": test_vars
+        "vars": test_vars,
+        
+        # We want to handle the exception because 
+        # the handler must be called to stop the progress bar.
+        "handle-exception": True
     }, handler=handler)
 
 
