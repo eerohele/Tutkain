@@ -68,8 +68,6 @@ class Backchannel(object):
 
     def handle(self, response):
         try:
-            print(response.get(edn.Keyword("handle-exception")))
-
             if not isinstance(response, dict):
                 self.client.recvq.put(response)
             # It's an exception but the client doesn't want to handle it.
