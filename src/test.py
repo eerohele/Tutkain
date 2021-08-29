@@ -205,13 +205,20 @@ def add_markers(view, results):
 def run_tests(view, client, test_vars):
     def handler(response):
         view.run_command("tutkain_clear_test_markers")
-        results = response_results(view, response)
 
-        # Persist results so it's possible to create UIs to present it later.
-        view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
+        if not response.get(edn.Keyword("exception")):
+            results = response_results(view, response)
 
-        add_markers(view, results)
+            # Persist results so it's possible to create UIs to present it later.
+            view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
+
+            add_markers(view, results)
+
+        # Put response in the queue and stop progress bar 
+        # regardless of it being exceptional or not:
+
         client.recvq.put(response)
+
         progress.stop()
 
     code = view.substr(sublime.Region(0, view.size()))
