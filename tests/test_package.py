@@ -96,6 +96,10 @@ class TestJVMClient(ViewTestCase):
         if self.client:
             self.client.halt()
 
+    def setUp(self):
+        self.server.recvq = queue.Queue()
+        self.backchannel.recvq = queue.Queue()
+
     def get_print(self):
         return self.client.printq.get(timeout=5)
 
