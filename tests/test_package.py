@@ -375,6 +375,68 @@ class TestJVMClient(ViewTestCase):
         self.assertFalse(test.regions(self.view, "fail"))
         self.assertFalse(test.regions(self.view, "error"))
 
+    def test_unsuccessful_tests(self):
+        code = """
+        (ns my.app
+          (:require [clojure.test :refer [deftest is]]))
+
+        (deftest my-test
+          (is (= 3 (+ 1 1))))
+        """
+
+        self.set_view_content(code)
+        self.view.run_command("tutkain_run_tests", {"scope": "ns"})
+        response = edn.read(self.backchannel.recv())
+        id = response.get(edn.Keyword("id"))
+
+        self.assertEquals(edn.kwmap({
+            "op": edn.Keyword("test"),
+            "file": None,
+            "ns": "my.app",
+            "vars": [],
+            "code": base64.encode(code.encode("utf-8")),
+            "id": id
+        }), response)
+
+        val = "{:test 1, :pass 0, :fail 1, :error 0, :assert 1, :type :summary}"
+
+        self.backchannel.send(edn.kwmap({
+            "id": id,
+            "tag": edn.Keyword("ret"),
+            "val": val,
+            "pass": [],
+            "fail": [edn.kwmap({
+                        "file": None,
+                        "type": edn.Keyword("fail"),
+                        "line": 5,
+                        "expected": "3\\n",
+                        "actual": "2\\n",
+                        "message": None,
+                        "var-meta": edn.kwmap({
+                            "line": 4,
+                            "column": 1,
+                            "file": "NO_SOURCE_FILE",
+                            "name": edn.Symbol("my-test"),
+                            "ns": "my.app"
+                        })
+                    })],
+            "error": []
+        }))
+
+        self.assertEquals(val, self.get_print().get("printable"))
+        self.assertEquals(
+            [sublime.Region(78, 78)],
+            test.regions(self.view, "failures")
+        )
+
+        self.assertEquals(
+            [{"name": "my-test", "region": [78, 78], "type": "fail"}],
+            test.unsuccessful(self.view)
+        )
+
+        self.assertFalse(test.regions(self.view, "passes"))
+        self.assertFalse(test.regions(self.view, "error"))
+
 
 class TestJSClient(ViewTestCase):
     @classmethod
