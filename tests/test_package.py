@@ -70,7 +70,7 @@ class TestJVMClient(ViewTestCase):
     @classmethod
     def setUpClass(self):
         super().setUpClass()
-        start_logging(False)
+        start_logging(True)
 
         def write_greeting(buf):
             buf.write("user=> ")
