@@ -44,8 +44,15 @@ class TestJVMClient(ViewTestCase):
                 edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
             })
 
+            # Client loads modules
             for _ in range(5):
-                backchannel.recv()
+                module = edn.read(backchannel.recv())
+
+                backchannel.send(edn.kwmap({
+                    "id": module.get(edn.Keyword("id")),
+                    "result": edn.Keyword("ok"),
+                    "filename": module.get(edn.Keyword("filename"))
+                }))
 
             server.send({
                 edn.Keyword("tag"): edn.Keyword("out"),
