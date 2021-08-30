@@ -11,7 +11,7 @@ class Server(object):
         self.executor = futures.ThreadPoolExecutor()
         self.greeting = greeting
         self.port = port
-        self.timeout = 1
+        self.timeout = timeout
         self.recvq = queue.Queue()
 
     def recv_loop(self):
