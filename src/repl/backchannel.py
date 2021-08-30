@@ -70,16 +70,13 @@ class Backchannel(object):
         try:
             if not isinstance(response, dict):
                 self.client.recvq.put(response)
-            # It's an exception but the client doesn't want to handle it.
-            elif response.get(edn.Keyword("exception")) and not response.get(edn.Keyword("handle-exception")):
-                self.client.recvq.put(response)
             elif response.get(edn.Keyword("debug")):
                 log.debug({"event": "info", "message": response.get(edn.Keyword("val"))})
             else:
                 id = response.get(edn.Keyword("id"))
 
                 try:
-                    handler = self.handlers.get(id)
+                    handler = self.handlers.get(id, self.client.recvq.put)
                     handler.__call__(response)
                 finally:
                     self.handlers.pop(id, None)
