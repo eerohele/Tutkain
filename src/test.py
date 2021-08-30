@@ -170,8 +170,7 @@ def serializable_results(results):
 
 
 def add_markers(view, results):
-    passes = results["pass"].values()
-    if passes:
+    if passes := results["pass"].values():
         view.add_regions(
             region_key(view, "passes"),
             [p["region"] for p in passes],
@@ -179,8 +178,7 @@ def add_markers(view, results):
             icon="circle",
         )
 
-    failures = results["fail"].values()
-    if failures:
+    if failures := results["fail"].values():
         view.add_regions(
             region_key(view, "failures"),
             [f["region"] for f in failures],
@@ -189,8 +187,7 @@ def add_markers(view, results):
             annotations=[add_annotation(f) for f in failures],
         )
 
-    errors = results["error"].values()
-    if errors:
+    if errors := results["error"].values():
         view.add_regions(
             region_key(view, "errors"),
             [e["region"] for e in errors],
