@@ -1,3 +1,4 @@
+import sublime
 import queue
 
 from Tutkain.api import edn
@@ -6,6 +7,7 @@ from Tutkain.src.repl import views
 from Tutkain.src.repl.client import BabashkaClient, JVMClient, JSClient
 from Tutkain.src import base64
 from Tutkain.src import state
+from Tutkain.src import test
 
 from .mock import Server
 from .util import ViewTestCase
@@ -319,6 +321,59 @@ class TestJVMClient(ViewTestCase):
         self.eval_context()
         self.assertEquals("""(Integer/parseInt "42")\n""", self.server.recv())
         self.get_print()
+
+    def test_run_tests_ns(self):
+        code = """
+        (ns my.app
+          (:require [clojure.test :refer [deftest is]]))
+
+        (deftest my-test
+          (is (= 2 (+ 1 1))))
+        """
+
+        self.set_view_content(code)
+        self.view.run_command("tutkain_run_tests", {"scope": "ns"})
+        response = edn.read(self.backchannel.recv())
+        id = response.get(edn.Keyword("id"))
+
+        self.assertEquals(edn.kwmap({
+            "op": edn.Keyword("test"),
+            "file": None,
+            "ns": "my.app",
+            "vars": [],
+            "code": base64.encode(code.encode("utf-8")),
+            "id": id
+        }), response)
+
+        val = "{:test 1, :pass 1, :fail 0, :error 0, :assert 1, :type :summary}"
+
+        self.backchannel.send(edn.kwmap({
+            "id": id,
+            "tag": edn.Keyword("ret"),
+            "val": val,
+            "pass": [edn.kwmap({
+                        "type": edn.Keyword("pass"),
+                        "line": 5,
+                        "var-meta": edn.kwmap({
+                            "line": 4,
+                            "column": 1,
+                            "file": "NO_SOURCE_FILE",
+                            "name": edn.Symbol("my-test"),
+                            "ns": "my.app"
+                        })
+                    })],
+            "fail": [],
+            "error": []
+        }))
+
+        self.assertEquals(val, self.get_print().get("printable"))
+        self.assertEquals(
+            [sublime.Region(78, 78)],
+            test.regions(self.view, "passes")
+        )
+
+        self.assertFalse(test.regions(self.view, "fail"))
+        self.assertFalse(test.regions(self.view, "error"))
 
 
 class TestJSClient(ViewTestCase):
