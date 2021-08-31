@@ -562,6 +562,10 @@ class TestJSClient(ViewTestCase):
         if self.client:
             self.client.halt()
 
+    def setUp(self):
+        self.server.recvq = queue.Queue()
+        self.backchannel.recvq = queue.Queue()
+
     def test_innermost(self):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((9, 9))
@@ -640,6 +644,9 @@ class TestBabashkaClient(ViewTestCase):
 
         if self.client:
             self.client.halt()
+
+    def setUp(self):
+        self.server.recvq = queue.Queue()
 
     def test_innermost(self):
         self.set_view_content("(map inc (range 10))")
