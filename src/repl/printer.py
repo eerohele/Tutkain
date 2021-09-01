@@ -29,13 +29,14 @@ def print_loop(view, client):
                 view.window().run_command("show_panel", {"panel": f"output.{tap.panel_name}"})
                 panel = view.window().find_output_panel(tap.panel_name)
                 append_to_view(panel, printable)
+            # Print invisible Unicode characters (U+2063) around stdout and
+            # stderr to prevent them from getting syntax highlighting.
+            #
+            # This is probably somewhat evil, but the performance is *so*
+            # much better than with view.add_regions.
             elif tag == edn.Keyword("err"):
                 append_to_view(view, '⁣⁣' + printable + '⁣⁣')
             elif tag == edn.Keyword("out"):
-                # Print U+2063 around stdout to prevent them from getting syntax highlighting.
-                #
-                # This is probably somewhat evil, but the performance is *so* much better than
-                # with view.add_regions.
                 append_to_view(view, '⁣' + printable + '⁣')
             else:
                 append_to_view(view, printable)
