@@ -1,5 +1,6 @@
 import sublime
 import queue
+import unittest
 
 from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
@@ -10,10 +11,43 @@ from Tutkain.src import state
 from Tutkain.src import test
 
 from .mock import Server
-from .util import ViewTestCase
 
 
-class TestJVMClient(ViewTestCase):
+class PackageTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        sublime.run_command("new_window")
+        self.window = sublime.active_window()
+
+    @classmethod
+    def tearDownClass(self):
+        if self.window:
+            self.window.run_command("close_window")
+
+    def setUp(self, syntax="Clojure (Tutkain).sublime-syntax"):
+        self.view = self.window.new_file()
+        self.view.set_name("tutkain.clj")
+        self.view.set_scratch(True)
+        self.view.window().focus_view(self.view)
+        self.view.assign_syntax(syntax)
+
+    def tearDown(self):
+        if self.view:
+            self.view.close()
+
+    def set_view_content(self, chars):
+        self.view.run_command("select_all")
+        self.view.run_command("right_delete")
+        self.view.run_command("append", {"characters": chars})
+
+    def set_selections(self, *pairs):
+        self.view.sel().clear()
+
+        for begin, end in pairs:
+            self.view.sel().add(sublime.Region(begin, end))
+
+
+class TestJVMClient(PackageTestCase):
     @classmethod
     def conduct_handshake(self):
         server = self.server
@@ -87,17 +121,19 @@ class TestJVMClient(ViewTestCase):
         self.client = JVMClient(source_root(), self.server.host, self.server.port)
         self.server.executor.submit(self.client.connect)
         dialect = edn.Keyword("clj")
-        state.set_view_client(self.view, dialect, self.client)
-        repl_view = self.view.window().new_file()
-        views.configure(repl_view, dialect, self.client)
-        state.set_view_client(repl_view, dialect, self.client)
-        state.set_repl_view(repl_view, dialect)
+        self.repl_view = sublime.active_window().new_file()
+        views.configure(self.repl_view, dialect, self.client)
+        state.set_view_client(self.repl_view, dialect, self.client)
+        state.set_repl_view(self.repl_view, dialect)
         self.backchannel = self.conduct_handshake()
 
     @classmethod
     def tearDownClass(self):
         super().tearDownClass()
         stop_logging()
+
+        if self.repl_view:
+            self.repl_view.close()
 
         if self.server:
             self.server.stop()
@@ -106,6 +142,7 @@ class TestJVMClient(ViewTestCase):
             self.client.halt()
 
     def setUp(self):
+        super().setUp()
         self.server.recvq = queue.Queue()
         self.backchannel.recvq = queue.Queue()
 
@@ -445,7 +482,7 @@ class TestJVMClient(ViewTestCase):
         self.assertFalse(test.regions(self.view, "error"))
 
 
-class TestJSClient(ViewTestCase):
+class TestJSClient(PackageTestCase):
     @classmethod
     def conduct_handshake(self):
         server = self.server
@@ -519,7 +556,7 @@ class TestJSClient(ViewTestCase):
 
     @classmethod
     def setUpClass(self):
-        super().setUpClass(syntax="ClojureScript (Tutkain).sublime-syntax")
+        super().setUpClass()
         start_logging(False)
 
         def write_greeting(buf):
@@ -544,17 +581,19 @@ class TestJSClient(ViewTestCase):
         self.server.executor.submit(self.client.connect)
 
         dialect = edn.Keyword("cljs")
-        state.set_view_client(self.view, dialect, self.client)
-        repl_view = self.view.window().new_file()
-        views.configure(repl_view, dialect, self.client)
-        state.set_view_client(repl_view, dialect, self.client)
-        state.set_repl_view(repl_view, dialect)
+        self.repl_view = sublime.active_window().new_file()
+        views.configure(self.repl_view, dialect, self.client)
+        state.set_view_client(self.repl_view, dialect, self.client)
+        state.set_repl_view(self.repl_view, dialect)
         self.backchannel = self.conduct_handshake()
 
     @classmethod
     def tearDownClass(self):
         super().tearDownClass()
         stop_logging()
+
+        if self.repl_view:
+            self.repl_view.close()
 
         if self.server:
             self.server.stop()
@@ -563,6 +602,7 @@ class TestJSClient(ViewTestCase):
             self.client.halt()
 
     def setUp(self):
+        super().setUp(syntax="ClojureScript (Tutkain).sublime-syntax")
         self.server.recvq = queue.Queue()
         self.backchannel.recvq = queue.Queue()
 
@@ -573,7 +613,7 @@ class TestJSClient(ViewTestCase):
         self.assertEquals("(range 10)\n", self.server.recv())
 
 
-class TestBabashkaClient(ViewTestCase):
+class TestBabashkaClient(PackageTestCase):
     @classmethod
     def conduct_handshake(self):
         server = self.server
@@ -599,7 +639,7 @@ class TestBabashkaClient(ViewTestCase):
 
     @classmethod
     def setUpClass(self):
-        super().setUpClass(syntax="Babashka (Tutkain).sublime-syntax")
+        super().setUpClass()
         start_logging(False)
 
         def write_greeting(buf):
@@ -626,11 +666,10 @@ class TestBabashkaClient(ViewTestCase):
 
         self.server.executor.submit(self.client.connect)
         dialect = edn.Keyword("bb")
-        state.set_view_client(self.view, dialect, self.client)
-        repl_view = self.view.window().new_file()
-        views.configure(repl_view, dialect, self.client)
-        state.set_view_client(repl_view, dialect, self.client)
-        state.set_repl_view(repl_view, dialect)
+        self.repl_view = sublime.active_window().new_file()
+        views.configure(self.repl_view, dialect, self.client)
+        state.set_view_client(self.repl_view, dialect, self.client)
+        state.set_repl_view(self.repl_view, dialect)
         self.conduct_handshake()
 
     # TODO: Extract into base class
@@ -639,6 +678,9 @@ class TestBabashkaClient(ViewTestCase):
         super().tearDownClass()
         stop_logging()
 
+        if self.repl_view:
+            self.repl_view.close()
+
         if self.server:
             self.server.stop()
 
@@ -646,6 +688,7 @@ class TestBabashkaClient(ViewTestCase):
             self.client.halt()
 
     def setUp(self):
+        super().setUp(syntax="Babashka (Tutkain).sublime-syntax")
         self.server.recvq = queue.Queue()
 
     def test_innermost(self):
