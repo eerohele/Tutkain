@@ -199,18 +199,19 @@ def add_markers(view, results):
         )
 
 
+def handle_test_response(view, client, response):
+    view.run_command("tutkain_clear_test_markers")
+    results = response_results(view, response)
+
+    # Persist results so it's possible to create UIs to present it later.
+    view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
+
+    add_markers(view, results)
+    client.recvq.put(response)
+    progress.stop()
+
+
 def run_tests(view, client, test_vars):
-    def handler(response):
-        view.run_command("tutkain_clear_test_markers")
-        results = response_results(view, response)
-
-        # Persist results so it's possible to create UIs to present it later.
-        view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
-
-        add_markers(view, results)
-        client.recvq.put(response)
-        progress.stop()
-
     code = view.substr(sublime.Region(0, view.size()))
 
     client.backchannel.send({
@@ -219,7 +220,7 @@ def run_tests(view, client, test_vars):
         "code": base64.encode(code.encode("utf-8")),
         "file": view.file_name(),
         "vars": test_vars
-    }, handler=handler)
+    }, handler=lambda response: handle_test_response(view, client, response))
 
 
 def run(view, client, test_vars=[]):
