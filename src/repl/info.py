@@ -139,7 +139,7 @@ def show_popup(view, point, response):
                 content += """<p class="arglists">"""
 
                 for arglist in arglists:
-                    content += f"""<code>{htmlify(arglist)}</code> """
+                    content += f"""{htmlify(arglist)} """
 
                 content += "</p>"
 
