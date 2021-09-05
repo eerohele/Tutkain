@@ -366,7 +366,7 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals("""(Integer/parseInt "42")\n""", self.server.recv())
         self.get_print()
 
-    def test_run_tests_ns(self):
+    def test_async_run_tests_ns(self):
         code = """
         (ns my.app
           (:require [clojure.test :refer [deftest is]]))
@@ -419,7 +419,7 @@ class TestJVMClient(PackageTestCase):
         self.assertFalse(test.regions(self.view, "fail"))
         self.assertFalse(test.regions(self.view, "error"))
 
-    def test_unsuccessful_tests(self):
+    def test_async_unsuccessful_tests(self):
         code = """
         (ns my.app
           (:require [clojure.test :refer [deftest is]]))
