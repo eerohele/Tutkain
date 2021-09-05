@@ -249,6 +249,7 @@ class JVMClient(Client):
             "completions.clj": [],
             "load_blob.clj": [],
             "test.clj": [],
+            "query.clj": [],
             "analyzer.clj": [
                 edn.Symbol("clojure.tools.reader"),
                 edn.Symbol("clojure.tools.analyzer.jvm")

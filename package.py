@@ -1259,3 +1259,59 @@ class TutkainSelectLocalsCommand(TextCommand):
 
             if symbol := symbol_at_point(self.view, point):
                 fetch_locals(self.view, point, symbol, self.handler)
+
+
+class TutkainFindInMetadataCommand(WindowCommand):
+    def goto(self, items, index):
+        if index != -1:
+            item = items[index]
+            info.goto(self.window, info.parse_location(item))
+
+    def handle_response(self, response):
+        items = []
+
+        if metas := response.get(edn.Keyword("var-metas")):
+            for meta in metas:
+                name = meta.get(edn.Keyword("name")).name
+
+                doc = meta.get(edn.Keyword("doc"), "")
+
+                if "\n" in doc:
+                    docstring = meta.get(edn.Keyword("doc")).split("\n")[0] + "…"
+                else:
+                    docstring = doc
+
+                arglists = " ".join(meta.get(edn.Keyword("arglists"), []))
+
+                if type := meta.get(edn.Keyword("type")):
+                    kind = completion_kinds().get(type.name, sublime.KIND_AMBIGUOUS)
+                else:
+                    kind = sublime.KIND_AMBIGUOUS
+
+                item = sublime.QuickPanelItem(name, details=docstring, annotation=arglists, kind=kind)
+                items.append(item)
+
+            self.window.show_quick_panel(
+                items,
+                lambda index: self.goto(metas, index),
+            )
+
+    def send_request(self, client, pattern):
+        client.backchannel.send({
+            "op": edn.Keyword("find-in-meta"),
+            "pattern": pattern
+        }, handler=self.handle_response)
+
+    def run(self):
+        dialect = edn.Keyword("clj")
+
+        if client := state.client(self.window, dialect):
+            self.window.show_input_panel(
+                "Find in metadata",
+                "",
+                lambda pattern: self.send_request(client, pattern),
+                lambda _: None,
+                lambda: None,
+            )
+        else:
+            self.window.status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")

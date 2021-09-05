@@ -64,6 +64,17 @@
     (let [s (str file)]
       (or (some-> s io/resource str) s))))
 
+(defn prep-meta
+  [{sym-name :name sym-ns :ns :as m}]
+  (some->
+    m
+    (select-keys [:name :file :column :line :arglists :doc :fnspec])
+    (assoc :ns (some-> sym-ns ns-name name))
+    (assoc :name sym-name)
+    (update :file resolve-file)
+    (update :arglists #(map pr-str %))
+    (remove-empty)))
+
 (defn lookup
   "Given an ns symbol and a string representation of a clojure.lang.Named
   instance, return selected metadata of the var it names.
@@ -78,15 +89,7 @@
       (when-some [spec (some-> named spec/get-spec spec/describe pr-str)]
         {:name named
          :spec spec})
-      (let [{sym-name :name sym-ns :ns :as m} (sym-meta ns named)]
-        (some->
-          m
-          (select-keys [:name :file :column :line :arglists :doc :fnspec])
-          (assoc :ns (some-> sym-ns ns-name name))
-          (assoc :name sym-name)
-          (update :file resolve-file)
-          (update :arglists #(map pr-str %))
-          (remove-empty))))))
+      (prep-meta (sym-meta ns named)))))
 
 (defmulti info :dialect)
 

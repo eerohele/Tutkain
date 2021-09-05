@@ -54,7 +54,7 @@ class TestJVMClient(TestCase):
                     })
                 )
 
-                for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "analyzer.clj"]:
+                for filename in ["lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "query.clj", "analyzer.clj"]:
                     response = edn.read(backchannel.recv())
                     self.assertEquals(edn.Keyword("load-base64"), response.get(edn.Keyword("op")))
                     self.assertEquals(filename, response.get(edn.Keyword("filename")))
