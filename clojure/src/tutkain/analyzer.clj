@@ -37,7 +37,7 @@
 (defn node->position
   "Given an tools.analyzer node, return the position information for that
   node."
-  [{form :form {:keys [line column end-column] :as env} :env}]
+  [{form :form {:keys [line column end-column]} :env}]
   {:line line
    :column column
    :form form
