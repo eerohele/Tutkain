@@ -68,7 +68,7 @@
         "command": "tutkain_goto_definition",
     },
     {
-        "caption": "Tutkain: Find in Metadata",
-        "command": "tutkain_find_in_metadata",
+        "caption": "Tutkain: Apropos",
+        "command": "tutkain_apropos",
     },
 ]

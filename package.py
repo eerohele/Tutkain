@@ -1261,7 +1261,7 @@ class TutkainSelectLocalsCommand(TextCommand):
                 fetch_locals(self.view, point, symbol, self.handler)
 
 
-class TutkainFindInMetadataCommand(WindowCommand):
+class TutkainAproposCommand(WindowCommand):
     def goto(self, items, index):
         if index != -1:
             item = items[index]
@@ -1298,7 +1298,7 @@ class TutkainFindInMetadataCommand(WindowCommand):
 
     def send_request(self, client, pattern):
         client.backchannel.send({
-            "op": edn.Keyword("find-in-meta"),
+            "op": edn.Keyword("apropos"),
             "pattern": pattern
         }, handler=self.handle_response)
 
@@ -1307,7 +1307,7 @@ class TutkainFindInMetadataCommand(WindowCommand):
 
         if client := state.client(self.window, dialect):
             self.window.show_input_panel(
-                "Find in metadata",
+                "Apropos",
                 "",
                 lambda pattern: self.send_request(client, pattern),
                 lambda _: None,

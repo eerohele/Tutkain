@@ -3,7 +3,7 @@
    [tutkain.backchannel :refer [handle respond-to]]
    [tutkain.lookup :as lookup]))
 
-(defmethod handle :find-in-meta
+(defmethod handle :apropos
   [{:keys [pattern] :as message}]
   (when-some [re (some-> pattern not-empty re-pattern)]
     (let [metas (sort-by :name
