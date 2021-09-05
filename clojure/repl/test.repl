@@ -1,0 +1,122 @@
+(ns repl.test
+  (:require
+   [clojure.spec.alpha :as spec]
+   [cognitect.transcriptor :as xr]
+   [tutkain.test]
+   [tutkain.backchannel.test :refer [string->base64 send-op]]))
+
+(spec/def ::file (spec/nilable string?))
+(spec/def ::line pos-int?)
+(spec/def ::column pos-int?)
+(spec/def ::type #{:pass :fail :error})
+(spec/def ::expected string?)
+(spec/def ::actual string?)
+(spec/def ::message (spec/nilable string?))
+(spec/def ::name symbol?)
+(spec/def ::ns string?)
+
+(spec/def ::var-meta
+  (spec/keys :req-un [::line ::column ::file ::name]))
+
+(spec/def ::fail
+  (spec/coll-of
+    (spec/keys :req-un [::file ::line ::type ::expected ::actual ::message ::var-meta])
+    :min-count 1))
+
+(spec/def ::pass
+  (spec/coll-of
+    (spec/keys :req-un [::type ::line ::var-meta])
+    :min-count 1))
+
+(spec/def ::error
+  (spec/coll-of
+    (spec/keys :req-un [::file ::line ::type ::expected ::actual ::message ::var-meta])
+    :min-count 1))
+
+(spec/def ::tag #{:ret})
+(spec/def ::val string?)
+
+(spec/def ::result
+  (spec/keys :req-un [::fail ::pass ::error ::tag ::val]))
+
+(spec/def ::passing-result
+  (spec/keys :req-un [::pass ::tag ::val]))
+
+(spec/def ::failing-result
+  (spec/keys :req-un [::fail ::tag ::val]))
+
+(spec/def ::error-result
+  (spec/keys :req-un [::error ::tag ::val]))
+
+;; when :vars is empty, run all tests in ns
+(send-op
+  {:op :test
+   :ns "my.app"
+   :code (string->base64 "
+           (ns my.app
+             (:require [clojure.test :refer [deftest is]]))
+
+           (deftest my-test
+             (is (= 2 (+ 1 1))))")
+   :vars []})
+
+(xr/check! ::passing-result)
+
+(send-op
+  {:op :test
+   :ns "my.app"
+   :code (string->base64 "
+           (ns my.app
+             (:require [clojure.test :refer [deftest is]]))
+
+           (deftest my-test
+             (is (= 3 (+ 1 1))))")
+   :vars []})
+
+(xr/check! ::failing-result)
+
+(send-op
+  {:op :test
+   :ns "my.app"
+   :code (string->base64 "
+           (ns my.app
+             (:require [clojure.test :refer [deftest is]]))
+           (deftest my-test
+             (is (= ::impossible (/ 4 0))))")
+   :vars []})
+
+(xr/check! ::error-result)
+
+;; when vars is not empty, only run the selected tests
+
+(send-op
+  {:op :test
+   :ns "my.app"
+   :code (string->base64 "
+           (ns my.app
+             (:require [clojure.test :refer [deftest is]]))
+
+           (deftest my-test
+             (is (= 2 (+ 1 1))))
+
+           (deftest my-other-test
+             (is (= 3 (+ 1 1))))")
+   :vars ["my-test"]})
+
+(xr/check! ::passing-result)
+
+(send-op
+  {:op :test
+   :ns "my.app"
+   :code (string->base64 "
+           (ns my.app
+             (:require [clojure.test :refer [deftest is]]))
+
+           (deftest my-test
+             (is (= 2 (+ 1 1))))
+
+           (deftest my-other-test
+             (is (= 3 (+ 1 1))))")
+   :vars ["my-other-test"]})
+
+(xr/check! ::failing-result)
