@@ -71,4 +71,8 @@
         "caption": "Tutkain: Apropos",
         "command": "tutkain_apropos",
     },
+    {
+        "caption": "Tutkain: Dir",
+        "command": "tutkain_dir",
+    },
 ]

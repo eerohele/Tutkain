@@ -1270,7 +1270,7 @@ class TutkainAproposCommand(WindowCommand):
     def handle_response(self, response):
         items = []
 
-        if metas := response.get(edn.Keyword("var-metas")):
+        if metas := response.get(edn.Keyword("vars")):
             for meta in metas:
                 name = meta.get(edn.Keyword("name")).name
 
@@ -1315,3 +1315,61 @@ class TutkainAproposCommand(WindowCommand):
             )
         else:
             self.window.status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
+
+
+class TutkainDirCommand(TextCommand):
+    def goto(self, items, index):
+        if index != -1:
+            item = items[index]
+            info.goto(self.view.window(), info.parse_location(item))
+
+    def handle_response(self, response):
+        items = []
+
+        if vars := response.get(edn.Keyword("vars")):
+            for var in vars:
+                name = var.get(edn.Keyword("name")).name
+
+                doc = var.get(edn.Keyword("doc"), "")
+
+                if "\n" in doc:
+                    docstring = var.get(edn.Keyword("doc")).split("\n")[0] + "…"
+                else:
+                    docstring = doc
+
+                arglists = " ".join(var.get(edn.Keyword("arglists"), []))
+
+                if type := var.get(edn.Keyword("type")):
+                    kind = completion_kinds().get(type.name, sublime.KIND_AMBIGUOUS)
+                else:
+                    kind = sublime.KIND_AMBIGUOUS
+
+                item = sublime.QuickPanelItem(name, details=docstring, annotation=arglists, kind=kind)
+                items.append(item)
+
+            if symbol := response.get(edn.Keyword("symbol")):
+                selected_index = list(map(lambda v: v.get(edn.Keyword("name")), vars)).index(edn.Symbol(symbol))
+            else:
+                selected_index = -1
+
+            self.view.window().show_quick_panel(
+                items,
+                lambda index: self.goto(vars, index),
+                selected_index=selected_index
+            )
+
+    def run(self, _):
+        dialect = dialects.for_view(self.view)
+
+        if client := state.client(self.view.window(), dialect):
+            if sel := self.view.sel():
+                point = sel[0].begin()
+
+                if symbol := selectors.expand_by_selector(self.view, point, "meta.symbol"):
+                    client.backchannel.send({
+                        "op": edn.Keyword("dir"),
+                        "ns": namespace.name(self.view),
+                        "sym": self.view.substr(symbol)
+                    }, self.handle_response)
+        else:
+            self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
