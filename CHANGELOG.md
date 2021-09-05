@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 
   Then Tutkain no longer prompts you for the hostname when connecting.
 
+  - Fix doc popup arglists font
+
 ## 0.9.0 (alpha) - 2021-08-21
 
 - Fix auto-completion and doc popups when connected to both Clojure and ClojureScript socket REPLs
