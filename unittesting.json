@@ -1,5 +1,6 @@
 {
   "async": true,
   "reload_package_on_testing": false,
-  "capture_console": true
+  "capture_console": true,
+  "verbosity": 2
 }
