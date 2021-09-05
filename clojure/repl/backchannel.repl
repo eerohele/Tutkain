@@ -5,10 +5,10 @@
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.backchannel :as backchannel]
+   [tutkain.backchannel.test :refer [string->base64]]
    [tutkain.socket :as socket]
    [tutkain.test])
   (:import
-   (java.util Base64)
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
 (def recvq (LinkedBlockingQueue.))
@@ -50,12 +50,6 @@
 ;; Backchannel continues to work after handler throws an error
 (send {:op :echo})
 (recv)
-
-(def base64-encoder (Base64/getEncoder))
-
-(defn string->base64
-  [string]
-  (.encodeToString base64-encoder (.getBytes string)))
 
 ;; Backchannel has access to the same bindings as the REPL thread
 (send {:op :test

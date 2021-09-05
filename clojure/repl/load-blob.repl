@@ -4,11 +4,9 @@
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.backchannel :as backchannel]
+   [tutkain.backchannel.test :refer [string->base64]]
    [tutkain.load-blob])
   (:import
-   (clojure.lang LineNumberingPushbackReader)
-   (java.io StringReader)
-   (java.util Base64)
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
 (spec/def ::tag
@@ -33,16 +31,6 @@
 (defn recv
   []
   (-> recvq (.poll 1 TimeUnit/SECONDS)))
-
-(defn string->reader
-  [string]
-  (-> string StringReader. LineNumberingPushbackReader.))
-
-(def base64-encoder (Base64/getEncoder))
-
-(defn string->base64
-  [string]
-  (.encodeToString base64-encoder (.getBytes string)))
 
 (backchannel/handle
   {:op :load

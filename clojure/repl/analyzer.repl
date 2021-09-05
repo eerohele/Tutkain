@@ -3,11 +3,8 @@
    [clojure.set :as set]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
-   [tutkain.analyzer :as analyzer])
-  (:import
-   (clojure.lang LineNumberingPushbackReader)
-   (java.io StringReader)
-   (java.util Base64)))
+   [tutkain.analyzer :as analyzer]
+   [tutkain.backchannel.test :refer [string->base64 string->reader]]))
 
 (spec/def ::op
   #{:const :map :def})
@@ -30,16 +27,6 @@
   (spec/keys
     :req-un [::op]
     :opt-un [::type ::form ::env]))
-
-(defn string->reader
-  [string]
-  (-> string StringReader. LineNumberingPushbackReader.))
-
-(def base64-encoder (Base64/getEncoder))
-
-(defn string->base64
-  [string]
-  (.encodeToString base64-encoder (.getBytes string)))
 
 ;; Analyze multiple forms
 (analyzer/reader->nodes "/path/to/my.clj" *ns* 0 0 (string->reader "1 2"))
