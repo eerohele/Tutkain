@@ -1,4 +1,8 @@
 (ns tutkain.completions
+  "Query the Clojure runtime for information on vars, keywords, Java classes,
+  etc., presumably for editor auto-completion support.
+
+  Originally adapted from nrepl.util.completion."
   (:require
    [clojure.main :as main]
    [tutkain.backchannel :refer [handle respond-to]])
@@ -9,8 +13,6 @@
    (java.lang.reflect Field Member Modifier)
    (java.util.jar JarEntry)
    (java.util.concurrent ConcurrentHashMap)))
-
-;; Adapted from nrepl.util.completion
 
 (defn annotate-keyword
   [kw]
