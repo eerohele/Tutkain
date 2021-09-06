@@ -5,9 +5,11 @@
 
 (defn ^:private meta-with-type
   [var]
-  (let [{:keys [macro arglists] :as m} (meta var)]
+  (let [{:keys [macro arglists] :as m} (meta var)
+        v (var-get var)]
     (assoc m :type (cond
-                     (= clojure.lang.MultiFn (class (var-get var))) :multimethod
+                     (= clojure.lang.MultiFn (class v)) :multimethod
+                     (and (map? v) (contains? v :impls)) :protocol
                      macro :macro
                      arglists :function
                      :else :var))))

@@ -608,6 +608,7 @@ def completion_kinds():
         "method": sublime.KIND_FUNCTION,
         "static-method": sublime.KIND_FUNCTION,
         "keyword": sublime.KIND_KEYWORD,
+        "protocol": sublime.KIND_TYPE
     }
 
 
