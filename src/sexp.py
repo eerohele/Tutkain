@@ -75,6 +75,9 @@ class Open:
 
 
 def find_open(view, start_point):
+    """Given a View and a start point, find the first point to the left of the
+    start point that opens an S-expression, and return a Region that encloses
+    that point."""
     point = start_point - 1
     stack = 0
 
@@ -96,6 +99,8 @@ def find_open(view, start_point):
 
 
 def find_close(view, opening):
+    """Given a View and a Region that opens an S-expression, return the Region
+    that closes the S-expression."""
     if opening is None:
         return None
 
@@ -165,6 +170,12 @@ def move_inside(view, point, edge):
 
 
 def innermost(view, start_point, edge=True):
+    """Given a View and a point, return the innermost S-expression surrounding
+    the point.
+
+    If `point` immediately precedes or follows a point whose character opens or
+    closes an S-expression, move inside that S-expression before beginning the
+    search, unless `edge=False`."""
     point = move_inside(view, start_point, edge)
 
     if selectors.inside_comment(view, point - 1):
@@ -207,6 +218,18 @@ def make_sexp(view, begin):
 
 
 def outermost(view, point, edge=True, ignore={}):
+    """Given a View and a point, return the outermost S-expression surrounding
+    the point.
+
+    If `point` immediately precedes or follows a point whose character opens or
+    closes an S-expression, move inside that S-expression before beginning the
+    search, unless `edge=False`.
+
+    If `ignore` is a non-empty set of strings, if the first symbol of the
+    outermost S-expression equals one of the strings, ignore that S-expression
+    when determining the outermost S-expression and use the previous
+    S-expression instead. Useful when ignoring things like Clojure `comment`
+    forms, for example."""
     previous = find_open(view, move_inside(view, point, edge))
 
     while previous and point >= 0:
