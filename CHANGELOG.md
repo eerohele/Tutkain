@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## UNRELEASED
 
 - Improve the UI of the **Tutkain: Show Unsuccessful Tests** command #65 (thx @pedrorgirardi)
+- Add **Tutkain: Apropos** command
 - Improve locals highlighting when destructuring a namespaced keyword #55
 - Fix support for `tutkain_connect` `host` argument
 
