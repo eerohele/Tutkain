@@ -18,15 +18,15 @@
   [{:keys [pattern] :as message}]
   (when-some [re (some-> pattern not-empty re-pattern)]
     (let [vars (eduction
-                  (map ns-publics)
-                  (mapcat vals)
-                  (map meta-with-type)
-                  (filter (fn [{:keys [doc name]}]
-                            (or
-                              (and doc (re-find (re-matcher re doc)))
-                              (re-find (re-matcher re (str name))))))
-                  (map lookup/prep-meta)
-                  (all-ns))]
+                 (map ns-publics)
+                 (mapcat vals)
+                 (map meta-with-type)
+                 (filter (fn [{:keys [doc name]}]
+                           (or
+                             (and doc (re-find (re-matcher re doc)))
+                             (re-find (re-matcher re (str name))))))
+                 (map lookup/prep-meta)
+                 (all-ns))]
       (respond-to message {:vars (sort-by :name vars)}))))
 
 (defmethod handle :dir
