@@ -295,6 +295,15 @@
         "command": "tutkain_select_locals"
     },
 
+    // Given a string or a regular expression, show a list of all vars whose name
+    // or docstring match the input.
+    //
+    // Select an item in the list to goto definition. Clojure only.
+    {
+        "keys": ["ctrl+p", "ctrl+a"],
+        "command": "tutkain_apropos"
+    },
+
     // Paredit commands
     //
     // Documentation TBD.
