@@ -1306,13 +1306,15 @@ class TutkainAproposCommand(WindowCommand):
         dialect = edn.Keyword("clj")
 
         if client := state.client(self.window, dialect):
-            self.window.show_input_panel(
+            panel = self.window.show_input_panel(
                 "Apropos",
                 "",
                 lambda pattern: self.send_request(client, pattern),
                 lambda _: None,
                 lambda: None,
             )
+
+            panel.assign_syntax("Packages/Regular Expressions/RegExp.sublime-syntax")
         else:
             self.window.status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
 
