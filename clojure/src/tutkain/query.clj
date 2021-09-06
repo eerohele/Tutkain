@@ -11,7 +11,7 @@
   [{:keys [pattern] :as message}]
   (when-some [re (some-> pattern not-empty re-pattern)]
     (let [vars (eduction
-                  (map ns-interns)
+                  (map ns-publics)
                   (mapcat vals)
                   (map meta)
                   (filter :doc)
