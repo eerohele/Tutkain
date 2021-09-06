@@ -12,35 +12,36 @@ def goto(window, items, index):
 
 def handle_response(window, kinds, response):
     items = []
+    vars = response.get(edn.Keyword("vars"), [])
 
-    if vars := response.get(edn.Keyword("vars")):
-        for var in vars:
-            name = "/".join([var.get(edn.Keyword("ns")), var.get(edn.Keyword("name")).name])
+    for var in vars:
+        ns = var.get(edn.Keyword("ns"))
+        symbol = var.get(edn.Keyword("name"))
+        name = "/".join([ns, symbol.name])
+        docstring = var.get(edn.Keyword("doc"), "")
 
-            doc = var.get(edn.Keyword("doc"), "")
+        if "\n" in docstring:
+            docstring = docstring.split("\n")[0] + "…"
 
-            if "\n" in doc:
-                docstring = var.get(edn.Keyword("doc")).split("\n")[0] + "…"
-            else:
-                docstring = doc
+        arglists = " ".join(var.get(edn.Keyword("arglists"), []))
+        kind = sublime.KIND_AMBIGUOUS
 
-            arglists = " ".join(var.get(edn.Keyword("arglists"), []))
+        if type := var.get(edn.Keyword("type")):
+            kind = kinds.get(type.name, sublime.KIND_AMBIGUOUS)
 
-            if type := var.get(edn.Keyword("type")):
-                kind = kinds.get(type.name, sublime.KIND_AMBIGUOUS)
-            else:
-                kind = sublime.KIND_AMBIGUOUS
-
-            item = sublime.QuickPanelItem(name, details=docstring, annotation=arglists, kind=kind)
-            items.append(item)
-
-        if symbol := response.get(edn.Keyword("symbol")):
-            selected_index = list(map(lambda v: v.get(edn.Keyword("name")), vars)).index(edn.Symbol(symbol))
-        else:
-            selected_index = -1
-
-        window.show_quick_panel(
-            items,
-            lambda index: goto(window, vars, index),
-            selected_index=selected_index
+        items.append(
+            sublime.QuickPanelItem(name, details=docstring, annotation=arglists, kind=kind)
         )
+
+    if symbol := response.get(edn.Keyword("symbol")):
+        selected_index = list(
+            map(lambda v: v.get(edn.Keyword("name")), vars)
+        ).index(edn.Symbol(symbol))
+    else:
+        selected_index = -1
+
+    window.show_quick_panel(
+        items,
+        lambda index: goto(window, vars, index),
+        selected_index=selected_index
+    )
