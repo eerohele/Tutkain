@@ -1270,19 +1270,22 @@ class TutkainAproposCommand(WindowCommand):
             "pattern": pattern
         }, handler=lambda response: query.handle_response(self.window, completion_kinds(), response))
 
-    def run(self):
+    def run(self, pattern=None):
         dialect = edn.Keyword("clj")
 
         if client := state.client(self.window, dialect):
-            panel = self.window.show_input_panel(
-                "Apropos",
-                "",
-                lambda pattern: self.send_request(client, pattern),
-                lambda _: None,
-                lambda: None,
-            )
+            if pattern is None:
+                panel = self.window.show_input_panel(
+                    "Apropos",
+                    "",
+                    lambda pattern: self.send_request(client, pattern),
+                    lambda _: None,
+                    lambda: None,
+                )
 
-            panel.assign_syntax("Packages/Regular Expressions/RegExp.sublime-syntax")
+                panel.assign_syntax("Packages/Regular Expressions/RegExp.sublime-syntax")
+            else:
+                self.send_request(client, pattern)
         else:
             self.window.status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
 

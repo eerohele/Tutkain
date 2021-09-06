@@ -481,6 +481,34 @@ class TestJVMClient(PackageTestCase):
         self.assertFalse(test.regions(self.view, "passes"))
         self.assertFalse(test.regions(self.view, "error"))
 
+    def test_apropos(self):
+        self.view.window().run_command("tutkain_apropos", {"pattern": "cat"})
+
+        op = edn.read(self.backchannel.recv())
+        id = op.get(edn.Keyword("id"))
+
+        self.assertEquals(edn.kwmap({
+            "op": edn.Keyword("apropos"),
+            "id": id,
+            "pattern": "cat"
+        }), op)
+
+        # TODO: This is not useful at the moment. How do we test things like
+        # this that go into a quick panel and not in the REPL view? Should
+        # they also go through printq (or equivalent)?
+        self.backchannel.send(edn.kwmap({
+            "vars": [edn.kwmap({
+                "name": edn.Symbol("cat"),
+                "file": "jar:file:/home/.m2/repository/org/clojure/clojure/1.11.0-alpha1/clojure-1.11.0-alpha1.jar!/clojure/core.clj",
+                "column": 1,
+                "line": 7644,
+                "arglists": ["[rf]"],
+                "doc": ["A transducer which concatenates the contents of each input, which must be a\\n  collection, into the reduction."],
+                "type": "function",
+                "ns": "clojure.core"
+            })]
+        }))
+
 
 class TestJSClient(PackageTestCase):
     @classmethod
