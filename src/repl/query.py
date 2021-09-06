@@ -15,7 +15,7 @@ def handle_response(window, kinds, response):
 
     if vars := response.get(edn.Keyword("vars")):
         for var in vars:
-            name = var.get(edn.Keyword("name")).name
+            name = "/".join([var.get(edn.Keyword("ns")), var.get(edn.Keyword("name")).name])
 
             doc = var.get(edn.Keyword("doc"), "")
 
