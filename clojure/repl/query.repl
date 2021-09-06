@@ -1,0 +1,65 @@
+(ns repl.query
+  (:require
+   [clojure.edn :as edn]
+   [clojure.spec.alpha :as spec]
+   [clojure.string :as string]
+   [cognitect.transcriptor :as xr]
+   [clojure.test.check.generators :as gen]
+   [tutkain.backchannel :as backchannel]
+   [tutkain.backchannel.test :refer [send-op]]
+   [tutkain.lookup.specs :as specs]
+   [tutkain.query]))
+
+(spec/def ::result
+  (spec/keys
+    :req-un [::specs/ns ::specs/name ::specs/type]
+    :opt-un [::specs/file ::specs/column ::specs/line ::specs/arglists ::specs/doc]))
+
+(spec/def ::results
+  (spec/coll-of ::result :min-count 1 :distinct true))
+
+(->
+  {:op :apropos
+   :pattern "duplicate"}
+  send-op
+  :vars) ;; string
+
+(xr/check! ::results)
+
+(->
+  {:op :apropos
+   :pattern ".*dupl.*"}
+  send-op
+  :vars) ;; regexp
+
+(xr/check! ::results)
+
+(->
+  {:op :apropos
+   :pattern ""}
+  send-op
+  :vars)
+
+(xr/check! empty?)
+
+;; protocols
+(->
+  {:op :apropos
+   :pattern "CollReduce"}
+  send-op
+  :vars)
+
+(set (map :type *1))
+(xr/check! (partial some #{:protocol}))
+
+;; multimethods
+(require 'clojure.inspector)
+
+(->
+  {:op :apropos
+   :pattern "leaf"}
+  send-op
+  :vars)
+
+(set (map :type *1))
+(xr/check! (partial some #{:multimethod}))

@@ -13,6 +13,7 @@
 (spec/def ::ret string?)
 (spec/def ::fn string?)
 (spec/def ::spec string?)
+(spec/def ::type #{:function :macro :multimethod :protocol :var})
 
 (spec/def ::fnspec
   (spec/keys :opt-un [::args ::ret ::fn]))
@@ -20,7 +21,7 @@
 (spec/def ::info
   (spec/keys
     :req-un [::name]
-    :opt-un [::ns ::file ::column ::line ::arglists ::doc ::fnspec ::spec]))
+    :opt-un [::ns ::file ::column ::line ::arglists ::doc ::fnspec ::spec ::type]))
 
 (spec/def ::infos
   (spec/coll-of ::info :min-count 1 :distinct true))
