@@ -3,9 +3,14 @@
    [tutkain.backchannel :refer [handle respond-to]]
    [tutkain.lookup :as lookup]))
 
-(defn ^:private add-type
-  [{:keys [macro arglists] :as meta}]
-  (assoc meta :type (cond macro :macro arglists :function :else :var)))
+(defn ^:private meta-with-type
+  [var]
+  (let [{:keys [macro arglists] :as m} (meta var)]
+    (assoc m :type (cond
+                     (= clojure.lang.MultiFn (class (var-get var))) :multimethod
+                     macro :macro
+                     arglists :function
+                     :else :var))))
 
 (defmethod handle :apropos
   [{:keys [pattern] :as message}]
@@ -13,14 +18,12 @@
     (let [vars (eduction
                   (map ns-publics)
                   (mapcat vals)
-                  (map meta)
-                  (filter :doc)
+                  (map meta-with-type)
                   (filter (fn [{:keys [doc name]}]
                             (or
-                              (re-find (re-matcher re doc))
+                              (and doc (re-find (re-matcher re doc)))
                               (re-find (re-matcher re (str name))))))
                   (map lookup/prep-meta)
-                  (map add-type)
                   (all-ns))]
       (respond-to message {:vars (sort-by :name vars)}))))
 
@@ -37,9 +40,8 @@
                          (some-> (ns-resolve ns sym) .ns))]
       (let [vars (eduction
                    (map val)
-                   (map meta)
+                   (map meta-with-type)
                    (map lookup/prep-meta)
-                   (map add-type)
                    (ns-publics sym-ns))]
         (respond-to message {:symbol (name sym)
                              :vars (sort-by :name vars)})))))

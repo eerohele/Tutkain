@@ -68,7 +68,7 @@
   [{sym-name :name sym-ns :ns :as m}]
   (some->
     m
-    (select-keys [:name :file :column :line :arglists :doc :fnspec])
+    (select-keys [:name :file :column :line :arglists :doc :fnspec :type])
     (assoc :ns (some-> sym-ns ns-name name))
     (assoc :name sym-name)
     (update :file resolve-file)
