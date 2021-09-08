@@ -1,106 +1,121 @@
 import itertools
-import queue
 import socket
 
+from queue import Queue
+from typing import IO
 from threading import Event, Thread
 
 from ...api import edn
 from ..log import log
 
 
-class Backchannel(object):
-    def connect(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.host, self.port))
-        self.buffer = self.socket.makefile(mode="rw")
+class Client:
+    """A backchannel client.
 
-        log.debug({"event": "backchannel/connect", "host": self.host, "port": self.port})
+    Connects to a backchannel server to allow consumers to send messages to
+    the server and register callbacks to be called on responses to those
+    messages."""
 
-        send_loop = Thread(daemon=True, target=self.send_loop)
+    def __init__(self, default_handler):
+        """Given a default response message handler function, initialize a new
+        backchannel client."""
+        self.default_handler = default_handler
+        self.sendq = Queue()
+        self.handlers = {}
+        self.message_id = itertools.count(1)
+        self.stop_event = Event()
+
+    def send_loop(self, sock: socket.SocketType, buffer: IO):
+        """Given a socket and a file object, start a loop that gets items from
+        the send queue of this backchannel client and writes them as EDN into
+        the file object.
+
+        Attempts to shut down the socket upon exiting the loop."""
+        try:
+            while message := self.sendq.get():
+                log.debug({"event": "backchannel/send", "message": message})
+                edn.write(buffer, message)
+        except OSError as error:
+            log.error({"event": "error", "error": error})
+        finally:
+            try:
+                sock.shutdown(socket.SHUT_RDWR)
+                sock.close()
+                log.debug({"event": "backchannel/disconnect"})
+            except OSError as e:
+                log.debug({"event": "error", "exception": e})
+
+            self.stop_event.set()
+            log.debug({"event": "thread/exit"})
+
+    def recv_loop(self, buffer: IO):
+        """Given a file object, start a loop that reads EDN messages from the
+        file object and calls the handler function of this backchannel client
+        on every message."""
+        try:
+            while not self.stop_event.is_set() and (message := edn.read_line(buffer)):
+                log.debug({"event": "backchannel/recv", "message": message})
+                self.handle(message)
+        except OSError as error:
+            log.error({"event": "error", "error": error})
+        finally:
+            log.debug({"event": "thread/exit"})
+
+    def connect(self, host, port):
+        """Given a host and a port number, connect this backchannel client to
+        the backchannel server listening on host:port."""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((host, port))
+        buffer = sock.makefile(mode="rw")
+
+        log.debug({"event": "backchannel/connect", "host": host, "port": port})
+
+        send_loop = Thread(daemon=True, target=lambda: self.send_loop(sock, buffer))
         send_loop.name = "tutkain.backchannel.send_loop"
         send_loop.start()
 
-        recv_loop = Thread(daemon=True, target=self.recv_loop)
+        recv_loop = Thread(daemon=True, target=lambda: self.recv_loop(buffer))
         recv_loop.name = "tutkain.backchannel.recv_loop"
         recv_loop.start()
 
         return self
 
-    def disconnect(self):
-        if self.socket is not None:
-            try:
-                self.socket.shutdown(socket.SHUT_RDWR)
-                self.socket.close()
-                log.debug({"event": "backchannel/disconnect"})
-            except OSError as e:
-                log.debug({"event": "error", "exception": e})
-
-    def __init__(self, client, host, port):
-        self.stop_event = Event()
-        self.client = client
-        self.host = host
-        self.port = port
-        self.sendq = queue.Queue()
-        self.handlers = {}
-        self.message_id = itertools.count(1)
-
-    def send_loop(self):
-        try:
-            while item := self.sendq.get():
-                log.debug({"event": "backchannel/send", "item": item})
-                edn.write(self.buffer, item)
-        except OSError as error:
-            log.error({"event": "error", "error": error})
-        finally:
-            self.disconnect()
-            self.stop_event.set()
-            log.debug({"event": "thread/exit"})
-
-    def send(self, op, handler=None):
-        mid = edn.Keyword("id")
-        op = edn.kwmap(op)
-        op[mid] = next(self.message_id)
+    def send(self, message, handler=None):
+        """Given a message (a dict) and, optionally, a handler function, put
+        the message into the send queue of this backchannel client and register
+        the handler to be called on the message response."""
+        message = edn.kwmap(message)
+        message_id = next(self.message_id)
+        message[edn.Keyword("id")] = message_id
 
         if handler:
-            self.handlers[op[mid]] = handler
+            self.handlers[message_id] = handler
 
-        self.sendq.put(op)
+        self.sendq.put(message)
 
-    def handle(self, response):
+    def handle(self, message):
+        """Given a message, call the handler function registered for the
+        message in this backchannel instance.
+
+        If there's no handler function for the message, call the default
+        handler function instead."""
         try:
-            if not isinstance(response, dict):
-                self.client.recvq.put(response)
-            elif response.get(edn.Keyword("debug")):
-                log.debug({"event": "info", "message": response.get(edn.Keyword("val"))})
+            if not isinstance(message, dict):
+                self.default_handler(message)
+            elif message.get(edn.Keyword("debug")):
+                log.debug({"event": "info", "message": message.get(edn.Keyword("val"))})
             else:
-                id = response.get(edn.Keyword("id"))
+                id = message.get(edn.Keyword("id"))
 
                 try:
-                    handler = self.handlers.get(id, self.client.recvq.put)
-                    handler.__call__(response)
+                    handler = self.handlers.get(id, self.default_handler)
+                    handler.__call__(message)
                 finally:
                     self.handlers.pop(id, None)
         except AttributeError as error:
-            log.error({"event": "error", "response": response, "error": error})
-
-    def recv_loop(self):
-        try:
-            while not self.stop_event.is_set() and (item := edn.read_line(self.buffer)):
-                log.debug({"event": "backchannel/recv", "item": item})
-                self.handle(item)
-        except OSError as error:
-            log.error({"event": "error", "error": error})
-        finally:
-            log.debug({"event": "thread/exit"})
+            log.error({"event": "error", "message": message, "error": error})
 
     def halt(self):
+        """Halt this backchannel client."""
         log.debug({"event": "backchannel/halt"})
         self.sendq.put(None)
-
-
-class NoopBackchannel():
-    def send(self, op, handler=None):
-        pass
-
-    def halt(self):
-        pass

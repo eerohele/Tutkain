@@ -6,8 +6,9 @@ import os
 import pathlib
 import posixpath
 import socket
+import types
 
-from .backchannel import Backchannel, NoopBackchannel
+from . import backchannel
 from ...api import edn
 from ..log import log
 from .. import base64
@@ -93,7 +94,7 @@ class Client(ABC):
         self.handlers = {}
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
         self.namespace = "user"
-        self.backchannel = NoopBackchannel()
+        self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda _: None)
         self.backchannel_opts = backchannel_opts
         self.capabilities = set()
 
@@ -236,11 +237,11 @@ class JVMClient(Client):
 
             if (host := ret.get(edn.Keyword("host"))):
                 port = ret.get(edn.Keyword("port"))
-                self.backchannel = Backchannel(self, host, port).connect()
+                self.backchannel = backchannel.Client(self.recvq.put).connect(host, port)
             elif (val := edn.read(ret.get(edn.Keyword("val")))) and isinstance(val, dict):
                 host = val.get(edn.Keyword("host"))
                 port = val.get(edn.Keyword("port"))
-                self.backchannel = Backchannel(self, host, port).connect()
+                self.backchannel = backchannel.Client(self.recvq.put).connect(host, port)
             else:
                 self.recvq.put(ret)
 
@@ -340,7 +341,7 @@ class JSClient(Client):
         val = edn.read(line)
         host = val.get(edn.Keyword("host"))
         port = val.get(edn.Keyword("port"))
-        self.backchannel = Backchannel(self, host, port).connect()
+        self.backchannel = backchannel.Client(self.recvq.put).connect(host, port)
 
         self.load_modules({
             "lookup.clj": [],
