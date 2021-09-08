@@ -19,6 +19,12 @@ def adjacent_direction(view, point):
 
 
 def find_adjacent(view, point):
+    """Given a View and a point, return the Clojure form adjacent to the point,
+    if any.
+
+    If there is a Clojure form both to the left and to the right of the point,
+    return the one to the left. If there is no form adjacent to the point,
+    return None."""
     if selectors.ignore(view, point):
         return None
 
@@ -33,6 +39,8 @@ def find_adjacent(view, point):
 
 
 def find_next(view, point):
+    """Given a View and a point, return the next Clojure form to the right of
+    the point."""
     max_point = view.size()
 
     if view.match_selector(point, "string - punctuation.definition.string.begin | comment.line"):
@@ -70,8 +78,11 @@ def find_next(view, point):
 
 
 def absorb_macro_characters(view, region):
-    """Given a region, if the region is preceded by a macro character, expand the region to cover
-    all macro characters preceding the region."""
+    """Given a View and a Region, if a macro character precedes the region,
+    expand the region to cover all macro characters preceding the region.
+
+    A macro character is a character that matches the `keyword.operator.macro`
+    scope."""
     if view.match_selector(region.begin() - 1, "keyword.operator.macro"):
         keywords = selectors.expand_by_selector(
             view, region.begin() - 1, "keyword.operator.macro"
@@ -82,6 +93,8 @@ def absorb_macro_characters(view, region):
 
 
 def find_previous(view, point):
+    """Given a View and a point, return the previous Clojure form to the right
+    of the point."""
     if view.match_selector(point, "string - punctuation.definition.string.begin | comment.line"):
         return view.word(view.find_by_class(point, False, CLASS_WORD_START))
     else:
