@@ -1,3 +1,4 @@
+import inspect
 from dataclasses import dataclass
 from . import selectors
 from sublime import CLASS_WORD_START, Region, View
@@ -6,13 +7,13 @@ from sublime import CLASS_WORD_START, Region, View
 OPEN = {"(": ")", "[": "]", "{": "}"}
 CLOSE = {")": "(", "]": "[", "}": "{"}
 
-BEGIN_SELECTORS = """punctuation.section.parens.begin
+BEGIN_SELECTORS = inspect.cleandoc("""punctuation.section.parens.begin
 | punctuation.section.brackets.begin
-| punctuation.section.braces.begin"""
+| punctuation.section.braces.begin""")
 
-END_SELECTORS = """punctuation.section.parens.end
+END_SELECTORS = inspect.cleandoc("""punctuation.section.parens.end
 | punctuation.section.brackets.end
-| punctuation.section.braces.end"""
+| punctuation.section.braces.end""")
 
 CHAR_TO_SELECTOR = {
     "(": "punctuation.section.parens.begin",
@@ -26,10 +27,10 @@ BEGIN_TO_END_SELECTOR = {
     "punctuation.section.braces.begin": "punctuation.section.braces.end"
 }
 
-ABSORB_SELECTOR = """keyword.operator.macro
+ABSORB_SELECTOR = inspect.cleandoc("""keyword.operator.macro
 | punctuation.definition.keyword
 | punctuation.definition.comment
-| constant.other.keyword"""
+| constant.other.keyword""")
 
 
 @dataclass(eq=True, frozen=True)
