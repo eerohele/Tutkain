@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from . import selectors
-from sublime import CLASS_WORD_START, Region
+from sublime import CLASS_WORD_START, Region, View
 
 
 OPEN = {"(": ")", "[": "]", "{": "}"}
@@ -26,14 +26,20 @@ BEGIN_TO_END_SELECTOR = {
     "punctuation.section.braces.begin": "punctuation.section.braces.end"
 }
 
+ABSORB_SELECTOR = """keyword.operator.macro
+| punctuation.definition.keyword
+| punctuation.definition.comment
+| constant.other.keyword"""
 
+
+@dataclass(eq=True, frozen=True)
 class Sexp:
-    absorb_selector = "keyword.operator.macro | punctuation.definition.keyword | punctuation.definition.comment | constant.other.keyword"
+    """A dataclass that encapsulates an S-expression in a View.
 
-    def __init__(self, view, open_region, close_region):
-        self.view = view
-        self.open = self.absorb_macro_characters(open_region)
-        self.close = close_region
+    Do not initialize directly; use make_sexp instead."""
+    view: View
+    open: Region
+    close: Region
 
     def __str__(self):
         return self.view.substr(self.extent())
@@ -47,25 +53,34 @@ class Sexp:
     def contains(self, point):
         return point >= self.open.end() and point <= self.close.begin()
 
-    def absorb_macro_characters(self, region):
-        begin = region.begin()
 
-        if self.view.match_selector(begin - 1, self.absorb_selector):
-            # Find the first point that contains a character other than a macro character or a
-            # character that's part of a keyword
-            boundary = (
-                selectors.find(
-                    self.view, begin - 1, f"- ({self.absorb_selector})", forward=False
-                )
-                + 1
+def absorb_macro_characters(view: View, region: Region):
+    """Given a View and a Region that encloses a character that opens an
+    S-expression, extend the region to contain all macro characters that
+    precede the S-expression, if any."""
+    begin = region.begin()
+
+    if view.match_selector(begin - 1, ABSORB_SELECTOR):
+        # Find the first point that contains a character other than a macro character or a
+        # character that's part of a keyword
+        boundary = (
+            selectors.find(
+                view, begin - 1, f"- ({ABSORB_SELECTOR})", forward=False
             )
+            + 1
+        )
 
-            begin = max(boundary, 0)
+        begin = max(boundary, 0)
 
-        return Region(begin, region.end())
+    return Region(begin, region.end())
 
-    def __eq__(self, other):
-        return other and self.extent() == other.extent()
+
+def make_sexp(view: View, open_region: Region, close_region: Region):
+    """Given a View, an open Region, and a close Region, return a Sexp
+    instance.
+
+    Use this instead of initializing Sexp directly."""
+    return Sexp(view, absorb_macro_characters(view, open_region), close_region)
 
 
 @dataclass(eq=True, frozen=True)
@@ -193,11 +208,11 @@ def innermost(view, start_point, edge=True):
         )
 
         # TODO: Is a string a sexp?
-        return Sexp(view, Region(begin, begin + 1), Region(end, end + 1))
+        return make_sexp(view, Region(begin, begin + 1), Region(end, end + 1))
     else:
         if punctuation := find_open(view, point):
             close_region = find_close(view, punctuation)
-            return Sexp(view, punctuation.region, close_region)
+            return make_sexp(view, punctuation.region, close_region)
 
 
 def walk_outward(view, point, edge=True):
@@ -210,11 +225,6 @@ def walk_outward(view, point, edge=True):
 
 def head_word(view, point):
     return view.substr(view.word(view.find_by_class(point, True, CLASS_WORD_START)))
-
-
-def make_sexp(view, begin):
-    close_region = find_close(view, begin)
-    return Sexp(view, begin.region, close_region)
 
 
 def outermost(view, point, edge=True, ignore={}):
@@ -234,7 +244,7 @@ def outermost(view, point, edge=True, ignore={}):
 
     while previous and point >= 0:
         if previous.region and view.rowcol(previous.region.begin())[1] == 0:
-            return make_sexp(view, previous)
+            return make_sexp(view, previous.region, find_close(view, previous))
 
         current = find_open(view, point)
 
@@ -243,7 +253,7 @@ def outermost(view, point, edge=True, ignore={}):
                 ignore and head_word(view, current.region.begin()) in ignore
             )
         ):
-            return make_sexp(view, previous)
+            return make_sexp(view, previous.region, find_close(view, previous))
         else:
             point = previous.region.begin()
             previous = current
