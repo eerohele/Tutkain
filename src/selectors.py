@@ -21,6 +21,10 @@ def ignore(view, point):
 
 
 def find(view, start_point, selector, forward=True):
+    """Given a View, a start point, and a selector, return the first point
+    to the right of the start point that matches the selector.
+
+    If `forward=False`, walk left instead."""
     point = start_point if forward else start_point - 1
     max_size = view.size()
 
@@ -37,8 +41,11 @@ def find(view, start_point, selector, forward=True):
 
 
 def expand_by_selector(view, start_point, selector):
-    # If the scope at start_point doesn't match the selector, abort
-    # immediately.
+    """Given a View, a start point, and a selector, return a Region that
+    encloses all the points surrounding the start point that match the
+    selector.
+
+    If the start point does not match the selector, return None."""
     if not view.match_selector(start_point, selector):
         return None
 
