@@ -1,4 +1,4 @@
-from sublime import Region
+from sublime import Region, View
 
 SEXP_DELIMITERS = "punctuation.section.parens | punctuation.section.brackets | punctuation.section.braces | punctuation.definition.string"
 SEXP_BEGIN = "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin | punctuation.definition.string.begin"
@@ -73,3 +73,14 @@ def expand_by_selector(view, start_point, selector):
             point += 1
 
     return Region(begin, end)
+
+
+def match_many(view: View, point: int, *selectors: str):
+    """Given a View, a start point, and any number of selectors, check each
+    selector against the scope at the corresponding point. Return `True` iff
+    each selector matches the point."""
+    for index, selector in enumerate(selectors):
+        if not view.match_selector(point + index, selector):
+            return False
+
+    return True

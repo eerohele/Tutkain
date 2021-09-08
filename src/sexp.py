@@ -138,46 +138,19 @@ def find_close(view, opening):
             point += 1
 
 
-def matches_selector_pattern(view, start_point, patterns):
-    point = start_point
-    i = 0
-
-    while i < len(patterns):
-        if not view.match_selector(point + i, patterns[i]):
-            return False
-
-        i += 1
-
-    return True
-
-
-def has_macro_character_attached_to_sexp(view, point):
-    patterns = [
-        ["keyword.operator.macro", selectors.SEXP_BEGIN],
-        ["punctuation.definition.comment", selectors.SEXP_BEGIN],
-        ["keyword.operator.macro", "keyword.operator.macro", selectors.SEXP_BEGIN],
-        ["keyword.operator.macro", "punctuation.definition.comment", selectors.SEXP_BEGIN],
-        [
-            "keyword.operator.macro",
-            "keyword.operator.macro",
-            "keyword.operator.macro",
-            selectors.SEXP_BEGIN,
-        ],
-    ]
-
-    for pattern in patterns:
-        if matches_selector_pattern(view, point, pattern):
-            return True
-
-    return False
-
-
 def move_inside(view, point, edge):
     if not edge or selectors.inside_string(view, point):
         return point
-    elif (edge is True or edge == "forward") and view.match_selector(
-        point, selectors.SEXP_BEGIN
-    ) or has_macro_character_attached_to_sexp(view, point):
+    elif (
+        (edge is True or edge == "forward") and view.match_selector(point, selectors.SEXP_BEGIN)
+    ) or (
+        selectors.match_many(view, point, "keyword.operator.macro", selectors.SEXP_BEGIN)) or (
+        selectors.match_many(view, point, "keyword.operator.macro", selectors.SEXP_BEGIN)) or (
+        selectors.match_many(view, point, "keyword.operator.macro", "keyword.operator.macro", selectors.SEXP_BEGIN)) or (
+        selectors.match_many(view, point, "keyword.operator.macro", "keyword.operator.macro", "keyword.operator.macro", selectors.SEXP_BEGIN)) or (
+        selectors.match_many(view, point, "punctuation.definition.comment", selectors.SEXP_BEGIN)) or (
+        selectors.match_many(view, point, "keyword.operator.macro", "punctuation.definition.comment", selectors.SEXP_BEGIN)
+    ):
         return view.find(r"[\(\[\{\"]", point).end()
     elif (edge is True or edge == "backward") and view.match_selector(point - 1, selectors.SEXP_END):
         return point - 1
