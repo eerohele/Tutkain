@@ -38,6 +38,8 @@ def print_loop(view, client):
                 append_to_view(view, '⁣⁣' + printable + '⁣⁣')
             elif tag == edn.Keyword("out"):
                 append_to_view(view, '⁣' + printable + '⁣')
+            elif edn.Keyword("debug") in response:
+                log.debug({"event": "info", "response": response.get(edn.Keyword("val"))})
             else:
                 append_to_view(view, printable)
     finally:
