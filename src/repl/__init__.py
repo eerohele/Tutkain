@@ -94,7 +94,7 @@ class Client(ABC):
         self.handlers = {}
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
         self.namespace = "user"
-        self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda _: None)
+        self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
         self.backchannel_opts = backchannel_opts
         self.capabilities = set()
 
@@ -191,6 +191,7 @@ class Client(ABC):
         self.recvq.put(None)
         self.sendq.put(":repl/quit")
         self.executor.shutdown(wait=False)
+        self.backchannel.halt()
 
     def __exit__(self, type, value, traceback):
         self.halt()
@@ -294,10 +295,6 @@ class JVMClient(Client):
         elif val := response.get(edn.Keyword("val")):
             return val
 
-    def halt(self):
-        super().halt()
-        self.backchannel.halt()
-
 
 class JSClient(Client):
     def __init__(self, source_root, host, port, prompt_for_build_id):
@@ -394,10 +391,6 @@ class JSClient(Client):
             return response.get(edn.Keyword("val"))
         elif val := response.get(edn.Keyword("val")):
             return val
-
-    def halt(self):
-        super().halt()
-        self.backchannel.halt()
 
 
 class BabashkaClient(Client):
