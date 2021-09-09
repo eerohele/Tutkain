@@ -13,19 +13,22 @@ from ..log import log
 from .. import base64
 
 
+def read_until_prompt(socket: socket.SocketType):
+    """Given a socket, read bytes from the socket until `=> `, then return the
+    read bytes."""
+    bs = bytearray()
+
+    while bs[-3:] != bytearray(b"=> "):
+        bs.extend(socket.recv(1))
+
+    return bs
+
+
 class Client(ABC):
     def start_workers(self):
         self.executor.submit(self.send_loop)
         self.executor.submit(self.recv_loop)
         return self
-
-    def sink_until_prompt(self):
-        bs = bytearray()
-
-        while bs[-3:] != bytearray(b"=> "):
-            bs.extend(self.socket.recv(1))
-
-        return bs
 
     def write_line(self, line):
         self.buffer.write(line)
@@ -61,7 +64,7 @@ class Client(ABC):
 
         log.debug({
             "event": "client/handshake",
-            "data": self.executor.submit(self.sink_until_prompt).result(timeout=5)
+            "data": self.executor.submit(lambda: read_until_prompt(self.socket)).result(timeout=5)
         })
 
         return self
