@@ -42,6 +42,7 @@ def configure(view, dialect, client):
     view_count = len(window.views_in_group(target_group))
 
     view.set_name(f"REPL · {dialects.name(dialect)} · {client.host}:{client.port}")
+    view.settings().set("highlight_line", False)
     view.settings().set("line_numbers", False)
     view.settings().set("gutter", False)
     view.settings().set("is_widget", True)
