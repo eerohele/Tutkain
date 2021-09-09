@@ -25,6 +25,15 @@ def read_until_prompt(socket: socket.SocketType):
 
 
 class Client(ABC):
+    """A `Client` connects to a Clojure socket server, then sends over code
+    that a) starts a custom REPL on top of the default REPL and b) starts a
+    backchannel socket server. The `Client` then connects to the backchannel
+    socket server and uses that connection to communicate with the Clojure
+    runtime.
+
+    Tutkain uses the REPL for evaluations and the backchannel for everything
+    else (auto-completion, metadata lookup, static analysis, etc.)"""
+
     def start_workers(self):
         self.executor.submit(self.send_loop)
         self.executor.submit(self.recv_loop)
