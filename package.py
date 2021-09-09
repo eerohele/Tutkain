@@ -364,7 +364,7 @@ class TutkainEvaluateCommand(TextCommand):
             "op": edn.Keyword("load"),
             "code": base64.encode(code.encode("utf-8")),
             "file": self.view.file_name()
-        }, handler=client.printq.put)
+        })
 
     def handler(self, region, client, response, inline_result):
         if inline_result and edn.Keyword("val") in response:
