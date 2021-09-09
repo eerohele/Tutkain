@@ -395,6 +395,10 @@ class JSClient(Client):
         elif val := response.get(edn.Keyword("val")):
             return val
 
+    def halt(self):
+        super().halt()
+        self.backchannel.halt()
+
 
 class BabashkaClient(Client):
     def __init__(self, source_root, host, port):
