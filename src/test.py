@@ -207,7 +207,7 @@ def handle_test_response(view, client, response):
     view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
 
     add_markers(view, results)
-    client.recvq.put(response)
+    client.printq.put(response)
     progress.stop()
 
 

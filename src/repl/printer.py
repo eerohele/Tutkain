@@ -21,26 +21,28 @@ def print_loop(view, client):
         log.debug({"event": "thread/start"})
 
         while item := client.printq.get():
-            printable = item.get("printable")
-            response = item.get("response")
-            tag = response.get(edn.Keyword("tag"))
+            tag = item.get(edn.Keyword("tag"))
+            val = item.get(edn.Keyword("val"))
 
             if tag == edn.Keyword("tap"):
                 view.window().run_command("show_panel", {"panel": f"output.{tap.panel_name}"})
                 panel = view.window().find_output_panel(tap.panel_name)
-                append_to_view(panel, printable)
+                append_to_view(panel, val)
             # Print invisible Unicode characters (U+2063) around stdout and
             # stderr to prevent them from getting syntax highlighting.
             #
             # This is probably somewhat evil, but the performance is *so*
             # much better than with view.add_regions.
             elif tag == edn.Keyword("err"):
-                append_to_view(view, '⁣⁣' + printable + '⁣⁣')
+                append_to_view(view, '⁣⁣' + val + '⁣⁣')
             elif tag == edn.Keyword("out"):
-                append_to_view(view, '⁣' + printable + '⁣')
-            elif edn.Keyword("debug") in response:
-                log.debug({"event": "info", "response": response.get(edn.Keyword("val"))})
-            else:
-                append_to_view(view, printable)
+                append_to_view(view, '⁣' + val + '⁣')
+            elif edn.Keyword("debug") in item:
+                log.debug({"event": "info", "item": item.get(edn.Keyword("val"))})
+            elif val := item.get(edn.Keyword("val")):
+                if not val.endswith("\n"):
+                    val = val + "\n"
+
+                append_to_view(view, val)
     finally:
         log.debug({"event": "thread/exit"})

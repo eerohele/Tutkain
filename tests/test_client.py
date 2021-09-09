@@ -80,11 +80,8 @@ class TestJVMClient(TestCase):
                 })
 
                 self.assertEquals({
-                    "printable": "Clojure 1.11.0-alpha1",
-                    "response": {
-                        edn.Keyword("tag"): edn.Keyword("out"),
-                        edn.Keyword("val"): "Clojure 1.11.0-alpha1"
-                    }
+                    edn.Keyword("tag"): edn.Keyword("out"),
+                    edn.Keyword("val"): "Clojure 1.11.0-alpha1"
                 }, client.printq.get(timeout=1))
 
                 client.eval("(inc 1)")
@@ -122,10 +119,7 @@ class TestJVMClient(TestCase):
 
                 server.send(response)
 
-                self.assertEquals(
-                    {"printable": "2", "response": response},
-                    client.printq.get(timeout=1)
-                )
+                self.assertEquals(response, client.printq.get(timeout=1))
 
             client.halt()
             self.assertEquals(":repl/quit\n", server.recv())

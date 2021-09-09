@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
-from inspect import cleandoc
 import queue
 import os
 import pathlib
@@ -18,7 +17,6 @@ class Client(ABC):
     def start_workers(self):
         self.executor.submit(self.send_loop)
         self.executor.submit(self.recv_loop)
-        self.executor.submit(self.format_loop)
         return self
 
     def sink_until_prompt(self):
@@ -87,7 +85,6 @@ class Client(ABC):
         self.port = port
         self.name = name
         self.sendq = queue.Queue()
-        self.recvq = queue.Queue()
         self.printq = queue.Queue()
         self.handlers = {}
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
@@ -121,13 +118,15 @@ class Client(ABC):
         if ns := item.get(edn.Keyword("ns")):
             self.namespace = ns
 
+        form = item.get(edn.Keyword("form"))
+
         if (form := item.get(edn.Keyword("form"))) and (handler := self.handlers.get(form)):
             try:
                 handler.__call__(item)
             finally:
                 self.handlers.pop(form, None)
         else:
-            self.recvq.put(item)
+            self.printq.put(item)
 
     def recv_loop(self):
         try:
@@ -137,13 +136,13 @@ class Client(ABC):
         except OSError as error:
             log.error({"event": "error", "error": error})
         finally:
-            self.recvq.put(edn.kwmap({
+            self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("ret"),
                 "val": ":tutkain/disconnected"
             }))
 
-            # put a None into the queue to tell consumers to stop reading it.
-            self.recvq.put(None)
+            # Put a None into the queue to tell consumers to stop reading it.
+            self.printq.put(None)
 
             # Feed poison pill to input queue.
             self.sendq.put(None)
@@ -154,39 +153,8 @@ class Client(ABC):
             # close the connection to the socket.
             self.disconnect()
 
-    def format_form(self, form):
-        if lines := cleandoc(form).splitlines():
-            first_line = (lines[0] + "\n")
-
-            next_lines = "\n".join(
-                map(lambda line: ((len(self.namespace) + 5) * " ") + line, lines[1:])
-            )
-
-            if next_lines:
-                next_lines += "\n"
-
-            return f"""{self.namespace}=> {first_line}{next_lines}"""
-
-    @abstractmethod
-    def format(self, response):
-        pass
-
-    def format_loop(self):
-        try:
-            log.debug({"event": "thread/start"})
-
-            while response := self.recvq.get():
-                log.debug({"event": "formatq/recv", "data": response})
-
-                if printable := self.format(response):
-                    self.printq.put({"printable": printable, "response": response})
-        finally:
-            self.printq.put(None)
-            log.debug({"event": "thread/exit"})
-
     def halt(self):
         log.debug({"event": "client/halt"})
-        self.recvq.put(None)
         self.sendq.put(":repl/quit")
         self.executor.shutdown(wait=False)
         self.backchannel.halt()
@@ -217,17 +185,17 @@ class JVMClient(Client):
         line = self.buffer.readline()
 
         if not line.startswith('{'):
-            self.recvq.put(edn.kwmap({
+            self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": "Couldn't connect to Clojure REPL."
             }))
 
-            self.recvq.put(edn.kwmap({
+            self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": line
             }))
 
-            self.recvq.put(edn.kwmap({
+            self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": "NOTE: Tutkain requires Clojure 1.10.0 or newer."
             }))
@@ -236,13 +204,13 @@ class JVMClient(Client):
 
             if (host := ret.get(edn.Keyword("host"))):
                 port = ret.get(edn.Keyword("port"))
-                self.backchannel = backchannel.Client(self.recvq.put).connect(host, port)
+                self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
             elif (val := edn.read(ret.get(edn.Keyword("val")))) and isinstance(val, dict):
                 host = val.get(edn.Keyword("host"))
                 port = val.get(edn.Keyword("port"))
-                self.backchannel = backchannel.Client(self.recvq.put).connect(host, port)
+                self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
             else:
-                self.recvq.put(ret)
+                self.printq.put(ret)
 
         self.load_modules({
             "lookup.clj": [],
@@ -257,7 +225,7 @@ class JVMClient(Client):
         })
 
         self.write_line("""(println "Clojure" (clojure-version))""")
-        self.recvq.put(edn.read_line(self.buffer))
+        self.printq.put(edn.read_line(self.buffer))
 
         log.debug({"event": "client/handshake", "data": self.buffer.readline()})
         self.start_workers()
@@ -278,7 +246,7 @@ class JVMClient(Client):
         self.sendq.put(code)
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.handlers[code] = handler or self.recvq.put
+        self.handlers[code] = handler or self.printq.put
 
         self.backchannel.send({
             "op": edn.Keyword("set-eval-context"),
@@ -286,12 +254,6 @@ class JVMClient(Client):
             "line": line + 1,
             "column": column + 1
         }, lambda _: self.sendq.put(code))
-
-    def format(self, response):
-        if form := response.get(edn.Keyword("in")):
-            return self.format_form(form)
-        elif val := response.get(edn.Keyword("val")):
-            return val
 
 
 class JSClient(Client):
@@ -336,7 +298,7 @@ class JSClient(Client):
         val = edn.read(line)
         host = val.get(edn.Keyword("host"))
         port = val.get(edn.Keyword("port"))
-        self.backchannel = backchannel.Client(self.recvq.put).connect(host, port)
+        self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
 
         self.load_modules({
             "lookup.clj": [],
@@ -349,17 +311,17 @@ class JSClient(Client):
         line = self.buffer.readline()
 
         if not line.startswith('{'):
-            self.recvq.put(edn.kwmap({
+            self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": "Couldn't connect to ClojureScript REPL. Here's why:"
             }))
 
-            self.recvq.put(edn.kwmap({
+            self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": line
             }))
 
-            self.recvq.put(edn.kwmap({
+            self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": "Is the shadow-cljs watch running for the build ID you chose?"
             }))
@@ -379,16 +341,8 @@ class JSClient(Client):
         self.sendq.put(code)
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.handlers[code] = handler or self.recvq.put
+        self.handlers[code] = handler or self.printq.put
         self.sendq.put(code)
-
-    def format(self, response):
-        if form := response.get(edn.Keyword("in")):
-            return self.format_form(form)
-        elif response.get(edn.Keyword("tag")) == edn.Keyword("out"):
-            return response.get(edn.Keyword("val"))
-        elif val := response.get(edn.Keyword("val")):
-            return val
 
 
 class BabashkaClient(Client):
@@ -398,7 +352,9 @@ class BabashkaClient(Client):
     def handshake(self):
         self.write_line("""((requiring-resolve 'clojure.core.server/io-prepl))""")
         self.write_line("""(println "Babashka" (System/getProperty "babashka.version"))""")
-        self.recvq.put(edn.read_line(self.buffer))
+
+        self.printq.put(edn.read_line(self.buffer))
+
         self.buffer.readline()
         self.start_workers()
 
@@ -413,13 +369,5 @@ class BabashkaClient(Client):
         self.sendq.put(code)
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.handlers[code] = handler or self.recvq.put
+        self.handlers[code] = handler or self.printq.put
         self.sendq.put(code)
-
-    def format(self, response):
-        if form := response.get(edn.Keyword("in")):
-            return self.format_form(form)
-        elif response.get(edn.Keyword("tag")) == edn.Keyword("out"):
-            return response.get(edn.Keyword("val"))
-        elif val := response.get(edn.Keyword("val")):
-            return val + "\n"

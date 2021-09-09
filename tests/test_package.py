@@ -186,9 +186,18 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=18)
 
         self.assertEquals("(inc 1)\n", self.server.recv())
-        self.assertEquals(self.print_item("user", "(inc 1)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (inc 1)\n"
+        }), self.get_print())
+
         self.assertEquals("(inc 2)\n", self.server.recv())
-        self.assertEquals(self.print_item("user", "(inc 2)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (inc 2)\n"
+        }), self.get_print())
 
     def test_outermost_empty(self):
         self.set_view_content("")
@@ -202,16 +211,30 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=10)
         self.assertEquals("(range 10)\n", self.server.recv())
-        self.assertEquals(self.print_item("user", "(range 10)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (range 10)\n"
+        }), self.get_print())
 
     def test_form(self):
         self.set_view_content("42 84")
         self.set_selections((0, 0), (3, 3))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.eval_context()
-        self.assertEquals(self.print_item("user", "42"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> 42\n"
+        }), self.get_print())
+
         self.eval_context(column=4)
-        self.assertEquals(self.print_item("user", "84"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> 84\n"
+        }), self.get_print())
+
         self.assertEquals("42\n", self.server.recv())
         self.assertEquals("84\n", self.server.recv())
 
@@ -221,15 +244,21 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"code": "((requiring-resolve 'clojure.data/diff) $0 $1)"})
         self.eval_context()
         self.assertEquals("((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.server.recv())
-        self.assertEquals(
-            self.print_item("user", "((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})"),
-            self.get_print()
-        )
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> ((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n"
+        }), self.get_print())
 
     def test_eval_in_ns(self):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
         self.eval_context()
-        self.assertEquals(self.print_item("user", "(reset)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (reset)\n"
+        }), self.get_print())
+
         # Clients sends ns first
         ret = self.server.recv()
         self.assertTrue(ret.startswith("(do (or (some->> "))
@@ -240,10 +269,20 @@ class TestJVMClient(PackageTestCase):
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "ns"})
         self.eval_context(ns="baz.quux")
-        self.assertEquals(self.print_item("user", "(ns foo.bar)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (ns foo.bar)\n"
+        }), self.get_print())
+
         self.assertEquals("(ns foo.bar)\n", self.server.recv())
         self.eval_context(ns="baz.quux", column=14)
-        self.assertEquals(self.print_item("user", "(ns baz.quux)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (ns baz.quux)\n"
+        }), self.get_print())
+
         self.assertEquals("(ns baz.quux)\n", self.server.recv())
 
     def test_view(self):
@@ -280,25 +319,45 @@ class TestJVMClient(PackageTestCase):
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=3)
-        self.assertEquals(self.print_item("user", "(inc 1)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (inc 1)\n"
+        }), self.get_print())
+
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
         self.eval_context(column=3)
-        self.assertEquals(self.print_item("user", "(inc 1)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (inc 1)\n"
+        }), self.get_print())
+
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.set_view_content("(inc #_(dec 2) 4)")
         self.set_selections((14, 14))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=8)
-        self.assertEquals(self.print_item("user", "(dec 2)"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (dec 2)\n"
+        }), self.get_print())
+
         self.assertEquals("(dec 2)\n", self.server.recv())
         self.set_view_content("#_:a")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.eval_context(column=3)
-        self.assertEquals(self.print_item("user", ":a"), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> :a\n"
+        }), self.get_print())
+
         self.assertEquals(":a\n", self.server.recv())
 
     def test_lookup(self):
@@ -346,15 +405,17 @@ class TestJVMClient(PackageTestCase):
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context()
-        self.assertEquals(self.print_item("user", code), self.get_print())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": f"user=> {code}\n"
+        }), self.get_print())
+
         retval = "x" * 9126
         response = edn.kwmap({"tag": edn.Keyword("ret"), "val": retval})
         self.assertEquals(code + "\n", self.server.recv())
         self.server.send(response)
-        self.assertEqual({
-            "printable": retval,
-            "response": response
-        }, self.get_print())
+        self.assertEquals(response, self.get_print())
 
     def test_evaluate_dialect(self):
         self.view.run_command("tutkain_evaluate", {"code": "(random-uuid)", "dialect": "cljs"})
@@ -389,12 +450,10 @@ class TestJVMClient(PackageTestCase):
             "id": id
         }), response)
 
-        val = "{:test 1, :pass 1, :fail 0, :error 0, :assert 1, :type :summary}"
-
-        self.backchannel.send(edn.kwmap({
+        response = edn.kwmap({
             "id": id,
             "tag": edn.Keyword("ret"),
-            "val": val,
+            "val": "{:test 1, :pass 1, :fail 0, :error 0, :assert 1, :type :summary}",
             "pass": [edn.kwmap({
                         "type": edn.Keyword("pass"),
                         "line": 5,
@@ -408,9 +467,12 @@ class TestJVMClient(PackageTestCase):
                     })],
             "fail": [],
             "error": []
-        }))
+        })
 
-        self.assertEquals(val, self.get_print().get("printable"))
+        self.backchannel.send(response)
+
+        self.assertEquals(response, self.get_print())
+
         self.assertEquals(
             [sublime.Region(78, 78)],
             test.regions(self.view, "passes")
@@ -442,12 +504,10 @@ class TestJVMClient(PackageTestCase):
             "id": id
         }), response)
 
-        val = "{:test 1, :pass 0, :fail 1, :error 0, :assert 1, :type :summary}"
-
-        self.backchannel.send(edn.kwmap({
+        response = edn.kwmap({
             "id": id,
             "tag": edn.Keyword("ret"),
-            "val": val,
+            "val": "{:test 1, :pass 0, :fail 1, :error 0, :assert 1, :type :summary}",
             "pass": [],
             "fail": [edn.kwmap({
                         "file": None,
@@ -465,9 +525,11 @@ class TestJVMClient(PackageTestCase):
                         })
                     })],
             "error": []
-        }))
+        })
 
-        self.assertEquals(val, self.get_print().get("printable"))
+        self.backchannel.send(response)
+
+        self.assertEquals(response, self.get_print())
         self.assertEquals(
             [sublime.Region(78, 78)],
             test.regions(self.view, "failures")
@@ -508,6 +570,8 @@ class TestJVMClient(PackageTestCase):
                 "ns": "clojure.core"
             })]
         }))
+
+        print(self.get_print())
 
 
 class TestJSClient(PackageTestCase):

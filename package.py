@@ -121,7 +121,12 @@ def evaluate(view, client, code, point=None, handler=None):
         line, column = 0, 0
 
     file = view.file_name() or "NO_SOURCE_FILE"
-    client.recvq.put({edn.Keyword("in"): code})
+
+    client.printq.put({
+        edn.Keyword("tag"): edn.Keyword("ret"),
+        edn.Keyword("val"): format_form(client.namespace, code)
+    })
+
     client.eval(code, file, line, column, handler)
 
 
@@ -157,6 +162,20 @@ def set_layout(window):
             }
 
         window.set_layout(layout)
+
+
+def format_form(namespace, form):
+    if lines := cleandoc(form).splitlines():
+        first_line = (lines[0] + "\n")
+
+        next_lines = "\n".join(
+            map(lambda line: ((len(namespace) + 5) * " ") + line, lines[1:])
+        )
+
+        if next_lines:
+            next_lines += "\n"
+
+        return f"""{namespace}=> {first_line}{next_lines}"""
 
 
 class TutkainClearOutputViewCommand(WindowCommand):
@@ -345,14 +364,14 @@ class TutkainEvaluateCommand(TextCommand):
             "op": edn.Keyword("load"),
             "code": base64.encode(code.encode("utf-8")),
             "file": self.view.file_name()
-        }, handler=client.recvq.put)
+        }, handler=client.printq.put)
 
     def handler(self, region, client, response, inline_result):
         if inline_result and edn.Keyword("val") in response:
             inline.clear(self.view)
             inline.show(self.view, region.end(), response[edn.Keyword("val")], inline_result)
         else:
-            client.recvq.put(response)
+            client.printq.put(response)
 
     def evaluate_input(self, client, code):
         evaluate(self.view, client, code)
