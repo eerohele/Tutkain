@@ -24,11 +24,8 @@ class Client(ABC):
     def sink_until_prompt(self):
         bs = bytearray()
 
-        while True:
+        while bs[-3:] != bytearray(b"=> "):
             bs.extend(self.socket.recv(1))
-
-            if bs[-3:] == bytearray(b"=> "):
-                break
 
         return bs
 
