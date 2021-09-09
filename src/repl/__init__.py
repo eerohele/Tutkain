@@ -105,10 +105,6 @@ class Client(ABC):
         self.backchannel_opts = backchannel_opts
         self.capabilities = set()
 
-    def __enter__(self):
-        self.connect()
-        return self
-
     def send_loop(self):
         while item := self.sendq.get():
             log.debug({"event": "client/send", "item": item})
@@ -170,9 +166,6 @@ class Client(ABC):
         self.sendq.put(":repl/quit")
         self.executor.shutdown(wait=False)
         self.backchannel.halt()
-
-    def __exit__(self, type, value, traceback):
-        self.halt()
 
 
 class JVMClient(Client):
