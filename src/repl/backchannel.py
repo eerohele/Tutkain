@@ -99,21 +99,16 @@ class Client:
 
         If there's no handler function for the message, call the default
         handler function instead."""
-        try:
-            if not isinstance(message, dict):
-                self.default_handler(message)
-            elif message.get(edn.Keyword("debug")):
-                log.debug({"event": "info", "message": message.get(edn.Keyword("val"))})
-            else:
-                id = message.get(edn.Keyword("id"))
+        if message.get(edn.Keyword("debug")):
+            log.debug({"event": "info", "message": message.get(edn.Keyword("val"))})
+        else:
+            id = message.get(edn.Keyword("id"))
 
-                try:
-                    handler = self.handlers.get(id, self.default_handler)
-                    handler.__call__(message)
-                finally:
-                    self.handlers.pop(id, None)
-        except AttributeError as error:
-            log.error({"event": "error", "message": message, "error": error})
+            try:
+                handler = self.handlers.get(id, self.default_handler)
+                handler.__call__(message)
+            finally:
+                self.handlers.pop(id, None)
 
     def halt(self):
         """Halt this backchannel client."""
