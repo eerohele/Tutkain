@@ -104,6 +104,8 @@ class Client:
         try:
             handler = self.handlers.get(id, self.default_handler)
             handler.__call__(message)
+        except AttributeError as error:
+            log.error({"event": "error", "message": message, "error": error})
         finally:
             self.handlers.pop(id, None)
 
