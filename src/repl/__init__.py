@@ -78,16 +78,6 @@ class Client(ABC):
 
         return self
 
-    def disconnect(self):
-        if self.socket is not None:
-            try:
-                self.buffer.close()
-                self.socket.shutdown(socket.SHUT_RDWR)
-                self.socket.close()
-                log.debug({"event": "client/disconnect"})
-            except OSError as e:
-                log.debug({"event": "error", "exception": e})
-
     def source_path(self, filename):
         return posixpath.join(pathlib.Path(self.source_root).as_posix(), filename)
 
@@ -159,7 +149,14 @@ class Client(ABC):
 
             # We've exited the loop that reads from the socket, so we can
             # close the connection to the socket.
-            self.disconnect()
+            if self.socket is not None:
+                try:
+                    self.buffer.close()
+                    self.socket.shutdown(socket.SHUT_RDWR)
+                    self.socket.close()
+                    log.debug({"event": "client/disconnect"})
+                except OSError as error:
+                    log.debug({"event": "error", "exception": error})
 
     def halt(self):
         log.debug({"event": "client/halt"})
