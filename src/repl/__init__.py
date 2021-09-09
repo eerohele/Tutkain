@@ -55,16 +55,17 @@ class Client(ABC):
     def handshake(self):
         pass
 
-    def probe(self):
-        # TODO: Configurable timeout?
-        self.executor.submit(self.sink_until_prompt).result(timeout=5)
-
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
         self.buffer = self.socket.makefile(mode="rw")
         log.debug({"event": "client/connect", "host": self.host, "port": self.port})
-        log.debug({"event": "client/handshake", "data": self.probe()})
+
+        log.debug({
+            "event": "client/handshake",
+            "data": self.executor.submit(self.sink_until_prompt).result(timeout=5)
+        })
+
         return self
 
     def disconnect(self):
