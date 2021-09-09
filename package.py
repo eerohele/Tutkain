@@ -26,7 +26,7 @@ from .src import inline
 from .src import paredit
 from .src import namespace
 from .src import test
-from .src.repl.client import BabashkaClient, JVMClient, JSClient
+from .src import repl
 from .src.repl import info
 from .src.repl import query
 from .src.repl import history
@@ -506,11 +506,11 @@ class TutkainConnectCommand(WindowCommand):
                     self.choose_build_id(view, ids, on_done)
 
                 # FIXME: Backchannel port option
-                client = JSClient(source_root(), host, int(port), prompt)
+                client = repl.JSClient(source_root(), host, int(port), prompt)
             elif dialect == edn.Keyword("bb"):
-                client = BabashkaClient(source_root(), host, int(port))
+                client = repl.BabashkaClient(source_root(), host, int(port))
             else:
-                client = JVMClient(
+                client = repl.JVMClient(
                     source_root(), host, int(port), backchannel_opts={
                         "port": settings().get("clojure").get("backchannel").get("port"),
                         "bind_address": settings().get("clojure").get("backchannel").get("bind_address", "localhost")

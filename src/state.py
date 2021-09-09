@@ -2,7 +2,7 @@ from collections import defaultdict
 from sublime import View, Window
 from typing import Dict, TypedDict, Union
 
-from .repl.client import Client
+from . import repl
 from ..api import edn
 
 
@@ -13,13 +13,13 @@ Dialect = edn.Keyword
 
 class State(TypedDict):
     active_repl_view: Dict[WindowId, Dict[Dialect, View]]
-    client_by_view: Dict[ViewId, Dict[Dialect, Client]]
+    client_by_view: Dict[ViewId, Dict[Dialect, repl.Client]]
 
 
 __state = State(active_repl_view=defaultdict(dict), client_by_view=defaultdict(dict))
 
 
-def set_view_client(view: View, dialect: Dialect, client: Client) -> None:
+def set_view_client(view: View, dialect: Dialect, client: repl.Client) -> None:
     __state["client_by_view"][view.id()][dialect] = client
 
 
@@ -35,12 +35,12 @@ def set_repl_view(view: View, dialect: Dialect) -> None:
         raise ValueError(f"View {view.id()} has no window")
 
 
-def view_client(view: View, dialect: Dialect) -> Union[Client, None]:
+def view_client(view: View, dialect: Dialect) -> Union[repl.Client, None]:
     if view:
         return __state["client_by_view"].get(view.id(), {}).get(dialect)
 
 
-def client(window: Window, dialect: Dialect) -> Union[Client, None]:
+def client(window: Window, dialect: Dialect) -> Union[repl.Client, None]:
     if view := repl_view(window, dialect):
         return view_client(view, dialect)
 

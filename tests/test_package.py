@@ -4,8 +4,8 @@ import unittest
 
 from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
+from Tutkain.src import repl
 from Tutkain.src.repl import views
-from Tutkain.src.repl.client import BabashkaClient, JVMClient, JSClient
 from Tutkain.src import base64
 from Tutkain.src import state
 from Tutkain.src import test
@@ -118,7 +118,7 @@ class TestJVMClient(PackageTestCase):
             buf.flush()
 
         self.server = Server(greeting=write_greeting).start()
-        self.client = JVMClient(source_root(), self.server.host, self.server.port)
+        self.client = repl.JVMClient(source_root(), self.server.host, self.server.port)
         self.server.executor.submit(self.client.connect)
         dialect = edn.Keyword("clj")
         self.repl_view = sublime.active_window().new_file()
@@ -599,7 +599,7 @@ class TestJSClient(PackageTestCase):
 
         self.server.start()
 
-        self.client = JSClient(
+        self.client = repl.JSClient(
             source_root(),
             self.server.host,
             self.server.port,
@@ -686,7 +686,7 @@ class TestBabashkaClient(PackageTestCase):
 
         self.server.start()
 
-        self.client = BabashkaClient(
+        self.client = repl.BabashkaClient(
             source_root(),
             self.server.host,
             self.server.port
