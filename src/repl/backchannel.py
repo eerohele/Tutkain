@@ -41,6 +41,7 @@ class Client:
             try:
                 sock.shutdown(socket.SHUT_RDWR)
                 sock.close()
+                buffer.close()
                 log.debug({"event": "backchannel/disconnect"})
             except OSError as e:
                 log.debug({"event": "error", "exception": e})
