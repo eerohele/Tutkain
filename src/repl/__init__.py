@@ -40,6 +40,8 @@ class Client(ABC):
         return self
 
     def write_line(self, line):
+        """Given a string, write the string followed by a newline into the file object
+        associated with the socket of this client."""
         self.buffer.write(line)
         self.buffer.write("\n")
         self.buffer.flush()
@@ -79,6 +81,9 @@ class Client(ABC):
         return self
 
     def source_path(self, filename):
+        """Given the name of a Clojure source file belonging to this package,
+        return the absolute path to that source file as a POSIX path (for
+        Windows compatibility)."""
         return posixpath.join(pathlib.Path(self.source_root).as_posix(), filename)
 
     def __init__(self, source_root, host, port, name, backchannel_opts={}):
@@ -96,6 +101,9 @@ class Client(ABC):
         self.capabilities = set()
 
     def send_loop(self):
+        """Start a loop that reads strings to send for evaluation from `sendq`
+        and writes them into the file object associated with the socket of
+        this client."""
         while item := self.sendq.get():
             log.debug({"event": "client/send", "item": item})
             self.buffer.write(item)
@@ -106,10 +114,22 @@ class Client(ABC):
 
     @abstractmethod
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
+        """Given a string of Clojure code, send it for evaluation to the
+        Clojure runtime this client is connected to.
+
+        Accepts these optional parameters:
+        - `file`: the absolute path to the source file this evaluation is
+                  associated with (default `"NO_SOURCE_FILE"`)
+        - `line`: the line number the code is positioned at (default `0`)
+        - `column`: the column number the code is positioned at (default `0`)
+        - `handler`: a function of one argument, the evaluation result (default
+                    `None`)"""
         pass
 
     @abstractmethod
     def switch_namespace(self, ns):
+        """Given the name of a Clojure namespace as a string, ask the Clojure
+        runtime this client is connected to to switch to that namespace."""
         pass
 
     def handle(self, item):
@@ -127,6 +147,10 @@ class Client(ABC):
             self.printq.put(item)
 
     def recv_loop(self):
+        """Start a loop that reads (EDN) evaluation results from the file
+        object associated with the socket of this client and calls the handler
+        function associated with the evaluation, if any. Otherwise proxies the
+        result to the print queue."""
         try:
             while item := edn.read_line(self.buffer):
                 log.debug({"event": "client/recv", "item": item})
@@ -159,6 +183,7 @@ class Client(ABC):
                     log.debug({"event": "error", "exception": error})
 
     def halt(self):
+        """Halt this client."""
         log.debug({"event": "client/halt"})
         self.sendq.put(":repl/quit")
         self.executor.shutdown(wait=False)

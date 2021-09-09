@@ -40,6 +40,7 @@ def print_loop(view, client):
             elif edn.Keyword("debug") in item:
                 log.debug({"event": "info", "item": item.get(edn.Keyword("val"))})
             elif val := item.get(edn.Keyword("val")):
+                # Babashka
                 if not val.endswith("\n"):
                     val = val + "\n"
 
