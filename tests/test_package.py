@@ -149,14 +149,6 @@ class TestJVMClient(PackageTestCase):
     def get_print(self):
         return self.client.printq.get(timeout=5)
 
-    def print_item(self, ns, code):
-        return {
-            "printable": f"""{ns}=> {code}\n""",
-            "response": {
-                edn.Keyword("in"): f"""{code}"""
-            }
-        }
-
     def eval_context(self, ns="user", file="NO_SOURCE_FILE", line=1, column=1):
         actual = edn.read(self.backchannel.recv())
         id = actual.get(edn.Keyword("id"))
