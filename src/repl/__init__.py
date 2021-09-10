@@ -101,9 +101,8 @@ class Client(ABC):
         self.capabilities = set()
 
     def send_loop(self):
-        """Start a loop that reads strings to send for evaluation from `sendq`
-        and writes them into the file object associated with the socket of
-        this client."""
+        """Start a loop that reads strings from `self.sendq` and sends them to
+        the Clojure runtime this client is connected to for evaluation."""
         while item := self.sendq.get():
             log.debug({"event": "client/send", "item": item})
             self.buffer.write(item)
@@ -147,10 +146,9 @@ class Client(ABC):
             self.printq.put(item)
 
     def recv_loop(self):
-        """Start a loop that reads (EDN) evaluation results from the file
-        object associated with the socket of this client and calls the handler
-        function associated with the evaluation, if any. Otherwise proxies the
-        result to the print queue."""
+        """Start a loop that reads EDN messages from a socket, then calls the
+        handler function associated with that message, if any. Otherwise
+        proxies the result to the print queue."""
         try:
             while item := edn.read_line(self.buffer):
                 log.debug({"event": "client/recv", "item": item})
