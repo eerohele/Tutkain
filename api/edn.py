@@ -52,13 +52,13 @@ def error(error, b, ch):
 
 
 def unread(b, n):
-    """Given a filelike object and an integer, unread that many characters from
+    """Given a file object and an integer, unread that many characters from
     the object."""
     b.seek(b.tell() - n)
 
 
 def read_string(b, _):
-    """Given a filelike object, read a single EDN string."""
+    """Given a file object, read a single EDN string."""
     with io.StringIO() as s:
         while (ch := b.read(1)) != '"':
             if ch == "\\":
@@ -85,12 +85,12 @@ def read_meta(b, ch):
 
 
 def read_list(b, _):
-    """Given a filelike object, read a single EDN list."""
+    """Given a file object, read a single EDN list."""
     return read_delimited_list(b, ')')
 
 
 def read_delimited_list(b, delim):
-    """Given a filelike object and a delimiter character, read an EDN element
+    """Given a file object and a delimiter character, read an EDN element
     that edns with that character."""
     xs = []
 
@@ -104,12 +104,12 @@ def read_delimited_list(b, delim):
 
 
 def read_vector(b, _):
-    """Given a filelike object, read a single EDN vector."""
+    """Given a file object, read a single EDN vector."""
     return read_delimited_list(b, ']')
 
 
 def read_set(b, _):
-    """Given a filelike object, read a single EDN set."""
+    """Given a file object, read a single EDN set."""
     return set(read_delimited_list(b, '}'))
 
 
@@ -122,7 +122,7 @@ def read_unmatched_delimiter(b, ch):
 
 
 def read_map(b, _):
-    """Given a filelike object, read a single EDN map."""
+    """Given a file object, read a single EDN map."""
     xs = read_delimited_list(b, '}')
 
     if (len(xs) & 1) == 1:
@@ -133,7 +133,7 @@ def read_map(b, _):
 
 
 def read_character(b, _):
-    """Given a filelike object, read a single EDN character."""
+    """Given a file object, read a single EDN character."""
     ch = b.read(1)
     token = read_token(b, ch)
 
@@ -150,7 +150,7 @@ def read_character(b, _):
 
 
 def read_dispatch(b, ch):
-    """Given a file object and a character, read an EDN element prefix by the
+    """Given a file object and a character, read an EDN element prefixed by the
     dispatch macro."""
     x = b.read(1)
 
