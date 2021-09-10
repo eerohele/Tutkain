@@ -80,15 +80,15 @@
                              :xform-in #(assoc % :build-id build-id :in *in*)
                              :xform-out #(dissoc % :in)))
              address (.getLocalAddress backchannel)
-             _ (prn {:host (.getHostName address)
-                     :port (.getPort address)})
+             _ (out-fn {:host (.getHostName address)
+                        :port (.getPort address)})
              {:keys [supervisor relay clj-runtime]} (api/get-runtime!)
              worker (supervisor/get-worker supervisor build-id)
              spec (spec-for-runtime out-fn (:client-id clj-runtime))]
          (repl-impl/do-repl worker relay *in* close-signal spec))
        (catch ExceptionInfo ex
-         (prn {:tag :err :val (Throwable->str ex)}))
+         (out-fn {:tag :err :val (Throwable->str ex)}))
        (catch AssertionError ex
-         (prn {:tag :err :val (Throwable->str ex)}))
+         (out-fn {:tag :err :val (Throwable->str ex)}))
        (finally
          (async/>!! close-signal true))))))
