@@ -567,6 +567,9 @@ class TestJVMClient(PackageTestCase):
 
 
 class TestJSClient(PackageTestCase):
+    def get_print(self):
+        return self.client.printq.get(timeout=5)
+
     @classmethod
     def conduct_handshake(self):
         server = self.server
@@ -636,6 +639,10 @@ class TestJSClient(PackageTestCase):
 
             # TODO: Add test for no runtime
 
+            # Clojure version info is printed on the client
+            self.client.printq.get(timeout=5)
+            self.client.printq.get(timeout=5)
+
             return backchannel
 
     @classmethod
@@ -696,8 +703,16 @@ class TestJSClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.assertEquals("(range 10)\n", self.server.recv())
 
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (range 10)\n"
+        }), self.get_print())
+
 
 class TestBabashkaClient(PackageTestCase):
+    def get_print(self):
+        return self.client.printq.get(timeout=5)
+
     @classmethod
     def conduct_handshake(self):
         server = self.server
@@ -720,6 +735,9 @@ class TestBabashkaClient(PackageTestCase):
             edn.Keyword("ms"): 0,
             edn.Keyword("form"): """(println "Babashka" (System/getProperty "babashka.version"))""",
         })
+
+        # Babashka version info is printed on the client
+        self.client.printq.get(timeout=5)
 
     @classmethod
     def setUpClass(self):
@@ -780,3 +798,8 @@ class TestBabashkaClient(PackageTestCase):
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.assertEquals("(range 10)\n", self.server.recv())
+
+        self.assertEquals(edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "user=> (range 10)\n"
+        }), self.get_print())
