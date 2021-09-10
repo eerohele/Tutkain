@@ -10,11 +10,10 @@
    (clojure.lang ExceptionInfo)))
 
 (defn pp-ret
-  "Pretty-print a ClojureScript evaluation result.
-
-  ClojureScript evaluation results are strings. That means we must first try
-  to read them. If the Clojure reader can't read the result, we fall back to
-  the original result followed by a newline."
+  "Pretty-print a ClojureScript evaluation result."
+  ;; ClojureScript evaluation results are strings. That means we must first try
+  ;; to read them. If the Clojure reader can't read the result, we fall back to
+  ;; the original result followed by a newline.
   [ret]
   (try
     (binding [*default-data-reader-fn* tagged-literal
