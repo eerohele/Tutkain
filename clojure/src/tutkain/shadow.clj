@@ -80,8 +80,9 @@
                              :xform-in #(assoc % :build-id build-id :in *in*)
                              :xform-out #(dissoc % :in)))
              address (.getLocalAddress backchannel)
-             _ (out-fn {:host (.getHostName address)
-                        :port (.getPort address)})
+             _ (out-fn {:tag :ret
+                        :val (pr-str {:host (.getHostName address)
+                                      :port (.getPort address)})})
              {:keys [supervisor relay clj-runtime]} (api/get-runtime!)
              worker (supervisor/get-worker supervisor build-id)
              spec (spec-for-runtime out-fn (:client-id clj-runtime))]

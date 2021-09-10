@@ -609,8 +609,8 @@ class TestJSClient(PackageTestCase):
 
         with Server() as backchannel:
             server.send({
-                edn.Keyword("host"): "localhost",
-                edn.Keyword("port"): backchannel.port
+                edn.Keyword("tag"): edn.Keyword("ret"),
+                edn.Keyword("val"): f"""{{:host "localhost", :port {backchannel.port}}}""",
             })
 
             for _ in range(4):

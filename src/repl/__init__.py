@@ -322,7 +322,8 @@ class JSClient(Client):
         self.write_line(f"""(try (tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))""")
 
         line = self.buffer.readline()
-        val = edn.read(line)
+        ret = edn.read(line)
+        val = edn.read(ret.get(edn.Keyword("val")))
         host = val.get(edn.Keyword("host"))
         port = val.get(edn.Keyword("port"))
         self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
