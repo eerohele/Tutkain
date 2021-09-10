@@ -214,17 +214,17 @@ class JVMClient(Client):
         if not line.startswith('{'):
             self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
-                "val": "Couldn't connect to Clojure REPL."
+                "val": "Couldn't connect to Clojure REPL.\n"
             }))
 
             self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
-                "val": line
+                "val": line + "\n"
             }))
 
             self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
-                "val": "NOTE: Tutkain requires Clojure 1.10.0 or newer."
+                "val": "NOTE: Tutkain requires Clojure 1.10.0 or newer.\n"
             }))
         else:
             ret = edn.read(line)
@@ -340,17 +340,17 @@ class JSClient(Client):
         if not line.startswith('{'):
             self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
-                "val": "Couldn't connect to ClojureScript REPL. Here's why:"
+                "val": "Couldn't connect to ClojureScript REPL. Here's why:\n"
             }))
 
             self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
-                "val": line
+                "val": line + "\n"
             }))
 
             self.printq.put(edn.kwmap({
                 "tag": edn.Keyword("err"),
-                "val": "Is the shadow-cljs watch running for the build ID you chose?"
+                "val": "Is the shadow-cljs watch running for the build ID you chose?\n"
             }))
         else:
             ret = edn.read(line)
