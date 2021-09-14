@@ -25,6 +25,8 @@ All notable changes to this project will be documented in this file.
   Then Tutkain no longer prompts you for the hostname when connecting.
 
   - Fix doc popup arglists font
+  - Assign correct syntax when going to definition inside JAR (thx @pedrorgirardi!)
+  - A number of minor bug fixes and improvements
 
 ## 0.9.0 (alpha) - 2021-08-21
 
