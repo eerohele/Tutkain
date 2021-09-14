@@ -44,7 +44,7 @@ def goto(window, location):
                     file.write(source_file.decode())
 
                 # TODO: Add setting?
-                flags = sublime.ENCODED_POSITION | sublime.ADD_TO_SELECTION | sublime.SEMI_TRANSIENT | sublime.CLEAR_TO_RIGHT
+                flags = sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU
                 view = window.open_file(f"{path}:{line}:{column}", flags=flags)
                 view.set_scratch(True)
                 view.set_read_only(True)
