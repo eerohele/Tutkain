@@ -4,6 +4,7 @@ import os
 import re
 import sublime
 import tempfile
+import pathlib
 
 from urllib.parse import urlparse
 from zipfile import ZipFile
@@ -36,7 +37,7 @@ def goto(window, location):
             archive = ZipFile(jar_url.path, "r")
             source_file = archive.read(path)
             view_name = jar_url.path + "!/" + path
-            descriptor, path = tempfile.mkstemp()
+            descriptor, path = tempfile.mkstemp(pathlib.Path(path).suffix)
 
             try:
                 with os.fdopen(descriptor, "w") as file:
@@ -45,7 +46,6 @@ def goto(window, location):
                 # TODO: Add setting?
                 flags = sublime.ENCODED_POSITION | sublime.ADD_TO_SELECTION | sublime.SEMI_TRANSIENT | sublime.CLEAR_TO_RIGHT
                 view = window.open_file(f"{path}:{line}:{column}", flags=flags)
-                view.assign_syntax("Clojure (Tutkain).sublime-syntax")
                 view.set_scratch(True)
                 view.set_read_only(True)
                 rename(view, view_name)
