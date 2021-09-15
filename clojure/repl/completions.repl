@@ -82,6 +82,9 @@
 
 (xr/check! ::specs/function-completions (filter (comp #{:function} :type) sym-candidates))
 
+(candidates "clojure.lang" *ns*)
+(xr/check! (prefixed-candidates ::specs/symbol-completions "clojure.lang"))
+
 (spec/fdef completions/candidates
   :args (spec/cat :prefix ::specs/prefix :ns ::specs/ns)
   :ret (spec/coll-of ::specs/completion :kind sequential? :distinct true))

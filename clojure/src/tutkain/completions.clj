@@ -143,7 +143,7 @@
   (->>
     ["sun.boot.class.path" "java.ext.dirs" "java.class.path"]
     (eduction
-      (keep #(some-> ^String % System/getProperty (.split "/")))
+      (keep #(some-> ^String % System/getProperty (.split File/pathSeparator)))
       cat
       (mapcat path-files)
       (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__")))))

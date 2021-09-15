@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
   Tutkain now no longer opens the target file in a split view.
 
+- Fix auto-completion for top-level classes (e.g. `clojure.lang.*`)
 - Improve locals highlighting when destructuring a namespaced keyword #55
 - Fix support for `tutkain_connect` `host` argument
 
