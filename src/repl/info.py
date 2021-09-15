@@ -7,6 +7,7 @@ import tempfile
 import pathlib
 
 from urllib.parse import urlparse
+from urllib.request import url2pathname
 from zipfile import ZipFile
 
 from ...api import edn
@@ -31,12 +32,14 @@ def goto(window, location):
         elif resource.scheme == "jar" and "!" in resource.path:
             parts = resource.path.split("!")
             jar_url = urlparse(parts[0])
+            # Strip the leading slash from the path on Windows
+            jar_path = url2pathname(jar_url.path)
             # If the path after the ! starts with a forward slash, strip it. ZipFile can't
             # find the file inside the archive otherwise.
             path = parts[1][1:] if parts[1].startswith("/") else parts[1]
-            archive = ZipFile(jar_url.path, "r")
+            archive = ZipFile(jar_path, "r")
             source_file = archive.read(path)
-            view_name = jar_url.path + "!/" + path
+            view_name = jar_path + "!/" + path
             descriptor, path = tempfile.mkstemp(pathlib.Path(path).suffix)
 
             try:
