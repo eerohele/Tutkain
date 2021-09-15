@@ -11,6 +11,7 @@
 map
 
 ;; host language things
+clojure.lang.
 java.
 
 ;; interrupts over backchannel (ugly exception though)
