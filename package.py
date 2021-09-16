@@ -27,6 +27,7 @@ from .src import paredit
 from .src import namespace
 from .src import test
 from .src import repl
+from .src.progress import ProgressBar
 from .src.repl import info
 from .src.repl import query
 from .src.repl import history
@@ -360,11 +361,19 @@ class TutkainEvaluateCommand(TextCommand):
         return self.without_discard_macro(eval_region)
 
     def evaluate_view(self, client, code):
+        progress = ProgressBar("[Tutkain] Evaluating view...")
+
+        def handler(_):
+            progress.stop()
+            self.view.window().status_message("[Tutkain] Evaluating view... done.")
+
+        progress.start()
+
         client.backchannel.send({
             "op": edn.Keyword("load"),
             "code": base64.encode(code.encode("utf-8")),
-            "file": self.view.file_name()
-        })
+            "file": self.view.file_name(),
+        }, handler)
 
     def handler(self, region, client, response, inline_result):
         if inline_result and edn.Keyword("val") in response:
