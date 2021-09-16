@@ -282,14 +282,43 @@ class TestJVMClient(PackageTestCase):
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
-        response = edn.read(self.backchannel.recv())
+        message = edn.read(self.backchannel.recv())
+        id = message.get(edn.Keyword("id"))
 
         self.assertEquals({
             edn.Keyword("op"): edn.Keyword("load"),
             edn.Keyword("code"): base64.encode("(ns foo.bar) (defn x [y] y)".encode("utf-8")),
             edn.Keyword("file"): None,
-            edn.Keyword("id"): response.get(edn.Keyword("id"))
-        }, response)
+            edn.Keyword("id"): id
+        }, message)
+
+        response = edn.kwmap({
+            "id": id,
+            "tag": edn.Keyword("ret"),
+            "val": "nil\\n"
+        })
+
+        self.server.send(response)
+        self.assertEquals(response, self.get_print())
+
+    def test_view_syntax_error(self):
+        self.set_view_content("(ns foo.bar) (defn x [y] y") # missing close paren
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"scope": "view"})
+
+        message = edn.read(self.backchannel.recv())
+
+        response = edn.kwmap({
+            "id": message.get(edn.Keyword("id")),
+            "tag": edn.Keyword("ret"),
+            # Can't be bothered to stick a completely realistic exception map
+            # here, this'll do
+            "val": """{:via [{:type clojure.lang.Compiler$CompilerException, :message "Syntax error reading source at (NO_SOURCE_FILE)"}]}""",
+            "exception": True
+        })
+
+        self.server.send(response)
+        self.assertEquals(response, self.get_print())
 
     def test_view_common(self):
         self.view.assign_syntax("Packages/Tutkain/Clojure Common (Tutkain).sublime-syntax")

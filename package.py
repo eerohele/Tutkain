@@ -363,7 +363,8 @@ class TutkainEvaluateCommand(TextCommand):
     def evaluate_view(self, client, code):
         progress = ProgressBar("[Tutkain] Evaluating view...")
 
-        def handler(_):
+        def handler(response):
+            client.printq.put(response)
             progress.stop()
             self.view.window().status_message("[Tutkain] Evaluating view... done.")
 
