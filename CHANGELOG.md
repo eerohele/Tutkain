@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- If you evaluate a view with a syntax error, show an error in the REPL view
+- Show progress indicator when evaluating view #59
+
 ## 0.10.0 (alpha) - 2021-09-15
 
 - Improve the UI of the **Tutkain: Show Unsuccessful Tests** command #65 (thx @pedrorgirardi)
