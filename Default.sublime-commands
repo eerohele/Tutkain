@@ -71,4 +71,8 @@
         "caption": "Tutkain: Apropos",
         "command": "tutkain_apropos",
     },
+    {
+        "caption": "Tutkain: Explore Stack Trace",
+        "command": "tutkain_explore_stack_trace",
+    },
 ]

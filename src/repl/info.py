@@ -21,14 +21,14 @@ def rename(view, name):
             view.set_name(name)
 
 
-def goto(window, location):
+def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU):
     if location:
         resource = location["resource"]
         line = location["line"] + 1
         column = location["column"] + 1
 
         if not resource.scheme or resource.scheme == "file" and resource.path:
-            view = window.open_file(f"{resource.path}:{line}:{column}", flags=sublime.ENCODED_POSITION)
+            view = window.open_file(f"{resource.path}:{line}:{column}", flags=flags)
         elif resource.scheme == "jar" and "!" in resource.path:
             parts = resource.path.split("!")
             jar_url = urlparse(parts[0])
@@ -46,8 +46,6 @@ def goto(window, location):
                 with os.fdopen(descriptor, "w") as file:
                     file.write(source_file.decode())
 
-                # TODO: Add setting?
-                flags = sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU
                 view = window.open_file(f"{path}:{line}:{column}", flags=flags)
                 view.set_scratch(True)
                 view.set_read_only(True)

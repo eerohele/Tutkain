@@ -14,7 +14,14 @@
   [a b]
   (* (other/sum a b) (other/sum a b)))
 
+(defn divide
+  [a b]
+  (/ a b))
+
 (comment
+  ;; Explore Clojure stack traces
+  (divide 4 0)
+
   (+ 1 2)
   (throw (ex-info "Boom!" {:a :1}))
   (range 512)

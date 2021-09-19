@@ -1336,3 +1336,29 @@ class TutkainDirCommand(TextCommand):
                     }, lambda response: query.handle_response(window, completion_kinds(), response))
         else:
             self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
+
+
+class TutkainExploreStackTrace(TextCommand):
+    def goto(self, val):
+        location = info.parse_location(val)
+        info.goto(self.view.window(), location, flags=sublime.ENCODED_POSITION | sublime.TRANSIENT)
+
+    def handler(self, response):
+        elements = edn.read(response.get(edn.Keyword("val")))
+        items = []
+
+        for element in elements:
+            trigger = element.get(edn.Keyword("name"))
+            filename = element.get(edn.Keyword("file-name"))
+            line = element.get(edn.Keyword("line"))
+            items.append(sublime.QuickPanelItem(trigger, details=filename, annotation=f"line {line}", kind=sublime.KIND_FUNCTION))
+
+        self.view.window().show_quick_panel(
+            items,
+            lambda index: self.goto(elements[index]),
+            on_highlight=lambda index: self.goto(elements[index])
+        )
+
+    def run(self, _):
+        if client := state.client(self.view.window(), edn.Keyword("clj")):
+            client.eval("((requiring-resolve 'tutkain.repl/resolve-stacktrace) *e)", handler=self.handler)
