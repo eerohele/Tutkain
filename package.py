@@ -1347,26 +1347,26 @@ class TutkainExploreStackTrace(TextCommand):
             info.goto(self.view.window(), location, flags=sublime.ENCODED_POSITION | sublime.TRANSIENT)
 
     def handler(self, response):
-        elements = edn.read(response.get(edn.Keyword("val")))
-        items = []
+        if elements := edn.read(response.get(edn.Keyword("val"))):
+            items = []
 
-        for element in elements:
-            trigger = element.get(edn.Keyword("name"))
-            filename = element.get(edn.Keyword("file-name"))
-            line = element.get(edn.Keyword("line"))
-            items.append(
-                sublime.QuickPanelItem(
-                    trigger,
-                    annotation=f"{filename}:{line}",
-                    kind=sublime.KIND_FUNCTION
+            for element in elements:
+                trigger = element.get(edn.Keyword("name"))
+                filename = element.get(edn.Keyword("file-name"))
+                line = element.get(edn.Keyword("line"))
+                items.append(
+                    sublime.QuickPanelItem(
+                        trigger,
+                        annotation=f"{filename}:{line}",
+                        kind=sublime.KIND_FUNCTION
+                    )
                 )
-            )
 
-        self.view.window().show_quick_panel(
-            items,
-            lambda index: self.goto(elements, index),
-            on_highlight=lambda index: self.goto(elements, index)
-        )
+            self.view.window().show_quick_panel(
+                items,
+                lambda index: self.goto(elements, index),
+                on_highlight=lambda index: self.goto(elements, index)
+            )
 
     def run(self, _):
         if client := state.client(self.view.window(), edn.Keyword("clj")):
