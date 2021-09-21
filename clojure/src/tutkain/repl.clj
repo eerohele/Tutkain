@@ -1,6 +1,7 @@
 (ns tutkain.repl
   (:require
    [clojure.main :as main]
+   [clojure.repl :as repl]
    [tutkain.backchannel :as backchannel]
    [tutkain.format :as format])
   (:import
@@ -130,7 +131,8 @@
     (map (fn [el]
            (let [class-name (.getClassName el)
                  file-name (.getFileName el)
-                 url (if (.endsWith file-name ".java")
+                 java? (.endsWith file-name ".java")
+                 url (if java?
                        (class->source (.getResource cl (str (.replace class-name "." "/") ".class")))
                        (or
                          ;; TODO: This appears to work, but is it right?
@@ -139,6 +141,8 @@
              {:file (str url)
               :file-name file-name
               :column 1
-              :name (str class-name "/" (.getMethodName el))
+              :name (if java?
+                      (str (.getClassName el) "/" (.getMethodName el))
+                      (repl/demunge class-name))
               :line (.getLineNumber el)}))
       (.getStackTrace ex))))
