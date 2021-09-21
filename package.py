@@ -1354,7 +1354,13 @@ class TutkainExploreStackTrace(TextCommand):
             trigger = element.get(edn.Keyword("name"))
             filename = element.get(edn.Keyword("file-name"))
             line = element.get(edn.Keyword("line"))
-            items.append(sublime.QuickPanelItem(trigger, details=filename, annotation=f"line {line}", kind=sublime.KIND_FUNCTION))
+            items.append(
+                sublime.QuickPanelItem(
+                    trigger,
+                    annotation=f"{filename}:{line}",
+                    kind=sublime.KIND_FUNCTION
+                )
+            )
 
         self.view.window().show_quick_panel(
             items,
