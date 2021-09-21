@@ -1339,9 +1339,12 @@ class TutkainDirCommand(TextCommand):
 
 
 class TutkainExploreStackTrace(TextCommand):
-    def goto(self, val):
-        location = info.parse_location(val)
-        info.goto(self.view.window(), location, flags=sublime.ENCODED_POSITION | sublime.TRANSIENT)
+    def goto(self, elements, index):
+        if index == -1:
+            self.view.window().focus_view(self.view)
+        else:
+            location = info.parse_location(elements[index])
+            info.goto(self.view.window(), location, flags=sublime.ENCODED_POSITION | sublime.TRANSIENT)
 
     def handler(self, response):
         elements = edn.read(response.get(edn.Keyword("val")))
@@ -1355,8 +1358,8 @@ class TutkainExploreStackTrace(TextCommand):
 
         self.view.window().show_quick_panel(
             items,
-            lambda index: self.goto(elements[index]),
-            on_highlight=lambda index: self.goto(elements[index])
+            lambda index: self.goto(elements, index),
+            on_highlight=lambda index: self.goto(elements, index)
         )
 
     def run(self, _):
