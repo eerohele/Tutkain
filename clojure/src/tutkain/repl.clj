@@ -127,22 +127,23 @@
   For Java sources, presumes that the Java source files are next to the main
   artifact in the local Maven repository."
   [^Throwable ex]
-  (let [cl (.getContextClassLoader (Thread/currentThread))]
-    (map (fn [el]
-           (let [class-name (.getClassName el)
-                 file-name (.getFileName el)
-                 java? (.endsWith file-name ".java")
-                 url (if java?
-                       (class->source (.getResource cl (str (.replace class-name "." "/") ".class")))
-                       (or
-                         ;; TODO: This appears to work, but is it right?
-                         (.getResource (Class/forName class-name) file-name)
-                         (.getResource cl file-name)))]
-             {:file (str url)
-              :file-name file-name
-              :column 1
-              :name (if java?
-                      (str (.getClassName el) "/" (.getMethodName el))
-                      (repl/demunge class-name))
-              :line (.getLineNumber el)}))
-      (.getStackTrace ex))))
+  (when (instance? Throwable ex)
+    (let [cl (.getContextClassLoader (Thread/currentThread))]
+      (map (fn [el]
+             (let [class-name (.getClassName el)
+                   file-name (.getFileName el)
+                   java? (.endsWith file-name ".java")
+                   url (if java?
+                         (class->source (.getResource cl (str (.replace class-name "." "/") ".class")))
+                         (or
+                           ;; TODO: This appears to work, but is it right?
+                           (.getResource (Class/forName class-name) file-name)
+                           (.getResource cl file-name)))]
+               {:file (str url)
+                :file-name file-name
+                :column 1
+                :name (if java?
+                        (str (.getClassName el) "/" (.getMethodName el))
+                        (repl/demunge class-name))
+                :line (.getLineNumber el)}))
+        (.getStackTrace ex)))))
