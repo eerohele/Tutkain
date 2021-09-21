@@ -266,7 +266,7 @@ class JVMClient(Client):
         return self
 
     def switch_namespace(self, ns):
-        code = f"(do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1))"
+        code = f"(do (or (some->> '{ns} find-ns ns-name in-ns) (ns {ns})) (set! *3 *2) (set! *2 *1) nil)"
         self.handlers[code] = lambda _: None
         self.sendq.put(code)
 
