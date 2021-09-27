@@ -481,4 +481,19 @@
         "args": {"scope": "outermost"},
         "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
     },
+
+    // Show tap panel
+    {
+        "keys": ["ctrl+c", "ctrl+p"],
+        "command": "show_panel",
+        "args": {"panel": "output.tutkain.tap_panel"}
+    },
+
+    // Hide tap panel
+    {
+        "keys": ["ctrl+c", "ctrl+p"],
+        "command": "hide_panel",
+        "args": {"panel": "output.tutkain.tap_panel"},
+        "context": [{"key": "panel", "operand": "output.tutkain.tap_panel"}]
+    }
 ]
