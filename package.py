@@ -395,10 +395,10 @@ class TutkainEvaluateCommand(TextCommand):
 
         point = self.view.sel()[0].begin()
 
-        if dialect is None:
-            dialect = dialects.for_point(self.view, point)
-        else:
+        if dialect is not None:
             dialect = edn.Keyword(dialect)
+        else:
+            dialect = dialects.for_point(self.view, point) or edn.Keyword("clj")
 
         client = state.client(self.view.window(), dialect)
 
