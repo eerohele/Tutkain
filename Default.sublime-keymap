@@ -12,7 +12,12 @@
         "key": "auto_complete_visible",
         "operator": "equal",
         "operand": false
-      }
+      },
+      {
+        "key": "panel_has_focus",
+        "operator": "equal",
+        "operand": false
+      },
     ]
   },
 
