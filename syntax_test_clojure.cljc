@@ -1582,10 +1582,6 @@
 ;  ^ meta.function-call.clojure variable.function.clojure
 ;    ^ - variable.function.clojure
 
-  (. a b)
-;  ^ meta.function-call.clojure variable.function.clojure
-;    ^ - variable.function.clojure
-
   #(true blah 10)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
@@ -2787,6 +2783,15 @@
 
 
 ; # Special forms
+
+  (. System (getProperties))
+;  ^ meta.special-form.clojure keyword.other.clojure
+
+  (new java.util.HashMap)
+;  ^^^ meta.special-form.clojure keyword.other.clojure
+
+  (set! *warn-on-reflection* true)
+;  ^^^^ meta.special-form.clojure keyword.other.clojure
 
   (def x 1)
 ;  ^^^ meta.special-form.clojure keyword.declaration.variable.clojure

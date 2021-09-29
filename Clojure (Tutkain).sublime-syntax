@@ -205,6 +205,15 @@ contexts:
     - include: main
 
   special-forms:
+    - match: '\.{{end}}'
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.other.clojure
+      set: list-tail
+    - match: 'new{{end}}'
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.other.clojure
+      set: list-tail
+    - match: 'set!{{end}}'
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.other.clojure
+      set: list-tail
     - match: 'def{{end}}'
       scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure keyword.declaration.variable.clojure
       set: def-tail
