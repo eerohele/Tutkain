@@ -115,6 +115,16 @@
 
 (comment (ns-java-method-candidates 'clojure.main))
 
+(defn field-candidates
+  "Given a java.lang.Class instance, return all field candidates of that class."
+  [^Class class]
+  (eduction
+    (filter static?)
+    (map #(hash-map :candidate (.getName %) :type :field))
+    (.getDeclaredFields class)))
+
+(comment (field-candidates java.lang.String) ,)
+
 (defn static-member-candidates
   "Given a java.lang.Class instance, return all static member candidates of
   that class."
@@ -122,12 +132,11 @@
   (eduction
     (filter static?)
     (map (fn [member]
-           (let [method? (= Method (type member))]
-             (cond->
-               {:candidate (.getName member) :type (if method? :static-method :field)}
-               method? (assoc :arglists (mapv (memfn getSimpleName) (.getParameterTypes member)))
-               method? (assoc :return-type (-> member .getReturnType .getSimpleName))))))
-    (concat (.getMethods class) (.getDeclaredFields class))))
+           {:candidate (.getName member)
+            :type :static-method
+            :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
+            :return-type (-> member .getReturnType .getSimpleName)}))
+    (.getMethods class)))
 
 (comment (static-member-candidates java.lang.String),)
 
@@ -298,7 +307,7 @@
   (when-let [prefix-scope (first (.split prefix "/"))]
     (let [scope (symbol prefix-scope)
           candidates (if-let [class (resolve-class ns scope)]
-                       (static-member-candidates class)
+                       (concat (static-member-candidates class) (field-candidates class))
                        (when-let [ns (or (find-ns scope) (scope (ns-aliases ns)))]
                          (ns-public-var-candidates ns)))]
       (map (fn [candidate] (update candidate :candidate #(str scope "/" %))) candidates))))
