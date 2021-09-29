@@ -83,6 +83,7 @@ def show_popup(view, point, response):
             spec = info.get(edn.Keyword("spec"), "")
             fnspec = info.get(edn.Keyword("fnspec"), {})
             doc = info.get(edn.Keyword("doc"), "")
+            fmt = info.get(edn.Keyword("format"), edn.Keyword("text"))
 
             if ns and name and file:
                 name = f"""
@@ -157,7 +158,11 @@ def show_popup(view, point, response):
                 content += """</p>"""
 
             if doc:
-                doc = re.sub(r"\s", "&nbsp;", htmlify(doc))
+                if fmt == edn.Keyword("text"):
+                    doc = re.sub(r"\s", "&nbsp;", htmlify(doc))
+                elif fmt == edn.Keyword("html"):
+                    doc = re.sub(r"\s", "&nbsp;", re.sub(r"\n", "<br/>", doc))
+
                 content += f"""<p class="doc">{doc}</p>"""
 
             content += "</body>"

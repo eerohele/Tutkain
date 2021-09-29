@@ -64,3 +64,80 @@
                 ;;  :line: -2}
                 :line (max 0 (.getLineNumber el))}))
         (.getStackTrace ex)))))
+
+(def ^:private result (atom nil))
+
+(defn parse-source
+  [url module-name]
+  (let [tool (ToolProvider/getSystemDocumentationTool)
+        file-manager (.getStandardFileManager tool nil nil nil)
+        tmpdir (System/getProperty "java.io.tmpdir")
+        file (io/file tmpdir (.getName (io/file (.getFile url))))
+        file-objects (.getJavaFileObjectsFromFiles file-manager [file])
+        doclet (reify Doclet
+                 (init [this _ _]
+                   (reset! result nil))
+                 (run [this root]
+                   (reset! result root) true)
+                 (getSupportedOptions [this]
+                   #{}))
+        options (into
+                  ["--show-members" "private"
+                   "--show-types" "private"
+                   "--show-packages" "all"
+                   "--show-module-contents" "all"
+                   "-quiet"]
+                  (when module-name ["--patch-module" (format "%s=%s" module-name tmpdir)]))
+        out (java.io.StringWriter.)]
+    (spit file (slurp url))
+    (.call (.getTask tool out file-manager nil (class doclet) options file-objects))
+    @result))
+
+(defn parse
+  [environment elements]
+  (into []
+    (mapcat (fn [element]
+              (let [trees (.getDocTrees ^DocletEnvironment environment)
+                    source-positions (.getSourcePositions trees)]
+                (when-some [path (.getPath trees element)]
+                  (let [compilation-unit (.getCompilationUnit path)
+                        line-map (.getLineMap compilation-unit)
+                        position (.getStartPosition source-positions compilation-unit (.getLeaf path))
+                        util (.getElementUtils environment)
+                        package-name (.toString (.getPackageOf util element))
+                        parent-name (-> element .getEnclosingElement .getSimpleName .toString)
+                        element-name (-> element .getSimpleName .toString)
+                        name (if (= (.getKind element) ElementKind/CLASS)
+                               (symbol (str package-name "." element-name))
+                               (symbol (str package-name "." parent-name) element-name))]
+                    (into [(merge
+                             {:name name
+                              :line (.getLineNumber line-map position)
+                              :column (.getColumnNumber line-map position)
+                              :doc (some-> (.getDocComment util element) .trim)}
+                             (when (= (.getKind element) ElementKind/METHOD)
+                               {:arglists (mapv (fn [element]
+                                                  (str "(" (.toString (.asType element)) " "(.getSimpleName element) ")"))
+                                            (.getParameters element))}))]
+                      (parse environment (.getEnclosedElements element))))))))
+    elements))
+
+(defn info
+  [sym]
+  (let [cl (.getContextClassLoader (Thread/currentThread))
+        sym-class (if (qualified-symbol? sym)
+                    (-> sym namespace symbol resolve)
+                    (resolve sym))
+        module-name (-> sym-class .getModule .getName)
+        url (class-url->source-url (.getResource cl (str (.replace (.getName sym-class) "." "/") ".class")))
+        environment (parse-source url module-name)
+        method->info (into {}
+                       (map (juxt :name identity))
+                       (parse environment (.getIncludedElements environment)))]
+    (some-> (get method->info sym) (assoc :format :html :file (str url)))))
+
+(comment
+  (java.time.LocalDate/parse "2021-09-28")
+  (java.time.LocalDate/now)
+  ,)
+

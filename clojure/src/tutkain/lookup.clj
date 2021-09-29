@@ -3,7 +3,8 @@
    [clojure.java.io :as io]
    [clojure.spec.alpha :as spec]
    [tutkain.format :refer [pp-str]]
-   [tutkain.backchannel :refer [handle respond-to]]))
+   [tutkain.backchannel :refer [handle respond-to]]
+   [tutkain.java :as java]))
 
 (set! *warn-on-reflection* true)
 
@@ -89,7 +90,7 @@
       (when-some [spec (some-> named spec/get-spec spec/describe pr-str)]
         {:name named
          :spec spec})
-      (prep-meta (sym-meta ns named)))))
+      (or (prep-meta (sym-meta ns named)) (java/info named)))))
 
 (defmulti info :dialect)
 
