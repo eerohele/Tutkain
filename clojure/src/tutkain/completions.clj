@@ -10,7 +10,7 @@
    (clojure.lang Reflector)
    (java.util.jar JarFile)
    (java.io File)
-   (java.lang.reflect Field Member Method Modifier)
+   (java.lang.reflect Field Member Modifier)
    (java.util.jar JarEntry)
    (java.util.concurrent ConcurrentHashMap)))
 
@@ -281,12 +281,20 @@
 
 (defn ns-class-candidates
   "Given an ns symbol, return all class candidates that are imported into that
-  namespace."
+  namespace, as well as the possible constructor candidates for each class."
   [ns]
   (sequence
     (comp
       (map key)
-      (map #(hash-map :candidate (name %) :type :class)))
+      (mapcat
+        (fn [class-name]
+          (into [(annotate-class class-name)]
+            (map (fn [constructor]
+                   {:candidate (str class-name ".")
+                    :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
+                    :return-type (str class-name)
+                    :type :method})
+              (some-> class-name symbol resolve .getConstructors))))))
     (ns-imports ns)))
 
 (comment (ns-class-candidates 'clojure.main),)
@@ -329,7 +337,17 @@
       ;; until the first class that's not a candidate.
       (drop-while (complement candidate?))
       (take-while candidate?)
+      (mapcat (fn [{class-name :candidate}]
+                (into [(annotate-class class-name)]
+                  (map (fn [constructor]
+                         {:candidate (str class-name ".")
+                          :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
+                          :return-type (or (some-> class-name (.split "\\.") last) "")
+                          :type :method})
+                    (some-> class-name symbol resolve .getConstructors)))))
       @class-candidate-list)))
+
+(comment (seq (class-candidates "java.util.concurrent.Linked")) ,)
 
 (defn candidates
   "Given a string prefix and ns symbol, return auto-completion candidates for
@@ -351,6 +369,8 @@
 
 (comment
   (candidates "ran" 'clojure.core)
+  (candidates "Strin" 'clojure.core)
+  (candidates "Throwable" 'clojure.core)
   (time (dorun (candidates "m" 'clojure.core)))
   ,)
 
