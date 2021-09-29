@@ -76,6 +76,10 @@
 (candidates ".g" *ns*)
 (xr/check! (prefixed-candidates ::specs/completions ".g"))
 
+(import '(java.time LocalDate))
+(candidates ".atStartOf" *ns*)
+(xr/check! (prefixed-candidates ::specs/completions ".atStartOfDay"))
+
 (candidates "java.util.Date/" *ns*)
 (xr/check! ::specs/completions (candidates "java.util.Spliterator$" *ns*))
 (assert (every? #(.contains (:candidate %) "$") (candidates "java.util.Spliterator$" *ns*)))

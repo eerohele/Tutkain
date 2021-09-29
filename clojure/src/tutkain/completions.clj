@@ -105,7 +105,6 @@
   (eduction
     (map val)
     (mapcat #(.getMethods ^Class %))
-    (filter static?)
     (map #(->> ^Member % .getName (str ".")))
     (distinct)
     (ns-imports ns)))
