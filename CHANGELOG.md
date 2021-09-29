@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 - If you evaluate a view with a syntax error, show an error in the REPL view
 - Show progress indicator when evaluating view #59
+- Fix evaluation prompt
+
+  Previously, pressing Enter would insert a line break instead of submitting the evaluation.
+
+- Allow evaluating input when a non-Clojure view is active
+- Add parameter and return types to Java auto-completion items
+- Improve auto-completion support for Java instance methods
+- Improve auto-completion UI
 
 ## 0.10.0 (alpha) - 2021-09-15
 
