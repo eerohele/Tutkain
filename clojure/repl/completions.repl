@@ -83,23 +83,28 @@
 (candidates ".atStartOf" *ns*)
 (xr/check! (prefixed-candidates ::specs/method-completions ".atStartOfDay"))
 
-(assert (set/subset? #{{:candidate ".atTime"
+(assert (set/subset? #{{:class "LocalDate"
+                        :candidate ".atTime"
                         :arglists ["int" "int"]
                         :type :method
                         :return-type "LocalDateTime"}
-                       {:candidate ".atTime"
+                       {:class "LocalDate"
+                        :candidate ".atTime"
                         :arglists ["int" "int" "int"]
                         :type :method
                         :return-type "LocalDateTime"}
-                       {:candidate ".atTime"
+                       {:class "LocalDate"
+                        :candidate ".atTime"
                         :arglists ["LocalTime"]
                         :type :method
                         :return-type "ChronoLocalDateTime"}
-                       {:candidate ".atTime"
+                       {:class "LocalDate"
+                        :candidate ".atTime"
                         :arglists ["int" "int" "int" "int"]
                         :type :method
                         :return-type "LocalDateTime"}
-                       {:candidate ".atTime"
+                       {:class "LocalDate"
+                        :candidate ".atTime"
                         :arglists ["OffsetTime"]
                         :type :method
                         :return-type "OffsetDateTime"}}

@@ -106,14 +106,15 @@
     (map val)
     (mapcat #(.getMethods ^Class %))
     (map (fn [member]
-           {:candidate (str "." (.getName member))
+           {:class (-> member .getDeclaringClass .getSimpleName)
+            :candidate (str "." (.getName member))
             :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
             :return-type (-> member .getReturnType .getSimpleName)
             :type :method}))
     (distinct)
     (ns-imports ns)))
 
-(comment (ns-java-method-candidates 'clojure.main))
+(comment (seq (ns-java-method-candidates 'clojure.main)))
 
 (defn field-candidates
   "Given a java.lang.Class instance, return all field candidates of that class."
