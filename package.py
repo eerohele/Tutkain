@@ -1371,4 +1371,4 @@ class TutkainExploreStackTrace(TextCommand):
 
     def run(self, _):
         if client := state.client(self.view.window(), edn.Keyword("clj")):
-            client.eval("((requiring-resolve 'tutkain.repl/resolve-stacktrace) *e)", handler=self.handler)
+            client.eval("((requiring-resolve 'tutkain.java/resolve-stacktrace) *e)", handler=self.handler)

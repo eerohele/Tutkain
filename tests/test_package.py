@@ -79,7 +79,7 @@ class TestJVMClient(PackageTestCase):
             })
 
             # Client loads modules
-            for _ in range(6):
+            for _ in range(7):
                 module = edn.read(backchannel.recv())
 
                 backchannel.send(edn.kwmap({

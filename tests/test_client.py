@@ -54,7 +54,7 @@ class TestJVMClient(TestCase):
                     })
                 )
 
-                filenames = {"lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "query.clj", "analyzer.clj"}
+                filenames = {"java.clj", "lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "query.clj", "analyzer.clj"}
 
                 for filename in filenames:
                     response = edn.read(backchannel.recv())

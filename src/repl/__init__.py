@@ -238,6 +238,7 @@ class JVMClient(Client):
                 self.printq.put(ret)
 
         self.load_modules({
+            "java.clj": [],
             "lookup.clj": [],
             "completions.clj": [],
             "load_blob.clj": [],
