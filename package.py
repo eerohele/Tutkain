@@ -27,6 +27,7 @@ from .src import paredit
 from .src import namespace
 from .src import test
 from .src import repl
+from .src import completions
 from .src.progress import ProgressBar
 from .src.repl import info
 from .src.repl import query
@@ -625,90 +626,15 @@ class TutkainNewScratchViewCommand(WindowCommand):
         )
 
 
-def completion_kinds():
-    return {
-        "function": sublime.KIND_FUNCTION,
-        "var": sublime.KIND_VARIABLE,
-        "macro": (sublime.KIND_ID_FUNCTION, "m", "macro"),
-        "multimethod": (sublime.KIND_ID_FUNCTION, "u", "multimethod"),
-        "namespace": sublime.KIND_NAMESPACE,
-        "field": sublime.KIND_VARIABLE,
-        "class": sublime.KIND_TYPE,
-        "special-form": (sublime.KIND_ID_FUNCTION, "s", "special form"),
-        "method": sublime.KIND_FUNCTION,
-        "static-method": sublime.KIND_FUNCTION,
-        "keyword": sublime.KIND_KEYWORD,
-        "protocol": sublime.KIND_TYPE
-    }
-
-
 class TutkainShowPopupCommand(TextCommand):
     def run(self, _, item={}):
         info.show_popup(self.view, -1, {edn.Keyword("info"): edn.kwmap(item)})
 
 
 class TutkainViewEventListener(ViewEventListener):
-    def completion_item(self, item):
-        details = ""
-
-        if edn.Keyword("doc") in item:
-            d = {}
-
-            for k, v in item.items():
-                d[k.name] = v.name if isinstance(v, edn.Keyword) else v
-
-            details = f"""<a href="{sublime.command_url("tutkain_show_popup", args={"item": d})}">More</a>"""
-
-        candidate = item.get(edn.Keyword("candidate"))
-        trigger = candidate + " "
-        type = item.get(edn.Keyword("type"))
-        kind = completion_kinds().get(type.name, sublime.KIND_AMBIGUOUS)
-
-        if type in {
-            edn.Keyword("method"),
-            edn.Keyword("static-method"),
-            edn.Keyword("function"),
-            edn.Keyword("macro"),
-            edn.Keyword("multimethod"),
-            edn.Keyword("special-form")
-        }:
-            arglists = item.get(edn.Keyword("arglists"), [])
-            trigger += "(" + ", ".join(arglists) + ")"
-
-        return_type = item.get(edn.Keyword("return-type"), "")
-
-        return sublime.CompletionItem(
-            trigger=trigger,
-            completion=candidate,
-            kind=kind,
-            annotation=return_type,
-            details=details,
-        )
-
     def on_query_completions(self, prefix, locations):
-        point = locations[0] - 1
-
-        if settings().get("auto_complete") and self.view.match_selector(
-            point,
-            "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
-        ) and (dialect := dialects.for_point(self.view, point)) and (client := state.client(self.view.window(), dialect)):
-            if scope := selectors.expand_by_selector(self.view, point, "meta.symbol | constant.other.keyword"):
-                prefix = self.view.substr(scope)
-
-            completion_list = sublime.CompletionList()
-
-            client.backchannel.send({
-                "op": edn.Keyword("completions"),
-                "prefix": prefix,
-                "ns": namespace.name(self.view),
-                "dialect": dialect
-            }, handler=lambda response: (
-                completion_list.set_completions(
-                    map(self.completion_item, response.get(edn.Keyword("completions"), []))
-                )
-            ))
-
-            return completion_list
+        if settings().get("auto_complete"):
+            return completions.get_completions(self.view, prefix, locations)
 
 
 def lookup(view, form, handler):
@@ -1314,7 +1240,7 @@ class TutkainAproposCommand(WindowCommand):
         client.backchannel.send({
             "op": edn.Keyword("apropos"),
             "pattern": pattern
-        }, handler=lambda response: query.handle_response(self.window, completion_kinds(), response))
+        }, handler=lambda response: query.handle_response(self.window, completions.KINDS, response))
 
     def run(self, pattern=None):
         dialect = edn.Keyword("clj")
@@ -1350,7 +1276,7 @@ class TutkainDirCommand(TextCommand):
                         "op": edn.Keyword("dir"),
                         "ns": namespace.name(self.view),
                         "sym": self.view.substr(symbol)
-                    }, lambda response: query.handle_response(window, completion_kinds(), response))
+                    }, lambda response: query.handle_response(window, completions.KINDS, response))
         else:
             self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
 
