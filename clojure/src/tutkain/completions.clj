@@ -98,18 +98,21 @@
   [^Member member]
   (-> member .getModifiers Modifier/isStatic))
 
-(defn ns-java-methods
+(defn ns-java-method-candidates
   "Given an ns symbol, return all Java methods that are available in the
   context of that ns."
   [ns]
   (eduction
     (map val)
     (mapcat #(.getMethods ^Class %))
-    (map #(->> ^Member % .getName (str ".")))
+    (map (fn [member]
+           {:candidate (str "." (.getName member))
+            :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
+            :type :method}))
     (distinct)
     (ns-imports ns)))
 
-(comment (ns-java-methods 'clojure.main))
+(comment (ns-java-method-candidates 'clojure.main))
 
 (defn static-member-candidates
   "Given a java.lang.Class instance, return all static member candidates of
@@ -276,14 +279,6 @@
     (ns-imports ns)))
 
 (comment (ns-class-candidates 'clojure.main),)
-
-(defn ns-java-method-candidates
-  "Given an ns symbol, return all Java method candidates that are imported into
-  that namespace."
-  [ns]
-  (map #(hash-map :candidate % :type :method) (ns-java-methods ns)))
-
-(comment (ns-java-method-candidates 'clojure.core),)
 
 (defn scoped?
   "Given a string prefix, return true if it's scoped.
