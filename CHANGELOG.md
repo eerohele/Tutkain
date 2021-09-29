@@ -10,9 +10,9 @@ All notable changes to this project will be documented in this file.
   Previously, pressing Enter would insert a line break instead of submitting the evaluation.
 
 - Allow evaluating input when a non-Clojure view is active
-- Add parameter and return types to Java auto-completion items
-- Improve auto-completion support for Java instance methods
+- Improve auto-completion support for Java methods, fields, and classes
 - Improve auto-completion UI
+- Improve syntax definition for Java interop special forms
 
 ## 0.10.0 (alpha) - 2021-09-15
 
