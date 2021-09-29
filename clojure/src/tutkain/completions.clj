@@ -10,7 +10,7 @@
    (clojure.lang Reflector)
    (java.util.jar JarFile)
    (java.io File)
-   (java.lang.reflect Field Member Modifier)
+   (java.lang.reflect Field Member Method Modifier)
    (java.util.jar JarEntry)
    (java.util.concurrent ConcurrentHashMap)))
 
@@ -112,16 +112,20 @@
 
 (comment (ns-java-methods 'clojure.main))
 
-(defn static-members
-  "Given a java.lang.Class instance, return all static members of that class."
+(defn static-member-candidates
+  "Given a java.lang.Class instance, return all static member candidates of
+  that class."
   [^Class class]
   (eduction
     (filter static?)
-    (map #(.getName ^Member %))
-    (dedupe)
+    (map (fn [member]
+           (let [method? (= Method (type member))]
+             (cond->
+               {:candidate (.getName member) :type (if method? :static-method :field)}
+               method? (assoc :arglists (mapv (memfn getSimpleName) (.getParameterTypes member)))))))
     (concat (.getMethods class) (.getDeclaredFields class))))
 
-(comment (static-members java.lang.String),)
+(comment (static-member-candidates java.lang.String),)
 
 (defn path-files [^String path]
   (cond
@@ -281,13 +285,6 @@
   (map #(hash-map :candidate % :type :method) (ns-java-methods ns)))
 
 (comment (ns-java-method-candidates 'clojure.core),)
-
-(defn static-member-candidates
-  "Given a class, return all static member candidates for that class."
-  [class]
-  (map #(hash-map :candidate % :type :static-method) (static-members class)))
-
-(comment (static-member-candidates java.lang.String),)
 
 (defn scoped?
   "Given a string prefix, return true if it's scoped.

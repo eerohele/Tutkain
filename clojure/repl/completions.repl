@@ -64,8 +64,8 @@
 
 (assert (not-any? #(.contains (:candidate %) "$") (candidates "java." *ns*)))
 
-(assert (set/subset? #{{:candidate "java.time.LocalDate/parse" :type :static-method}
-                       {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :static-method}}
+(assert (set/subset? #{{:candidate "java.time.LocalDate/parse" :type :static-method :arglists ["CharSequence"]}
+                       {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :field}}
           (set (candidates "java.time.LocalDate/" *ns*))))
 
 (def imported-classes (set (map second (mapcat ns-imports (all-ns)))))

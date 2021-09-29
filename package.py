@@ -632,6 +632,7 @@ def completion_kinds():
         "macro": (sublime.KIND_ID_FUNCTION, "m", "macro"),
         "multimethod": (sublime.KIND_ID_FUNCTION, "u", "multimethod"),
         "namespace": sublime.KIND_NAMESPACE,
+        "field": sublime.KIND_VARIABLE,
         "class": sublime.KIND_TYPE,
         "special-form": (sublime.KIND_ID_FUNCTION, "s", "special form"),
         "method": sublime.KIND_FUNCTION,
