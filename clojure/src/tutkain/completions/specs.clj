@@ -25,6 +25,7 @@
   (spec/coll-of ::completion :kind sequential? :distinct true :min-count 1))
 
 (spec/def ::arglists (spec/coll-of string?))
+(spec/def ::return-type string?)
 (spec/def ::doc string?)
 
 (spec/def ::symbol-completion
@@ -38,6 +39,12 @@
 
 (spec/def ::function-completions
   (spec/coll-of ::function-completion :kind sequential? :min-count 1))
+
+(spec/def ::method-completion
+  (spec/keys :req-un [::candidate ::type ::return-type ::arglists]))
+
+(spec/def ::method-completions
+  (spec/coll-of ::method-completion :kind sequential? :min-count 1))
 
 (spec/def ::prefix
   (spec/with-gen string? (constantly (gen/fmap str gen/symbol))))

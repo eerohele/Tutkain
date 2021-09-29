@@ -108,6 +108,7 @@
     (map (fn [member]
            {:candidate (str "." (.getName member))
             :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
+            :return-type (-> member .getReturnType .getSimpleName)
             :type :method}))
     (distinct)
     (ns-imports ns)))
@@ -124,7 +125,8 @@
            (let [method? (= Method (type member))]
              (cond->
                {:candidate (.getName member) :type (if method? :static-method :field)}
-               method? (assoc :arglists (mapv (memfn getSimpleName) (.getParameterTypes member)))))))
+               method? (assoc :arglists (mapv (memfn getSimpleName) (.getParameterTypes member)))
+               method? (assoc :return-type (-> member .getReturnType .getSimpleName))))))
     (concat (.getMethods class) (.getDeclaredFields class))))
 
 (comment (static-member-candidates java.lang.String),)

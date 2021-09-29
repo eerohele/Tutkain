@@ -64,7 +64,10 @@
 
 (assert (not-any? #(.contains (:candidate %) "$") (candidates "java." *ns*)))
 
-(assert (set/subset? #{{:candidate "java.time.LocalDate/parse" :type :static-method :arglists ["CharSequence"]}
+(assert (set/subset? #{{:candidate "java.time.LocalDate/parse"
+                        :type :static-method
+                        :arglists ["CharSequence"]
+                        :return-type "LocalDate"}
                        {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :field}}
           (set (candidates "java.time.LocalDate/" *ns*))))
 
@@ -78,13 +81,28 @@
 
 (import '(java.time LocalDate))
 (candidates ".atStartOf" *ns*)
-(xr/check! (prefixed-candidates ::specs/completions ".atStartOfDay"))
+(xr/check! (prefixed-candidates ::specs/method-completions ".atStartOfDay"))
 
-(assert (set/subset? #{{:candidate ".atTime", :arglists ["int" "int"], :type :method}
-                       {:candidate ".atTime", :arglists ["int" "int" "int"], :type :method}
-                       {:candidate ".atTime", :arglists ["LocalTime"], :type :method}
-                       {:candidate ".atTime", :arglists ["int" "int" "int" "int"], :type :method}
-                       {:candidate ".atTime", :arglists ["OffsetTime"], :type :method}}
+(assert (set/subset? #{{:candidate ".atTime"
+                        :arglists ["int" "int"]
+                        :type :method
+                        :return-type "LocalDateTime"}
+                       {:candidate ".atTime"
+                        :arglists ["int" "int" "int"]
+                        :type :method
+                        :return-type "LocalDateTime"}
+                       {:candidate ".atTime"
+                        :arglists ["LocalTime"]
+                        :type :method
+                        :return-type "ChronoLocalDateTime"}
+                       {:candidate ".atTime"
+                        :arglists ["int" "int" "int" "int"]
+                        :type :method
+                        :return-type "LocalDateTime"}
+                       {:candidate ".atTime"
+                        :arglists ["OffsetTime"]
+                        :type :method
+                        :return-type "OffsetDateTime"}}
           (set (candidates ".atTime" *ns*))))
 
 (candidates "java.util.Date/" *ns*)
