@@ -14,6 +14,9 @@
    (java.util.jar JarEntry)
    (java.util.concurrent ConcurrentHashMap)))
 
+(when (nil? (System/getProperty "apple.awt.UIElement"))
+  (System/setProperty "apple.awt.UIElement" "true"))
+
 (defn annotate-keyword
   [kw]
   {:candidate (str kw) :type :keyword})
