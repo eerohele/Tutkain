@@ -297,8 +297,8 @@
     (map key)
     (mapcat
       (fn [class-name]
-        (when-some [class (-> class-name symbol resolve)]
-          (into [(annotate-class class-name)]
+        (into [(annotate-class class-name)]
+          (when-some [class (-> class-name symbol resolve)]
             (map (fn [constructor]
                    {:candidate (str class-name ".")
                     :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
