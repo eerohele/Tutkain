@@ -101,6 +101,13 @@
   [^Member member]
   (-> member .getModifiers Modifier/isStatic))
 
+(defn ^:private qualified-class-name
+  [^Class class]
+  (let [class-name (.getSimpleName class)]
+    (if-some [package-name (some-> class .getPackage .getName)]
+      (str package-name "." class-name)
+      class-name)))
+
 (defn ns-java-method-candidates
   "Given an ns symbol, return all Java methods that are available in the
   context of that ns."
@@ -109,10 +116,10 @@
     (map val)
     (mapcat #(.getMethods ^Class %))
     (map (fn [member]
-           {:class (-> member .getDeclaringClass .getSimpleName)
+           {:class (-> member .getDeclaringClass qualified-class-name)
             :candidate (str "." (.getName member))
             :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
-            :return-type (-> member .getReturnType .getSimpleName)
+            :return-type (-> member .getReturnType qualified-class-name)
             :type :method}))
     (distinct)
     (ns-imports ns)))
@@ -136,11 +143,11 @@
   (eduction
     (filter static?)
     (map (fn [member]
-           {:class (.getSimpleName class)
+           {:class (qualified-class-name class)
             :candidate (.getName member)
             :type :static-method
             :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
-            :return-type (-> member .getReturnType .getSimpleName)}))
+            :return-type (-> member .getReturnType qualified-class-name)}))
     (.getMethods class)))
 
 (comment (static-member-candidates java.lang.String),)
@@ -293,13 +300,14 @@
       (map key)
       (mapcat
         (fn [class-name]
-          (into [(annotate-class class-name)]
-            (map (fn [constructor]
-                   {:candidate (str class-name ".")
-                    :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
-                    :return-type (str class-name)
-                    :type :method})
-              (some-> class-name symbol resolve .getConstructors))))))
+          (when-some [class (-> class-name symbol resolve)]
+            (into [(annotate-class class-name)]
+              (map (fn [constructor]
+                     {:candidate (str class-name ".")
+                      :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
+                      :return-type (qualified-class-name class)
+                      :type :method})
+                (.getConstructors class)))))))
     (ns-imports ns)))
 
 (comment (ns-class-candidates 'clojure.main),)

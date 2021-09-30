@@ -64,11 +64,11 @@
 
 (assert (not-any? #(.contains (:candidate %) "$") (candidates "java." *ns*)))
 
-(assert (set/subset? #{{:class "LocalDate"
+(assert (set/subset? #{{:class "java.time.LocalDate"
                         :candidate "java.time.LocalDate/parse"
                         :type :static-method
                         :arglists ["CharSequence"]
-                        :return-type "LocalDate"}
+                        :return-type "java.time.LocalDate"}
                        {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :field}}
           (set (candidates "java.time.LocalDate/" *ns*))))
 
@@ -84,38 +84,38 @@
 (candidates ".atStartOf" *ns*)
 (xr/check! (prefixed-candidates ::specs/method-completions ".atStartOfDay"))
 
-(assert (set/subset? #{{:class "LocalDate"
+(assert (set/subset? #{{:class "java.time.LocalDate"
                         :candidate ".atTime"
                         :arglists ["int" "int"]
                         :type :method
-                        :return-type "LocalDateTime"}
-                       {:class "LocalDate"
+                        :return-type "java.time.LocalDateTime"}
+                       {:class "java.time.LocalDate"
                         :candidate ".atTime"
                         :arglists ["int" "int" "int"]
                         :type :method
-                        :return-type "LocalDateTime"}
-                       {:class "LocalDate"
+                        :return-type "java.time.LocalDateTime"}
+                       {:class "java.time.LocalDate"
                         :candidate ".atTime"
                         :arglists ["LocalTime"]
                         :type :method
-                        :return-type "ChronoLocalDateTime"}
-                       {:class "LocalDate"
+                        :return-type "java.time.chrono.ChronoLocalDateTime"}
+                       {:class "java.time.LocalDate"
                         :candidate ".atTime"
                         :arglists ["int" "int" "int" "int"]
                         :type :method
-                        :return-type "LocalDateTime"}
-                       {:class "LocalDate"
+                        :return-type "java.time.LocalDateTime"}
+                       {:class "java.time.LocalDate"
                         :candidate ".atTime"
                         :arglists ["OffsetTime"]
                         :type :method
-                        :return-type "OffsetDateTime"}}
+                        :return-type "java.time.OffsetDateTime"}}
           (set (candidates ".atTime" *ns*))))
 
 ;; Constructors in java.lang
 (xr/check! (partial set/subset?
              #{{:candidate "String."
                 :arglists ["int[]" "int" "int"]
-                :return-type "String"
+                :return-type "java.lang.String"
                 :type :method}})
   (set (candidates "String" *ns*)))
 
@@ -124,11 +124,11 @@
 (xr/check! (partial set/subset?
              #{{:candidate "URL."
                 :arglists ["URL" "String"]
-                :return-type "URL"
+                :return-type "java.net.URL"
                 :type :method}
                {:candidate "URL."
                 :arglists ["String"]
-                :return-type "URL"
+                :return-type "java.net.URL"
                 :type :method}})
   (set (candidates "URL" *ns*)))
 
