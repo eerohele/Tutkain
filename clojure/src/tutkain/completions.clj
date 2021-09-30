@@ -273,20 +273,18 @@
   "Given an ns symbol, return all vars that are available in the context of
   that namespace."
   [ns]
-  (sequence
-    (comp
-      (map val)
-      (filter var?)
-      (map annotate-var))
+  (eduction
+    (map val)
+    (filter var?)
+    (map annotate-var)
     (ns-map ns)))
 
 (defn ns-public-var-candidates
   "Given an ns symbol, return all public var candidates in that namespace."
   [ns]
-  (sequence
-    (comp
-      (map val)
-      (map annotate-var))
+  (eduction
+    (map val)
+    (map annotate-var)
     (ns-publics ns)))
 
 (comment (ns-public-var-candidates 'clojure.set),)
@@ -295,19 +293,18 @@
   "Given an ns symbol, return all class candidates that are imported into that
   namespace, as well as the possible constructor candidates for each class."
   [ns]
-  (sequence
-    (comp
-      (map key)
-      (mapcat
-        (fn [class-name]
-          (when-some [class (-> class-name symbol resolve)]
-            (into [(annotate-class class-name)]
-              (map (fn [constructor]
-                     {:candidate (str class-name ".")
-                      :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
-                      :return-type (qualified-class-name class)
-                      :type :method})
-                (.getConstructors class)))))))
+  (eduction
+    (map key)
+    (mapcat
+      (fn [class-name]
+        (when-some [class (-> class-name symbol resolve)]
+          (into [(annotate-class class-name)]
+            (map (fn [constructor]
+                   {:candidate (str class-name ".")
+                    :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
+                    :return-type (qualified-class-name class)
+                    :type :method})
+              (.getConstructors class))))))
     (ns-imports ns)))
 
 (comment (ns-class-candidates 'clojure.main),)
