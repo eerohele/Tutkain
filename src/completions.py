@@ -9,14 +9,14 @@ from ..api import edn
 KINDS = {
     "function": sublime.KIND_FUNCTION,
     "var": sublime.KIND_VARIABLE,
-    "macro": (sublime.KIND_ID_FUNCTION, "m", "macro"),
-    "multimethod": (sublime.KIND_ID_FUNCTION, "u", "multimethod"),
+    "macro": (sublime.KIND_ID_FUNCTION, "m", "Macro"),
+    "multimethod": (sublime.KIND_ID_FUNCTION, "u", "Multimethod"),
     "namespace": sublime.KIND_NAMESPACE,
     "field": sublime.KIND_VARIABLE,
     "class": sublime.KIND_TYPE,
-    "special-form": (sublime.KIND_ID_FUNCTION, "s", "special form"),
-    "method": sublime.KIND_FUNCTION,
-    "static-method": sublime.KIND_FUNCTION,
+    "special-form": (sublime.KIND_ID_FUNCTION, "s", "Special form"),
+    "method": (sublime.KIND_ID_FUNCTION, "e", "Instance method"),
+    "static-method": (sublime.KIND_ID_FUNCTION, "c", "Static method"),
     "keyword": sublime.KIND_KEYWORD,
     "protocol": sublime.KIND_TYPE
 }
