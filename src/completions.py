@@ -15,7 +15,7 @@ KINDS = {
     "field": sublime.KIND_VARIABLE,
     "class": sublime.KIND_TYPE,
     "special-form": (sublime.KIND_ID_FUNCTION, "s", "Special form"),
-    "method": (sublime.KIND_ID_FUNCTION, "e", "Instance method"),
+    "method": (sublime.KIND_ID_FUNCTION, "i", "Instance method"),
     "static-method": (sublime.KIND_ID_FUNCTION, "c", "Static method"),
     "keyword": sublime.KIND_KEYWORD,
     "protocol": sublime.KIND_TYPE
