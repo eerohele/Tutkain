@@ -64,7 +64,8 @@
 
 (assert (not-any? #(.contains (:candidate %) "$") (candidates "java." *ns*)))
 
-(assert (set/subset? #{{:candidate "java.time.LocalDate/parse"
+(assert (set/subset? #{{:class "LocalDate"
+                        :candidate "java.time.LocalDate/parse"
                         :type :static-method
                         :arglists ["CharSequence"]
                         :return-type "LocalDate"}

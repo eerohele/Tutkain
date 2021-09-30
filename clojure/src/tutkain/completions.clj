@@ -136,7 +136,8 @@
   (eduction
     (filter static?)
     (map (fn [member]
-           {:candidate (.getName member)
+           {:class (.getSimpleName class)
+            :candidate (.getName member)
             :type :static-method
             :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
             :return-type (-> member .getReturnType .getSimpleName)}))

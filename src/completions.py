@@ -25,7 +25,12 @@ KINDS = {
 def completion_item(item):
     details = ""
 
-    if edn.Keyword("doc") in item:
+    if klass := item.get(edn.Keyword("class")):
+        details = f"on <code>{klass}</code>"
+
+        if return_type := item.get(edn.Keyword("return-type")):
+            details += f", returns <code>{return_type}</code>"
+    elif edn.Keyword("doc") in item:
         d = {}
 
         for k, v in item.items():
@@ -38,16 +43,12 @@ def completion_item(item):
     type = item.get(edn.Keyword("type"))
 
     arglists = item.get(edn.Keyword("arglists"), [])
+    annotation = ""
 
-    if type == edn.Keyword("method") and (klass := item.get(edn.Keyword("class"))):
-        annotation = klass + " · (" + ", ".join(arglists) + ")"
-    elif type in {edn.Keyword("method"), edn.Keyword("static-method")}:
+    if type in {edn.Keyword("method"), edn.Keyword("static-method")}:
         annotation = "(" + ", ".join(arglists) + ")"
     else:
-        annotation = " ".join(arglists)
-
-    if return_type := item.get(edn.Keyword("return-type"), ""):
-        annotation += " → " + return_type
+        annotation += " ".join(arglists)
 
     kind = KINDS.get(type.name, sublime.KIND_AMBIGUOUS)
 
