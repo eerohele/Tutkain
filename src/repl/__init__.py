@@ -250,7 +250,7 @@ class JVMClient(Client):
             ]
         })
 
-        self.write_line("""(println "Clojure" (clojure-version))""")
+        self.write_line("""(tutkain/eval (println "Clojure" (clojure-version)))""")
         self.printq.put(edn.read_line(self.buffer))
 
         log.debug({"event": "client/handshake", "data": self.buffer.readline()})
