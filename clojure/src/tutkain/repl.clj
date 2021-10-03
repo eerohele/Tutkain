@@ -4,7 +4,8 @@
    [tutkain.backchannel :as backchannel]
    [tutkain.format :as format])
   (:import
-   (java.io File)))
+   (java.io File)
+   (java.util Date)))
 
 (def ^:dynamic ^:experimental *print*
   "A function you can use as the :print arg of clojure.main/repl."
@@ -13,6 +14,24 @@
 (def ^:dynamic ^:experimental *caught*
   "A function you can use as the :caught arg of clojure.main/repl."
   main/repl-caught)
+
+(defonce ^{:doc "An atom containing your REPL evaluation history. Persists across connections."} history
+  (atom []))
+
+(defn ^:private add-history-entry
+  [max-history entry]
+  (swap! history
+    (fn [h v]
+      (if (>= (count h) max-history)
+        (conj (subvec h 1) v)
+        (conj h v)))
+    (assoc entry :inst (Date.))))
+
+(defn reval
+  []
+  (let [form (-> @history peek :form read-string)]
+    (when (not= form '(tutkain.repl/reval))
+      (eval form))))
 
 (defn repl
   "Tutkain's main read-eval-print loop.
@@ -28,7 +47,7 @@
     to ensure useful exception stack traces"
   ([]
    (repl {}))
-  ([opts]
+  ([{:keys [max-history] :or {max-history 100} :as opts}]
    (let [EOF (Object.)
          lock (Object.)
          out *out*
@@ -62,7 +81,7 @@
                (when
                  (try
                    (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
-                         file (backchannel/eval-context :file)]
+                         file (:file @backchannel/eval-context)]
                      (binding [*file* (or file "NO_SOURCE_PATH")
                                *source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")]
                        (try
@@ -81,18 +100,22 @@
                                  (set! *3 *2)
                                  (set! *2 *1)
                                  (set! *1 ret)
-                                 (out-fn {:tag :ret
-                                          :val (format/pp-str ret)
-                                          :ns (str (.name *ns*))
-                                          :ms ms
-                                          :form s})
+                                 (let [message {:tag :ret
+                                                :val (format/pp-str ret)
+                                                :ns (str (.name *ns*))
+                                                :ms ms
+                                                :form s}]
+                                   (future (add-history-entry max-history (merge message @backchannel/eval-context)))
+                                   (out-fn message))
                                  true))))
                          (catch Throwable ex
                            (set! *e ex)
-                           (out-fn {:tag :err
-                                    :val (format/Throwable->str ex)
-                                    :ns (str (.name *ns*))
-                                    :form s})
+                           (let [message {:tag :err
+                                          :val (format/Throwable->str ex)
+                                          :ns (str (.name *ns*))
+                                          :form s}]
+                             (future (add-history-entry max-history (merge message @backchannel/eval-context)))
+                             (out-fn message))
                            true))))
                    (catch Throwable ex
                      (set! *e ex)

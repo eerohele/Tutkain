@@ -55,8 +55,8 @@
     (catch FileNotFoundException ex
       (respond-to message {:filename filename :result :fail :reason :not-found :ex (Throwable->map ex)}))))
 
-(def ^:private eval-ctx
-  (atom {:file nil}))
+(def eval-context
+  (atom {:file nil :line 0 :column 0}))
 
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn set-column!
@@ -68,17 +68,13 @@
   [{:keys [in file line column] :or {line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (let [new-context (swap! eval-ctx assoc :file file)]
+  (let [new-context (swap! eval-context assoc :file file :line line :column column)]
     (respond-to message new-context)))
 
 (defmethod handle :interrupt
   [{:keys [repl-thread]}]
   (assert repl-thread)
   (.interrupt repl-thread))
-
-(defn eval-context
-  [k]
-  (get @eval-ctx k))
 
 (def ^:private thread-counter
   (AtomicInteger.))
