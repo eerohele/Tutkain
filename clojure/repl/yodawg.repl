@@ -91,8 +91,17 @@
 (rrecv)
 (xr/check! ::ret) ;; InterruptedException
 
-(rsend :repl/quit)
+(rsend '(inc 1))
+(def ret (select-keys (rrecv) [:tag :val :ns :form]))
+;; Evaluating lists whose head is tutkain/eval don't affect *1 etc.
+(rsend '(tutkain/eval (in-ns 'tutkain.repl)))
+(rrecv)
+(xr/check! ::ret)
+(rsend '*1)
+(select-keys (rrecv) [:tag :val :ns :form])
+(xr/check! (partial = (assoc ret :form "*1")))
 
+(rsend :repl/quit)
 
 (try
   (socket/client

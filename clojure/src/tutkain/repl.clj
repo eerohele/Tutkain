@@ -67,19 +67,26 @@
                                *source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")]
                        (try
                          (when-not (identical? form EOF)
-                           (let [start (System/nanoTime)
-                                 ret (eval form)
-                                 ms (quot (- (System/nanoTime) start) 1000000)]
-                             (when-not (= :repl/quit ret)
-                               (set! *3 *2)
-                               (set! *2 *1)
-                               (set! *1 ret)
+                           (if (and (list? form) (= 'tutkain/eval (first form)))
+                             (do
                                (out-fn {:tag :ret
-                                        :val (format/pp-str ret)
+                                        :val (pr-str (apply eval (rest form)))
                                         :ns (str (.name *ns*))
-                                        :ms ms
                                         :form s})
-                               true)))
+                               true)
+                             (let [start (System/nanoTime)
+                                   ret (eval form)
+                                   ms (quot (- (System/nanoTime) start) 1000000)]
+                               (when-not (= :repl/quit ret)
+                                 (set! *3 *2)
+                                 (set! *2 *1)
+                                 (set! *1 ret)
+                                 (out-fn {:tag :ret
+                                          :val (format/pp-str ret)
+                                          :ns (str (.name *ns*))
+                                          :ms ms
+                                          :form s})
+                                 true))))
                          (catch Throwable ex
                            (set! *e ex)
                            (out-fn {:tag :err
