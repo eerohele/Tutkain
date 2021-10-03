@@ -20,7 +20,11 @@
   (when (some? url)
     (let [new-url (if (= "jrt" (.getProtocol url))
                     (str "jar:file:" (System/getProperty "java.home") "/lib/src.zip!" (.getFile url))
-                    (.replace (.toString url) ".jar!" "-sources.jar!"))]
+                    (->
+                      (.toString url)
+                       ;; Strip nested class part from filename
+                      (.replaceAll "\\$.+?\\." "\\.")
+                      (.replace ".jar!" "-sources.jar!")))]
       (URL. (.replace new-url ".class" ".java")))))
 
 (defn resolve-stacktrace
