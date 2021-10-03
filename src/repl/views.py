@@ -29,7 +29,7 @@ def active_repl_view(window: Window) -> Union[View, None]:
             return view
 
 
-def configure(view, dialect, client):
+def configure(view, dialect, host, port):
     window = view.window()
     num_groups = window.num_groups()
     target_group = num_groups - 1
@@ -41,7 +41,7 @@ def configure(view, dialect, client):
 
     view_count = len(window.views_in_group(target_group))
 
-    view.set_name(f"REPL · {dialects.name(dialect)} · {client.host}:{client.port}")
+    view.set_name(f"REPL · {dialects.name(dialect)} · {host}:{port}")
     view.settings().set("highlight_line", False)
     view.settings().set("line_numbers", False)
     view.settings().set("gutter", False)
@@ -55,8 +55,8 @@ def configure(view, dialect, client):
     view.settings().set("detect_indentation", False)
     view.settings().set("auto_complete", False)
     view.settings().set("tutkain_repl_view_dialect", dialect.name or "clj")
-    view.settings().set("tutkain_repl_host", client.host)
-    view.settings().set("tutkain_repl_port", client.port)
+    view.settings().set("tutkain_repl_host", host)
+    view.settings().set("tutkain_repl_port", port)
     view.settings().set("scroll_past_end", 0.5)
     view.settings().set("result_file_regex", r"""\s*\[.+?\"(.+?)" (\d+)\]""")
     view.set_read_only(True)
