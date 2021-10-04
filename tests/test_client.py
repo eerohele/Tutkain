@@ -62,7 +62,7 @@ class TestJVMClient(TestCase):
                     self.assertTrue(response.get(edn.Keyword("filename")) in filenames)
 
                 self.assertEquals(
-                    """(println "Clojure" (clojure-version))""",
+                    """(tutkain/eval (println "Clojure" (clojure-version)))""",
                     server.recv().rstrip()
                 )
 
