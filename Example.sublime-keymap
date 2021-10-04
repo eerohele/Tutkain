@@ -304,6 +304,16 @@
         "command": "tutkain_apropos"
     },
 
+    // Open a user interface for exploring the stack trace of the most recent
+    // exception (*e).
+    //
+    // Currently only useful for exceptions thrown at the REPL. Cannot be used
+    // with exceptions arising e.g. from running Tutkain: Run Test.
+    {
+        "keys": ["ctrl+c", "ctrl+0"],
+        "command": "explore_stack_trace"
+    },
+
     // Paredit commands
     //
     // Documentation TBD.
