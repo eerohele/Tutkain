@@ -14,6 +14,7 @@ class TestTest(ViewTestCase):
         current = partial(test.current, self.view)
 
         self.assertAlwaysYields("(deftest foo)", "foo", current)
+        self.assertAlwaysYields("(deftest foo ())", "foo", current)
         self.assertAlwaysYields("(deftest ^:foo bar)", "bar", current)
 
         self.set_view_content("(doseq (deftest ^:foo bar))")
