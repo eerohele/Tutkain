@@ -311,7 +311,7 @@
     // with exceptions arising e.g. from running Tutkain: Run Test.
     {
         "keys": ["ctrl+c", "ctrl+0"],
-        "command": "explore_stack_trace"
+        "command": "tutkain_explore_stack_trace"
     },
 
     // Paredit commands
