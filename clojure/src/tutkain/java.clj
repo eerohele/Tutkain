@@ -1,7 +1,8 @@
 (ns tutkain.java
   (:require
    [clojure.java.io :as io]
-   [clojure.repl :as repl])
+   [clojure.repl :as repl]
+   [tutkain.backchannel :refer [handle most-recent-exception respond-to]])
   (:import
    (java.net URL)))
 
@@ -64,3 +65,7 @@
                 ;;  :line: -2}
                 :line (max 0 (.getLineNumber el))}))
         (.getStackTrace ex)))))
+
+(defmethod handle :resolve-stacktrace
+  [message]
+  (respond-to message {:stacktrace (resolve-stacktrace @most-recent-exception)}))

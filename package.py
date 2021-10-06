@@ -1290,7 +1290,7 @@ class TutkainExploreStackTraceCommand(TextCommand):
             info.goto(self.view.window(), location, flags=sublime.ENCODED_POSITION | sublime.TRANSIENT)
 
     def handler(self, response):
-        if elements := edn.read(response.get(edn.Keyword("val"))):
+        if elements := response.get(edn.Keyword("stacktrace")):
             items = []
 
             for element in elements:
@@ -1313,7 +1313,6 @@ class TutkainExploreStackTraceCommand(TextCommand):
 
     def run(self, _):
         if client := state.client(self.view.window(), edn.Keyword("clj")):
-            client.eval(
-                "(tutkain/eval ((requiring-resolve 'tutkain.java/resolve-stacktrace) *e))",
-                handler=self.handler
-            )
+            client.backchannel.send({
+                "op": edn.Keyword("resolve-stacktrace")
+            }, self.handler)

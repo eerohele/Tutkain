@@ -10,6 +10,8 @@
    (java.util.concurrent.atomic AtomicInteger)
    (java.util Base64)))
 
+(defonce most-recent-exception (atom nil))
+
 (defn respond-to
   "Respond to a backchannel op message."
   [{:keys [id out-fn]} response]
