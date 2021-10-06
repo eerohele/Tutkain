@@ -1281,7 +1281,7 @@ class TutkainDirCommand(TextCommand):
             self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
 
 
-class TutkainExploreStackTrace(TextCommand):
+class TutkainExploreStackTraceCommand(TextCommand):
     def goto(self, elements, index):
         if index == -1:
             self.view.window().focus_view(self.view)
