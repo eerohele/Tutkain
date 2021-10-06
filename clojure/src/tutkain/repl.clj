@@ -69,50 +69,48 @@
                (assoc opts
                  :xform-in #(assoc % :in in :repl-thread repl-thread)
                  :xform-out #(dissoc % :in)))]
-         (binding [*out* (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
-                   *err* (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)]
-           (try
-             (out-fn {:greeting (str "Clojure " (clojure-version) "\n")
-                      :host (-> backchannel .getInetAddress .getHostName)
-                      :port (-> backchannel .getLocalPort)})
-             (loop []
-               (when
-                 (try
-                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
-                         file (:file @backchannel/eval-context)]
-                     (binding [*file* (or file "NO_SOURCE_PATH")
-                               *source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")]
-                       (try
-                         (when-not (identical? form EOF)
-                           (if (and (list? form) (= 'tutkain/eval (first form)))
-                             (do
-                               (apply eval (rest form))
-                               true)
-                             (let [ret (eval form)]
-                               (when-not (= :repl/quit ret)
-                                 (set! *3 *2)
-                                 (set! *2 *1)
-                                 (set! *1 ret)
-                                 (out-fn ret)
-                                 (future (add-history-entry max-history {:form form :ret ret}))
-                                 true))))
-                         (catch Throwable ex
-                           (set! *e ex)
-                           (reset! backchannel/most-recent-exception ex)
-                           (send-over-backchannel {:tag :err
-                                                   :val (format/Throwable->str ex)
-                                                   :ns (str (.name *ns*))
-                                                   :form s})
-                           true))))
-                   (catch Throwable ex
-                     (set! *e ex)
-                     (reset! backchannel/most-recent-exception ex)
-                     (send-over-backchannel
-                       {:tag :ret
-                        :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
-                        :ns (str (.name *ns*))
-                        :exception true})
-                     true))
-                 (recur)))
-             (finally
-               (.close backchannel)))))))))
+         (try
+           (out-fn {:greeting (str "Clojure " (clojure-version) "\n")
+                    :host (-> backchannel .getInetAddress .getHostName)
+                    :port (-> backchannel .getLocalPort)})
+           (loop []
+             (when
+               (try
+                 (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
+                       file (:file @backchannel/eval-context)]
+                   (binding [*file* (or file "NO_SOURCE_PATH")
+                             *source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")]
+                     (try
+                       (when-not (identical? form EOF)
+                         (if (and (list? form) (= 'tutkain/eval (first form)))
+                           (do
+                             (apply eval (rest form))
+                             true)
+                           (let [ret (eval form)]
+                             (when-not (= :repl/quit ret)
+                               (set! *3 *2)
+                               (set! *2 *1)
+                               (set! *1 ret)
+                               (out-fn ret)
+                               (future (add-history-entry max-history {:form form :ret ret}))
+                               true))))
+                       (catch Throwable ex
+                         (set! *e ex)
+                         (reset! backchannel/most-recent-exception ex)
+                         (send-over-backchannel {:tag :err
+                                                 :val (format/Throwable->str ex)
+                                                 :ns (str (.name *ns*))
+                                                 :form s})
+                         true))))
+                 (catch Throwable ex
+                   (set! *e ex)
+                   (reset! backchannel/most-recent-exception ex)
+                   (send-over-backchannel
+                     {:tag :ret
+                      :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
+                      :ns (str (.name *ns*))
+                      :exception true})
+                   true))
+               (recur)))
+           (finally
+             (.close backchannel))))))))
