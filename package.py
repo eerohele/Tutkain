@@ -426,6 +426,7 @@ class TutkainEvaluateCommand(TextCommand):
                     view.run_command("insert_snippet", {"contents": snippet})
 
                 view.settings().set("tutkain_repl_input_panel", True)
+                view.settings().set("auto_complete", True)
                 view.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
             elif code:
                 variables = {}
@@ -1336,6 +1337,7 @@ class TutkainPromptCommand(WindowCommand):
         )
 
         view.settings().set("tutkain_repl_input_panel", True)
+        view.settings().set("auto_complete", True)
         view.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
 
     def run(self):
