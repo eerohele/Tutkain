@@ -6,7 +6,6 @@
    (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
    (java.io BufferedReader BufferedWriter ByteArrayInputStream InputStreamReader OutputStreamWriter FileNotFoundException)
    (java.lang.reflect Field)
-   (java.net InetSocketAddress)
    (java.net InetAddress ServerSocket)
    (java.util.concurrent.atomic AtomicInteger)
    (java.util Base64)))
