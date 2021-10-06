@@ -71,7 +71,7 @@ java.
 
 (defmacro break []
   `(clojure.main/repl
-     :init #(print "<<<DEBUG>>>")
+     :init #(println "<<<DEBUG>>>")
      :need-prompt (constantly false)
      :prompt (constantly "")
      :read readr
