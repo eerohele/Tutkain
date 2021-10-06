@@ -4,10 +4,10 @@
    [tutkain.format :as format])
   (:import
    (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
-   (java.io ByteArrayInputStream InputStreamReader FileNotFoundException)
+   (java.io BufferedReader BufferedWriter ByteArrayInputStream InputStreamReader OutputStreamWriter FileNotFoundException)
    (java.lang.reflect Field)
    (java.net InetSocketAddress)
-   (java.nio.channels Channels ServerSocketChannel)
+   (java.net InetAddress ServerSocket)
    (java.util.concurrent.atomic AtomicInteger)
    (java.util Base64)))
 
@@ -96,47 +96,46 @@
   Other options are subject to change."
   [{:keys [port bind-address xform-in xform-out]
     :or {port 0 bind-address "localhost" xform-in identity xform-out identity}}]
-  (let [socket (ServerSocketChannel/open)
-        address (InetSocketAddress. ^String bind-address port)
-        lock (Object.)]
-    (.bind socket address)
-    (let [thread (Thread.
-                   (bound-fn []
-                     (try
-                       (let [socket-channel (.accept socket)
-                             in (LineNumberingPushbackReader. (Channels/newReader socket-channel "UTF-8"))
-                             out (Channels/newWriter socket-channel "UTF-8")
-                             EOF (Object.)
-                             out-fn (fn [message]
-                                      (locking lock
-                                        (.write out (pr-str (dissoc (xform-out message) :out-fn)))
-                                        (.write out "\n")
-                                        (.flush out)))]
-                         (loop []
-                           (when (.isOpen socket)
-                             (when-some [message (try
-                                                   (edn/read {:eof EOF} in)
-                                                   ;; If we can't read from the socket, exit the loop.
-                                                   (catch java.net.SocketException _)
-                                                   ;; If the remote host closes the connection, exit the loop.
-                                                   (catch java.io.IOException _))]
-                               (when-not (identical? EOF message)
-                                 (let [recur? (case (:op message)
-                                                :quit false
-                                                (let [message (assoc (xform-in message) :out-fn out-fn)]
-                                                  (try
-                                                    (handle message)
-                                                    true
-                                                    (catch Throwable ex
-                                                      (respond-to message {:tag :ret
-                                                                           :exception true
-                                                                           :val (format/pp-str (Throwable->map ex))})
-                                                      true))))]
-                                   (when recur? (recur))))))))
-                       (finally
-                         (.close socket)))))]
-      (doto thread
-        (.setName (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter)))
-        (.setDaemon true)
-        (.start))
-      socket)))
+  (let [address (InetAddress/getByName ^String bind-address)
+        socket (ServerSocket. port 0 address)
+        lock (Object.)
+        thread (Thread.
+                 (bound-fn []
+                   (try
+                     (let [conn (.accept socket)
+                           in (-> conn .getInputStream InputStreamReader. BufferedReader. LineNumberingPushbackReader.)
+                           out (-> conn .getOutputStream OutputStreamWriter. BufferedWriter.)
+                           EOF (Object.)
+                           out-fn (fn [message]
+                                    (locking lock
+                                      (.write out (pr-str (dissoc (xform-out message) :out-fn)))
+                                      (.write out "\n")
+                                      (.flush out)))]
+                       (loop []
+                         (when-not (.isClosed socket)
+                           (when-some [message (try
+                                                 (edn/read {:eof EOF} in)
+                                                 ;; If we can't read from the socket, exit the loop.
+                                                 (catch java.net.SocketException _)
+                                                 ;; If the remote host closes the connection, exit the loop.
+                                                 (catch java.io.IOException _))]
+                             (when-not (identical? EOF message)
+                               (let [recur? (case (:op message)
+                                              :quit false
+                                              (let [message (assoc (xform-in message) :out-fn out-fn)]
+                                                (try
+                                                  (handle message)
+                                                  true
+                                                  (catch Throwable ex
+                                                    (respond-to message {:tag :ret
+                                                                         :exception true
+                                                                         :val (format/pp-str (Throwable->map ex))})
+                                                    true))))]
+                                 (when recur? (recur))))))))
+                     (finally
+                       (.close socket)))))]
+    (doto thread
+      (.setName (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter)))
+      (.setDaemon true)
+      (.start))
+    socket))

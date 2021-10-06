@@ -72,10 +72,9 @@
                                :xform-in #(assoc % :in in :repl-thread repl-thread)
                                :xform-out #(dissoc % :in)))]
            (try
-             (let [address (.getLocalAddress backchannel)]
-               (out-fn {:tag :ret
-                        :val (pr-str {:host (.getHostName address)
-                                      :port (.getPort address)})}))
+             (out-fn {:tag :ret
+                      :val (pr-str {:host (-> backchannel .getInetAddress .getHostName)
+                                    :port (-> backchannel .getLocalPort)})})
              (add-tap tapfn)
              (loop []
                (when
