@@ -757,8 +757,7 @@ class TutkainEventListener(EventListener):
             state.set_repl_view(view, edn.Keyword(dialect))
         elif sublime.active_window().active_panel() is None and settings().get("auto_switch_namespace", True):
             if (dialect := dialects.for_view(view)) and (client := state.client(view.window(), dialect)):
-                default_ns = "cljs.user" if dialect == edn.Keyword("cljs") else "user"
-                ns = namespace.name(view) or default_ns
+                ns = namespace.name(view) or namespace.default(dialect)
                 client.switch_namespace(ns)
 
     def on_hover(self, view, point, hover_zone):
@@ -1345,3 +1344,21 @@ class TutkainPromptCommand(WindowCommand):
             self.prompt(client)
         else:
             self.window.status_message("ERR: Not connected to a REPL.")
+
+
+class TutkainToggleAutoSwitchNamespaceCommand(TextCommand):
+    def run(self, _):
+        current = settings().get("auto_switch_namespace")
+        settings().set("auto_switch_namespace", not current)
+
+        if settings().get("auto_switch_namespace"):
+            self.view.window().status_message(f"[⏽] [Tutkain] Automatic namespace switching enabled.")
+
+            if (sel := self.view.sel()) and (
+                dialect := dialects.for_point(self.view, sel[0].begin())
+            ) and (
+                client := state.client(self.view.window(), dialect)
+            ) and (ns := namespace.name(self.view) or namespace.default(dialect)):
+                client.switch_namespace(ns)
+        else:
+            self.view.window().status_message(f"[⭘] [Tutkain] Automatic namespace switching disabled.")

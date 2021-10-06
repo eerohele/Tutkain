@@ -1,4 +1,5 @@
 from . import sexp
+from ..api import edn
 
 
 def find_regions(view):
@@ -16,3 +17,7 @@ def forms(view):
     for region in regions:
         if outermost := sexp.outermost(view, region.begin()):
             yield outermost.extent()
+
+
+def default(dialect):
+    return "cljs.user" if dialect == edn.Keyword("cljs") else "user"
