@@ -5,8 +5,19 @@ from concurrent import futures
 from Tutkain.api import edn
 
 
+def send_text(buffer, message):
+    buffer.write(message)
+    buffer.write("\n")
+    buffer.flush()
+
+
+def send_edn(buffer, message):
+    edn.write(buffer, message)
+
+
 class Server(object):
-    def __init__(self, port=0, greeting=lambda _: None, timeout=1):
+    def __init__(self, send_fn, port=0, greeting=lambda _: None, timeout=1):
+        self.send_fn = send_fn
         self.conn = None
         self.executor = futures.ThreadPoolExecutor()
         self.greeting = greeting
@@ -22,7 +33,7 @@ class Server(object):
         return self.recvq.get(timeout=timeout)
 
     def send(self, message):
-        edn.write(self.buffer(), message)
+        self.send_fn(self.buffer(), message)
 
     def wait(self):
         self.conn, _ = self.socket.accept()

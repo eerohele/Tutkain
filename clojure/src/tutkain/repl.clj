@@ -1,6 +1,7 @@
 (ns tutkain.repl
   (:require
    [clojure.main :as main]
+   [clojure.pprint :as pprint]
    [tutkain.backchannel :as backchannel]
    [tutkain.format :as format])
   (:import
@@ -29,7 +30,7 @@
 
 (defn reval
   []
-  (let [form (-> @history peek :form read-string)]
+  (let [form (-> @history peek :form)]
     (when (not= form '(tutkain.repl/reval))
       (eval form))))
 
@@ -53,29 +54,27 @@
          out *out*
          in *in*
          out-fn (fn [message]
-                  (binding [*out* out
-                            *flush-on-newline* true
-                            *print-readably* true]
+                  (binding [*print-readably* true
+                            pprint/*print-right-margin* 100]
                     (locking lock
-                      (prn message))))
-         tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})
+                      (pprint/pprint message out)
+                      (.flush out))))
          repl-thread (Thread/currentThread)]
      (main/with-bindings
        (in-ns 'user)
        (apply require main/repl-requires)
-       (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
-                 *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
-                 *print* #(out-fn {:tag :ret :val (format/pp-str %)})
-                 *caught* #(out-fn {:tag :err :val (format/Throwable->str %)})]
-         (let [backchannel (backchannel/open
-                             (assoc opts
-                               :xform-in #(assoc % :in in :repl-thread repl-thread)
-                               :xform-out #(dissoc % :in)))]
+       (let [{backchannel :socket
+              send-over-backchannel :send-over-backchannel}
+             (backchannel/open
+               (assoc opts
+                 :xform-in #(assoc % :in in :repl-thread repl-thread)
+                 :xform-out #(dissoc % :in)))]
+         (binding [*out* (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
+                   *err* (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)]
            (try
-             (out-fn {:tag :ret
-                      :val (pr-str {:host (-> backchannel .getInetAddress .getHostName)
-                                    :port (-> backchannel .getLocalPort)})})
-             (add-tap tapfn)
+             (out-fn {:greeting (str "Clojure " (clojure-version) "\n")
+                      :host (-> backchannel .getInetAddress .getHostName)
+                      :port (-> backchannel .getLocalPort)})
              (loop []
                (when
                  (try
@@ -87,43 +86,33 @@
                          (when-not (identical? form EOF)
                            (if (and (list? form) (= 'tutkain/eval (first form)))
                              (do
-                               (out-fn {:tag :ret
-                                        :val (pr-str (apply eval (rest form)))
-                                        :ns (str (.name *ns*))
-                                        :form s})
+                               (apply eval (rest form))
                                true)
-                             (let [start (System/nanoTime)
-                                   ret (eval form)
-                                   ms (quot (- (System/nanoTime) start) 1000000)]
+                             (let [ret (eval form)]
                                (when-not (= :repl/quit ret)
                                  (set! *3 *2)
                                  (set! *2 *1)
                                  (set! *1 ret)
-                                 (let [message {:tag :ret
-                                                :val (format/pp-str ret)
-                                                :ns (str (.name *ns*))
-                                                :ms ms
-                                                :form s}]
-                                   (future (add-history-entry max-history (merge message @backchannel/eval-context)))
-                                   (out-fn message))
+                                 (out-fn ret)
+                                 (future (add-history-entry max-history {:form form :ret ret}))
                                  true))))
                          (catch Throwable ex
                            (set! *e ex)
-                           (let [message {:tag :err
-                                          :val (format/Throwable->str ex)
-                                          :ns (str (.name *ns*))
-                                          :form s}]
-                             (future (add-history-entry max-history (merge message @backchannel/eval-context)))
-                             (out-fn message))
+                           (reset! backchannel/most-recent-exception ex)
+                           (send-over-backchannel {:tag :err
+                                                   :val (format/Throwable->str ex)
+                                                   :ns (str (.name *ns*))
+                                                   :form s})
                            true))))
                    (catch Throwable ex
                      (set! *e ex)
-                     (out-fn {:tag :ret
-                              :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
-                              :ns (str (.name *ns*))
-                              :exception true})
+                     (reset! backchannel/most-recent-exception ex)
+                     (send-over-backchannel
+                       {:tag :ret
+                        :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
+                        :ns (str (.name *ns*))
+                        :exception true})
                      true))
                  (recur)))
              (finally
-               (.close backchannel)
-               (remove-tap tapfn)))))))))
+               (.close backchannel)))))))))

@@ -124,10 +124,7 @@ def evaluate(view, client, code, point=None, handler=None):
 
     file = view.file_name() or "NO_SOURCE_FILE"
 
-    client.printq.put({
-        edn.Keyword("tag"): edn.Keyword("ret"),
-        edn.Keyword("val"): format_form(client.namespace, code)
-    })
+    client.printq.put(format_form(client.namespace, code))
 
     client.eval(code, file, line, column, handler)
 
@@ -378,9 +375,9 @@ class TutkainEvaluateCommand(TextCommand):
         }, handler)
 
     def handler(self, region, client, response, inline_result):
-        if inline_result and edn.Keyword("val") in response:
+        if inline_result:
             inline.clear(self.view)
-            inline.show(self.view, region.end(), response[edn.Keyword("val")], inline_result)
+            inline.show(self.view, region.end(), response, inline_result)
         else:
             client.printq.put(response)
 

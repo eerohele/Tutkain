@@ -4,7 +4,7 @@ from Tutkain.api import edn
 from Tutkain.package import source_root, start_logging, stop_logging
 from Tutkain.src import repl
 
-from .mock import Server
+from .mock import Server, send_edn, send_text
 
 
 class TestJVMClient(TestCase):
@@ -21,7 +21,7 @@ class TestJVMClient(TestCase):
             buf.write("user=> ")
             buf.flush()
 
-        with Server(greeting=write_greeting) as server:
+        with Server(send_text, greeting=write_greeting) as server:
             client = repl.JVMClient(source_root(), server.host, server.port)
 
             server.executor.submit(client.connect)
@@ -45,15 +45,8 @@ class TestJVMClient(TestCase):
             server.send("#'tutkain.repl/repl")
             server.recv()
 
-
-            with Server() as backchannel:
-                server.send(
-                    edn.kwmap({
-                        "tag": edn.Keyword("ret"),
-                        "val": f"""{{:host "localhost", :port {backchannel.port}}}""",
-                    })
-                )
-
+            with Server(send_edn) as backchannel:
+                server.send(f"""{{:greeting "Clojure 1.11.0-alpha1" :host "localhost", :port {backchannel.port}}}""")
                 filenames = {"java.clj", "lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "query.clj", "analyzer.clj"}
 
                 for filename in filenames:
@@ -61,28 +54,7 @@ class TestJVMClient(TestCase):
                     self.assertEquals(edn.Keyword("load-base64"), response.get(edn.Keyword("op")))
                     self.assertTrue(response.get(edn.Keyword("filename")) in filenames)
 
-                self.assertEquals(
-                    """(tutkain/eval (println "Clojure" (clojure-version)))""",
-                    server.recv().rstrip()
-                )
-
-                server.send({
-                    edn.Keyword("tag"): edn.Keyword("out"),
-                    edn.Keyword("val"): "Clojure 1.11.0-alpha1"
-                })
-
-                server.send({
-                    edn.Keyword("tag"): edn.Keyword("ret"),
-                    edn.Keyword("val"): "nil",
-                    edn.Keyword("ns"): "user",
-                    edn.Keyword("ms"): 0,
-                    edn.Keyword("form"): """(println "Clojure" (clojure-version))"""
-                })
-
-                self.assertEquals({
-                    edn.Keyword("tag"): edn.Keyword("out"),
-                    edn.Keyword("val"): "Clojure 1.11.0-alpha1"
-                }, client.printq.get(timeout=1))
+                self.assertEquals("Clojure 1.11.0-alpha1", client.printq.get(timeout=1))
 
                 client.eval("(inc 1)")
 
@@ -108,18 +80,8 @@ class TestJVMClient(TestCase):
                 }))
 
                 self.assertEquals("(inc 1)\n", server.recv())
-
-                response = edn.kwmap({
-                    "tag": edn.Keyword("ret"),
-                    "val": "2",
-                    "ns": "user",
-                    "ms": 1,
-                    "form": "(inc 1)"
-                })
-
-                server.send(response)
-
-                self.assertEquals(response, client.printq.get(timeout=1))
+                server.send("2")
+                self.assertEquals("2\n", client.printq.get(timeout=1))
 
             client.halt()
             self.assertEquals(":repl/quit\n", server.recv())

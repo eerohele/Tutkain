@@ -6,6 +6,7 @@ import pathlib
 import posixpath
 import socket
 import types
+from threading import Lock
 
 from . import backchannel
 from ...api import edn
@@ -93,12 +94,13 @@ class Client(ABC):
         self.name = name
         self.sendq = queue.Queue()
         self.printq = queue.Queue()
-        self.handlers = {}
+        self.handler = None
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
         self.namespace = "user"
         self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
         self.backchannel_opts = backchannel_opts
         self.capabilities = set()
+        self.lock = Lock()
 
     def send_loop(self):
         """Start a loop that reads strings from `self.sendq` and sends them to
@@ -131,26 +133,20 @@ class Client(ABC):
         runtime this client is connected to to switch to that namespace."""
         pass
 
+    def set_handler(self, handler):
+        with self.lock:
+            self.handler = handler
+
     def handle(self, item):
-        if ns := item.get(edn.Keyword("ns")):
-            self.namespace = ns
-
-        form = item.get(edn.Keyword("form"))
-
-        if (form := item.get(edn.Keyword("form"))) and (handler := self.handlers.get(form)):
-            try:
-                handler.__call__(item)
-            finally:
-                self.handlers.pop(form, None)
-        else:
-            self.printq.put(item)
+        handler = self.handler or self.printq.put
+        handler(item)
 
     def recv_loop(self):
-        """Start a loop that reads EDN messages from a socket, then calls the
-        handler function associated with that message, if any. Otherwise
-        proxies the result to the print queue."""
+        """Start a loop that reads evaluation responses from a socket and puts
+        them in a print queue."""
         try:
-            while item := edn.read_line(self.buffer):
+            while response := self.socket.recv(8192):
+                item = response.decode("utf-8")
                 log.debug({"event": "client/recv", "item": item})
                 self.handle(item)
         except OSError as error:
@@ -206,7 +202,7 @@ class JVMClient(Client):
 
         backchannel_port = self.backchannel_opts.get("port", 0)
         backchannel_bind_address = self.backchannel_opts.get("bind_address", "localhost")
-        self.write_line(f"""(try (tutkain.repl/repl {{:port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))""")
+        self.write_line(f"""(try (tutkain.repl/repl {{:port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))""")
         line = self.buffer.readline()
 
         if not line.startswith('{'):
@@ -227,13 +223,9 @@ class JVMClient(Client):
         else:
             ret = edn.read(line)
 
-            if (host := ret.get(edn.Keyword("host"))):
-                port = ret.get(edn.Keyword("port"))
+            if (host := ret.get(edn.Keyword("host"))) and (port := ret.get(edn.Keyword("port"))):
                 self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
-            elif (val := edn.read(ret.get(edn.Keyword("val")))) and isinstance(val, dict):
-                host = val.get(edn.Keyword("host"))
-                port = val.get(edn.Keyword("port"))
-                self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
+                self.printq.put(ret.get(edn.Keyword("greeting")))
             else:
                 self.printq.put(ret)
 
@@ -250,10 +242,6 @@ class JVMClient(Client):
             ]
         })
 
-        self.write_line("""(tutkain/eval (println "Clojure" (clojure-version)))""")
-        self.printq.put(edn.read_line(self.buffer))
-
-        log.debug({"event": "client/handshake", "data": self.buffer.readline()})
         self.start_workers()
 
     def __init__(self, source_root, host, port, backchannel_opts={}):
@@ -267,12 +255,11 @@ class JVMClient(Client):
         return self
 
     def switch_namespace(self, ns):
-        code = f"(tutkain/eval (or (some->> '{ns} find-ns ns-name in-ns .name) (ns {ns})))"
-        self.handlers[code] = lambda _: None
-        self.sendq.put(code)
+        self.namespace = ns
+        self.sendq.put(f"(tutkain/eval (or (some->> '{ns} find-ns ns-name in-ns .name) (ns {ns})))")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.handlers[code] = handler or self.printq.put
+        self.set_handler(handler)
 
         self.backchannel.send({
             "op": edn.Keyword("set-eval-context"),
@@ -318,14 +305,14 @@ class JSClient(Client):
             self.buffer.readline()
 
         backchannel_port = self.backchannel_opts.get("port", 0)
-        self.write_line(f"""(try (tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}}) (catch Exception ex {{:tag :err :val (.toString ex)}}))""")
+        self.write_line(f"""(tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}})""")
 
-        line = self.buffer.readline()
-        ret = edn.read(line)
-        val = edn.read(ret.get(edn.Keyword("val")))
-        host = val.get(edn.Keyword("host"))
-        port = val.get(edn.Keyword("port"))
+        ret = edn.read_line(self.buffer)
+        host = ret.get(edn.Keyword("host"))
+        port = ret.get(edn.Keyword("port"))
         self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
+        greeting = ret.get(edn.Keyword("greeting"))
+        self.printq.put(greeting)
 
         self.load_modules({
             "lookup.clj": [],
@@ -334,41 +321,15 @@ class JSClient(Client):
             "shadow.clj": [],
         })
 
-        self.write_line("""(println "ClojureScript" *clojurescript-version*)""")
-        line = self.buffer.readline()
-
-        if not line.startswith('{'):
-            self.printq.put(edn.kwmap({
-                "tag": edn.Keyword("err"),
-                "val": "Couldn't connect to ClojureScript REPL. Here's why:\n"
-            }))
-
-            self.printq.put(edn.kwmap({
-                "tag": edn.Keyword("err"),
-                "val": line + "\n"
-            }))
-
-            self.printq.put(edn.kwmap({
-                "tag": edn.Keyword("err"),
-                "val": "Is the shadow-cljs watch running for the build ID you chose?\n"
-            }))
-        else:
-            ret = edn.read(line)
-            self.handle(ret)
-
-            if ret.get(edn.Keyword("tag")) != edn.Keyword("err"):
-                self.handle(edn.read_line(self.buffer))
-                log.debug({"event": "client/handshake", "data": self.buffer.readline()})
-
         self.start_workers()
 
     def switch_namespace(self, ns):
-        code = f"(in-ns '{ns})"
-        self.handlers[code] = lambda _: None
-        self.sendq.put(code)
+        self.namespace = ns
+        self.set_handler(lambda _: None)
+        self.sendq.put(f"(in-ns '{ns})")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.handlers[code] = handler or self.printq.put
+        self.set_handler(handler)
         self.sendq.put(code)
 
 
@@ -377,11 +338,9 @@ class BabashkaClient(Client):
         super().__init__(source_root, host, port, "tutkain.bb.client")
 
     def handshake(self):
-        self.write_line("""((requiring-resolve 'clojure.core.server/io-prepl))""")
+        self.write_line("""(clojure.main/repl :init #() :prompt (constantly "") :need-prompt (constantly false))""")
         self.write_line("""(println "Babashka" (System/getProperty "babashka.version"))""")
-
-        self.printq.put(edn.read_line(self.buffer))
-
+        self.printq.put(self.buffer.readline())
         self.buffer.readline()
         self.start_workers()
 
@@ -391,10 +350,10 @@ class BabashkaClient(Client):
         return self
 
     def switch_namespace(self, ns):
-        code = f"(in-ns '{ns})"
-        self.handlers[code] = lambda _: None
-        self.sendq.put(code)
+        self.namespace = ns
+        self.set_handler(lambda _: None)
+        self.sendq.put(f"(in-ns '{ns})")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.handlers[code] = handler or self.printq.put
+        self.set_handler(handler)
         self.sendq.put(code)

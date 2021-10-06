@@ -1,68 +1,45 @@
 (ns tutkain.shadow
   (:require
    [clojure.core.async :as async]
+   [clojure.pprint :as pprint]
+   [cljs.util :refer [*clojurescript-version*]]
    [shadow.cljs.devtools.api :as api]
    [shadow.cljs.devtools.server.repl-impl :as repl-impl]
    [shadow.cljs.devtools.server.supervisor :as supervisor]
-   [tutkain.format :refer [pp-str Throwable->str]]
+   [tutkain.format :refer [Throwable->str]]
    [tutkain.backchannel :as backchannel])
   (:import
    (clojure.lang ExceptionInfo)))
 
-(defn pp-ret
-  "Pretty-print a ClojureScript evaluation result."
-  ;; ClojureScript evaluation results are strings. That means we must first try
-  ;; to read them. If the Clojure reader can't read the result, we fall back to
-  ;; the original result followed by a newline.
-  [ret]
-  (try
-    (binding [*default-data-reader-fn* tagged-literal
-              *read-eval* false]
-      (-> ret read-string pp-str))
-    (catch Throwable _
-      (str ret \newline))))
-
-(comment
-  (pp-ret "{:a 1}")
-  (pp-ret "#object [Function]")
-  (pp-ret "#object [foo.bar.Baz]")
-  (pp-ret "#object [object Window]")
-  (pp-ret "#js {:foo 1 :bar 2}")
-  (pp-ret "#queue [1 2 3]")
-  (pp-ret ":::1")
-  )
-
 (defn ^:private spec-for-runtime
-  [out-fn runtime-id]
+  [out-fn send-over-backchannel runtime-id]
   {:init-state {:runtime-id runtime-id}
 
    :repl-prompt (constantly "")
 
    :repl-read-ex
    (fn [{:keys [read-result]} ex]
-     (out-fn
+     (send-over-backchannel
        {:tag :err
         :val (Throwable->str ex)
         :form (:source read-result)}))
 
    :repl-result
-   (fn [{:keys [ns read-result]} ret]
-     (out-fn
-       {:tag :ret
-        :form (:source read-result)
-        :ns (str ns)
-        :val (pp-ret ret)}))
+   (fn [_ ret]
+     (out-fn ret))
 
    :repl-stderr
    (fn [{:keys [ns read-result]} text]
-     (out-fn {:tag :err
-              :ns (str ns)
-              :val text
-              :form (:source read-result)}))
+     (send-over-backchannel
+       {:tag :err
+        :ns (str ns)
+        :val (str text "\n")
+        :form (:source read-result)}))
 
    :repl-stdout
    (fn [_ text]
-     (out-fn {:tag :out :val text}))})
+     (send-over-backchannel
+       {:tag :out :val text}))})
 
 (defn repl
   ([]
@@ -72,22 +49,29 @@
          close-signal (async/promise-chan)
          out-fn #(binding [*flush-on-newline* true]
                    (locking lock
-                     (prn %)))]
+                     (pprint/pprint
+                       (binding [*default-data-reader-fn* tagged-literal
+                                 *read-eval* false]
+                         (some-> % read-string)))))
+         {backchannel :socket
+          send-over-backchannel :send-over-backchannel}
+         (backchannel/open
+           (assoc opts
+             :xform-in #(assoc % :build-id build-id :in *in*)
+             :xform-out #(dissoc % :in)))]
      (try
-       (let [backchannel (backchannel/open
-                           (assoc opts
-                             :xform-in #(assoc % :build-id build-id :in *in*)
-                             :xform-out #(dissoc % :in)))
-             _ (out-fn {:tag :ret
-                        :val (pr-str {:host (-> backchannel .getInetAddress .getHostName)
-                                      :port (-> backchannel .getLocalPort)})})
+       (let [_ (prn {:greeting (let [{:keys [major minor qualifier]} *clojurescript-version*]
+                                 (format "ClojureScript %s.%s.%s\n" major minor qualifier))
+                     :host (-> backchannel .getInetAddress .getHostName)
+                     :port (-> backchannel .getLocalPort)})
              {:keys [supervisor relay clj-runtime]} (api/get-runtime!)
              worker (supervisor/get-worker supervisor build-id)
-             spec (spec-for-runtime out-fn (:client-id clj-runtime))]
+             spec (spec-for-runtime out-fn send-over-backchannel (:client-id clj-runtime))]
          (repl-impl/do-repl worker relay *in* close-signal spec))
        (catch ExceptionInfo ex
-         (out-fn {:tag :err :val (Throwable->str ex)}))
+         (send-over-backchannel {:tag :err :val (Throwable->str ex)}))
        (catch AssertionError ex
-         (out-fn {:tag :err :val (Throwable->str ex)}))
+         (send-over-backchannel {:tag :err :val (Throwable->str ex)}))
        (finally
-         (async/>!! close-signal true))))))
+         (async/>!! close-signal true)
+         (.close backchannel))))))

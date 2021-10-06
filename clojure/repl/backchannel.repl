@@ -12,10 +12,13 @@
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
 (def recvq (LinkedBlockingQueue.))
-(def backchannel (backchannel/open {:port 1337}))
+
+(let [{:keys [socket send-over-backchannel]} (backchannel/open {:port 1337})]
+  (def backchannel socket)
+  (def send-over-backchannel send-over-backchannel))
+
 (xr/on-exit #(.close backchannel))
-(.setSoTimeout (.socket backchannel) 1000)
-(def port (-> backchannel .getLocalAddress .getPort))
+(def port (.getLocalPort backchannel))
 (def sendq (socket/client :host "localhost" :port port :recvq recvq))
 (xr/on-exit #(.put sendq ::socket/quit))
 
@@ -69,7 +72,11 @@
 (recv)
 (xr/check! ::test-results)
 
+(send-over-backchannel {:tag :out :val "Hello, world!"})
+(recv)
+(xr/check! #{{:tag :out :val "Hello, world!"}})
+
 (send {:op :quit})
 (Thread/sleep 3000)
-(.isOpen backchannel)
-(xr/check! false?)
+(.isClosed backchannel)
+(xr/check! true?)
