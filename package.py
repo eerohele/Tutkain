@@ -628,12 +628,6 @@ class TutkainShowPopupCommand(TextCommand):
         info.show_popup(self.view, -1, {edn.Keyword("info"): edn.kwmap(item)})
 
 
-class TutkainViewEventListener(ViewEventListener):
-    def on_query_completions(self, prefix, locations):
-        if settings().get("auto_complete"):
-            return completions.get_completions(self.view, prefix, locations)
-
-
 def lookup(view, form, handler):
     if not view.settings().get("tutkain_repl_view_dialect") and form and (
         dialect := dialects.for_point(view, form.begin())
@@ -802,6 +796,10 @@ class TutkainEventListener(EventListener):
                     window.focus_view(active_view)
 
             state.forget_repl_view(view, dialect)
+
+    def on_query_completions(self, view, prefix, locations):
+        if settings().get("auto_complete"):
+            return completions.get_completions(view, prefix, locations)
 
 
 class TutkainExpandSelectionImplCommand(TextCommand):
