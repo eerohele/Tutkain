@@ -37,7 +37,7 @@ class Server(object):
 
     def wait(self):
         self.conn, _ = self.socket.accept()
-        buffer = self.conn.makefile(mode="rw")
+        buffer = self.conn.makefile(mode="rw", buffering=8192)
         self.greeting(buffer)
         return buffer
 
