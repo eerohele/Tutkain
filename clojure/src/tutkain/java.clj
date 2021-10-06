@@ -1,6 +1,5 @@
 (ns tutkain.java
   (:require
-   [clojure.java.io :as io]
    [clojure.repl :as repl]
    [tutkain.backchannel :refer [handle most-recent-exception respond-to]])
   (:import
