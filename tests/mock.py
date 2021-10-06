@@ -1,3 +1,4 @@
+import io
 import socket
 import queue
 from concurrent import futures
@@ -37,7 +38,7 @@ class Server(object):
 
     def wait(self):
         self.conn, _ = self.socket.accept()
-        buffer = self.conn.makefile(mode="rw", buffering=8192)
+        buffer = self.conn.makefile(mode="rw", buffering=io.DEFAULT_BUFFER_SIZE)
         self.greeting(buffer)
         return buffer
 

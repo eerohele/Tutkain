@@ -1,3 +1,4 @@
+import io
 import sublime
 import queue
 import unittest
@@ -353,7 +354,8 @@ class TestJVMClient(PackageTestCase):
         }, response)
 
     def test_issue_46(self):
-        code = """(apply str (repeat 9126 "x"))"""
+        n = io.DEFAULT_BUFFER_SIZE + 1024
+        code = """(apply str (repeat {n} "x"))"""
         self.set_view_content(code)
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
@@ -362,10 +364,17 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals(f"user=> {code}\n", self.get_print())
 
         self.assertEquals(code + "\n", self.server.recv())
-        response = "x" * 9126
+        response = "x" * n
         self.server.send(response)
-        self.assertEquals(response[:8192], self.get_print())
-        self.assertEquals(response[8192:] + "\n", self.get_print())
+
+        chunks = [
+            response[i:i + io.DEFAULT_BUFFER_SIZE] for i in range(0, len(response), io.DEFAULT_BUFFER_SIZE)
+        ]
+
+        for chunk in chunks[:-1]:
+            self.assertEquals(chunk, self.get_print())
+
+        self.assertEquals(chunks[-1] + "\n", self.get_print())
 
     def test_evaluate_dialect(self):
         self.view.run_command("tutkain_evaluate", {"code": "(random-uuid)", "dialect": "cljs"})

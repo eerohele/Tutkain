@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
+import io
 import queue
 import os
 import pathlib
@@ -145,7 +146,7 @@ class Client(ABC):
         """Start a loop that reads evaluation responses from a socket and puts
         them in a print queue."""
         try:
-            while response := self.socket.recv(8192):
+            while response := self.socket.recv(io.DEFAULT_BUFFER_SIZE):
                 item = response.decode("utf-8")
                 log.debug({"event": "client/recv", "item": item})
                 self.handle(item)
