@@ -1,9 +1,17 @@
 (ns tutkain.java
   (:require
+   [clojure.java.io :as io]
    [clojure.repl :as repl]
    [tutkain.backchannel :refer [handle most-recent-exception respond-to]])
   (:import
    (java.net URL)))
+
+(defn source-zip
+  []
+  (let [file (io/file (System/getProperty "java.home") "lib/src.zip")]
+    (if (.exists file)
+      file
+      (io/file (System/getProperty "java.home") "src.zip"))))
 
 (defn class-url->source-url
   "Given the URL of an artifact in the classpath providing Java classes, return
@@ -19,7 +27,7 @@
   [^URL url]
   (when (some? url)
     (let [new-url (if (= "jrt" (.getProtocol url))
-                    (str "jar:file:" (System/getProperty "java.home") "/lib/src.zip!" (.getFile url))
+                    (str "jar:file:" (source-zip) "!" (.getFile url))
                     (->
                       (.toString url)
                        ;; Strip nested class part from filename
