@@ -43,7 +43,7 @@
   - Starts a backchannel socket server that Tutkain uses for editor tooling
     (auto-completion, metadata lookup, etc.)
   - Pretty-prints evaluation results and exception maps
-  - Binds *print* and *caught* for use with nested REPLs started via
+  - Binds *print* for use with nested REPLs started via
     clojure.main/repl
   - Binds *file* and *source-path* to vals sent via backchannel when evaluating
     to ensure useful exception stack traces"
@@ -71,7 +71,8 @@
                  :xform-in #(assoc % :in in :repl-thread repl-thread)
                  :xform-out #(dissoc % :in)))]
          (binding [*out* (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
-                   *err* (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)]
+                   *err* (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
+                   *print* out-fn]
            (try
              (out-fn {:greeting (str "Clojure " (clojure-version) "\n")
                       :host (-> backchannel .getInetAddress .getHostName)
