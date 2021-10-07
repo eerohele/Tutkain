@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
   Evaluation results are no longer wrapped in prepl-like message frames (`{:tag ret :val ,,,}` etc.). Evaluations now send character streams and receive character streams. Standard output (`println`), exception messages, and tapped values are now sent over the same backchannel Tutkain uses for other IDE-like features (auto-completion etc.)
 
-- Added **Tutkain: Toggle Auto Switch Namespace** command
+- Add **Tutkain: Toggle Auto Switch Namespace** command
 
   Namespace auto switching can interfere with nested clojure.main REPLs. You can assign a key binding to this command to temporarily disable namespace auto switching when working with nested REPLs.
 
@@ -16,6 +16,10 @@ All notable changes to this project will be documented in this file.
 - Add **Tutkain: Prompt** command
 
   **Tutkain: Prompt** opens an input panel at the bottom of the screen that prompts you for things to evaluate. It is intended to be used with nested clojure.main REPLs. For "regular" evaluation needs, you should continue to prefer `comment` forms etc.
+
+- Add **Tutkain: Dir** command
+
+  When your caret is on top of a symbol that resolves to a var, you can run **Tutkain: Dir** to show a list of all vars in that var's namespace.
 
 - Enable auto-completion for input panels
 - Add first cut of evaluation history
