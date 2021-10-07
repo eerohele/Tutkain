@@ -40,18 +40,18 @@
     (-> ^Field field (doto (.setAccessible true)) (.set reader column))))
 
 (defmethod handle :set-eval-context
-  [{:keys [in file line column] :or {line 0 column 0} :as message}]
+  [{:keys [^LineNumberingPushbackReader in file line column] :or {line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
   (let [new-context (swap! eval-context assoc :file file :line line :column column)]
     (respond-to message new-context)))
 
 (defmethod handle :interrupt
-  [{:keys [repl-thread]}]
+  [{:keys [^Thread repl-thread]}]
   (assert repl-thread)
   (.interrupt repl-thread))
 
-(def ^:private thread-counter
+(def ^:private ^AtomicInteger thread-counter
   (AtomicInteger.))
 
 (defn open
@@ -81,8 +81,7 @@
         socket (ServerSocket. port 0 address)
         lock (Object.)
         eventual-send-fn (promise)
-        thread (Thread.
-                 (bound-fn []
+        msg-loop (bound-fn []
                    (try
                      (let [conn (.accept socket)
                            in (-> conn .getInputStream InputStreamReader. BufferedReader. LineNumberingPushbackReader.)
@@ -122,7 +121,8 @@
                          (finally
                            (remove-tap tapfn))))
                      (finally
-                       (.close socket)))))]
+                       (.close socket))))
+        thread (Thread. ^Runnable msg-loop)]
     (doto thread
       (.setName (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter)))
       (.setDaemon true)
