@@ -36,22 +36,23 @@ def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIE
             jar_path = url2pathname(jar_url.path)
             # If the path after the ! starts with a forward slash, strip it. ZipFile can't
             # find the file inside the archive otherwise.
-            path = parts[1][1:] if parts[1].startswith("/") else parts[1]
-            archive = ZipFile(jar_path, "r")
-            source_file = archive.read(path)
-            view_name = jar_path + "!/" + path
-            descriptor, path = tempfile.mkstemp(pathlib.Path(path).suffix)
+            if os.path.isfile(jar_path):
+                path = parts[1][1:] if parts[1].startswith("/") else parts[1]
+                archive = ZipFile(jar_path, "r")
+                source_file = archive.read(path)
+                view_name = jar_path + "!/" + path
+                descriptor, path = tempfile.mkstemp(pathlib.Path(path).suffix)
 
-            try:
-                with os.fdopen(descriptor, "w") as file:
-                    file.write(source_file.decode())
+                try:
+                    with os.fdopen(descriptor, "w") as file:
+                        file.write(source_file.decode())
 
-                view = window.open_file(f"{path}:{line}:{column}", flags=flags)
-                view.set_scratch(True)
-                view.set_read_only(True)
-                rename(view, view_name)
-            finally:
-                os.remove(path)
+                    view = window.open_file(f"{path}:{line}:{column}", flags=flags)
+                    view.set_scratch(True)
+                    view.set_read_only(True)
+                    rename(view, view_name)
+                finally:
+                    os.remove(path)
 
 
 def parse_location(info):
