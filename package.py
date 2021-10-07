@@ -1278,8 +1278,8 @@ class TutkainDirCommand(TextCommand):
 
 class TutkainExploreStackTraceCommand(TextCommand):
     def goto(self, elements, index):
-        if index == -1:
-            self.view.window().focus_view(self.view)
+        if index == -1 and (window := self.view.window()):
+            window.focus_view(self.view)
         else:
             location = info.parse_location(elements[index])
             info.goto(self.view.window(), location, flags=sublime.ENCODED_POSITION | sublime.TRANSIENT)
