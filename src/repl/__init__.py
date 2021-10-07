@@ -26,6 +26,9 @@ def read_until_prompt(socket: socket.SocketType):
     return bs
 
 
+BASE64_BLOB = "(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))"
+
+
 class Client(ABC):
     """A `Client` connects to a Clojure socket server, then sends over code
     that a) starts a custom REPL on top of the default REPL and b) starts a
@@ -191,7 +194,7 @@ class JVMClient(Client):
     def handshake(self):
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
-        self.write_line("(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))")
+        self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
         for filename in ["format.clj", "backchannel.clj", "base64.clj", "repl.clj"]:
@@ -295,7 +298,7 @@ class JSClient(Client):
     def handshake(self, build_id):
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
-        self.write_line("(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))")
+        self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
         for filename in ["format.clj", "backchannel.clj", "base64.clj", "shadow.clj"]:
