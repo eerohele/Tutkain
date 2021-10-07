@@ -11,7 +11,6 @@ from sublime_plugin import (
     ListInputHandler,
     TextCommand,
     TextInputHandler,
-    ViewEventListener,
     WindowCommand,
 )
 
