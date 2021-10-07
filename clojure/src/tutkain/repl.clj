@@ -23,9 +23,10 @@
   [max-history entry]
   (swap! history
     (fn [h v]
-      (if (>= (count h) max-history)
-        (conj (subvec h 1) v)
-        (conj h v)))
+      (cond
+        (= (-> entry :form first resolve symbol) 'tutkain.repl/reval) h
+        (>= (count h) max-history) (conj (subvec h 1) v)
+        :else (conj h v)))
     (assoc entry :inst (Date.))))
 
 (defn reval
