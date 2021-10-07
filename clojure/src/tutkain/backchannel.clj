@@ -3,12 +3,11 @@
    [clojure.edn :as edn]
    [tutkain.format :as format])
   (:import
-   (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
-   (java.io BufferedReader BufferedWriter ByteArrayInputStream InputStreamReader OutputStreamWriter FileNotFoundException)
+   (clojure.lang LineNumberingPushbackReader)
+   (java.io BufferedReader BufferedWriter InputStreamReader OutputStreamWriter)
    (java.lang.reflect Field)
    (java.net InetAddress ServerSocket)
-   (java.util.concurrent.atomic AtomicInteger)
-   (java.util Base64)))
+   (java.util.concurrent.atomic AtomicInteger)))
 
 (defonce most-recent-exception (atom nil))
 
@@ -30,31 +29,6 @@
 (defmethod handle :default
   [message]
   (throw (ex-info "Unknown op" {:message message})))
-
-(def ^:private base64-decoder
-  (Base64/getDecoder))
-
-(defn base64-reader
-  [blob]
-  (->
-    base64-decoder
-    (.decode blob)
-    (ByteArrayInputStream.)
-    (InputStreamReader.)
-    (LineNumberingPushbackReader.)))
-
-(defmethod handle :load-base64
-  [{:keys [blob path filename requires] :as message}]
-  (try
-    (some->> requires (run! require))
-    (with-open [reader (base64-reader blob)]
-      (try
-        (Compiler/load reader path filename)
-        (respond-to message {:filename filename :result :ok})
-        (catch Compiler$CompilerException ex
-          (respond-to message {:filename filename :result :fail :reason :compiler-ex :ex (Throwable->map ex)}))))
-    (catch FileNotFoundException ex
-      (respond-to message {:filename filename :result :fail :reason :not-found :ex (Throwable->map ex)}))))
 
 (def eval-context
   (atom {:file nil :line 0 :column 0}))

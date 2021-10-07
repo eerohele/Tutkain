@@ -38,6 +38,8 @@ class TestJVMClient(TestCase):
 
             # Client loads modules
             server.recv()
+            server.send("""#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]""")
+            server.recv()
             server.send("#'tutkain.format/pp-str")
             server.recv()
             server.send("#'tutkain.backchannel/open")

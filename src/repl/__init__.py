@@ -194,7 +194,7 @@ class JVMClient(Client):
         self.write_line("(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))")
         self.buffer.readline()
 
-        for filename in ["format.clj", "backchannel.clj", "repl.clj"]:
+        for filename in ["format.clj", "backchannel.clj", "base64.clj", "repl.clj"]:
             path = self.source_path(filename)
 
             with open(path, "rb") as file:
@@ -298,7 +298,7 @@ class JSClient(Client):
         self.write_line("(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))")
         self.buffer.readline()
 
-        for filename in ["format.clj", "backchannel.clj", "shadow.clj"]:
+        for filename in ["format.clj", "backchannel.clj", "base64.clj", "shadow.clj"]:
             path = self.source_path(filename)
 
             with open(path, "rb") as file:

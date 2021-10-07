@@ -6,7 +6,8 @@
    [clojure.tools.analyzer.passes.source-info :as source-info]
    [clojure.tools.analyzer.passes.uniquify :as uniquify]
    [clojure.tools.reader :as reader]
-   [tutkain.backchannel :as bc :refer [base64-reader handle respond-to]]))
+   [tutkain.base64 :refer [base64-reader]]
+   [tutkain.backchannel :as bc :refer [handle respond-to]]))
 
 (def ^:private analyzer-passes
   (passes/schedule #{#'source-info/source-info #'uniquify/uniquify-locals}))

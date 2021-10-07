@@ -1,7 +1,8 @@
 (ns tutkain.load-blob
   (:require
    [tutkain.format :refer [pp-str]]
-   [tutkain.backchannel :refer [base64-reader handle respond-to]])
+   [tutkain.base64 :refer [base64-reader]]
+   [tutkain.backchannel :refer [handle respond-to]])
   (:import
    (java.io File)))
 
