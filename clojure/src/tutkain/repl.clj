@@ -92,7 +92,7 @@
                                (set! *2 *1)
                                (set! *1 ret)
                                (out-fn ret)
-                               (future (add-history-entry max-history {:form form :ret ret}))
+                               (future (add-history-entry max-history {:inst (Date.) :form form :ret ret}))
                                true))))
                        (catch Throwable ex
                          (set! *e ex)
