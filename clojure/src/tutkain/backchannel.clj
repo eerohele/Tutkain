@@ -71,10 +71,9 @@
   Other options are subject to change.
 
   Returns a map with these keys:
-    :socket           The ServerSocket instance this backchannel listens on.
-    :eventual-send-fn A promise that eventually contains a function you can
-                      call to send messages to the client connected to this
-                      backchannel."
+    :socket                The ServerSocket instance this backchannel listens on.
+    :send-over-backchannel A function you can call to send messages to the
+                           client connected to this backchannel."
   [{:keys [port bind-address xform-in xform-out]
     :or {port 0 bind-address "localhost" xform-in identity xform-out identity}}]
   (let [address (InetAddress/getByName ^String bind-address)
