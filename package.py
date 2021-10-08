@@ -185,12 +185,16 @@ class TutkainClearOutputViewCommand(WindowCommand):
             view.set_read_only(True)
             inline.clear(self.window.active_view())
 
-    def run(self):
-        if view := views.active_repl_view(self.window):
-            self.clear_view(view)
+    def run(self, output_views=["tap", "repl"]):
 
-        panel = self.window.find_output_panel(tap.panel_name)
-        panel and self.clear_view(panel)
+        for view_name in output_views:
+            if view_name == "repl":
+                if view := views.active_repl_view(self.window):
+                    self.clear_view(view)
+
+            elif view_name == "tap":
+                if view := self.window.find_output_panel(tap.panel_name):
+                    self.clear_view(view)
 
 
 class TutkainEvaluateFormCommand(TextCommand):
