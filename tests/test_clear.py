@@ -51,7 +51,7 @@ class TestClear(TestCase):
         self.repl_view.run_command("append", {"characters": "foo"})
         self.tap_panel.run_command("append", {"characters": "bar"})
 
-        self.window.run_command("tutkain_clear_output_view", {"output_views": ["tap", "repl"]})
+        self.window.run_command("tutkain_clear_output_view", {"views": ["tap", "repl"]})
 
         self.assertEquals("", view_content(self.repl_view))
         self.assertEquals("", view_content(self.tap_panel))
@@ -65,7 +65,7 @@ class TestClear(TestCase):
         self.repl_view.run_command("append", {"characters": "foo"})
         self.tap_panel.run_command("append", {"characters": "bar"})
 
-        self.window.run_command("tutkain_clear_output_view", {"output_views": ["tap"]})
+        self.window.run_command("tutkain_clear_output_view", {"views": ["tap"]})
 
         self.assertEquals("foo", view_content(self.repl_view))
         self.assertEquals("", view_content(self.tap_panel))
@@ -79,7 +79,7 @@ class TestClear(TestCase):
         self.repl_view.run_command("append", {"characters": "foo"})
         self.tap_panel.run_command("append", {"characters": "bar"})
 
-        self.window.run_command("tutkain_clear_output_view", {"output_views": ["repl"]})
+        self.window.run_command("tutkain_clear_output_view", {"views": ["repl"]})
 
         self.assertEquals("", view_content(self.repl_view))
         self.assertEquals("bar", view_content(self.tap_panel))
@@ -93,7 +93,7 @@ class TestClear(TestCase):
         self.repl_view.run_command("append", {"characters": "foo"})
         self.tap_panel.run_command("append", {"characters": "bar"})
 
-        self.window.run_command("tutkain_clear_output_view", {"output_views": []})
+        self.window.run_command("tutkain_clear_output_view", {"views": []})
 
         self.assertEquals("foo", view_content(self.repl_view))
         self.assertEquals("bar", view_content(self.tap_panel))

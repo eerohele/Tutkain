@@ -34,7 +34,6 @@ from .src.repl import history
 from .src.repl import tap
 from .src.repl import ports
 from .src.repl import printer
-from .src.repl import views
 
 
 from .src.log import start_logging, stop_logging
@@ -185,11 +184,11 @@ class TutkainClearOutputViewCommand(WindowCommand):
             view.set_read_only(True)
             inline.clear(self.window.active_view())
 
-    def run(self, output_views=["tap", "repl"]):
+    def run(self, views=["tap", "repl"]):
 
-        for view_name in output_views:
+        for view_name in views:
             if view_name == "repl":
-                if view := views.active_repl_view(self.window):
+                if view := repl.views.active_repl_view(self.window):
                     self.clear_view(view)
 
             elif view_name == "tap":
@@ -550,7 +549,7 @@ class TutkainConnectCommand(WindowCommand):
 
             client.connect()
             set_layout(self.window)
-            views.configure(view, dialect, client.host, client.port)
+            repl.views.configure(view, dialect, client.host, client.port)
             state.set_view_client(view, dialect, client)
             state.set_repl_view(view, dialect)
 
@@ -594,7 +593,7 @@ class TutkainDisconnectCommand(WindowCommand):
         inline.clear(active_view)
         test.progress.stop()
 
-        if view := views.active_repl_view(self.window):
+        if view := repl.views.active_repl_view(self.window):
             view.close()
 
         self.window.focus_view(active_view)
@@ -699,10 +698,10 @@ class TutkainGotoSymbolDefinitionCommand(TextCommand):
 
 
 def reconnect(vs):
-    for view in filter(views.get_dialect, vs):
-        dialect = views.get_dialect(view)
-        host = views.get_host(view)
-        port = views.get_port(view)
+    for view in filter(repl.views.get_dialect, vs):
+        dialect = repl.views.get_dialect(view)
+        host = repl.views.get_host(view)
+        port = repl.views.get_port(view)
 
         if dialect and host and port:
             view.window().run_command(
