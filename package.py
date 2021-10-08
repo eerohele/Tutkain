@@ -123,7 +123,7 @@ def evaluate(view, client, code, point=None, handler=None):
 
     file = view.file_name() or "NO_SOURCE_FILE"
 
-    client.printq.put(format_form(client.namespace, code))
+    client.print(format_form(client.namespace, code))
 
     client.eval(code, file, line, column, handler)
 
@@ -361,7 +361,7 @@ class TutkainEvaluateCommand(TextCommand):
         progress = ProgressBar("[Tutkain] Evaluating view...")
 
         def handler(response):
-            client.printq.put(response)
+            client.print(response)
             progress.stop()
             self.view.window().status_message("[Tutkain] Evaluating view... done.")
 
@@ -378,7 +378,7 @@ class TutkainEvaluateCommand(TextCommand):
             inline.clear(self.view)
             inline.show(self.view, region.end(), response, inline_result)
         else:
-            client.printq.put(response)
+            client.print(response)
 
     def evaluate_input(self, client, code):
         evaluate(self.view, client, code)
@@ -1314,7 +1314,7 @@ class TutkainExploreStackTraceCommand(TextCommand):
 
 class TutkainPromptCommand(WindowCommand):
     def on_done(self, client, code):
-        client.printq.put(format_form(client.namespace, code))
+        client.print(format_form(client.namespace, code))
         client.eval(code, "NO_SOURCE_FILE")
         history.update(self.window, code)
         self.prompt(client)

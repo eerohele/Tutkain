@@ -137,6 +137,9 @@ class Client(ABC):
         runtime this client is connected to to switch to that namespace."""
         pass
 
+    def print(self, item):
+        self.printq.put(item)
+
     def set_handler(self, handler):
         with self.lock:
             self.handler = handler
@@ -147,7 +150,7 @@ class Client(ABC):
         if handler := self.handler:
             handler(item)
         else:
-            self.printq.put(item)
+            self.print(item)
 
     def recv_loop(self):
         """Start a loop that reads evaluation responses from a socket and puts
@@ -160,13 +163,13 @@ class Client(ABC):
         except OSError as error:
             log.error({"event": "error", "error": error})
         finally:
-            self.printq.put(edn.kwmap({
+            self.print(edn.kwmap({
                 "tag": edn.Keyword("ret"),
                 "val": ":tutkain/disconnected"
             }))
 
             # Put a None into the queue to tell consumers to stop reading it.
-            self.printq.put(None)
+            self.print(None)
 
             # Feed poison pill to input queue.
             self.sendq.put(None)
@@ -214,17 +217,17 @@ class JVMClient(Client):
         line = self.buffer.readline()
 
         if not line.startswith('{'):
-            self.printq.put(edn.kwmap({
+            self.print(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": "Couldn't connect to Clojure REPL.\n"
             }))
 
-            self.printq.put(edn.kwmap({
+            self.print(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": line + "\n"
             }))
 
-            self.printq.put(edn.kwmap({
+            self.print(edn.kwmap({
                 "tag": edn.Keyword("err"),
                 "val": "NOTE: Tutkain requires Clojure 1.10.0 or newer.\n"
             }))
@@ -232,10 +235,10 @@ class JVMClient(Client):
             ret = edn.read(line)
 
             if (host := ret.get(edn.Keyword("host"))) and (port := ret.get(edn.Keyword("port"))):
-                self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
-                self.printq.put(ret.get(edn.Keyword("greeting")))
+                self.backchannel = backchannel.Client(self.print).connect(host, port)
+                self.print(ret.get(edn.Keyword("greeting")))
             else:
-                self.printq.put(ret)
+                self.print(ret)
 
         self.load_modules({
             "java.clj": [],
@@ -318,9 +321,9 @@ class JSClient(Client):
         ret = edn.read_line(self.buffer)
         host = ret.get(edn.Keyword("host"))
         port = ret.get(edn.Keyword("port"))
-        self.backchannel = backchannel.Client(self.printq.put).connect(host, port)
+        self.backchannel = backchannel.Client(self.print).connect(host, port)
         greeting = ret.get(edn.Keyword("greeting"))
-        self.printq.put(greeting)
+        self.print(greeting)
 
         self.load_modules({
             "lookup.clj": [],
@@ -348,7 +351,7 @@ class BabashkaClient(Client):
     def handshake(self):
         self.write_line("""(clojure.main/repl :init #() :prompt (constantly "") :need-prompt (constantly false))""")
         self.write_line("""(println "Babashka" (System/getProperty "babashka.version"))""")
-        self.printq.put(self.buffer.readline())
+        self.print(self.buffer.readline())
         self.buffer.readline()
         self.start_workers()
 
