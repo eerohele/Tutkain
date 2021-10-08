@@ -245,8 +245,9 @@ class TestJVMClient(PackageTestCase):
             edn.Keyword("id"): id
         }, message)
 
-        self.server.send("nil")
-        self.assertEquals("nil\n", self.get_print())
+        response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "nil"})
+        self.backchannel.send(response)
+        self.assertEquals(response, self.get_print())
 
     def test_view_syntax_error(self):
         self.set_view_content("(ns foo.bar) (defn x [y] y") # missing close paren
@@ -274,13 +275,18 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
         response = edn.read(self.backchannel.recv())
+        id = response.get(edn.Keyword("id"))
 
         self.assertEquals({
             edn.Keyword("op"): edn.Keyword("load"),
             edn.Keyword("code"): base64.encode("(ns foo.bar) (defn x [y] y)".encode("utf-8")),
             edn.Keyword("file"): None,
-            edn.Keyword("id"): response.get(edn.Keyword("id"))
+            edn.Keyword("id"): id
         }, response)
+
+        response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "#'x"})
+        self.backchannel.send(response)
+        self.assertEquals(response, self.get_print())
 
     def test_discard(self):
         self.set_view_content("#_(inc 1)")
