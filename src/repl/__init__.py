@@ -365,6 +365,11 @@ class BabashkaClient(Client):
         self.set_handler(lambda _: None)
         self.sendq.put(f"(in-ns '{ns})")
 
+    def print(self, item):
+        # Babashka currently has no backchannel we can use for err and out, so
+        # we just print everything without syntax highlighting.
+        self.printq.put(edn.kwmap({"tag": edn.Keyword("out"), "val": item}))
+
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.set_handler(handler)
         self.sendq.put(code)
