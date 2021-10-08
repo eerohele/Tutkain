@@ -549,7 +549,10 @@ class TutkainConnectCommand(WindowCommand):
 
             client.connect()
             set_layout(self.window)
-            repl.views.configure(view, dialect, client.host, client.port)
+
+            repl_view_settings = settings().get("repl_view_settings", {})
+
+            repl.views.configure(view, dialect, client.host, client.port, repl_view_settings)
             state.set_view_client(view, dialect, client)
             state.set_repl_view(view, dialect)
 
