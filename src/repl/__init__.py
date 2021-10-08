@@ -142,10 +142,12 @@ class Client(ABC):
             self.handler = handler
 
     def handle(self, item):
+        item = item.replace("\r", "")
+
         if handler := self.handler:
             handler(item)
         else:
-            self.printq.put(item.replace("\r", ""))
+            self.printq.put(item)
 
     def recv_loop(self):
         """Start a loop that reads evaluation responses from a socket and puts
