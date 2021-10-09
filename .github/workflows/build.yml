@@ -55,9 +55,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
 
-      - uses: DeLaGuardo/setup-clojure@3.3
+      - uses: DeLaGuardo/setup-clojure@3.5
         with:
-          cli: '1.10.3.967'
+          cli: '1.10.3.986'
 
       - name: Cache Maven dependencies
         uses: actions/cache@v1
