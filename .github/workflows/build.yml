@@ -56,11 +56,18 @@ jobs:
         with:
           distribution: ${{ matrix.java-distribution }}
           java-version: ${{ matrix.java-version }}
-          cache: 'maven'
 
       - uses: DeLaGuardo/setup-clojure@3.5
         with:
           cli: '1.10.3.986'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
 
       - name: Cache Git dependencies
         uses: actions/cache@v2
