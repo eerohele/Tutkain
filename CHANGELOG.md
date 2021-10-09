@@ -7,15 +7,24 @@ All notable changes to this project will be documented in this file.
 
   Evaluation results are no longer wrapped in prepl-like message frames (`{:tag ret :val ,,,}` etc.). Evaluations now send character streams and receive character streams. Standard output (`println`), exception messages, and tapped values are now sent over the same backchannel Tutkain uses for other IDE-like features (auto-completion etc.)
 
-- Add **Tutkain: Toggle Auto Switch Namespace** command
+- Add **Tutkain: Explore Stack Trace** command
 
-  Namespace auto switching can interfere with nested clojure.main REPLs. You can assign a key binding to this command to temporarily disable namespace auto switching when working with nested REPLs.
+  When your evaluation throws an exception, you can use **Tutkain: Explore Stack Trace** to explore the stack trace for that exception. When exploring the stack trace, Tutkain will also navigate to Java sources if it finds them.
 
-  This is not a perfect solution. Suggestions welcome.
+  Tutkain looks for Java base module sources in `$JAVA_HOME/src.zip` and `$JAVA_HOME/lib/src.zip`. For Java dependencies, it will look for a file with the suffix `*-sources.jar` next to the JAR file that contains the Java classes. If you have Maven installed, to easily download sources for all of the Java dependencies in your project, run:
 
-- Add **Tutkain: Prompt** command
+  ```
+  # with Clojure CLI
+  clj -A:my:aliases -Spom
 
-  **Tutkain: Prompt** opens an input panel at the bottom of the screen that prompts you for things to evaluate. It is intended to be used with nested clojure.main REPLs. For "regular" evaluation needs, you should continue to prefer `comment` forms etc.
+  # or with Leiningen
+  lein pom
+
+  # Then
+  mvn dependency:sources
+  ```
+
+  You will have to redownload sources (run the `mvn` command) again whenever you add a dependency to your project.
 
 - Add **Tutkain: Dir** command
 
@@ -37,6 +46,20 @@ All notable changes to this project will be documented in this file.
 - Improve auto-completion UI
 - Improve syntax definition for Java interop special forms
 - Fix test detection error #74
+- Fix lookup support for symbols that start with <
+- Add `views` argument to **Tutkain: Clear Output View** (thx @perdorgirardi)
+
+  Pass `["repl"]` to clear only the REPL view, `["tap"]` to clear only the tap panel, or `["repl", "tap"]` to clear both.
+
+- Add **Tutkain: Toggle Auto Switch Namespace** command
+
+  Namespace auto switching can interfere with nested clojure.main REPLs. You can assign a key binding to this command to temporarily disable namespace auto switching when working with nested REPLs.
+
+  This is not a perfect solution. Suggestions welcome.
+
+- Add **Tutkain: Prompt** command
+
+  **Tutkain: Prompt** opens an input panel at the bottom of the screen that prompts you for things to evaluate. It is intended to be used with nested clojure.main REPLs. For "regular" evaluation needs, you should continue to prefer `comment` forms etc.
 
 ## 0.10.0 (alpha) - 2021-09-15
 
