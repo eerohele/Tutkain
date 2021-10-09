@@ -60,5 +60,9 @@
       // Bind address for backchannel.
       "bind_address": "localhost"
     },
-  }
+  },
+
+  // You can overwrite Tutkain's default settings for a REPL view.
+  "repl_view_settings": {}
+
 }
