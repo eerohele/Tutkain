@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     container: sublimetext/unittesting
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - run: sh -e /etc/init.d/xvfb start
       - run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
       - run: |
@@ -22,7 +22,7 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
       - run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -33,7 +33,7 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - run: (new-object net.webclient).DownloadFile("https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.ps1","github.ps1")
       - run: |
           ./github.ps1 "bootstrap" -verbose
@@ -44,14 +44,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        java: ['11', '16']
+        java: ['11', '17']
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
 
@@ -60,7 +60,7 @@ jobs:
           cli: '1.10.3.986'
 
       - name: Cache Maven dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
@@ -68,7 +68,7 @@ jobs:
             ${{ runner.os }}-maven
 
       - name: Cache Git dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.gitlibs
           key: ${{ runner.os }}-gitlibs-${{ hashFiles('**/deps.edn') }}
