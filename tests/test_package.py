@@ -134,7 +134,7 @@ class TestJVMClient(PackageTestCase):
     def get_print(self):
         return self.client.printq.get(timeout=5)
 
-    def eval_context(self, ns="user", file="NO_SOURCE_FILE", line=1, column=1):
+    def eval_context(self, file="NO_SOURCE_FILE", line=1, column=1):
         actual = edn.read(self.backchannel.recv())
         id = actual.get(edn.Keyword("id"))
 
@@ -150,8 +150,7 @@ class TestJVMClient(PackageTestCase):
 
         self.backchannel.send(edn.kwmap({
             "id": id,
-            "file": file,
-            "ns": edn.Symbol(ns)
+            "file": file
         }))
 
     def test_outermost(self):
@@ -219,12 +218,12 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("(ns foo.bar) (ns baz.quux) (defn x [y] y)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "ns"})
-        self.eval_context(ns="baz.quux")
+        self.eval_context()
 
         self.assertEquals("user=> (ns foo.bar)\n", self.get_print())
 
         self.assertEquals("(ns foo.bar)\n", self.server.recv())
-        self.eval_context(ns="baz.quux", column=14)
+        self.eval_context(column=14)
 
         self.assertEquals("user=> (ns baz.quux)\n", self.get_print())
 
