@@ -761,7 +761,7 @@ class TutkainEventListener(EventListener):
         if dialect := view.settings().get("tutkain_repl_view_dialect"):
             state.set_repl_view(view, edn.Keyword(dialect))
         elif sublime.active_window().active_panel() is None and settings().get("auto_switch_namespace", True):
-            if (dialect := dialects.for_view(view)) and (client := state.client(view.window(), dialect)):
+            if (dialect := dialects.for_view(view)) and (window := view.window()) and (client := state.client(window, dialect)):
                 ns = namespace.name(view) or namespace.default(dialect)
                 client.switch_namespace(ns)
 
