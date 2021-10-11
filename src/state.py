@@ -31,8 +31,6 @@ def repl_view(window: Window, dialect: Dialect) -> Union[View, None]:
 def set_repl_view(view: View, dialect: Dialect) -> None:
     if window := view.window():
         __state["active_repl_view"][window.id()][dialect] = view
-    else:
-        raise ValueError(f"View {view.id()} has no window")
 
 
 def view_client(view: View, dialect: Dialect) -> Union[repl.Client, None]:
