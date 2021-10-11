@@ -5,7 +5,6 @@
    [tutkain.backchannel :as backchannel]
    [tutkain.format :as format])
   (:import
-   (java.io File)
    (java.util Date)))
 
 (def ^:dynamic ^:experimental *print*
@@ -80,10 +79,8 @@
              (loop []
                (when
                  (try
-                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
-                         file (:file @backchannel/eval-context)]
-                     (binding [*file* (or file "NO_SOURCE_PATH")
-                               *source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")]
+                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)]
+                     (with-bindings @backchannel/eval-context
                        (try
                          (when-not (identical? form EOF)
                            (if (and (list? form) (= 'tutkain/eval (first form)))

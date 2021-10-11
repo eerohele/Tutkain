@@ -1,10 +1,11 @@
 (ns tutkain.backchannel
   (:require
+   [clojure.core :as core]
    [clojure.edn :as edn]
    [tutkain.format :as format])
   (:import
    (clojure.lang LineNumberingPushbackReader)
-   (java.io BufferedReader BufferedWriter InputStreamReader OutputStreamWriter)
+   (java.io BufferedReader BufferedWriter File InputStreamReader OutputStreamWriter)
    (java.lang.reflect Field)
    (java.net InetAddress ServerSocket)
    (java.util.concurrent.atomic AtomicInteger)))
@@ -31,7 +32,7 @@
   (throw (ex-info "Unknown op" {:message message})))
 
 (def eval-context
-  (atom {:file nil :line 0 :column 0}))
+  (atom {}))
 
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn set-column!
@@ -43,8 +44,10 @@
   [{:keys [^LineNumberingPushbackReader in file line column] :or {line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (let [new-context (swap! eval-context assoc :file file :line line :column column)]
-    (respond-to message new-context)))
+  (let [file (or file "NO_SOURCE_PATH")
+        source-path (or (some-> file File. .getName) "NO_SOURCE_FILE")]
+    (reset! eval-context {#'core/*file* file #'core/*source-path* source-path})
+    (respond-to message {:file file :source-path source-path :line line :column column})))
 
 (defmethod handle :interrupt
   [{:keys [^Thread repl-thread]}]
