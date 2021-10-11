@@ -747,12 +747,16 @@ class TutkainEventListener(EventListener):
 
     def on_selection_modified_async(self, view):
         if settings().get("highlight_locals", True) and (sel := view.sel()):
-            point = sel[0].begin()
+            try:
+                point = sel[0].begin()
 
-            if symbol := symbol_at_point(view, point):
-                fetch_locals(view, point, symbol, partial(add_local_regions, view))
-            else:
-                view.erase_regions("tutkain_locals")
+                if symbol := symbol_at_point(view, point):
+                    fetch_locals(view, point, symbol, partial(add_local_regions, view))
+                else:
+                    view.erase_regions("tutkain_locals")
+            except IndexError:
+                # IndexError can happen if the view closes before we try getting the index on sel
+                pass
 
     def on_deactivated_async(self, view):
         inline.clear(view)
