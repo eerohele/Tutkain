@@ -44,6 +44,7 @@ class Server(object):
 
     def start(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(("localhost", self.port))
         self.socket.listen()
         self.socket.settimeout(self.timeout)
@@ -59,6 +60,7 @@ class Server(object):
         return self.buf.result(timeout=self.timeout)
 
     def stop(self):
+        self.socket.close()
         self.executor.shutdown(wait=False)
 
     def __exit__(self, type, value, traceback):
