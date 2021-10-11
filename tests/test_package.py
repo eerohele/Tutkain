@@ -164,7 +164,7 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.assertEquals("user=> (inc 1)\n", self.get_print())
         self.assertEquals("(inc 2)\n", self.server.recv())
-        self.assertEquals( "user=> (inc 2)\n", self.get_print())
+        self.assertEquals("user=> (inc 2)\n", self.get_print())
 
     def test_outermost_empty(self):
         self.set_view_content("")
@@ -249,7 +249,7 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals(response, self.get_print())
 
     def test_view_syntax_error(self):
-        self.set_view_content("(ns foo.bar) (defn x [y] y") # missing close paren
+        self.set_view_content("(ns foo.bar) (defn x [y] y")  # missing close paren
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
