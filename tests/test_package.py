@@ -165,6 +165,10 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals("user=> (inc 1)\n", self.get_print())
         self.assertEquals("(inc 2)\n", self.server.recv())
         self.assertEquals("user=> (inc 2)\n", self.get_print())
+        self.server.send("2")
+        self.assertEquals("2\n", self.get_print())
+        self.server.send("3")
+        self.assertEquals("3\n", self.get_print())
 
     def test_outermost_empty(self):
         self.set_view_content("")
@@ -179,6 +183,8 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=10)
         self.assertEquals("(range 10)\n", self.server.recv())
         self.assertEquals("user=> (range 10)\n", self.get_print())
+        self.server.send("(0 1 2 3 4 5 6 7 8 9)")
+        self.assertEquals("(0 1 2 3 4 5 6 7 8 9)\n", self.get_print())
 
     def test_form(self):
         self.set_view_content("42 84")
@@ -193,7 +199,11 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals("user=> 84\n", self.get_print())
 
         self.assertEquals("42\n", self.server.recv())
+        self.server.send("42")
+        self.assertEquals("42\n", self.get_print())
         self.assertEquals("84\n", self.server.recv())
+        self.server.send("84")
+        self.assertEquals("84\n", self.get_print())
 
     def test_parameterized(self):
         self.set_view_content("{:a 1} {:b 2}")
@@ -202,6 +212,8 @@ class TestJVMClient(PackageTestCase):
         self.eval_context()
         self.assertEquals("((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.server.recv())
         self.assertEquals("user=> ((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.get_print())
+        self.server.send("({:a 1} {:b 2} nil)")
+        self.assertEquals("({:a 1} {:b 2} nil)\n", self.get_print())
 
     def test_eval_in_ns(self):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
@@ -213,6 +225,8 @@ class TestJVMClient(PackageTestCase):
         ret = self.server.recv()
         self.assertTrue(ret.startswith("(tutkain/eval (or (some->> "))
         self.assertEquals("(reset)\n", self.server.recv())
+        self.server.send("nil")
+        self.assertEquals("nil\n", self.get_print())
 
     def test_ns(self):
         self.set_view_content("(ns foo.bar) (ns baz.quux) (defn x [y] y)")
@@ -228,6 +242,11 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals("user=> (ns baz.quux)\n", self.get_print())
 
         self.assertEquals("(ns baz.quux)\n", self.server.recv())
+
+        self.server.send("nil")  # foo.bar
+        self.assertEquals("nil\n", self.get_print())
+        self.server.send("nil")  # baz.quux
+        self.assertEquals("nil\n", self.get_print())
 
     def test_view(self):
         self.set_view_content("(ns foo.bar) (defn x [y] y)")
@@ -294,32 +313,39 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=3)
 
         self.assertEquals("user=> (inc 1)\n", self.get_print())
-
         self.assertEquals("(inc 1)\n", self.server.recv())
+        self.server.send("2")
+        self.assertEquals("2\n", self.get_print())
+
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
         self.eval_context(column=3)
 
         self.assertEquals("user=> (inc 1)\n", self.get_print())
-
         self.assertEquals("(inc 1)\n", self.server.recv())
+        self.server.send("2")
+        self.assertEquals("2\n", self.get_print())
+
         self.set_view_content("(inc #_(dec 2) 4)")
         self.set_selections((14, 14))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=8)
 
         self.assertEquals("user=> (dec 2)\n", self.get_print())
-
         self.assertEquals("(dec 2)\n", self.server.recv())
+        self.server.send("1")
+        self.assertEquals("1\n", self.get_print())
+
         self.set_view_content("#_:a")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.eval_context(column=3)
 
         self.assertEquals("user=> :a\n", self.get_print())
-
         self.assertEquals(":a\n", self.server.recv())
+        self.server.send(":a")
+        self.assertEquals(":a\n", self.get_print())
 
     def test_lookup(self):
         self.set_view_content("(rand)")
@@ -385,13 +411,14 @@ class TestJVMClient(PackageTestCase):
 
     def test_evaluate_dialect(self):
         self.view.run_command("tutkain_evaluate", {"code": "(random-uuid)", "dialect": "cljs"})
-        # The server receives no message because the evaluation uses a
-        # different dialect than the server.
+        # The server and the client receive no messages because the evaluation
+        # uses a different dialect than the server.
+        self.assertRaises(queue.Empty, lambda: self.client.printq.get_nowait())
         self.assertRaises(queue.Empty, lambda: self.server.recvq.get_nowait())
         self.view.run_command("tutkain_evaluate", {"code": """(Integer/parseInt "42")""", "dialect": "clj"})
         self.eval_context()
         self.assertEquals("""(Integer/parseInt "42")\n""", self.server.recv())
-        self.get_print()
+        self.assertEquals("""user=> (Integer/parseInt "42")\n""", self.get_print())
 
     def test_async_run_tests_ns(self):
         code = """
@@ -649,6 +676,8 @@ class TestJSClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.assertEquals("(range 10)\n", self.server.recv())
         self.assertEquals("user=> (range 10)\n", self.get_print())
+        self.server.send("(0 1 2 3 4 5 6 7 8 9)")
+        self.assertEquals("(0 1 2 3 4 5 6 7 8 9)\n", self.get_print())
 
 
 class TestBabashkaClient(PackageTestCase):
