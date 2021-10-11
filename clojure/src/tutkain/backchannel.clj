@@ -10,8 +10,6 @@
    (java.net InetAddress ServerSocket)
    (java.util.concurrent.atomic AtomicInteger)))
 
-(defonce most-recent-exception (atom nil))
-
 (defn respond-to
   "Respond to a backchannel op message."
   [{:keys [id out-fn]} response]
@@ -46,7 +44,7 @@
   (set-column! in (int column))
   (let [file (or file "NO_SOURCE_PATH")
         source-path (or (some-> file File. .getName) "NO_SOURCE_FILE")]
-    (reset! eval-context {#'core/*file* file #'core/*source-path* source-path})
+    (swap! eval-context assoc #'core/*file* file #'core/*source-path* source-path)
     (respond-to message {:file file :source-path source-path :line line :column column})))
 
 (defmethod handle :interrupt

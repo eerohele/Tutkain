@@ -92,12 +92,13 @@
                                  (set! *3 *2)
                                  (set! *2 *1)
                                  (set! *1 ret)
+                                 (reset! backchannel/eval-context (get-thread-bindings))
                                  (out-fn ret)
                                  (future (add-history-entry max-history {:inst (Date.) :form form :ret ret}))
                                  true))))
                          (catch Throwable ex
                            (set! *e ex)
-                           (reset! backchannel/most-recent-exception ex)
+                           (reset! backchannel/eval-context (get-thread-bindings))
                            (send-over-backchannel {:tag :err
                                                    :val (format/Throwable->str ex)
                                                    :ns (str (.name *ns*))
@@ -105,7 +106,7 @@
                            true))))
                    (catch Throwable ex
                      (set! *e ex)
-                     (reset! backchannel/most-recent-exception ex)
+                     (reset! backchannel/eval-context (get-thread-bindings))
                      (send-over-backchannel
                        {:tag :ret
                         :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))

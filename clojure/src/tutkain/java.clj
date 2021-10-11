@@ -2,7 +2,7 @@
   (:require
    [clojure.java.io :as io]
    [clojure.repl :as repl]
-   [tutkain.backchannel :refer [handle most-recent-exception respond-to]])
+   [tutkain.backchannel :refer [eval-context handle respond-to]])
   (:import
    (java.net URL)))
 
@@ -75,4 +75,4 @@
 
 (defmethod handle :resolve-stacktrace
   [message]
-  (respond-to message {:stacktrace (resolve-stacktrace @most-recent-exception)}))
+  (respond-to message {:stacktrace (resolve-stacktrace (get @eval-context #'clojure.core/*e))}))
