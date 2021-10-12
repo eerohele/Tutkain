@@ -1131,14 +1131,19 @@ class TutkainShowUnsuccessfulTestsCommand(TextCommand):
                 if i != -1:
                     begin, _ = unsuccessful[i]["region"]
 
-                    view.set_viewport_position(view.text_to_layout(begin))
+                    line, column = view.rowcol(begin)
+
+                    file_name_encoded_position = f"{view.file_name()}:{line+1}:{column}"
+
+                    # sublime.ENCODED_POSITION: Indicates the file_name should be searched for a :row or :row:col suffix
+                    # See https://www.sublimetext.com/docs/api_reference.html#sublime.Window
+                    view.window().open_file(file_name_encoded_position, flags=sublime.ENCODED_POSITION)
 
             items = [self.result_quick_panel_item(result) for result in unsuccessful]
 
             view.window().show_quick_panel(
                 items,
                 goto,
-                flags=sublime.MONOSPACE_FONT,
                 on_highlight=goto
             )
 
