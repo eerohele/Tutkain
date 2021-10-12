@@ -80,7 +80,7 @@
                (when
                  (try
                    (let [[form s] (read+string {:eof EOF :read-cond :allow} in)]
-                     (with-bindings @backchannel/eval-context
+                     (with-bindings (dissoc @backchannel/eval-context #'clojure.core/*ns*)
                        (try
                          (when-not (identical? form EOF)
                            (if (and (list? form) (= 'tutkain/eval (first form)))
