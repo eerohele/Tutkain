@@ -272,7 +272,9 @@ contexts:
       scope: punctuation.section.parens.begin.edn
       push:
       - include: list-end
-      - match: '(:require|:refer-clojure|:use){{end}}'
+      - match: '(:)(require|refer-clojure|use){{end}}'
+        captures:
+          1: punctuation.definition.keyword.clojure
         scope: meta.reader-form.clojure meta.statement.require.clojure constant.other.keyword.unqualified.clojure
         set:
           - include: list-end
@@ -284,7 +286,9 @@ contexts:
           - include: symbol
           - include: discard
           - include: unqualified_keyword
-      - match: ':import{{end}}'
+      - match: '(:)import{{end}}'
+        captures:
+          1: punctuation.definition.keyword.clojure
         scope: meta.reader-form.clojure meta.statement.import.clojure constant.other.keyword.unqualified.clojure
         set:
           - include: list-end

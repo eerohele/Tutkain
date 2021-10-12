@@ -2474,6 +2474,7 @@
 
   (ns foo.bar
     (:require
+;    ^ punctuation.definition.keyword.clojure
 ;    ^^^^^^^^ meta.statement.require.clojure
      [baz.quux]
      qux.zot
@@ -2482,6 +2483,7 @@
 
   (ns foo.bar
     (:import
+;    ^ punctuation.definition.keyword.clojure
 ;    ^^^^^^^ meta.statement.import.clojure
      (java.time LocalDate)))
 ;    ^ punctuation.section.parens.begin.edn
@@ -2495,6 +2497,7 @@
 ;    ^ punctuation.section.parens.begin.edn
 ;     ^^^^^^^ - meta.function-call.clojure
 ;     ^^^^^^^ - variable.function.clojure
+;             ^ punctuation.definition.keyword.edn
 ;             ^^^ constant.other.keyword.unqualified.edn
 ;                      ^ punctuation.section.parens.end.edn
 
@@ -2519,6 +2522,7 @@
   (ns foo.bar
     (:refer-clojure :exclude [map]))
  ;                  ^^^^^^^^ constant.other.keyword.unqualified.edn
+ ;   ^ punctuation.definition.keyword.clojure
 
 ; # deftest
 
