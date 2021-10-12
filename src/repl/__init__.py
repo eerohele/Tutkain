@@ -267,7 +267,7 @@ class JVMClient(Client):
 
     def switch_namespace(self, ns):
         self.namespace = ns
-        self.sendq.put(f"(tutkain/eval (or (some->> '{ns} find-ns ns-name in-ns .name) (ns {ns})))")
+        self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
         self.set_handler(handler)

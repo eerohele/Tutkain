@@ -223,7 +223,7 @@ class TestJVMClient(PackageTestCase):
 
         # Clients sends ns first
         ret = self.server.recv()
-        self.assertTrue(ret.startswith("(tutkain/eval (or (some->> "))
+        self.assertEquals(ret, "(tutkain.repl/switch-ns user)\n")
         self.assertEquals("(reset)\n", self.server.recv())
         self.server.send("nil")
         self.assertEquals("nil\n", self.get_print())

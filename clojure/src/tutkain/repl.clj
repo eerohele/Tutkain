@@ -34,6 +34,10 @@
     (when (not= form '(tutkain.repl/reval))
       (eval form))))
 
+(defmacro switch-ns
+  [namespace]
+  `(or (some->> '~namespace find-ns ns-name in-ns .name) (ns ~namespace)))
+
 (defn repl
   "Tutkain's main read-eval-print loop.
 
@@ -83,9 +87,9 @@
                      (with-bindings (dissoc @backchannel/eval-context #'clojure.core/*ns*)
                        (try
                          (when-not (identical? form EOF)
-                           (if (and (list? form) (= 'tutkain/eval (first form)))
+                           (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
                              (do
-                               (apply eval (rest form))
+                               (eval form)
                                true)
                              (let [ret (eval form)]
                                (when-not (= :repl/quit ret)
