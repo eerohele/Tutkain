@@ -373,10 +373,20 @@ contexts:
             - include: main
         - include: main
 
+  docstring:
+    - match: '"'
+      scope: punctuation.definition.string.begin.edn
+      push:
+      - meta_scope: meta.reader-form.edn string.quoted.double.edn comment.block.documentation.clojure
+      - include: string_content
+      - match: '"'
+        scope: punctuation.definition.string.end.edn
+        pop: true
+
   named-fn-body:
     - include: list-end
     - include: comment
-    - include: string
+    - include: docstring
     - include: reader-conditional
     - include: map
     - match: '\('
@@ -524,7 +534,7 @@ contexts:
 
   interface-specs:
     - include: comment
-    - include: string
+    - include: docstring
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       set:
@@ -540,7 +550,7 @@ contexts:
               scope: punctuation.section.brackets.end.edn
               pop: true
               set:
-                - include: string
+                - include: docstring
                 - include: comment
                 - match: '\)'
                   scope: punctuation.section.parens.end.edn

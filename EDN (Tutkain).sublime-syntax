@@ -68,17 +68,20 @@ contexts:
 
   # Literals
 
+  string_content:
+    - match: '(\\)(u\h{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
+      scope: constant.character.escape.edn
+      captures:
+        1: punctuation.definition.character.escape.begin.edn
+        3: invalid.illegal.escape.string.edn
+        4: punctuation.definition.character.escape.begin.edn
+
   string:
     - match: '"'
       scope: punctuation.definition.string.begin.edn
       push:
       - meta_scope: meta.reader-form.edn string.quoted.double.edn
-      - match: '(\\)(u\h{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
-        scope: constant.character.escape.edn
-        captures:
-          1: punctuation.definition.character.escape.begin.edn
-          3: invalid.illegal.escape.string.edn
-          4: punctuation.definition.character.escape.begin.edn
+      - include: string_content
       - match: '"'
         scope: punctuation.definition.string.end.edn
         pop: true
