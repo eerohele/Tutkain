@@ -375,12 +375,12 @@ contexts:
 
   docstring:
     - match: '"'
-      scope: punctuation.definition.string.begin.edn
+      scope: punctuation.definition.comment.begin.edn
       push:
-      - meta_scope: meta.reader-form.edn string.quoted.double.edn comment.block.documentation.clojure
+      - meta_scope: meta.reader-form.edn comment.block.documentation.clojure
       - include: string_content
       - match: '"'
-        scope: punctuation.definition.string.end.edn
+        scope: punctuation.definition.comment.end.edn
         pop: true
 
   named-fn-body:
