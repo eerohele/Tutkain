@@ -132,7 +132,7 @@ def get_indented_string(view, region, prune=False):
         return string
 
 
-IGNORE_SELECTORS = "punctuation.definition.string | string | comment.line"
+IGNORE_SELECTORS = "punctuation.definition.string | string | comment.line | comment.block.documentation"
 
 
 def indent_region(view, edit, region, prune=False):
