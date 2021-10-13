@@ -32,6 +32,10 @@
 (def eval-context
   (atom {}))
 
+(defn reset-eval-context!
+  [thread-bindings]
+  (reset! eval-context (dissoc thread-bindings #'core/*ns*)))
+
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn set-column!
   [^LineNumberingPushbackReader reader column]
