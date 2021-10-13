@@ -9,9 +9,9 @@ All notable changes to this project will be documented in this file.
 
 - Add **Tutkain: Explore Stack Trace** command
 
-  When your evaluation throws an exception, you can use **Tutkain: Explore Stack Trace** to explore the stack trace for that exception. When exploring the stack trace, Tutkain will also navigate to Java sources if it finds them.
+  When your evaluation throws an exception, you can use **Tutkain: Explore Stack Trace** to explore the stack trace for that exception (the current value of `*e`).
 
-  Tutkain looks for Java base module sources in `$JAVA_HOME/src.zip` and `$JAVA_HOME/lib/src.zip`. For Java dependencies, it will look for a file with the suffix `*-sources.jar` next to the JAR file that contains the Java classes. If you have Maven installed, to easily download sources for all of the Java dependencies in your project, run:
+  When exploring the stack trace, Tutkain will also navigate to Java sources if it finds them. Tutkain looks for Java base module sources in `$JAVA_HOME/src.zip` and `$JAVA_HOME/lib/src.zip`. For Java dependencies, it will look for a file with the suffix `*-sources.jar` next to the JAR file that contains the Java classes. If you have Maven installed, to easily download sources for all of the Java dependencies in your project, run:
 
   ```
   # with Clojure CLI
@@ -24,7 +24,7 @@ All notable changes to this project will be documented in this file.
   mvn dependency:sources
   ```
 
-  You will have to redownload sources (run the `mvn` command) again whenever you add a dependency to your project.
+  You will have to redownload sources (run the `mvn` command) again whenever you update your project dependencies.
 
 - Add **Tutkain: Dir** command
 
@@ -51,6 +51,8 @@ All notable changes to this project will be documented in this file.
 
   Pass `["repl"]` to clear only the REPL view, `["tap"]` to clear only the tap panel, or `["repl", "tap"]` to clear both.
 
+- Highlight current line when navigating unsuccessful tests via **Tutkain: Show Unsuccessful Tests** (thx @pedrorgirardi)
+
 - Add **Tutkain: Toggle Auto Switch Namespace** command
 
   Namespace auto switching can interfere with nested clojure.main REPLs. You can assign a key binding to this command to temporarily disable namespace auto switching when working with nested REPLs.
@@ -60,6 +62,10 @@ All notable changes to this project will be documented in this file.
 - Add **Tutkain: Prompt** command
 
   **Tutkain: Prompt** opens an input panel at the bottom of the screen that prompts you for things to evaluate. It is intended to be used with nested clojure.main REPLs. For "regular" evaluation needs, you should continue to prefer `comment` forms etc.
+
+- Improve shadow-cljs support backwards compatibility
+
+  Tutkain no longer relies on the internal `shadow.cljs.devtools.server.repl-impl/do-repl` function.
 
 ## 0.10.0 (alpha) - 2021-09-15
 
