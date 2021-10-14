@@ -267,6 +267,20 @@ contexts:
         - include: symbol
         - include: keywords
 
+  ns-list-tail:
+    - include: list-end
+    - include: stray-brackets
+    - include: constant
+    - include: docstring
+    - include: numbers
+    - include: symbolic
+    - include: keywords
+    - include: macro_characters
+    - include: sexp
+    - include: comma
+    - include: symbol
+    - include: fallback
+
   ns-tail:
     - match: '\('
       scope: punctuation.section.parens.begin.edn
@@ -300,8 +314,8 @@ contexts:
           - include: symbol
           - include: discard
           - include: unqualified_keyword
-      - include: list-tail
-    - include: list-tail
+      - include: ns-list-tail
+    - include: ns-list-tail
 
   fn-params-2:
     - match: '\['

@@ -2482,7 +2482,9 @@
 ;                                             ^^^^^^^ entity.name.namespace.clojure
 
   (ns foo.bar "baz")
-;             ^^^^^ string.quoted.double.edn
+;             ^ punctuation.definition.comment.begin.edn
+;             ^^^^^ comment.block.documentation.clojure
+;                 ^ punctuation.definition.comment.end.edn
 
   (ns foo.bar
     (:require

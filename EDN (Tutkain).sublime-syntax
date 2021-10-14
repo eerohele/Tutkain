@@ -48,7 +48,11 @@ contexts:
     # Symbols
     - include: symbol
 
-    # Fallback?
+    # Fallback
+    - include: fallback
+
+  # Fallback
+  fallback:
     - match: '[^\s,;\(\)\[\]{}\"`~@\^\\]+'
 
   # Constants
