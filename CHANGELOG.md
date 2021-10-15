@@ -11,11 +11,6 @@ All notable changes to this project will be documented in this file.
 
   When your caret is on top of a symbol that resolves to a var, you can run **Tutkain: Dir** to show a list of all vars in that var's namespace.
 
-- Enable auto-completion for input panels
-- Add first cut of evaluation history
-
-  Tutkain now saves the inputs and outputs of your last 100 evaluations in `tutkain.repl/history`. You can evaluate `(tutkain.repl/reval)` to re-evaluate your most recent evaluation.
-
 - If you evaluate a view with a syntax error, show an error in the REPL view
 - Show progress indicator when evaluating view #59
 - Fix evaluation prompt
