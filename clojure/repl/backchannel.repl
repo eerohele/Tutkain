@@ -59,7 +59,7 @@
        :ns "my.test"
        :file "/path/to/my/test.clj"
        :code (string->base64 "(ns my.test (:require [clojure.test :refer [deftest is]]))
-(deftest assert (is (true? *assert*)))")})
+(deftest test-assert (is (true? *assert*)))")})
 
 (spec/def ::fail empty?)
 (spec/def ::type #{:pass})
