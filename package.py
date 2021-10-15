@@ -122,8 +122,6 @@ def evaluate(view, client, code, point=None, handler=None):
 
     file = view.file_name() or "NO_SOURCE_FILE"
 
-    client.print(format_form(client.namespace, code))
-
     client.eval(code, file, line, column, handler)
 
 
@@ -159,20 +157,6 @@ def set_layout(window):
             }
 
         window.set_layout(layout)
-
-
-def format_form(namespace, form):
-    if lines := cleandoc(form).splitlines():
-        first_line = (lines[0] + "\n")
-
-        next_lines = "\n".join(
-            map(lambda line: ((len(namespace) + 5) * " ") + line, lines[1:])
-        )
-
-        if next_lines:
-            next_lines += "\n"
-
-        return f"""{namespace}=> {first_line}{next_lines}"""
 
 
 class TutkainClearOutputViewCommand(WindowCommand):
@@ -1329,7 +1313,6 @@ class TutkainExploreStackTraceCommand(TextCommand):
 
 class TutkainPromptCommand(WindowCommand):
     def on_done(self, client, code):
-        client.print(format_form(client.namespace, code))
         client.eval(code, "NO_SOURCE_FILE")
         history.update(self.window, code)
         self.prompt(client)

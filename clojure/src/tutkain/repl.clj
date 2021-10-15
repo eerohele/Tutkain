@@ -72,7 +72,10 @@
              (backchannel/open
                (assoc opts
                  :xform-in #(assoc % :in in :repl-thread repl-thread)
-                 :xform-out #(dissoc % :in)))]
+                 :xform-out #(dissoc % :in)))
+             prompt+input (fn [ns s]
+                            (send-over-backchannel {:tag :out :val (format "%s=> " (ns-name ns))})
+                            (send-over-backchannel {:tag :ret :val (str s \newline)}))]
          (binding [*out* (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
                    *err* (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
                    *print* out-fn]
@@ -83,14 +86,15 @@
              (loop []
                (when
                  (try
-                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)]
+                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
+                         silent? (and (list? form) (= 'tutkain.repl/switch-ns (first form)))]
                      (with-bindings @backchannel/eval-context
-                       (try
-                         (when-not (identical? form EOF)
-                           (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
-                             (do
-                               (eval form)
-                               true)
+                       (when-not (identical? form EOF)
+                         (when-not silent?
+                           (prompt+input *ns* s))
+                         (try
+                           (if silent?
+                             (do (eval form) true)
                              (let [ret (eval form)]
                                (when-not (= :repl/quit ret)
                                  (set! *3 *2)
@@ -99,15 +103,15 @@
                                  (backchannel/reset-eval-context! (get-thread-bindings))
                                  (out-fn ret)
                                  (future (add-history-entry max-history {:inst (Date.) :form form :ret ret}))
-                                 true))))
-                         (catch Throwable ex
-                           (set! *e ex)
-                           (backchannel/reset-eval-context! (get-thread-bindings))
-                           (send-over-backchannel {:tag :err
-                                                   :val (format/Throwable->str ex)
-                                                   :ns (str (.name *ns*))
-                                                   :form s})
-                           true))))
+                                 true)))
+                           (catch Throwable ex
+                             (set! *e ex)
+                             (backchannel/reset-eval-context! (get-thread-bindings))
+                             (send-over-backchannel {:tag :err
+                                                     :val (format/Throwable->str ex)
+                                                     :ns (str (.name *ns*))
+                                                     :form s})
+                             true)))))
                    (catch Throwable ex
                      (set! *e ex)
                      (backchannel/reset-eval-context! (get-thread-bindings))

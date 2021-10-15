@@ -69,14 +69,26 @@
 (xr/on-exit #(bsend ::socket/quit))
 
 (rsend '(inc 1))
+(brecv)
+(xr/check! ::ret) ;; prompt
+(brecv)
+(xr/check! ::ret) ;; input
 (rrecv)
 (xr/check! #{2})
 
 (rsend '(/ 4 0))
 (brecv)
+(xr/check! ::ret) ;; prompt
+(brecv)
+(xr/check! ::ret) ;; input
+(brecv)
 (xr/check! ::ret) ;; err
 
 (rsend '(tap> {:foo :bar}))
+(brecv)
+(xr/check! ::ret) ;; prompt
+(brecv)
+(xr/check! ::ret) ;; input
 (rrecv)
 (xr/check! true?)
 (brecv)
@@ -85,12 +97,18 @@
 (rsend '(Thread/sleep Integer/MAX_VALUE))
 (bsend {:op :interrupt})
 (brecv)
+(xr/check! ::ret) ;; prompt
+(brecv)
+(xr/check! ::ret) ;; input
+(brecv)
 (xr/check! ::ret) ;; InterruptedException
 
 (rsend '(inc 1))
+(brecv)
+(xr/check! ::ret)
 (def ret (rrecv))
-;; Evaluating lists whose head is tutkain/switch-ns don't affect *1 etc.
-(rsend '(tutkain/switch-ns 'tutkain.repl))
+;; Evaluating lists whose head is tutkain.repl/switch-ns don't affect *1 etc.
+(rsend '(tutkain.repl/switch-ns tutkain.repl))
 (rrecv)
 (xr/check! nil?) ;; Client doesn't send response
 (rsend '*1)

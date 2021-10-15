@@ -162,8 +162,10 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=18)
 
         self.assertEquals("(inc 1)\n", self.server.recv())
+        self.server.send("user=> (inc 1)")
         self.assertEquals("user=> (inc 1)\n", self.get_print())
         self.assertEquals("(inc 2)\n", self.server.recv())
+        self.server.send("user=> (inc 2)")
         self.assertEquals("user=> (inc 2)\n", self.get_print())
         self.server.send("2")
         self.assertEquals("2\n", self.get_print())
@@ -182,6 +184,7 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=10)
         self.assertEquals("(range 10)\n", self.server.recv())
+        self.server.send("user=> (range 10)")
         self.assertEquals("user=> (range 10)\n", self.get_print())
         self.server.send("(0 1 2 3 4 5 6 7 8 9)")
         self.assertEquals("(0 1 2 3 4 5 6 7 8 9)\n", self.get_print())
@@ -192,10 +195,12 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.eval_context()
 
+        self.server.send("user=> 42")
         self.assertEquals("user=> 42\n", self.get_print())
 
         self.eval_context(column=4)
 
+        self.server.send("user=> 84")
         self.assertEquals("user=> 84\n", self.get_print())
 
         self.assertEquals("42\n", self.server.recv())
@@ -211,6 +216,7 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"code": "((requiring-resolve 'clojure.data/diff) $0 $1)"})
         self.eval_context()
         self.assertEquals("((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.server.recv())
+        self.server.send("user=> ((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})")
         self.assertEquals("user=> ((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.get_print())
         self.server.send("({:a 1} {:b 2} nil)")
         self.assertEquals("({:a 1} {:b 2} nil)\n", self.get_print())
@@ -219,6 +225,7 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
         self.eval_context()
 
+        self.server.send("user=> (reset)")
         self.assertEquals("user=> (reset)\n", self.get_print())
 
         # Clients sends ns first
@@ -234,11 +241,13 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "ns"})
         self.eval_context()
 
+        self.server.send("user=> (ns foo.bar)")
         self.assertEquals("user=> (ns foo.bar)\n", self.get_print())
 
         self.assertEquals("(ns foo.bar)\n", self.server.recv())
         self.eval_context(column=14)
 
+        self.server.send("user=> (ns baz.quux)")
         self.assertEquals("user=> (ns baz.quux)\n", self.get_print())
 
         self.assertEquals("(ns baz.quux)\n", self.server.recv())
@@ -312,6 +321,7 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=3)
 
+        self.server.send("user=> (inc 1)")
         self.assertEquals("user=> (inc 1)\n", self.get_print())
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.server.send("2")
@@ -322,6 +332,7 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
         self.eval_context(column=3)
 
+        self.server.send("user=> (inc 1)")
         self.assertEquals("user=> (inc 1)\n", self.get_print())
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.server.send("2")
@@ -332,6 +343,7 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.eval_context(column=8)
 
+        self.server.send("user=> (dec 2)")
         self.assertEquals("user=> (dec 2)\n", self.get_print())
         self.assertEquals("(dec 2)\n", self.server.recv())
         self.server.send("1")
@@ -342,6 +354,7 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.eval_context(column=3)
 
+        self.server.send("user=> :a")
         self.assertEquals("user=> :a\n", self.get_print())
         self.assertEquals(":a\n", self.server.recv())
         self.server.send(":a")
@@ -418,6 +431,7 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"code": """(Integer/parseInt "42")""", "dialect": "clj"})
         self.eval_context()
         self.assertEquals("""(Integer/parseInt "42")\n""", self.server.recv())
+        self.server.send("""user=> (Integer/parseInt "42")""")
         self.assertEquals("""user=> (Integer/parseInt "42")\n""", self.get_print())
 
     def test_async_run_tests_ns(self):
@@ -675,6 +689,7 @@ class TestJSClient(PackageTestCase):
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.assertEquals("(range 10)\n", self.server.recv())
+        self.server.send("""user=> (range 10)""")
         self.assertEquals("user=> (range 10)\n", self.get_print())
         self.server.send("(0 1 2 3 4 5 6 7 8 9)")
         self.assertEquals("(0 1 2 3 4 5 6 7 8 9)\n", self.get_print())
@@ -759,6 +774,7 @@ class TestBabashkaClient(PackageTestCase):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.server.send("""user=> (range 10)""")
         self.assertEquals("(range 10)\n", self.server.recv())
 
         self.assertEquals(

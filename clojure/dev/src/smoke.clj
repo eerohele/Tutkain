@@ -93,3 +93,52 @@ java.
     (> n 40) (+ n 20)
     (> n 20) (- (first n) 20)
     :else 0))
+
+(defn inspect-coll
+  "Given an indexed, presumably nested coll, start a loop for navigating the
+  coll by key.
+
+  Reads keys from *in*, then prints coll at accumulated keypath.
+
+  Special inputs:
+  - quit: quit
+  - up: go up one level
+
+  For all other inputs, if coll contains key, print value at (get-in coll (conj
+  keypath key))."
+  [coll & {:keys [print-fn] :or {print-fn prn}}]
+  (loop [keypath []]
+    (printf "%s=> " keypath)
+    (flush)
+    (let [input (read)]
+      (println input)
+      (flush)
+      (cond
+        (= input 'quit)
+        :bye
+
+        (and (= input 'up) (empty? keypath))
+        (do (print-fn (get-in coll keypath))
+          (recur keypath))
+
+        (= input 'up)
+        (let [k (pop keypath)]
+          (print-fn (get-in coll k))
+          (recur k))
+
+        (and (or (indexed? (get-in coll keypath))
+               (map? (get-in coll keypath)))
+          (contains? (get-in coll keypath) input))
+        (let [k (conj keypath input)]
+          (print-fn (get-in coll k))
+          (recur k))
+
+        :else
+        (do
+          (print-fn :nope)
+          (print-fn (get-in coll keypath))
+          (recur keypath))))))
+
+(comment
+  (inspect-coll {:a [{:b 1}] :c [{:d 2}]} :print-fn tutkain.repl/*print*)
+  ,)

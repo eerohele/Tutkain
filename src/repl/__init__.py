@@ -100,7 +100,6 @@ class Client(ABC):
         self.printq = queue.Queue()
         self.handler = None
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
-        self.namespace = "user"
         self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
         self.backchannel_opts = backchannel_opts
         self.capabilities = set()
@@ -266,7 +265,6 @@ class JVMClient(Client):
         return self
 
     def switch_namespace(self, ns):
-        self.namespace = ns
         self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
@@ -335,7 +333,6 @@ class JSClient(Client):
         self.start_workers()
 
     def switch_namespace(self, ns):
-        self.namespace = ns
         self.set_handler(lambda _: None)
         self.sendq.put(f"(in-ns '{ns})")
 
@@ -349,7 +346,6 @@ class BabashkaClient(Client):
         super().__init__(source_root, host, port, "tutkain.bb.client")
 
     def handshake(self):
-        self.write_line("""(clojure.main/repl :init #() :prompt (constantly "") :need-prompt (constantly false))""")
         self.write_line("""(println "Babashka" (System/getProperty "babashka.version"))""")
         self.print(self.buffer.readline())
         self.buffer.readline()
@@ -361,7 +357,6 @@ class BabashkaClient(Client):
         return self
 
     def switch_namespace(self, ns):
-        self.namespace = ns
         self.set_handler(lambda _: None)
         self.sendq.put(f"(in-ns '{ns})")
 

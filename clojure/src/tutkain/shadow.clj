@@ -2,13 +2,14 @@
   (:require
    [clojure.core.async :as async]
    [clojure.pprint :as pprint]
+   [clojure.string :as string]
    [cljs.util :refer [*clojurescript-version*]]
    [shadow.cljs.repl :as repl]
    [shadow.cljs.devtools.api :as api]
    [shadow.cljs.devtools.server.supervisor :as supervisor]
    [shadow.cljs.devtools.server.worker :as worker]
    [shadow.remote.relay.api :as relay]
-   [tutkain.format :refer [Throwable->str]]
+   [tutkain.format :as format]
    [tutkain.backchannel :as backchannel])
   (:import
    (clojure.lang ExceptionInfo)))
@@ -34,7 +35,8 @@
            repl-read-ex
            repl-result
            repl-stdout
-           repl-stderr]}]
+           repl-stderr]}
+   send-over-backchannel]
   {:pre [(some? worker)
          (some? proc-stop)
          (some? close-signal)]}
@@ -125,6 +127,10 @@
               ([read-result]
                ;; (tap> [:repl-from-stdin read-result repl-state])
                (when (some? read-result)
+                 ;; FIXME: this also conceals user-issued in-ns calls
+                 (when-not (string/starts-with? (:source read-result) "(in-ns ")
+                   (send-over-backchannel {:tag :out :val (format "%s=> " (:ns repl-state))})
+                   (send-over-backchannel {:tag :ret :val (str (:source read-result) \newline)}))
                  (let [{:keys [eof? error? ex source]} read-result]
                    (cond
                      eof?
@@ -333,7 +339,7 @@
    (fn [{:keys [read-result]} ex]
      (send-over-backchannel
        {:tag :err
-        :val (Throwable->str ex)
+        :val (format/Throwable->str ex)
         :form (:source read-result)}))
 
    :repl-result
@@ -379,11 +385,11 @@
              {:keys [supervisor relay clj-runtime]} (api/get-runtime!)
              worker (supervisor/get-worker supervisor build-id)
              spec (spec-for-runtime out-fn send-over-backchannel (:client-id clj-runtime))]
-         (do-repl worker relay *in* close-signal spec))
+         (do-repl worker relay *in* close-signal spec send-over-backchannel))
        (catch ExceptionInfo ex
-         (send-over-backchannel {:tag :err :val (Throwable->str ex)}))
+         (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
        (catch AssertionError ex
-         (send-over-backchannel {:tag :err :val (Throwable->str ex)}))
+         (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
        (finally
          (async/>!! close-signal true)
          (.close backchannel))))))
