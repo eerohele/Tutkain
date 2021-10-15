@@ -3,9 +3,7 @@
    [clojure.main :as main]
    [clojure.pprint :as pprint]
    [tutkain.backchannel :as backchannel]
-   [tutkain.format :as format])
-  (:import
-   (java.util Date)))
+   [tutkain.format :as format]))
 
 (def ^:dynamic ^:experimental *print*
   "A function you can use as the :print arg of clojure.main/repl."
@@ -14,25 +12,6 @@
 (def ^:dynamic ^:experimental *caught*
   "A function you can use as the :caught arg of clojure.main/repl."
   main/repl-caught)
-
-(defonce ^{:doc "An atom containing your REPL evaluation history. Persists across connections."} history
-  (atom []))
-
-(defn ^:private add-history-entry
-  [max-history entry]
-  (swap! history
-    (fn [h v]
-      (cond
-        (= (-> entry :form first resolve symbol) 'tutkain.repl/reval) h
-        (>= (count h) max-history) (conj (subvec h 1) v)
-        :else (conj h v)))
-    (assoc entry :inst (Date.))))
-
-(defn reval
-  []
-  (let [form (-> @history peek :form)]
-    (when (not= form '(tutkain.repl/reval))
-      (eval form))))
 
 (defmacro switch-ns
   [namespace]
@@ -52,7 +31,7 @@
     to ensure useful exception stack traces"
   ([]
    (repl {}))
-  ([{:keys [max-history] :or {max-history 100} :as opts}]
+  ([opts]
    (let [EOF (Object.)
          lock (Object.)
          out *out*
@@ -102,7 +81,6 @@
                                  (set! *1 ret)
                                  (backchannel/reset-eval-context! (get-thread-bindings))
                                  (out-fn ret)
-                                 (future (add-history-entry max-history {:inst (Date.) :form form :ret ret}))
                                  true)))
                            (catch Throwable ex
                              (set! *e ex)
