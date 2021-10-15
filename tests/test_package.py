@@ -703,9 +703,6 @@ class TestBabashkaClient(PackageTestCase):
     def conduct_handshake(self):
         server = self.server
 
-        # Client starts io-prepl
-        server.recv()
-
         # Client sends version print
         server.recv()
 
