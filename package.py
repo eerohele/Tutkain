@@ -751,6 +751,7 @@ class TutkainEventListener(EventListener):
         elif sublime.active_window().active_panel() != "input" and settings().get("auto_switch_namespace", True):
             if (dialect := dialects.for_view(view)) and (window := view.window()) and (client := state.client(window, dialect)):
                 ns = namespace.name(view) or namespace.default(dialect)
+                view.set_status("tutkain_ns", ns)
                 client.switch_namespace(ns)
 
     def on_hover(self, view, point, hover_zone):
