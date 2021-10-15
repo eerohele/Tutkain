@@ -361,7 +361,7 @@ class TestJVMClient(PackageTestCase):
 
             self.assertEquals({
                 edn.Keyword("op"): edn.Keyword("lookup"),
-                edn.Keyword("named"): "rand",
+                edn.Keyword("ident"): "rand",
                 edn.Keyword("ns"): None,
                 edn.Keyword("dialect"): edn.Keyword("clj"),
                 edn.Keyword("id"): response.get(edn.Keyword("id"))
@@ -380,7 +380,7 @@ class TestJVMClient(PackageTestCase):
 
         self.assertEquals({
             edn.Keyword("op"): edn.Keyword("lookup"),
-            edn.Keyword("named"): "map",
+            edn.Keyword("ident"): "map",
             edn.Keyword("ns"): None,
             edn.Keyword("dialect"): edn.Keyword("clj"),
             edn.Keyword("id"): response.get(edn.Keyword("id"))

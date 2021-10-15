@@ -39,7 +39,7 @@
   {:op :lookup
    :build-id build-id
    :dialect :cljs
-   :named "mapcat"
+   :ident "mapcat"
    :ns "cljs.user"
    :out-fn prn}
   backchannel/handle

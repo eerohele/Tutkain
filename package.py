@@ -642,7 +642,7 @@ def lookup(view, form, handler):
     ):
         client.backchannel.send({
             "op": edn.Keyword("lookup"),
-            "named": view.substr(form),
+            "ident": view.substr(form),
             "ns": namespace.name(view),
             "dialect": dialect
         }, handler)

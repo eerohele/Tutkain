@@ -197,10 +197,10 @@
   (get (some->> (ns-alias->ns-sym env ns ns-alias) (analyzer.api/ns-interns env)) sym))
 
 (defn ^:private sym-meta
-  [env ns named]
-  (let [sym (symbol (name named))]
-    (if (qualified-symbol? named)
-      (qualified-sym-meta env ns (symbol (namespace named)) sym)
+  [env ns ident]
+  (let [sym (symbol (name ident))]
+    (if (qualified-symbol? ident)
+      (qualified-sym-meta env ns (symbol (namespace ident)) sym)
       (if-some [found-ns (find-ns sym)]
         (merge (meta found-ns)
           {:name sym
@@ -210,16 +210,16 @@
         (or (special-sym-meta sym) (core-sym-meta env sym) (ns-sym-meta env ns sym))))))
 
 (defn info
-  "Given a compiler environment, a symbol that names a clojure.lang.Named
-  instance, and an ns symbol, return selected metadata for the named var."
-  [env named ns]
-  (let [{:keys [arglists file] :as ret} (sym-meta env ns named)]
+  "Given a compiler environment, a symbol that names an ident, and an ns
+  symbol, return selected metadata for the named var."
+  [env ident ns]
+  (let [{:keys [arglists file] :as ret} (sym-meta env ns ident)]
     (cond-> (select-keys ret [:arglists :doc :file :line :column :name])
       arglists (assoc :arglists (format-arglists arglists))
       file (assoc :file (lookup/resolve-file file)))))
 
 (defmethod lookup/info :cljs
-  [{:keys [^String named ns build-id] :as message}]
+  [{:keys [^String ident ns build-id] :as message}]
   (let [env (compiler-env build-id)
-        named (symbol named)]
-    (respond-to message {:info (info env named (parse-ns ns))})))
+        sym (symbol ident)]
+    (respond-to message {:info (info env sym (parse-ns ns))})))

@@ -76,27 +76,27 @@
     (remove-empty)))
 
 (defn lookup
-  "Given an ns symbol and a string representation of a clojure.lang.Named
-  instance, return selected metadata of the var it names.
+  "Given an ns symbol and a string representation of an ident, return selected
+  metadata of the var it names.
 
-  If the Named is a keyword that names a spec, describe the spec.
+  If the ident is a keyword that names a spec, describe the spec.
 
   Otherwise, if it's a symbol, describe the var that symbol names."
-  [ns named]
+  [ns ident]
   (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))
-        named (binding [*ns* ns] (read-string named))]
-    (if (keyword? named)
-      (when-some [spec (some-> named spec/get-spec spec/describe pr-str)]
-        {:name named
+        ident (binding [*ns* ns] (read-string ident))]
+    (if (keyword? ident)
+      (when-some [spec (some-> ident spec/get-spec spec/describe pr-str)]
+        {:name ident
          :spec spec})
-      (prep-meta (sym-meta ns named)))))
+      (prep-meta (sym-meta ns ident)))))
 
 (defmulti info :dialect)
 
 (defmethod info :clj
-  [{:keys [named ns] :as message}]
+  [{:keys [ident ns] :as message}]
   (try
-    (when-some [result (lookup ns named)]
+    (when-some [result (lookup ns ident)]
       (respond-to message {:info result}))
     (catch Throwable ex
       (respond-to message {:ex (pp-str (Throwable->map ex))}))))

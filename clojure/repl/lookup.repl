@@ -56,7 +56,7 @@
 (->
   {:op :lookup
    :dialect :clj
-   :named "mapcat"
+   :ident "mapcat"
    :ns "user"
    :out-fn prn}
   backchannel/handle
