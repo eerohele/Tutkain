@@ -1,0 +1,114 @@
+(ns repl.cljs.shadow
+  (:require
+   [clojure.edn :as edn]
+   [clojure.core.server :as server]
+   [clojure.java.shell :as sh]
+   [clojure.spec.alpha :as spec]
+   [cognitect.transcriptor :as xr]
+   [shadow.cljs.devtools.server :as shadow.server]
+   [shadow.cljs.devtools.api :as shadow.api]
+   [tutkain.socket :as socket]
+   [tutkain.shadow :as shadow])
+  (:import
+   (java.util.concurrent LinkedBlockingQueue TimeUnit)))
+
+(spec/def ::tag #{:ret :err :out :tap})
+(spec/def ::val string?)
+(spec/def ::ns string?)
+(spec/def ::ms int?)
+(spec/def ::form string?)
+
+(spec/def ::ret
+  (spec/keys :opt-un [::tag ::val ::ns ::ms ::form]))
+
+(def build-id :node-script)
+
+;; Start shadow-cljs watch
+
+(xr/on-exit #(shadow.server/stop!))
+(do (shadow.server/start!) (shadow.api/watch build-id))
+#_(defn env [] (cljs/compiler-env build-id))
+
+(def server-name "shadow")
+
+(xr/on-exit #(server/stop-server server-name))
+
+(def server
+  (do
+    (server/stop-server server-name)
+    (server/start-server
+      {:name server-name
+       :port 0
+       :accept `shadow/repl
+       :args [{:build-id build-id}]})))
+
+(def node (future (sh/sh "node" "out/script.js")))
+(xr/on-exit #(future-cancel node))
+(Thread/sleep 3000)
+
+(def rrecvq (LinkedBlockingQueue.))
+(def brecvq (LinkedBlockingQueue.))
+
+(def rsendq
+  (socket/client
+    :host "localhost"
+    :port (.getLocalPort server)
+    :recvq rrecvq))
+
+(defn rsend
+  [code]
+  (.put rsendq code))
+
+(xr/on-exit #(rsend ::socket/quit))
+
+(defn rrecv
+  []
+  (-> rrecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+
+(defn brecv
+  []
+  (-> brecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+
+(def backchannel-addr (rrecv))
+
+(def bsendq
+  (socket/client
+    :host (:host backchannel-addr)
+    :port (:port backchannel-addr)
+    :recvq brecvq))
+
+(defn bsend
+  [message]
+  (.put bsendq message))
+
+(xr/on-exit #(bsend ::socket/quit))
+
+(rsend '(inc 1))
+(brecv)
+(xr/check! ::ret) ;; prompt
+(brecv)
+(xr/check! ::ret) ;; input
+(rrecv)
+(xr/check! #{2})
+
+(rsend '(ns foo.bar))
+(brecv)
+(xr/check! ::ret) ;; prompt
+(brecv)
+(xr/check! ::ret) ;; input
+(rrecv)
+(rsend (binding [*ns* (create-ns 'foo.bar)] (read-string "::qux")))
+(brecv)
+(xr/check! ::ret) ;; prompt
+(brecv)
+(xr/check! ::ret) ;; input
+(rrecv)
+(xr/check! qualified-keyword?)
+
+(rsend :repl/quit)
+(brecv)
+(xr/check! ::ret) ;; prompt
+(brecv)
+(xr/check! ::ret) ;; input
+(rrecv)
+(xr/check! nil?)

@@ -64,6 +64,10 @@ jobs:
         with:
           cli: '1.10.3.986'
 
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
       - name: Cache Maven dependencies
         uses: actions/cache@v2
         with:
