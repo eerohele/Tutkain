@@ -2,9 +2,10 @@
   (:require
    [clojure.core.async :as async]
    [clojure.pprint :as pprint]
-   [clojure.string :as string]
+   [clojure.tools.reader.reader-types :as readers]
+   [clojure.tools.reader :as reader]
+   [cljs.analyzer :as analyzer]
    [cljs.util :refer [*clojurescript-version*]]
-   [shadow.cljs.repl :as repl]
    [shadow.cljs.devtools.api :as api]
    [shadow.cljs.devtools.server.supervisor :as supervisor]
    [shadow.cljs.devtools.server.worker :as worker]
@@ -13,6 +14,30 @@
    [tutkain.backchannel :as backchannel])
   (:import
    (clojure.lang ExceptionInfo)))
+
+(defn ^:private read-one
+  [build-state reader]
+  (try
+    ;; FIXME: NO_SOURCE_FILE, use *source-path* from backchannel eval context?
+    (let [in (readers/source-logging-push-back-reader reader 1 "NO_SOURCE_FILE")
+          eof (Object.)
+          reader-opts {:eof eof :read-cond :allow :features #{:cljs}}
+          current-ns (get-in build-state [:repl-state :current-ns] 'user)
+          build-id (:shadow.build/build-id build-state)
+          compiler-env (api/compiler-env build-id)
+          [form s] (binding [*ns* (create-ns current-ns)
+                             reader/*alias-map* (apply merge
+                                                  ((juxt :requires :require-macros)
+                                                   (analyzer/get-namespace (delay compiler-env) current-ns)))
+                             reader/*data-readers* {}
+                             reader/*default-data-reader-fn* (fn [_ val] val)
+                             reader/resolve-symbol identity]
+                     (reader/read+string reader-opts in))
+          eof? (identical? form eof)]
+      (-> {:eof? eof?} (cond-> (not eof?) (assoc :form form :source s))))
+    (catch Exception ex
+      {:error? true
+       :ex ex})))
 
 ;; Vendored from shadow-cljs[1] to avoid using impl namespace.
 ;;
@@ -28,7 +53,7 @@
 (defn do-repl
   [{:keys [proc-stop] :as worker}
    relay
-   input-stream
+   reader
    close-signal
    {:keys [init-state
            repl-prompt
@@ -99,7 +124,7 @@
         (loop []
           ;; wait until told to read
           (when (some? (async/<!! read-lock))
-            (let [{:keys [eof?] :as next} (repl/dummy-read-one input-stream)]
+            (let [{:keys [eof?] :as next} (read-one (some-> worker :state-ref deref :build-state) reader)]
               (if eof?
                 (async/close! stdin)
                 ;; don't recur in case stdin was closed while in blocking read
@@ -128,7 +153,7 @@
                ;; (tap> [:repl-from-stdin read-result repl-state])
                (when (some? read-result)
                  ;; FIXME: this also conceals user-issued in-ns calls
-                 (when-not (string/starts-with? (:source read-result) "(in-ns ")
+                 (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
                    (repl-stdout repl-state (format "%s=> " (:ns repl-state)))
                    (repl-val repl-state (str (:source read-result) \newline)))
                  (let [{:keys [eof? error? ex source]} read-result]
