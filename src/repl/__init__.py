@@ -240,7 +240,6 @@ class JVMClient(Client):
                 self.print(ret)
 
         self.load_modules({
-            "java.clj": [],
             "lookup.clj": [],
             "completions.clj": [],
             "load_blob.clj": [],
