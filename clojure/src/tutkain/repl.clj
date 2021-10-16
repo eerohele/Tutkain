@@ -20,15 +20,11 @@
 (defn repl
   "Tutkain's main read-eval-print loop.
 
-  Like clojure.core.server/io-prepl, with these differences:
-
   - Starts a backchannel socket server that Tutkain uses for editor tooling
     (auto-completion, metadata lookup, etc.)
   - Pretty-prints evaluation results and exception maps
   - Binds *print* for use with nested REPLs started via
-    clojure.main/repl
-  - Binds *file* and *source-path* to vals sent via backchannel when evaluating
-    to ensure useful exception stack traces"
+    clojure.main/repl"
   ([]
    (repl {}))
   ([opts]
