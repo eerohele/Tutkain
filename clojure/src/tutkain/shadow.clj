@@ -35,8 +35,8 @@
            repl-read-ex
            repl-result
            repl-stdout
-           repl-stderr]}
-   send-over-backchannel]
+           repl-stderr
+           repl-val]}]
   {:pre [(some? worker)
          (some? proc-stop)
          (some? close-signal)]}
@@ -129,8 +129,8 @@
                (when (some? read-result)
                  ;; FIXME: this also conceals user-issued in-ns calls
                  (when-not (string/starts-with? (:source read-result) "(in-ns ")
-                   (send-over-backchannel {:tag :out :val (format "%s=> " (:ns repl-state))})
-                   (send-over-backchannel {:tag :ret :val (str (:source read-result) \newline)}))
+                   (repl-stdout repl-state (format "%s=> " (:ns repl-state)))
+                   (repl-val repl-state (str (:source read-result) \newline)))
                  (let [{:keys [eof? error? ex source]} read-result]
                    (cond
                      eof?
@@ -329,36 +329,6 @@
 
       result)))
 
-(defn ^:private spec-for-runtime
-  [out-fn send-over-backchannel runtime-id]
-  {:init-state {:runtime-id runtime-id}
-
-   :repl-prompt (constantly "")
-
-   :repl-read-ex
-   (fn [{:keys [read-result]} ex]
-     (send-over-backchannel
-       {:tag :err
-        :val (format/Throwable->str ex)
-        :form (:source read-result)}))
-
-   :repl-result
-   (fn [_ ret]
-     (out-fn ret))
-
-   :repl-stderr
-   (fn [{:keys [ns read-result]} text]
-     (send-over-backchannel
-       {:tag :err
-        :ns (str ns)
-        :val (str text "\n")
-        :form (:source read-result)}))
-
-   :repl-stdout
-   (fn [_ text]
-     (send-over-backchannel
-       {:tag :out :val text}))})
-
 (defn repl
   ([]
    (repl {}))
@@ -383,9 +353,41 @@
                      :host (-> backchannel .getInetAddress .getHostName)
                      :port (-> backchannel .getLocalPort)})
              {:keys [supervisor relay clj-runtime]} (api/get-runtime!)
-             worker (supervisor/get-worker supervisor build-id)
-             spec (spec-for-runtime out-fn send-over-backchannel (:client-id clj-runtime))]
-         (do-repl worker relay *in* close-signal spec send-over-backchannel))
+             worker (supervisor/get-worker supervisor build-id)]
+         (do-repl worker relay *in* close-signal
+           {:init-state {:runtime-id (:client-id clj-runtime)}
+
+            :repl-prompt (constantly "")
+
+            :repl-read-ex
+            (fn [{:keys [read-result]} ex]
+              (send-over-backchannel
+                {:tag :err
+                 :val (format/Throwable->str ex)
+                 :form (:source read-result)}))
+
+            :repl-result
+            (fn [_ ret]
+              (out-fn ret))
+
+            :repl-val
+            (fn [_ ret]
+              (send-over-backchannel
+                {:tag :ret
+                 :val ret}))
+
+            :repl-stderr
+            (fn [{:keys [ns read-result]} text]
+              (send-over-backchannel
+                {:tag :err
+                 :ns (str ns)
+                 :val (str text "\n")
+                 :form (:source read-result)}))
+
+            :repl-stdout
+            (fn [_ text]
+              (send-over-backchannel
+                {:tag :out :val text}))}))
        (catch ExceptionInfo ex
          (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
        (catch AssertionError ex
