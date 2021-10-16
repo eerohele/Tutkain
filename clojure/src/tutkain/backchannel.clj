@@ -1,6 +1,5 @@
 (ns tutkain.backchannel
   (:require
-   [clojure.core :as core]
    [clojure.edn :as edn]
    [tutkain.format :as format])
   (:import
@@ -34,7 +33,7 @@
 
 (defn reset-eval-context!
   [thread-bindings]
-  (reset! eval-context (dissoc thread-bindings #'core/*ns*)))
+  (reset! eval-context (dissoc thread-bindings #'*ns*)))
 
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn set-column!
@@ -48,7 +47,7 @@
   (set-column! in (int column))
   (let [file (or file "NO_SOURCE_PATH")
         source-path (or (some-> file File. .getName) "NO_SOURCE_FILE")]
-    (swap! eval-context assoc #'core/*file* file #'core/*source-path* source-path)
+    (swap! eval-context assoc #'*file* file #'*source-path* source-path)
     (respond-to message {:file file :source-path source-path :line line :column column})))
 
 (defmethod handle :interrupt
