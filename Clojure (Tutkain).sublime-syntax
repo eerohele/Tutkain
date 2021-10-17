@@ -267,20 +267,6 @@ contexts:
         - include: symbol
         - include: keywords
 
-  ns-list-tail:
-    - include: list-end
-    - include: stray-brackets
-    - include: constant
-    - include: docstring
-    - include: numbers
-    - include: symbolic
-    - include: keywords
-    - include: macro_characters
-    - include: sexp
-    - include: comma
-    - include: symbol
-    - include: fallback
-
   ns-tail:
     - match: '\('
       scope: punctuation.section.parens.begin.edn
@@ -314,8 +300,8 @@ contexts:
           - include: symbol
           - include: discard
           - include: unqualified_keyword
-      - include: ns-list-tail
-    - include: ns-list-tail
+      - include: list-tail
+    - include: list-tail
 
   fn-params-2:
     - match: '\['
@@ -387,20 +373,10 @@ contexts:
             - include: main
         - include: main
 
-  docstring:
-    - match: '"'
-      scope: punctuation.definition.comment.begin.edn
-      push:
-      - meta_scope: meta.reader-form.edn comment.block.documentation.clojure
-      - include: string_content
-      - match: '"'
-        scope: punctuation.definition.comment.end.edn
-        pop: true
-
   named-fn-body:
     - include: list-end
     - include: comment
-    - include: docstring
+    - include: string
     - include: reader-conditional
     - include: map
     - match: '\('
@@ -548,7 +524,7 @@ contexts:
 
   interface-specs:
     - include: comment
-    - include: docstring
+    - include: string
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       set:
@@ -564,7 +540,7 @@ contexts:
               scope: punctuation.section.brackets.end.edn
               pop: true
               set:
-                - include: docstring
+                - include: string
                 - include: comment
                 - match: '\)'
                   scope: punctuation.section.parens.end.edn

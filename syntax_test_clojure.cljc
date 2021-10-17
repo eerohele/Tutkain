@@ -1864,9 +1864,7 @@
 ;  ^^^^ keyword.declaration.function.clojure
 ;       ^^^^^^^^^^^^ entity.name.function.clojure
     "docstring"
-;   ^ punctuation.definition.comment.begin.edn
-;   ^^^^^^^^^^^ comment.block.documentation.clojure
-;             ^ punctuation.definition.comment.end.edn
+;   ^^^^^^^^^^^ string.quoted.double.edn
     [arg & args]
 ;   ^^^^^^^^^^^^- storage
 ;   ^^^^^^^^^^^^- entity
@@ -1882,9 +1880,7 @@
     declare-defn
 ;   ^^^^^^^^^^^^ entity.name.function.clojure
     "docstring"
-;   ^ punctuation.definition.comment.begin.edn
-;   ^^^^^^^^^^^ comment.block.documentation.clojure
-;             ^ punctuation.definition.comment.end.edn
+;   ^^^^^^^^^^^ string.quoted.double.edn
     ([] dont-declare)
 ;    ^^ meta.function.parameters.clojure
 ;   ^^^^^^^^^^^^^^^^^- storage
@@ -1900,9 +1896,7 @@
    declare-defn
 ;  ^^^^^^^^^^^^ entity.name.function.clojure
    "docstring"
-;  ^ punctuation.definition.comment.begin.edn
-;  ^^^^^^^^^^^ comment.block.documentation.clojure
-;            ^ punctuation.definition.comment.end.edn
+;  ^^^^^^^^^^^ string.quoted.double.edn
    {:private true}
 ;   ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;            ^^^^ constant.language.edn
@@ -2070,9 +2064,7 @@
    ; ---
 ;  ^ comment.line.edn punctuation.definition.comment
    "docstring"
-;  ^ punctuation.definition.comment.begin.edn
-;  ^^^^^^^^^^^ comment.block.documentation.clojure
-;            ^ punctuation.definition.comment.end.edn
+;  ^ string.quoted.double.edn punctuation.definition.string.begin.edn
   )
 
   ; Invalid but take care anyway
@@ -2128,9 +2120,7 @@
    DeclareInterface
 ;  ^^^^^^^^^^^^^^^^ entity.name.type.clojure
    "docstring"
-;  ^ punctuation.definition.comment.begin.edn
-;  ^^^^^^^^^^^ comment.block.documentation.clojure
-;            ^ punctuation.definition.comment.end.edn
+;  ^^^^^^^^^^^ string.quoted.double.edn
   )
 
   ; Interface methods should have the same visual style as other function
@@ -2139,9 +2129,7 @@
   (definterface DeclareInterface
     (declare-noindex [_] "foo")
 ;    ^^^^^^^^^^^^^^^ entity.name.function.clojure
-;                        ^ punctuation.definition.comment.begin.edn
-;                        ^^^^^ comment.block.documentation.clojure
-;                            ^ punctuation.definition.comment.end.edn
+;                        ^^^^^ string.quoted.double.edn
     (declare-noindex [_]))
 ;    ^^^^^^^^^^^^^^^ entity.name.function.clojure
 
@@ -2482,9 +2470,7 @@
 ;                                             ^^^^^^^ entity.name.namespace.clojure
 
   (ns foo.bar "baz")
-;             ^ punctuation.definition.comment.begin.edn
-;             ^^^^^ comment.block.documentation.clojure
-;                 ^ punctuation.definition.comment.end.edn
+;             ^^^^^ string.quoted.double.edn
 
   (ns foo.bar
     (:require
