@@ -27,17 +27,6 @@ def determine_indentation(view, open_bracket):
         return indentation
 
 
-def restore_cursors(view):
-    # I have no idea why I need to do this, but if I don't, after this
-    # command has finished executing, the view will be in a state where
-    # the indentation we just added is selected.
-    ends = [region.end() for region in view.sel()]
-    view.sel().clear()
-
-    for end in ends:
-        view.sel().add(Region(end, end))
-
-
 def insert_newline_and_indent(view, edit):
     for region in view.sel():
         point = region.begin()
@@ -57,7 +46,6 @@ def insert_newline_and_indent(view, edit):
                 indentation = determine_indentation(view, open_bracket)
                 new_line = indentation + view.substr(line).lstrip()
                 view.replace(edit, line, new_line)
-                restore_cursors(view)
 
 
 def prune_string(string):
@@ -150,4 +138,3 @@ def indent_region(view, edit, region, prune=False):
                     view.replace(edit, line, replacer)
 
                 previous_line = view.full_line(line.begin())
-                restore_cursors(view)
