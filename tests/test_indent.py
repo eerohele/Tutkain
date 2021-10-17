@@ -511,3 +511,15 @@ class TestIndentRegionCommand(ViewTestCase):
 
         for n in range(173):
             self.becomes(text, text, selections=[(n, n)])
+
+
+    def test_find_open_bracket(self):
+        self.becomes(
+        """
+        [[:a
+          :b]
+        :c]""",
+        """
+        [[:a
+          :b]
+         :c]""")
