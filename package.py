@@ -1179,7 +1179,7 @@ def fetch_locals(view, point, form, handler):
     ):
         line, column = view.rowcol(form.begin())
         end_column = column + form.size()
-        start_line, start_column = view.rowcol(outermost.open.begin())
+        start_line, start_column = view.rowcol(outermost.open.region.begin())
         context = view.substr(outermost.extent())
 
         if local := view.substr(form).strip():

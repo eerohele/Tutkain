@@ -34,32 +34,38 @@ ABSORB_SELECTOR = inspect.cleandoc("""keyword.operator.macro
 
 
 @dataclass(eq=True, frozen=True)
+class Delimiter:
+    selector: str
+    region: Region
+
+
+@dataclass(eq=True, frozen=True)
 class Sexp:
     """A dataclass that encapsulates an S-expression in a View.
 
     Do not initialize directly; use make_sexp instead."""
     view: View
-    open: Region
-    close: Region
+    open: Delimiter
+    close: Delimiter
 
     def __str__(self):
         return self.view.substr(self.extent())
 
     def extent(self):
-        return Region(self.open.begin(), self.close.end())
+        return Region(self.open.region.begin(), self.close.region.end())
 
     def is_empty(self):
-        return self.open.end() == self.close.begin()
+        return self.open.region.end() == self.close.region.begin()
 
     def contains(self, point):
-        return point >= self.open.end() and point <= self.close.begin()
+        return point >= self.open.region.end() and point <= self.close.region.begin()
 
 
-def absorb_macro_characters(view: View, region: Region):
-    """Given a View and a Region that encloses a character that opens an
+def absorb_macro_characters(view: View, delimiter: Delimiter):
+    """Given a View and a Delimiter that encloses a character that opens an
     S-expression, extend the region to contain all macro characters that
     precede the S-expression, if any."""
-    begin = region.begin()
+    begin = delimiter.region.begin()
 
     if view.match_selector(begin - 1, ABSORB_SELECTOR):
         # Find the first point that contains a character other than a macro character or a
@@ -73,21 +79,15 @@ def absorb_macro_characters(view: View, region: Region):
 
         begin = max(boundary, 0)
 
-    return Region(begin, region.end())
+    return Delimiter(delimiter.selector, Region(begin, delimiter.region.end()))
 
 
-def make_sexp(view: View, open_region: Region, close_region: Region):
-    """Given a View, an open Region, and a close Region, return a Sexp
+def make_sexp(view: View, open_delim: Delimiter, close_delim: Delimiter):
+    """Given a View, an open Delimiter, and a close Delimiter, return a Sexp
     instance.
 
     Use this instead of initializing Sexp directly."""
-    return Sexp(view, absorb_macro_characters(view, open_region), close_region)
-
-
-@dataclass(eq=True, frozen=True)
-class Open:
-    selector: str
-    region: Region
+    return Sexp(view, absorb_macro_characters(view, open_delim), close_delim)
 
 
 def find_open(view, start_point):
@@ -101,7 +101,7 @@ def find_open(view, start_point):
         if stack == 0 and view.match_selector(point, BEGIN_SELECTORS):
             char = view.substr(point)
             region = Region(point, point + 1)
-            return Open(CHAR_TO_SELECTOR[char], region)
+            return Delimiter(CHAR_TO_SELECTOR[char], region)
         elif stack > 0 and view.match_selector(point, BEGIN_SELECTORS):
             stack -= 1
             point -= 1
@@ -114,21 +114,22 @@ def find_open(view, start_point):
     return None
 
 
-def find_close(view, opening):
+def find_close(view, open_delim):
     """Given a View and a Region that opens an S-expression, return the Region
     that closes the S-expression."""
-    if opening is None:
+    if open_delim is None:
         return None
 
-    point = opening.region.end()
+    point = open_delim.region.end()
     stack = 0
     max_point = view.size()
-    end_selector = BEGIN_TO_END_SELECTOR[opening.selector]
+    end_selector = BEGIN_TO_END_SELECTOR[open_delim.selector]
 
     while point < max_point:
         if stack == 0 and view.match_selector(point, end_selector):
-            return Region(point, point + 1)
-        elif view.match_selector(point, opening.selector):
+            region = Region(point, point + 1)
+            return Delimiter(end_selector, region)
+        elif view.match_selector(point, open_delim.selector):
             stack += 1
             point += 1
         elif stack > 0 and view.match_selector(point, end_selector):
@@ -182,11 +183,13 @@ def innermost(view, start_point, edge=True):
         )
 
         # TODO: Is a string a sexp?
-        return make_sexp(view, Region(begin, begin + 1), Region(end, end + 1))
+        open_delim = Delimiter("punctuation.definition.string.begin", Region(begin, begin + 1))
+        close_delim = Delimiter("punctuation.definition.string.end", Region(end, end + 1))
+        return make_sexp(view, open_delim, close_delim)
     else:
-        if punctuation := find_open(view, point):
-            close_region = find_close(view, punctuation)
-            return make_sexp(view, punctuation.region, close_region)
+        if open_delim := find_open(view, point):
+            close_delim = find_close(view, open_delim)
+            return make_sexp(view, open_delim, close_delim)
 
 
 def walk_outward(view, point, edge=True):
@@ -194,7 +197,7 @@ def walk_outward(view, point, edge=True):
 
     while sexp:
         yield sexp
-        sexp = innermost(view, sexp.open.begin(), edge=False)
+        sexp = innermost(view, sexp.open.region.begin(), edge=False)
 
 
 def head_word(view, point):
@@ -218,7 +221,7 @@ def outermost(view, point, edge=True, ignore={}):
 
     while previous and point >= 0:
         if previous.region and view.rowcol(previous.region.begin())[1] == 0:
-            return make_sexp(view, previous.region, find_close(view, previous))
+            return make_sexp(view, previous, find_close(view, previous))
 
         current = find_open(view, point)
 
@@ -227,7 +230,7 @@ def outermost(view, point, edge=True, ignore={}):
                 ignore and head_word(view, current.region.begin()) in ignore
             )
         ):
-            return make_sexp(view, previous.region, find_close(view, previous))
+            return make_sexp(view, previous, find_close(view, previous))
         else:
             point = previous.region.begin()
             previous = current
@@ -251,10 +254,10 @@ def cycle_collection_type(view, edit):
             sexp = innermost(view, point, edge=edge)
 
             if sexp:
-                open_bracket = view.substr(sexp.open)
+                open_bracket = view.substr(sexp.open.region)
                 new_open_bracket = CYCLE_ORDER[open_bracket]
 
                 if new_open_bracket[-1:] in OPEN:
                     new_close_bracket = OPEN[new_open_bracket[-1:]]
-                    view.replace(edit, sexp.close, new_close_bracket)
-                    view.replace(edit, sexp.open, new_open_bracket)
+                    view.replace(edit, sexp.close.region, new_close_bracket)
+                    view.replace(edit, sexp.open.region, new_open_bracket)

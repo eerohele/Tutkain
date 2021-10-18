@@ -16,7 +16,7 @@ progress = ProgressBar("[Tutkain] Running tests...")
 
 def current(view, point):
     for s in sexp.walk_outward(view, point, edge=True):
-        if (head := forms.find_next(view, s.open.end())) and (
+        if (head := forms.find_next(view, s.open.region.end())) and (
             view.match_selector(head.begin(), "meta.deftest.clojure")
         ):
             form = forms.seek_forward(
