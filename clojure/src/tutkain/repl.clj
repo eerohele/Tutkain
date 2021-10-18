@@ -47,10 +47,7 @@
              (backchannel/open
                (assoc opts
                  :xform-in #(assoc % :in in :repl-thread repl-thread)
-                 :xform-out #(dissoc % :in)))
-             prompt+input (fn [ns s]
-                            (send-over-backchannel {:tag :out :val (format "%s=> " (ns-name ns))})
-                            (send-over-backchannel {:tag :ret :val (str s \newline)}))]
+                 :xform-out #(dissoc % :in)))]
          (binding [*out* (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
                    *err* (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
                    *print* out-fn]
@@ -61,23 +58,23 @@
              (loop []
                (when
                  (try
-                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
-                         silent? (and (list? form) (= 'tutkain.repl/switch-ns (first form)))]
+                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)]
                      (with-bindings @backchannel/eval-context
                        (when-not (identical? form EOF)
-                         (when-not silent?
-                           (prompt+input *ns* s))
                          (try
-                           (if silent?
+                           (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
                              (do (eval form) true)
-                             (let [ret (eval form)]
-                               (when-not (= :repl/quit ret)
-                                 (set! *3 *2)
-                                 (set! *2 *1)
-                                 (set! *1 ret)
-                                 (backchannel/reset-eval-context! (get-thread-bindings))
-                                 (out-fn ret)
-                                 true)))
+                             (do
+                               (binding [*out* out]
+                                 (println (format "%s=> %s" (ns-name *ns*) s)))
+                               (let [ret (eval form)]
+                                 (when-not (= :repl/quit ret)
+                                   (set! *3 *2)
+                                   (set! *2 *1)
+                                   (set! *1 ret)
+                                   (backchannel/reset-eval-context! (get-thread-bindings))
+                                   (out-fn ret)
+                                   true))))
                            (catch Throwable ex
                              (set! *e ex)
                              (backchannel/reset-eval-context! (get-thread-bindings))

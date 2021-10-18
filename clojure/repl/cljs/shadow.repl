@@ -10,6 +10,8 @@
    [tutkain.socket :as socket]
    [tutkain.shadow :as shadow])
   (:import
+   (clojure.lang LineNumberingPushbackReader)
+   (java.io StringReader)
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
 (spec/def ::tag #{:ret :err :out :tap})
@@ -61,15 +63,24 @@
 
 (xr/on-exit #(rsend ::socket/quit))
 
+(defn read-forms
+  [code]
+  (let [EOF (Object.)]
+    (when-some [reader (some->> code StringReader. LineNumberingPushbackReader.)]
+      (->>
+        #(read {:eof EOF :read-cond :allow} reader)
+        (repeatedly)
+        (take-while #(not (identical? % EOF)))))))
+
 (defn rrecv
   []
-  (-> rrecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+  (-> rrecvq (.poll 1 TimeUnit/SECONDS) read-forms))
 
 (defn brecv
   []
   (-> brecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
 
-(def backchannel-addr (rrecv))
+(def backchannel-addr (first (rrecv)))
 
 (def bsendq
   (socket/client
@@ -83,32 +94,29 @@
 
 (xr/on-exit #(bsend ::socket/quit))
 
+(defmacro check-result!
+  [& forms]
+  `(xr/check! (into #{} '(~forms))))
+
 (rsend '(inc 1))
-(brecv)
-(xr/check! ::ret) ;; prompt
-(brecv)
-(xr/check! ::ret) ;; input
 (rrecv)
-(xr/check! #{2})
+(check-result! cljs.user=> (inc 1))
+(rrecv)
+(check-result! 2)
 
 (rsend '(ns foo.bar))
-(brecv)
-(xr/check! ::ret) ;; prompt
-(brecv)
-(xr/check! ::ret) ;; input
 (rrecv)
+(check-result! cljs.user=> (ns foo.bar))
+(rrecv)
+(check-result! nil)
 (rsend (binding [*ns* (create-ns 'foo.bar)] (read-string "::qux")))
-(brecv)
-(xr/check! ::ret) ;; prompt
-(brecv)
-(xr/check! ::ret) ;; input
 (rrecv)
-(xr/check! qualified-keyword?)
+(check-result! foo.bar=> :foo.bar/qux)
+(rrecv)
+(check-result! :foo.bar/qux)
 
 (rsend :repl/quit)
-(brecv)
-(xr/check! ::ret) ;; prompt
-(brecv)
-(xr/check! ::ret) ;; input
+(rrecv)
+(check-result! foo.bar=> :repl/quit)
 (rrecv)
 (xr/check! nil?)

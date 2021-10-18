@@ -7,6 +7,8 @@
    [tutkain.socket :as socket]
    [tutkain.repl :as repl])
   (:import
+   (clojure.lang LineNumberingPushbackReader)
+   (java.io StringReader)
    (java.net ConnectException)
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
@@ -46,15 +48,24 @@
 
 (xr/on-exit #(rsend ::socket/quit))
 
+(defn read-forms
+  [code]
+  (let [EOF (Object.)]
+    (when-some [reader (some->> code StringReader. LineNumberingPushbackReader.)]
+      (->>
+        #(read {:eof EOF :read-cond :allow} reader)
+        (repeatedly)
+        (take-while #(not (identical? % EOF)))))))
+
 (defn rrecv
   []
-  (-> rrecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+  (-> rrecvq (.poll 1 TimeUnit/SECONDS) read-forms))
 
 (defn brecv
   []
   (-> brecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
 
-(def backchannel-addr (rrecv))
+(def backchannel-addr (first (rrecv)))
 
 (def bsendq
   (socket/client
@@ -68,50 +79,48 @@
 
 (xr/on-exit #(bsend ::socket/quit))
 
+(defmacro check-result!
+  [& forms]
+  `(xr/check! (into #{} '(~forms))))
+
 (rsend '(inc 1))
-(brecv)
-(xr/check! ::ret) ;; prompt
-(brecv)
-(xr/check! ::ret) ;; input
 (rrecv)
-(xr/check! #{2})
+(check-result! user=> (inc 1))
+(rrecv)
+(check-result! 2)
 
 (rsend '(/ 4 0))
-(brecv)
-(xr/check! ::ret) ;; prompt
-(brecv)
-(xr/check! ::ret) ;; input
+(rrecv)
+(check-result! user=> (/ 4 0))
 (brecv)
 (xr/check! ::ret) ;; err
 
 (rsend '(tap> {:foo :bar}))
-(brecv)
-(xr/check! ::ret) ;; prompt
-(brecv)
-(xr/check! ::ret) ;; input
 (rrecv)
-(xr/check! true?)
+(check-result! user=> (tap> {:foo :bar}))
+(rrecv)
+(check-result! true)
 (brecv)
 (xr/check! ::ret) ;; tap
 
 (rsend '(Thread/sleep Integer/MAX_VALUE))
+(rrecv)
+(check-result! user=> (Thread/sleep Integer/MAX_VALUE))
 (bsend {:op :interrupt})
-(brecv)
-(xr/check! ::ret) ;; prompt
-(brecv)
-(xr/check! ::ret) ;; input
 (brecv)
 (xr/check! ::ret) ;; InterruptedException
 
 (rsend '(inc 1))
-(brecv)
-(xr/check! ::ret)
+(rrecv)
+(check-result! user=> (inc 1))
 (def ret (rrecv))
 ;; Evaluating lists whose head is tutkain.repl/switch-ns don't affect *1 etc.
 (rsend '(tutkain.repl/switch-ns tutkain.repl))
 (rrecv)
 (xr/check! nil?) ;; Client doesn't send response
 (rsend '*1)
+(rrecv)
+(check-result! tutkain.repl=> *1)
 (rrecv)
 (xr/check! (partial = ret))
 

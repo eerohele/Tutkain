@@ -154,8 +154,7 @@
                (when (some? read-result)
                  ;; FIXME: this also conceals user-issued in-ns calls
                  (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
-                   (repl-stdout repl-state (format "%s=> " (:ns repl-state)))
-                   (repl-val repl-state (str (:source read-result) \newline)))
+                   (println (format "%s=> %s" (ns-name (:ns repl-state)) (:source read-result))))
                  (let [{:keys [eof? error? ex source]} read-result]
                    (cond
                      eof?
