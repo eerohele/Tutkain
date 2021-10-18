@@ -135,18 +135,19 @@ IGNORE_SELECTORS = "punctuation.definition.string | string | comment.line"
 
 def indent_region(view, edit, region, prune=False):
     if region and not view.match_selector(region.begin(), IGNORE_SELECTORS):
-        previous_line = None
+        new_lines = []
 
         for line in view.lines(region):
-            if previous_line:
-                begin = previous_line.end()
-                end = begin + line.size()
-                line = Region(begin, end)
+            replacee = line
 
-            open_bracket = sexp.find_open(view, line.begin())
-            if replacer := get_indented_string(view, open_bracket, line, prune=prune):
-                if replacer != view.substr(line):
-                    view.replace(edit, line, replacer)
+            if new_lines:
+                if previous := new_lines.pop():
+                    begin = previous.end()
+                    end = begin + line.size()
+                    replacee = Region(begin, end)
 
-                previous_line = view.full_line(line.begin())
+            open_bracket = sexp.find_open(view, replacee.begin())
+            if replacer := get_indented_string(view, open_bracket, replacee, prune=prune):
+                view.replace(edit, replacee, replacer)
+                new_lines.append(view.full_line(replacee.begin()))
                 restore_cursors(view)
