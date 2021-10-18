@@ -106,9 +106,7 @@ def prune_region(view, region):
     return "".join(strings)
 
 
-def get_indented_string(view, region, prune=False):
-    open_bracket = sexp.find_open(view, region.begin())
-
+def get_indented_string(view, open_bracket, region, prune=False):
     string = prune_region(view, region) if prune else view.substr(region)
 
     if view.match_selector(region.begin(), "string"):
@@ -133,7 +131,8 @@ def indent_region(view, edit, region, prune=False):
                 end = begin + line.size()
                 line = Region(begin, end)
 
-            if replacer := get_indented_string(view, line, prune=prune):
+            open_bracket = sexp.find_open(view, line.begin())
+            if replacer := get_indented_string(view, open_bracket, line, prune=prune):
                 if replacer != view.substr(line):
                     view.replace(edit, line, replacer)
 

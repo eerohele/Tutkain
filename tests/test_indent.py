@@ -523,3 +523,16 @@ class TestIndentRegionCommand(ViewTestCase):
         [[:a
           :b]
          :c]""")
+
+        self.becomes(
+        """
+        [{:a :b}
+         {:b :c
+          :d :e}
+         {:f :g}]""",
+        """
+        [{:a :b}
+         {:b :c
+          :d :e}
+         {:f :g}]""")
+
