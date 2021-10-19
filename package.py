@@ -1332,7 +1332,6 @@ class TutkainPromptCommand(WindowCommand):
         )
 
         view.settings().set("tutkain_repl_input_panel", True)
-        view.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
 
     def run(self):
         if client := state.client(self.window, edn.Keyword("clj")):
