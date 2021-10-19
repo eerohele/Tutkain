@@ -1,6 +1,9 @@
 import sublime
 
 
+bar = None
+
+
 # I straight up stole this progress bar from SublimeText/UnitTesting.
 class ProgressBar:
     def __init__(self, label, width=10):
@@ -23,3 +26,19 @@ class ProgressBar:
         after = self.width - before
         sublime.status_message("%s [%s=%s]" % (self.label, " " * before, " " * after))
         sublime.set_timeout(lambda: self.update(status + 1), 100)
+
+
+def start(message):
+    global bar
+
+    if bar:
+        bar.stop()
+
+    bar = ProgressBar("[Tutkain] Running tests...")
+    bar.start()
+
+
+def stop():
+    global bar
+    if bar:
+        bar.stop()

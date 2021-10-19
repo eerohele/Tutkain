@@ -4,14 +4,11 @@ from . import base64
 from . import forms
 from . import namespace
 from . import sexp
-from .progress import ProgressBar
+from . import progress
 from ..api import edn
 
 
 RESULTS_SETTINGS_KEY = "tutkain_clojure_test_results"
-
-
-progress = ProgressBar("[Tutkain] Running tests...")
 
 
 def current(view, point):
@@ -227,5 +224,5 @@ def run(view, client, test_vars=[]):
     if client is None:
         view.window().status_message("ERR: Not connected to a REPL.")
     else:
-        progress.start()
+        progress.start("[Tutkain] Running tests...")
         run_tests(view, client, test_vars)

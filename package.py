@@ -23,6 +23,7 @@ from .src import forms
 from .src import indent
 from .src import inline
 from .src import paredit
+from .src import progress
 from .src import namespace
 from .src import test
 from .src import repl
@@ -345,14 +346,12 @@ class TutkainEvaluateCommand(TextCommand):
         return self.without_discard_macro(eval_region)
 
     def evaluate_view(self, client, code):
-        progress = ProgressBar("[Tutkain] Evaluating view...")
-
         def handler(response):
             client.print(response)
             progress.stop()
             self.view.window().status_message("[Tutkain] Evaluating view... done.")
 
-        progress.start()
+        progress.start("[Tutkain] Evaluating view...")
 
         client.backchannel.send({
             "op": edn.Keyword("load"),
@@ -578,7 +577,7 @@ class TutkainDisconnectCommand(WindowCommand):
     def run(self):
         active_view = self.window.active_view()
         inline.clear(active_view)
-        test.progress.stop()
+        progress.stop()
 
         if view := repl.views.active_repl_view(self.window):
             view.close()
