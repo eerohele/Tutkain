@@ -99,30 +99,31 @@
                            tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})]
                        (deliver eventual-send-fn out-fn)
                        (add-tap tapfn)
-                       (try
-                         (loop []
-                           (when-not (.isClosed socket)
-                             (when-some [message (try
-                                                   (edn/read {:eof EOF} in)
-                                                   ;; If we can't read from the socket, exit the loop.
-                                                   (catch java.net.SocketException _)
-                                                   ;; If the remote host closes the connection, exit the loop.
-                                                   (catch java.io.IOException _))]
-                               (when-not (identical? EOF message)
-                                 (let [recur? (case (:op message)
-                                                :quit false
-                                                (let [message (assoc (xform-in message) :out-fn out-fn)]
-                                                  (try
-                                                    (handle message)
-                                                    true
-                                                    (catch Throwable ex
-                                                      (respond-to message {:tag :ret
-                                                                           :exception true
-                                                                           :val (format/pp-str (Throwable->map ex))})
-                                                      true))))]
-                                   (when recur? (recur)))))))
-                         (finally
-                           (remove-tap tapfn))))
+                       (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)]
+                         (try
+                           (loop []
+                             (when-not (.isClosed socket)
+                               (when-some [message (try
+                                                     (edn/read {:eof EOF} in)
+                                                     ;; If we can't read from the socket, exit the loop.
+                                                     (catch java.net.SocketException _)
+                                                     ;; If the remote host closes the connection, exit the loop.
+                                                     (catch java.io.IOException _))]
+                                 (when-not (identical? EOF message)
+                                   (let [recur? (case (:op message)
+                                                  :quit false
+                                                  (let [message (assoc (xform-in message) :out-fn out-fn)]
+                                                    (try
+                                                      (handle message)
+                                                      true
+                                                      (catch Throwable ex
+                                                        (respond-to message {:tag :ret
+                                                                             :exception true
+                                                                             :val (format/pp-str (Throwable->map ex))})
+                                                        true))))]
+                                     (when recur? (recur)))))))
+                           (finally
+                             (remove-tap tapfn)))))
                      (finally
                        (.close socket))))
         thread (Thread. ^Runnable msg-loop)]
