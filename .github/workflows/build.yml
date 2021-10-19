@@ -67,6 +67,11 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '16'
+          cache: 'npm'
+          cache-dependency-path: ./clojure/package-lock.json
+
+      - run: npm install
+        working-directory: ./clojure
 
       - name: Cache Maven dependencies
         uses: actions/cache@v2
