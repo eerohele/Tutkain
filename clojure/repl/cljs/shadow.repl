@@ -2,7 +2,6 @@
   (:require
    [clojure.edn :as edn]
    [clojure.core.server :as server]
-   [clojure.java.shell :as sh]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as shadow.server]
@@ -44,8 +43,14 @@
        :accept `shadow/repl
        :args [{:build-id build-id}]})))
 
-(def node (future (sh/sh "node" "out/script.js")))
-(xr/on-exit #(future-cancel node))
+(def process
+  (->
+    (ProcessBuilder. (into-array String ["node" "out/script.js"]))
+    .inheritIO
+    .start))
+
+(xr/on-exit #(.destroy process))
+
 (Thread/sleep 3000)
 
 (def rrecvq (LinkedBlockingQueue.))
