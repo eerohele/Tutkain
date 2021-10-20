@@ -528,6 +528,9 @@ contexts:
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       set:
+        - match: '\)'
+          scope: punctuation.section.parens.end.edn
+          set: interface-specs
         - include: metadata
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure

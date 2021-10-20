@@ -2099,6 +2099,12 @@
 ;                           ^^^^^^^^^^^^^^- storage
 ;                           ^^^^^^^^^^^^^^- entity
 
+(defprotocol Showable
+  ())
+; ^ punctuation.section.parens.begin.edn
+;  ^ punctuation.section.parens.end.edn
+;   ^ punctuation.section.parens.end.edn
+
 
 ; # definterface
 
