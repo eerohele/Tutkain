@@ -504,12 +504,12 @@ class TutkainConnectCommand(WindowCommand):
                 self.choose_build_id(ids, on_cancel, on_done)
 
             # FIXME: Backchannel port option
-            return repl.JSClient(source_root(), host, int(port), prompt)
+            return repl.JSClient(source_root(), host, port, prompt)
         elif dialect == edn.Keyword("bb"):
-            return repl.BabashkaClient(source_root(), host, int(port))
+            return repl.BabashkaClient(source_root(), host, port)
         else:
             return repl.JVMClient(
-                source_root(), host, int(port), backchannel_opts={
+                source_root(), host, port, backchannel_opts={
                     "port": settings().get("clojure").get("backchannel").get("port"),
                     "bind_address": settings().get("clojure").get("backchannel").get("bind_address", "localhost")
                 }
@@ -544,7 +544,7 @@ class TutkainConnectCommand(WindowCommand):
         active_view = self.window.active_view()
         view = self.get_or_create_view(view_id)
         set_layout(self.window)
-        client = self.connect(dialect, host, port, lambda: view.close())
+        client = self.connect(dialect, host, int(port), lambda: view.close())
         repl_view_settings = settings().get("repl_view_settings", {})
         repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
 
