@@ -483,17 +483,11 @@ class EvaluationScopeInputHandler(ListInputHandler):
 
 
 class TutkainConnectCommand(WindowCommand):
-    def set_build_id(self, view, index, on_done):
-        if index == -1:
-            view.close()
-        else:
-            on_done(index)
-
-    def choose_build_id(self, view, ids, on_done):
+    def choose_build_id(self, ids, on_cancel, on_done):
         if items := list(map(lambda id: id.name, ids)):
             self.window.show_quick_panel(
                 items,
-                lambda index: self.set_build_id(view, index, on_done),
+                lambda index: on_cancel() if index == -1 else on_done(index),
                 placeholder="Choose shadow-cljs build ID",
                 flags=sublime.MONOSPACE_FONT
             )
@@ -504,50 +498,32 @@ class TutkainConnectCommand(WindowCommand):
             None,
         ) if view_id else self.window.new_file()
 
-    def run(self, dialect, host, port, view_id=None):
-        dialect = edn.Keyword(dialect)
+    def make_client(self, dialect, host, port, on_cancel):
+        if dialect == edn.Keyword("cljs"):
+            def prompt(ids, on_done):
+                self.choose_build_id(ids, on_cancel, on_done)
 
+            # FIXME: Backchannel port option
+            return repl.JSClient(source_root(), host, int(port), prompt)
+        elif dialect == edn.Keyword("bb"):
+            return repl.BabashkaClient(source_root(), host, int(port))
+        else:
+            return repl.JVMClient(
+                source_root(), host, int(port), backchannel_opts={
+                    "port": settings().get("clojure").get("backchannel").get("port"),
+                    "bind_address": settings().get("clojure").get("backchannel").get("bind_address", "localhost")
+                }
+            )
+
+    def connect(self, dialect, host, port, on_cancel=lambda: None):
         try:
-            active_view = self.window.active_view()
-            view = self.get_or_create_view(view_id)
-
-            if settings().get("tap_panel"):
-                tap.create_panel(self.window)
-
-            if dialect == edn.Keyword("cljs"):
-                def prompt(ids, on_done):
-                    self.choose_build_id(view, ids, on_done)
-
-                # FIXME: Backchannel port option
-                client = repl.JSClient(source_root(), host, int(port), prompt).connect()
-            elif dialect == edn.Keyword("bb"):
-                client = repl.BabashkaClient(source_root(), host, int(port)).connect()
-            else:
-                client = repl.JVMClient(
-                    source_root(), host, int(port), backchannel_opts={
-                        "port": settings().get("clojure").get("backchannel").get("port"),
-                        "bind_address": settings().get("clojure").get("backchannel").get("bind_address", "localhost")
-                    }
-                ).connect()
-
-            set_layout(self.window)
-
-            repl_view_settings = settings().get("repl_view_settings", {})
-
-            repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
+            client = self.make_client(dialect, host, port, on_cancel)
+            client.connect()
             state.register_client(dialect, client)
             state.set_active_client(dialect, client)
-
-            print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
-            print_loop.name = f"tutkain.{dialect.name}.print_loop"
-            print_loop.start()
-
-            # Activate the output view and the view that was active prior to
-            # creating the output view.
-            self.window.focus_view(view)
-            self.window.focus_view(active_view)
+            return client
         except TimeoutError:
-            view.close()
+            on_cancel()
             sublime.error_message(cleandoc("""
                 Timed out trying to connect to socket REPL server.
 
@@ -556,8 +532,30 @@ class TutkainConnectCommand(WindowCommand):
                 See https://tutkain.flowthing.me/#starting-a-socket-repl for more information.
                 """))
         except ConnectionRefusedError:
-            view.close()
+            on_cancel()
             self.window.status_message(f"ERR: connection to {host}:{port} refused.")
+
+    def run(self, dialect, host, port, view_id=None):
+        dialect = edn.Keyword(dialect)
+
+        if settings().get("tap_panel"):
+            tap.create_panel(self.window)
+
+        active_view = self.window.active_view()
+        view = self.get_or_create_view(view_id)
+        set_layout(self.window)
+        client = self.connect(dialect, host, port, lambda: view.close())
+        repl_view_settings = settings().get("repl_view_settings", {})
+        repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
+
+        print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
+        print_loop.name = f"tutkain.{dialect.name}.print_loop"
+        print_loop.start()
+
+        # Activate the output view and the view that was active prior to
+        # creating the output view.
+        self.window.focus_view(view)
+        self.window.focus_view(active_view)
 
     def input(self, args):
         if "dialect" in args and "host" in args and "port" in args:
