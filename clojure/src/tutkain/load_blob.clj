@@ -4,6 +4,7 @@
    [tutkain.base64 :refer [base64-reader]]
    [tutkain.backchannel :refer [handle respond-to]])
   (:import
+   (clojure.lang Compiler)
    (java.io File)))
 
 (defmethod handle :load
