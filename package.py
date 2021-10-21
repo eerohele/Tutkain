@@ -519,7 +519,7 @@ class TutkainConnectCommand(WindowCommand):
         try:
             client = self.make_client(dialect, host, port, on_cancel)
             client.connect()
-            state.register_client(dialect, client)
+            state.register_client(client)
             state.set_active_client(dialect, client)
             return client
         except TimeoutError:

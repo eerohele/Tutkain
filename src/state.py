@@ -13,7 +13,7 @@ Dialect = edn.Keyword
 __state = defaultdict(dict)
 
 
-def register_client(dialect: Dialect, client: repl.Client) -> None:
+def register_client(client: repl.Client) -> None:
     __state["client_by_id"][client.id] = client
 
 
@@ -47,7 +47,6 @@ def forget_client(dialect: Dialect, client: repl.Client) -> None:
 
         if client.id in __state.get("client_by_id"):
             del __state["client_by_id"][client.id]
-
 
 
 def forget_active_repl_view(dialect: Dialect, view: View) -> None:

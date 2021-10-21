@@ -108,7 +108,7 @@ class TestJVMClient(PackageTestCase):
         dialect = edn.Keyword("clj")
         self.repl_view = sublime.active_window().new_file()
         views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
-        state.register_client(dialect, self.client)
+        state.register_client(self.client)
         state.set_active_client(dialect, self.client)
         self.backchannel = self.conduct_handshake()
 
@@ -661,7 +661,7 @@ class TestJSClient(PackageTestCase):
         dialect = edn.Keyword("cljs")
         self.repl_view = sublime.active_window().new_file()
         views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
-        state.register_client(dialect, self.client)
+        state.register_client(self.client)
         state.set_active_client(dialect, self.client)
         self.backchannel = self.conduct_handshake()
 
@@ -744,7 +744,7 @@ class TestBabashkaClient(PackageTestCase):
         dialect = edn.Keyword("bb")
         self.repl_view = sublime.active_window().new_file()
         views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
-        state.register_client(dialect, self.client)
+        state.register_client(self.client)
         state.set_active_client(dialect, self.client)
         self.conduct_handshake()
 
