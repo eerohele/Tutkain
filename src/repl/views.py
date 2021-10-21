@@ -45,7 +45,7 @@ def active_repl_view(window: Window) -> Union[View, None]:
             return view
 
 
-def configure(view, dialect, host, port, settings={}):
+def configure(view, dialect, client_id, host, port, settings={}):
     window = view.window()
     num_groups = window.num_groups()
     target_group = num_groups - 1
@@ -59,6 +59,7 @@ def configure(view, dialect, host, port, settings={}):
 
     # User is not allowed to change these settings:
     internal_settings = {
+        "tutkain_repl_client_id",
         "tutkain_repl_view_dialect",
         "tutkain_repl_host",
         "tutkain_repl_port",
@@ -72,6 +73,7 @@ def configure(view, dialect, host, port, settings={}):
             view.settings().set(settings_name, settings_value)
 
     view.set_name(f"REPL · {dialects.name(dialect)} · {host}:{port}")
+    view.settings().set("tutkain_repl_client_id", client_id)
     view.settings().set("tutkain_repl_view_dialect", dialect.name or "clj")
     view.settings().set("tutkain_repl_host", host)
     view.settings().set("tutkain_repl_port", port)

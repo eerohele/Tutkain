@@ -30,7 +30,7 @@ class TestClear(TestCase):
             self.repl_view.close()
 
     def test_clear(self):
-        views.configure(self.repl_view, edn.Keyword("clj"), "localhost", 1234)
+        views.configure(self.repl_view, edn.Keyword("clj"), "1", "localhost", 1234)
 
         # Clear both views by default:
 

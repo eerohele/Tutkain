@@ -18,6 +18,7 @@ class TestConfigure(TestCase):
         return views.configure(
             self.repl_view,
             edn.Keyword("clj"),
+            "1",
             "localhost",
             1234,
             settings,

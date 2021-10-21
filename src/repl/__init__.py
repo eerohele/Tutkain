@@ -7,6 +7,7 @@ import pathlib
 import posixpath
 import socket
 import types
+import uuid
 from threading import Lock
 
 from . import backchannel
@@ -92,12 +93,15 @@ class Client(ABC):
         return posixpath.join(pathlib.Path(self.source_root).as_posix(), filename)
 
     def __init__(self, source_root, host, port, name, backchannel_opts={}):
+        self.id = str(uuid.uuid4())
         self.source_root = source_root
         self.host = host
         self.port = port
         self.name = name
         self.sendq = queue.Queue()
         self.printq = queue.Queue()
+        self.server = None
+        self.client = None
         self.handler = None
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
         self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
@@ -236,6 +240,8 @@ class JVMClient(Client):
             if (host := ret.get(edn.Keyword("host"))) and (port := ret.get(edn.Keyword("port"))):
                 self.backchannel = backchannel.Client(self.print).connect(host, port)
                 self.print(ret.get(edn.Keyword("greeting")))
+                self.server = ret.get(edn.Keyword("server"))
+                self.client = ret.get(edn.Keyword("client"))
             else:
                 self.print(ret)
 
