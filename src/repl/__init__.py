@@ -118,6 +118,9 @@ class Client(ABC):
             self.buffer.write("\n")
             self.buffer.flush()
 
+        self.buffer.write(":repl/quit")
+        self.buffer.flush()
+        self.socket.shutdown(socket.SHUT_RDWR)
         log.debug({"event": "thread/exit"})
 
     @abstractmethod
@@ -166,34 +169,26 @@ class Client(ABC):
         except OSError as error:
             log.error({"event": "error", "error": error})
         finally:
-            self.print(edn.kwmap({
-                "tag": edn.Keyword("ret"),
-                "val": ":tutkain/disconnected"
-            }))
+            self.print(":tutkain/disconnected")
 
             # Put a None into the queue to tell consumers to stop reading it.
             self.print(None)
 
-            # Feed poison pill to input queue.
-            self.sendq.put(None)
-
             log.debug({"event": "thread/exit"})
 
-            # We've exited the loop that reads from the socket, so we can
-            # close the connection to the socket.
-            if self.socket is not None:
-                try:
-                    self.buffer.close()
-                    self.socket.shutdown(socket.SHUT_RDWR)
-                    self.socket.close()
-                    log.debug({"event": "client/disconnect"})
-                except OSError as error:
-                    log.debug({"event": "error", "exception": error})
+            try:
+                self.buffer.close()
+                self.socket.close()
+                log.debug({"event": "client/disconnect"})
+            except OSError as error:
+                log.debug({"event": "error", "exception": error})
 
     def halt(self):
         """Halt this client."""
         log.debug({"event": "client/halt"})
-        self.sendq.put(":repl/quit")
+
+        # Feed poison pill to input queue.
+        self.sendq.put(None)
         self.executor.shutdown(wait=False)
         self.backchannel.halt()
 

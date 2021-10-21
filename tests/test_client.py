@@ -86,4 +86,4 @@ class TestJVMClient(TestCase):
                 self.assertEquals("2\n", client.printq.get(timeout=1))
 
             client.halt()
-            self.assertEquals(":repl/quit\n", server.recv())
+            self.assertEquals(":repl/quit", server.recv())
