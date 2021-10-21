@@ -549,7 +549,7 @@ class TutkainConnectCommand(WindowCommand):
         repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
 
         print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
-        print_loop.name = f"tutkain.{dialect.name}.print_loop"
+        print_loop.name = f"tutkain.{client.id}.print_loop"
         print_loop.start()
 
         # Activate the output view and the view that was active prior to
