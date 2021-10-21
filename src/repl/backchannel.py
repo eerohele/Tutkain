@@ -62,7 +62,7 @@ class Client:
         finally:
             log.debug({"event": "thread/exit"})
 
-    def connect(self, host, port):
+    def connect(self, id, host, port):
         """Given a host and a port number, connect this backchannel client to
         the backchannel server listening on host:port."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -72,11 +72,11 @@ class Client:
         log.debug({"event": "backchannel/connect", "host": host, "port": port})
 
         send_loop = Thread(daemon=True, target=lambda: self.send_loop(sock, buffer))
-        send_loop.name = "tutkain.backchannel.send_loop"
+        send_loop.name = f"tutkain.backchannel.{id}.send_loop"
         send_loop.start()
 
         recv_loop = Thread(daemon=True, target=lambda: self.recv_loop(buffer))
-        recv_loop.name = "tutkain.backchannel.recv_loop"
+        recv_loop.name = f"tutkain.backchannel.{id}.recv_loop"
         recv_loop.start()
 
         return self

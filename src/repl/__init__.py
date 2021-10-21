@@ -103,7 +103,7 @@ class Client(ABC):
         self.server = None
         self.client = None
         self.handler = None
-        self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}")
+        self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}.{self.id}")
         self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
         self.backchannel_opts = backchannel_opts
         self.capabilities = set()
@@ -238,7 +238,7 @@ class JVMClient(Client):
             ret = edn.read(line)
 
             if (host := ret.get(edn.Keyword("host"))) and (port := ret.get(edn.Keyword("port"))):
-                self.backchannel = backchannel.Client(self.print).connect(host, port)
+                self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
                 self.print(ret.get(edn.Keyword("greeting")))
                 self.server = ret.get(edn.Keyword("server"))
                 self.client = ret.get(edn.Keyword("client"))
@@ -324,7 +324,7 @@ class JSClient(Client):
         ret = edn.read_line(self.buffer)
         host = ret.get(edn.Keyword("host"))
         port = ret.get(edn.Keyword("port"))
-        self.backchannel = backchannel.Client(self.print).connect(host, port)
+        self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
         greeting = ret.get(edn.Keyword("greeting"))
         self.print(greeting)
 
