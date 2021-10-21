@@ -72,12 +72,10 @@
                                    (set! *3 *2)
                                    (set! *2 *1)
                                    (set! *1 ret)
-                                   (backchannel/reset-eval-context! (get-thread-bindings))
                                    (out-fn ret)
                                    true))))
                            (catch Throwable ex
                              (set! *e ex)
-                             (backchannel/reset-eval-context! (get-thread-bindings))
                              (send-over-backchannel {:tag :err
                                                      :val (format/Throwable->str ex)
                                                      :ns (str (.name *ns*))
@@ -85,7 +83,6 @@
                              true)))))
                    (catch Throwable ex
                      (set! *e ex)
-                     (backchannel/reset-eval-context! (get-thread-bindings))
                      (send-over-backchannel
                        {:tag :ret
                         :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
