@@ -359,12 +359,15 @@
   ([{:keys [build-id] :as opts}]
    (let [lock (Object.)
          close-signal (async/promise-chan)
-         out-fn #(binding [*flush-on-newline* true]
+         out-fn #(binding [*flush-on-newline* true
+                           *default-data-reader-fn* tagged-literal
+                           *read-eval* false]
                    (locking lock
-                     (pprint/pprint
-                       (binding [*default-data-reader-fn* tagged-literal
-                                 *read-eval* false]
-                         (some-> % read-string)))))
+                     (try
+                       (pprint/pprint
+                         (some-> % read-string))
+                       (catch Throwable _
+                         (println %)))))
          {backchannel :socket
           send-over-backchannel :send-over-backchannel}
          (backchannel/open
