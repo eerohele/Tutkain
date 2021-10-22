@@ -393,8 +393,9 @@
                  :form (:source read-result)}))
 
             :repl-result
-            (fn [_ ret]
-              (out-fn ret))
+            (fn [{:keys [read-result]} ret]
+              (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
+                (out-fn ret)))
 
             :repl-val
             (fn [_ ret]
