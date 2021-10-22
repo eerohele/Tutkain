@@ -333,7 +333,6 @@ class JSClient(Client):
         self.start_workers()
 
     def switch_namespace(self, ns):
-        self.set_handler(lambda _: None)
         self.sendq.put(f"(in-ns '{ns})")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
