@@ -60,8 +60,7 @@
            repl-read-ex
            repl-result
            repl-stdout
-           repl-stderr
-           repl-val]}]
+           repl-stderr]}]
   {:pre [(some? worker)
          (some? proc-stop)
          (some? close-signal)]}
