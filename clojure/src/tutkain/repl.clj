@@ -32,12 +32,13 @@
          lock (Object.)
          out *out*
          in *in*
-         out-fn (fn [message]
-                  (binding [*print-readably* true
-                            pprint/*print-right-margin* 100]
-                    (locking lock
-                      (pprint/pprint message out)
-                      (.flush out))))
+         plain-print #(binding [*out* out] (println %))
+         pretty-print (fn [message]
+                        (binding [*print-readably* true
+                                  pprint/*print-right-margin* 100]
+                          (locking lock
+                            (pprint/pprint message out)
+                            (.flush out))))
          repl-thread (Thread/currentThread)]
      (main/with-bindings
        (in-ns 'user)
@@ -50,11 +51,11 @@
                  :xform-out #(dissoc % :in)))]
          (binding [*out* (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
                    *err* (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
-                   *print* out-fn]
+                   *print* pretty-print]
            (try
-             (out-fn {:greeting (str "Clojure " (clojure-version) "\n")
-                      :host (-> backchannel .getInetAddress .getHostName)
-                      :port (-> backchannel .getLocalPort)})
+             (pretty-print {:greeting (str "Clojure " (clojure-version) "\n")
+                            :host (-> backchannel .getInetAddress .getHostName)
+                            :port (-> backchannel .getLocalPort)})
              (loop []
                (when
                  (try
@@ -65,14 +66,13 @@
                            (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
                              (do (eval form) true)
                              (do
-                               (binding [*out* out]
-                                 (println (format "%s=> %s" (ns-name *ns*) s)))
+                               (plain-print (format "%s=> %s" (ns-name *ns*) s))
                                (let [ret (eval form)]
                                  (when-not (= :repl/quit ret)
                                    (set! *3 *2)
                                    (set! *2 *1)
                                    (set! *1 ret)
-                                   (out-fn ret)
+                                   (pretty-print ret)
                                    true))))
                            (catch Throwable ex
                              (set! *e ex)
