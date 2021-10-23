@@ -16,22 +16,24 @@ def format(form):
 
 
 def show(view, point, value, inline_result=True):
-    layout = sublime.LAYOUT_INLINE
-    value = html.escape(value)
+    # Hacks ahoy: don't print prompt and input
+    if not re.match(r".+?=>\s", value):
+        layout = sublime.LAYOUT_INLINE
+        value = html.escape(value)
 
-    if inline_result == "block":
-        value = format(re.sub(
-            r"(?m)^(\s+)",
-            lambda s: "&nbsp;" * (s.span()[1] - s.span()[0]),
-            value
-        )).replace("\n", "<br/>")
+        if inline_result == "block":
+            value = format(re.sub(
+                r"(?m)^(\s+)",
+                lambda s: "&nbsp;" * (s.span()[1] - s.span()[0]),
+                value
+            )).replace("\n", "<br/>")
 
-        layout = sublime.LAYOUT_BLOCK
+            layout = sublime.LAYOUT_BLOCK
 
-    style = "color: color(var(--foreground) alpha(0.5));"
-    html_text = """<p style="margin: 0"><span style="{}">=></span> {}</p>""".format(style, value)
-    region = sublime.Region(point, point)
-    view.add_phantom("tutkain/eval", region, html_text, layout)
+        style = "color: color(var(--foreground) alpha(0.5));"
+        html_text = """<p style="margin: 0"><span style="{}">=></span> {}</p>""".format(style, value)
+        region = sublime.Region(point, point)
+        view.add_phantom("tutkain/eval", region, html_text, layout)
 
 
 def clear(view):
