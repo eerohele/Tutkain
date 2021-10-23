@@ -268,14 +268,12 @@ class JVMClient(Client):
         self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.set_handler(handler)
-
         self.backchannel.send({
             "op": edn.Keyword("set-eval-context"),
             "file": file,
             "line": line + 1,
             "column": column + 1
-        }, lambda _: self.sendq.put(code))
+        }, lambda _: self.sendq.put(code), handler)
 
 
 class JSClient(Client):
@@ -336,8 +334,12 @@ class JSClient(Client):
         self.sendq.put(f"(in-ns '{ns})")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.set_handler(handler)
-        self.sendq.put(code)
+        self.backchannel.send({
+            "op": edn.Keyword("set-eval-context"),
+            "file": file,
+            "line": line + 1,
+            "column": column + 1
+        }, lambda _: self.sendq.put(code), handler)
 
 
 class BabashkaClient(Client):

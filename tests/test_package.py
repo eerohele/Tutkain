@@ -47,6 +47,25 @@ class PackageTestCase(unittest.TestCase):
         for begin, end in pairs:
             self.view.sel().add(sublime.Region(begin, end))
 
+    def eval_context(self, file="NO_SOURCE_FILE", line=1, column=1):
+        actual = edn.read(self.backchannel.recv())
+        id = actual.get(edn.Keyword("id"))
+
+        response = edn.kwmap({
+             "id": id,
+             "op": edn.Keyword("set-eval-context"),
+             "file": file,
+             "line": line,
+             "column": column,
+        })
+
+        self.assertEquals(response, actual)
+
+        self.backchannel.send(edn.kwmap({
+            "id": id,
+            "file": file
+        }))
+
 
 class TestJVMClient(PackageTestCase):
     @classmethod
@@ -133,25 +152,6 @@ class TestJVMClient(PackageTestCase):
 
     def get_print(self):
         return self.client.printq.get(timeout=5)
-
-    def eval_context(self, file="NO_SOURCE_FILE", line=1, column=1):
-        actual = edn.read(self.backchannel.recv())
-        id = actual.get(edn.Keyword("id"))
-
-        response = edn.kwmap({
-             "id": id,
-             "op": edn.Keyword("set-eval-context"),
-             "file": file,
-             "line": line,
-             "column": column,
-        })
-
-        self.assertEquals(response, actual)
-
-        self.backchannel.send(edn.kwmap({
-            "id": id,
-            "file": file
-        }))
 
     def test_outermost(self):
         self.set_view_content("(comment (inc 1) (inc 2))")
@@ -688,6 +688,7 @@ class TestJSClient(PackageTestCase):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.eval_context(column=10)
         self.assertEquals("(range 10)\n", self.server.recv())
         self.server.send("""user=> (range 10)""")
         self.assertEquals("user=> (range 10)\n", self.get_print())

@@ -44,6 +44,7 @@
        (in-ns 'user)
        (apply require main/repl-requires)
        (let [{backchannel :socket
+              eval-context :eval-context
               send-over-backchannel :send-over-backchannel}
              (backchannel/open
                (assoc opts
@@ -60,27 +61,35 @@
                (when
                  (try
                    (let [[form s] (read+string {:eof EOF :read-cond :allow} in)]
-                     (with-bindings @backchannel/eval-context
+                     (with-bindings (:thread-bindings @eval-context)
                        (when-not (identical? form EOF)
-                         (try
-                           (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
-                             (do (eval form) true)
-                             (do
-                               (plain-print (format "%s=> %s" (ns-name *ns*) s))
-                               (let [ret (eval form)]
-                                 (when-not (= :repl/quit ret)
-                                   (set! *3 *2)
-                                   (set! *2 *1)
-                                   (set! *1 ret)
-                                   (pretty-print ret)
-                                   true))))
-                           (catch Throwable ex
-                             (set! *e ex)
-                             (send-over-backchannel {:tag :err
-                                                     :val (format/Throwable->str ex)
-                                                     :ns (str (.name *ns*))
-                                                     :form s})
-                             true)))))
+                         (let [continuation? (contains? @eval-context :continuation-id)]
+                           (try
+                             (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
+                               (do (eval form) true)
+                               (do
+                                 ;; FIXME: add :prompt? to eval context
+                                 (when-not continuation?
+                                   (plain-print (format "%s=> %s" (ns-name *ns*) s)))
+                                 (let [ret (eval form)]
+                                   (when-not (= :repl/quit ret)
+                                     (set! *3 *2)
+                                     (set! *2 *1)
+                                     (set! *1 ret)
+                                     (if continuation?
+                                       (send-over-backchannel
+                                         {:tag :ret
+                                          :val (format/pp-str ret)})
+                                       (pretty-print ret))
+                                     true))))
+                             (catch Throwable ex
+                               (set! *e ex)
+                               (send-over-backchannel
+                                 {:tag :err
+                                  :val (format/Throwable->str ex)
+                                  :ns (str (.name *ns*))
+                                  :form s})
+                               true))))))
                    (catch Throwable ex
                      (set! *e ex)
                      (send-over-backchannel

@@ -359,13 +359,6 @@ class TutkainEvaluateCommand(TextCommand):
             "file": self.view.file_name(),
         }, handler)
 
-    def handler(self, region, client, response, inline_result):
-        if inline_result:
-            inline.clear(self.view)
-            inline.show(self.view, region.end(), response, inline_result)
-        else:
-            client.print(response)
-
     def evaluate_input(self, client, code):
         evaluate(self.view, client, code)
         history.update(self.view.window(), code)
@@ -447,13 +440,14 @@ class TutkainEvaluateCommand(TextCommand):
                     if not eval_region.empty():
                         code = self.view.substr(eval_region)
 
-                        evaluate(
-                            self.view,
-                            client,
-                            code,
-                            eval_region.begin(),
-                            lambda response: self.handler(eval_region, client, response, inline_result)
-                        )
+                        if inline_result:
+                            def handler(response):
+                                inline.clear(self.view)
+                                inline.show(self.view, region.end(), response.get(edn.Keyword("val")), inline_result)
+
+                            evaluate(self.view, client, code, eval_region.begin(), handler)
+                        else:
+                            evaluate(self.view, client, code, eval_region.begin())
 
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):

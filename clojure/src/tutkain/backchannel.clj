@@ -28,9 +28,6 @@
   [message]
   (throw (ex-info "Unknown op" {:message message})))
 
-(def eval-context
-  (atom {}))
-
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn set-column!
   [^LineNumberingPushbackReader reader column]
@@ -38,13 +35,21 @@
     (-> ^Field field (doto (.setAccessible true)) (.set reader column))))
 
 (defmethod handle :set-eval-context
-  [{:keys [^LineNumberingPushbackReader in file line column] :or {line 0 column 0} :as message}]
+  [{:keys [^LineNumberingPushbackReader eval-context in file line column continuation-id]
+    :or {line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
   (let [file (or file "NO_SOURCE_PATH")
         source-path (or (some-> file File. .getName) "NO_SOURCE_FILE")]
-    (swap! eval-context assoc #'*file* file #'*source-path* source-path)
-    (respond-to message {:file file :source-path source-path :line line :column column})))
+    (reset! eval-context
+      (cond-> {:thread-bindings {#'*file* file #'*source-path* source-path}}
+        continuation-id (assoc :continuation-id continuation-id)))
+    (respond-to message
+      (cond->
+        {:thread-bindings {:file file :source-path source-path}
+         :line line
+         :column column}
+        continuation-id (assoc :continuation-id continuation-id)))))
 
 (defmethod handle :interrupt
   [{:keys [^Thread repl-thread]}]
@@ -79,6 +84,7 @@
   (let [address (InetAddress/getByName ^String bind-address)
         socket (ServerSocket. port 0 address)
         lock (Object.)
+        eval-context (atom {:thread-bindings {}})
         eventual-send-fn (promise)
         msg-loop (bound-fn []
                    (try
@@ -89,7 +95,7 @@
                            out-fn (fn [message]
                                     (binding [*print-readably* true]
                                       (locking lock
-                                        (.write out (pr-str (dissoc (xform-out message) :out-fn)))
+                                        (.write out (pr-str (dissoc (xform-out message) :out-fn :eval-context)))
                                         (.write out "\n")
                                         (.flush out))))
                            tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})]
@@ -108,7 +114,9 @@
                                  (when-not (identical? EOF message)
                                    (let [recur? (case (:op message)
                                                   :quit false
-                                                  (let [message (assoc (xform-in message) :out-fn out-fn)]
+                                                  (let [message (assoc (xform-in message)
+                                                                  :eval-context eval-context
+                                                                  :out-fn out-fn)]
                                                     (try
                                                       (handle message)
                                                       true
@@ -127,5 +135,11 @@
       (.setName (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter)))
       (.setDaemon true)
       (.start))
-    {:socket socket
-     :send-over-backchannel (fn [message] (@eventual-send-fn message))}))
+    {:eval-context eval-context
+     :socket socket
+     :send-over-backchannel (fn [{:keys [tag] :as message}]
+                              (let [continuation-id (:continuation-id @eval-context)]
+                                (@eventual-send-fn
+                                 (cond-> message
+                                   (and continuation-id (#{:ret :err} tag))
+                                   (assoc :id continuation-id)))))}))

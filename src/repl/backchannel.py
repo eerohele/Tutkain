@@ -86,7 +86,7 @@ class Client:
         with self.lock:
             self.handlers[id] = handler
 
-    def send(self, message, handler=None):
+    def send(self, message, handler=None, continuation_handler=None):
         """Given a message (a dict) and, optionally, a handler function, put
         the message into the send queue of this backchannel client and register
         the handler to be called on the message response."""
@@ -96,6 +96,11 @@ class Client:
 
         if handler:
             self.register_handler(message_id, handler)
+
+        if continuation_handler:
+            continuation_id = next(self.message_id)
+            message[edn.Keyword("continuation-id")] = continuation_id
+            self.register_handler(continuation_id, continuation_handler)
 
         self.sendq.put(message)
 

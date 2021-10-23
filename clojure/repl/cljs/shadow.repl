@@ -135,6 +135,32 @@
 (rrecv)
 (xr/check! nil?)
 
+;; :continuation-id routes the result via the backchannel
+(bsend {:op :set-eval-context
+        :file "/my/path/app.cljs"
+        :line 1
+        :column 2
+        :continuation-id -1
+        :id 1})
+(brecv)
+(rsend '(js/parseInt "42"))
+(rrecv)
+(xr/check! nil?)
+(brecv)
+(xr/check! #{{:id -1 :tag :ret :val "42"}})
+
+(bsend {:op :set-eval-context
+        :file "/my/path/app.cljs"
+        :line 3
+        :column 4
+        :id 2})
+(brecv)
+(rsend '(js/parseInt "84"))
+(rrecv)
+(check-result! foo.bar.baz=> (js/parseInt "84"))
+(rrecv)
+(check-result! 84)
+
 (rsend :repl/quit)
 (rrecv)
 (check-result! foo.bar.baz=> :repl/quit)

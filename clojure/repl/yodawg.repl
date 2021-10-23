@@ -124,6 +124,32 @@
 (rrecv)
 (xr/check! (partial = ret))
 
+(bsend {:op :set-eval-context
+        :file "/my/path/app.clj"
+        :line 1
+        :column 2
+        :continuation-id -1
+        :id 1})
+
+(brecv)
+(rsend '(inc 1))
+(brecv)
+(xr/check! #{{:id -1 :tag :ret :val "2\n"}})
+
+(bsend {:op :set-eval-context
+        :file "/my/path/app.clj"
+        :line 3
+        :column 4
+        :continuation-id -2
+        :id 2})
+
+(brecv)
+(rsend '(/ 4 0))
+(rrecv)
+(xr/check! nil?)
+(brecv)
+(xr/check! ::ret) ;; Error
+
 (rsend :repl/quit)
 
 (Thread/sleep 3000)

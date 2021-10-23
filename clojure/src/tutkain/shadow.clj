@@ -60,7 +60,8 @@
            repl-read-ex
            repl-result
            repl-stdout
-           repl-stderr]}]
+           repl-stderr]}
+   eval-context]
   {:pre [(some? worker)
          (some? proc-stop)
          (some? close-signal)]}
@@ -151,8 +152,11 @@
               ([read-result]
                ;; (tap> [:repl-from-stdin read-result repl-state])
                (when (some? read-result)
-                 ;; FIXME: this also conceals user-issued in-ns calls
-                 (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
+                 (when-not
+                   ;; FIXME: add :prompt? to eval context
+                   (or (contains? @eval-context :continuation-id)
+                     ;; FIXME: this also conceals user-issued in-ns calls
+                     (and (list? (:form read-result)) (= 'in-ns (first (:form read-result)))))
                    (println (format "%s=> %s" (ns-name (:ns repl-state)) (:source read-result))))
                  (let [{:keys [eof? error? ex source]} read-result]
                    (cond
@@ -368,6 +372,7 @@
                        (catch Throwable _
                          (println %)))))
          {backchannel :socket
+          eval-context :eval-context
           send-over-backchannel :send-over-backchannel}
          (backchannel/open
            (assoc opts
@@ -394,8 +399,13 @@
 
             :repl-result
             (fn [{:keys [read-result]} ret]
-              (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
-                (out-fn ret)))
+              (if (contains? @eval-context :continuation-id)
+                (send-over-backchannel
+                  {:id (:continuation-id @eval-context)
+                   :tag :ret
+                   :val ret})
+                (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
+                  (out-fn ret))))
 
             :repl-val
             (fn [_ ret]
@@ -414,7 +424,8 @@
             :repl-stdout
             (fn [_ text]
               (send-over-backchannel
-                {:tag :out :val text}))}))
+                {:tag :out :val text}))}
+           eval-context))
        (catch ExceptionInfo ex
          (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
        (catch AssertionError ex
