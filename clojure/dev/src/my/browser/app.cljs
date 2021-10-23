@@ -2,7 +2,9 @@
   (:require
    [cljs.pprint :as pprint]
    [cljs.spec.alpha :as spec]
-   [my.other :as other]))
+   [my.other :as other])
+  (:import
+   (goog.date DateTime)))
 
 (enable-console-print!)
 
@@ -34,4 +36,6 @@
   (random-uuid)
   (clj->js {:a [1 "b" 'c]})
   (spec/exercise any?)
-  )
+
+  (DateTime.)
+  ,,,)
