@@ -3,7 +3,7 @@ import socket
 
 from queue import Queue
 from typing import IO
-from threading import Event, Thread
+from threading import Event, Thread, Lock
 
 from ...api import edn
 from ..log import log
@@ -24,6 +24,7 @@ class Client:
         self.handlers = {}
         self.message_id = itertools.count(1)
         self.stop_event = Event()
+        self.lock = Lock()
 
     def send_loop(self, sock: socket.SocketType, buffer: IO):
         """Given a socket and a file object, start a loop that gets items from
@@ -81,6 +82,10 @@ class Client:
 
         return self
 
+    def register_handler(self, id, handler):
+        with self.lock:
+            self.handlers[id] = handler
+
     def send(self, message, handler=None):
         """Given a message (a dict) and, optionally, a handler function, put
         the message into the send queue of this backchannel client and register
@@ -90,7 +95,7 @@ class Client:
         message[edn.Keyword("id")] = message_id
 
         if handler:
-            self.handlers[message_id] = handler
+            self.register_handler(message_id, handler)
 
         self.sendq.put(message)
 
@@ -103,12 +108,15 @@ class Client:
         id = message.get(edn.Keyword("id"))
 
         try:
-            handler = self.handlers.get(id, self.default_handler)
+            with self.lock:
+                handler = self.handlers.get(id, self.default_handler)
+
             handler.__call__(message)
         except AttributeError as error:
             log.error({"event": "error", "message": message, "error": error})
         finally:
-            self.handlers.pop(id, None)
+            with self.lock:
+                self.handlers.pop(id, None)
 
     def halt(self):
         """Halt this backchannel client."""
