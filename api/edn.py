@@ -91,7 +91,7 @@ def read_list(b, _):
 
 def read_delimited_list(b, delim):
     """Given a file object and a delimiter character, read an EDN element
-    that edns with that character."""
+    that ends with that character."""
     xs = []
 
     while (ch := b.read(1)) != delim:
