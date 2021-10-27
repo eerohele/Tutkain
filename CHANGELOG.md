@@ -7,6 +7,27 @@ All notable changes to this project will be documented in this file.
 
   Evaluation results are no longer wrapped in prepl-like message frames (`{:tag ret :val ,,,}` etc.). Evaluations now send character streams and receive character streams. Standard output (`println`), exception messages, and tapped values are now sent over the same backchannel Tutkain uses for other IDE-like features (auto-completion etc.)
 
+- Add **Tutkain: Explore Stack Trace** command
+
+  When your evaluation throws an exception, you can use **Tutkain: Explore Stack Trace** to explore the stack trace for that exception (the current value of `*e`).
+
+  When exploring the stack trace, Tutkain will also navigate to Java sources if it finds them. Tutkain looks for Java base module sources in `$JAVA_HOME/src.zip` and `$JAVA_HOME/lib/src.zip`. Alternatively, you can set the `tutkain.java.src.zip` system property to point to the Java base module source ZIP file.
+
+  For Java dependencies, Tutkain will look for a file with the suffix `*-sources.jar` next to the JAR file that contains the Java classes. If you have Maven installed, to easily download sources for all of the Java dependencies in your project, run:
+
+  ```
+  # with Clojure CLI
+  clj -A:my:aliases -Spom
+
+  # or with Leiningen
+  lein pom
+
+  # Then
+  mvn dependency:sources
+  ```
+
+  You will have to redownload sources (run the `mvn` command) again whenever you update your project dependencies.
+
 - Add **Tutkain: Dir** command
 
   When your caret is on top of a symbol that resolves to a var, you can run **Tutkain: Dir** to show a list of all vars in that var's namespace.

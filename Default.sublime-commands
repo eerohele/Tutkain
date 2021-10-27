@@ -76,6 +76,10 @@
         "command": "tutkain_dir",
     },
     {
+        "caption": "Tutkain: Explore Stack Trace",
+        "command": "tutkain_explore_stack_trace",
+    },
+    {
         "caption": "Tutkain: Prompt",
         "command": "tutkain_prompt"
     },

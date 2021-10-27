@@ -76,6 +76,7 @@
                                      (set! *3 *2)
                                      (set! *2 *1)
                                      (set! *1 ret)
+                                     (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
                                      (if continuation?
                                        (send-over-backchannel
                                          {:tag :ret
@@ -84,6 +85,7 @@
                                      true))))
                              (catch Throwable ex
                                (set! *e ex)
+                               (swap! eval-context assoc #'*e *e)
                                (send-over-backchannel
                                  {:tag :err
                                   :val (format/Throwable->str ex)
@@ -92,6 +94,7 @@
                                true))))))
                    (catch Throwable ex
                      (set! *e ex)
+                     (swap! eval-context assoc #'*e *e)
                      (send-over-backchannel
                        {:tag :ret
                         :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
