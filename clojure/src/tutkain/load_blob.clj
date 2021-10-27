@@ -8,7 +8,7 @@
    (java.io File)))
 
 (defmethod handle :load
-  [{:keys [code file] :as message}]
+  [{:keys [eval-context code file] :as message}]
   (try
     (with-open [reader (base64-reader code)]
       (let [file-name (some-> file File. .getName)
@@ -16,6 +16,7 @@
         (respond-to message {:tag :ret
                              :val (pp-str val)})))
     (catch Throwable ex
+      (swap! eval-context assoc #'*e ex)
       (respond-to message {:tag :ret
                            :val (pp-str (assoc (Throwable->map ex) :phase :execution))
                            :exception true}))))
