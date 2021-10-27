@@ -350,6 +350,9 @@ class TutkainEvaluateCommand(TextCommand):
             client.print(response)
             progress.stop()
             self.view.window().status_message("[Tutkain] Evaluating view... done.")
+            # Switch to current namespace after loading view
+            if ns := namespace.name(self.view):
+                client.switch_namespace(ns)
 
         progress.start("[Tutkain] Evaluating view...")
 

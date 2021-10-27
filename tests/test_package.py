@@ -275,6 +275,7 @@ class TestJVMClient(PackageTestCase):
         response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "nil"})
         self.backchannel.send(response)
         self.assertEquals(response, self.get_print())
+        self.assertEquals("(tutkain.repl/switch-ns foo.bar)\n", self.server.recv())
 
     def test_view_syntax_error(self):
         self.set_view_content("(ns foo.bar) (defn x [y] y")  # missing close paren
