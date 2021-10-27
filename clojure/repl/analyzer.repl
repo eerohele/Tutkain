@@ -1,9 +1,11 @@
 (ns repl.analyzer
   (:require
+   [clojure.edn :as edn]
    [clojure.set :as set]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.analyzer :as analyzer]
+   [tutkain.backchannel :as backchannel]
    [tutkain.backchannel.test :refer [string->base64 string->reader]]))
 
 (spec/def ::op
@@ -27,6 +29,12 @@
   (spec/keys
     :req-un [::op]
     :opt-un [::type ::form ::env]))
+
+(spec/def ::position
+  (spec/keys :req-un [::line
+                      ::form
+                      ::column
+                      ::end-column]))
 
 ;; Analyze multiple forms
 (analyzer/reader->nodes "/path/to/my.clj" *ns* 0 0 (string->reader "1 2"))
@@ -102,14 +110,7 @@
   analyzer/index-by-position)
 
 (xr/check!
-  (spec/every-kv
-    (spec/keys :req-un [::line
-                        ::form
-                        ::column
-                        ::end-column])
-    simple-symbol?
-    :min-count 6
-    :max-count 6))
+  (spec/every-kv ::position simple-symbol? :min-count 6 :max-count 6))
 
 (set
   (analyzer/local-positions
@@ -144,3 +145,23 @@
   (partial set/subset?
     #{{:line 0 :column 19 :form 'baz :end-column 26}
       {:line 0 :column 30 :form 'baz :end-column 33}}))
+
+(->
+  {:op :locals
+   :out-fn prn
+   :file "/path/to/my.clj"
+   :ns "user"
+   :context (string->base64 "(defn f [x] (inc x))")
+   :form 'x
+   :start-line 0
+   :start-column 0
+   :line 0
+   :column 9
+   :end-column 10}
+  backchannel/handle
+  with-out-str
+  edn/read-string
+  :positions)
+
+(xr/check! (spec/coll-of ::position))
+
