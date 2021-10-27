@@ -10,9 +10,11 @@
    (clojure.lang Reflector)
    (java.util.jar JarFile)
    (java.io File)
-   (java.lang.reflect Field Member Modifier)
+   (java.lang.reflect Constructor Field Member Method Modifier)
    (java.util.jar JarEntry)
    (java.util.concurrent ConcurrentHashMap)))
+
+#_(set! *warn-on-reflection* true)
 
 (when (nil? (System/getProperty "apple.awt.UIElement"))
   (System/setProperty "apple.awt.UIElement" "true"))
@@ -115,11 +117,11 @@
   (eduction
     (map val)
     (mapcat #(.getMethods ^Class %))
-    (map (fn [member]
-           {:class (-> member .getDeclaringClass qualified-class-name)
-            :candidate (str "." (.getName member))
-            :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
-            :return-type (-> member .getReturnType qualified-class-name)
+    (map (fn [^Method method]
+           {:class (-> method .getDeclaringClass qualified-class-name)
+            :candidate (str "." (.getName method))
+            :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
+            :return-type (-> method .getReturnType qualified-class-name)
             :type :method}))
     (distinct)
     (ns-imports ns)))
@@ -131,7 +133,7 @@
   [^Class class]
   (eduction
     (filter static?)
-    (map #(hash-map :candidate (.getName %) :type :field))
+    (map #(hash-map :candidate (.getName ^Field %) :type :field))
     (.getDeclaredFields class)))
 
 (comment (field-candidates java.lang.String) ,)
@@ -142,12 +144,12 @@
   [^Class class]
   (eduction
     (filter static?)
-    (map (fn [member]
+    (map (fn [^Method method]
            {:class (qualified-class-name class)
-            :candidate (.getName member)
+            :candidate (.getName method)
             :type :static-method
-            :arglists (mapv (memfn getSimpleName) (.getParameterTypes member))
-            :return-type (-> member .getReturnType qualified-class-name)}))
+            :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
+            :return-type (-> method .getReturnType qualified-class-name)}))
     (.getMethods class)))
 
 (comment (static-member-candidates java.lang.String),)
@@ -298,10 +300,10 @@
     (mapcat
       (fn [class-name]
         (into [(annotate-class class-name)]
-          (when-some [class (-> class-name symbol resolve)]
-            (map (fn [constructor]
+          (when-some [^Class class (-> class-name symbol resolve)]
+            (map (fn [^Constructor constructor]
                    {:candidate (str class-name ".")
-                    :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
+                    :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes constructor))
                     :return-type (qualified-class-name class)
                     :type :method})
               (.getConstructors class))))))
@@ -347,14 +349,15 @@
       ;; until the first class that's not a candidate.
       (drop-while (complement candidate?))
       (take-while candidate?)
-      (mapcat (fn [{class-name :candidate}]
+      (mapcat (fn [{^String class-name :candidate}]
                 (into [(annotate-class class-name)]
-                  (map (fn [constructor]
+                  (map (fn [^Constructor constructor]
                          {:candidate (str class-name ".")
-                          :arglists (mapv (memfn getSimpleName) (.getParameterTypes constructor))
+                          :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes constructor))
                           :return-type (or (some-> class-name (.split "\\.") last) "")
                           :type :method})
-                    (some-> class-name symbol resolve .getConstructors)))))
+                    (when-some [^Class class (some-> class-name symbol resolve)]
+                      (.getConstructors class))))))
       @class-candidate-list)))
 
 (comment (seq (class-candidates "java.util.concurrent.Linked")) ,)
@@ -382,6 +385,11 @@
   (candidates "Strin" 'clojure.core)
   (candidates "Throwable" 'clojure.core)
   (time (dorun (candidates "m" 'clojure.core)))
+  (time (dorun (candidates "java." *ns*)))
+
+  (require '[clj-async-profiler.core :as prof])
+  (prof/profile (dorun (candidates "java." *ns*)))
+  (prof/serve-files 1337)
   ,)
 
 (defmulti completions :dialect)
