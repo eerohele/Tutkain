@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
   When your caret is on top of a symbol that resolves to a var, you can run **Tutkain: Dir** to show a list of all vars in that var's namespace.
 
 - If you evaluate a view with a syntax error, show an error in the REPL view
+- Tutkain now switches to the namespace in the current view after evaluating a view (via **Tutkain: Evaluate** » **View**)
 - Show progress indicator when evaluating view #59
 - Fix evaluation prompt
 
