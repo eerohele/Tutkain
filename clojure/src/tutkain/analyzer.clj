@@ -22,8 +22,8 @@
 (defn reader->nodes
   "Given a file path, namespace, line, column, and a
   LineNumberingPushbackReader, read code from the reader in the context of the
-  file and the namespace, and return a lazy sequence of ASTs nodes resulting
-  from analyzing the code."
+  file and the namespace, and return a lazy sequence of ASTs nodes for the
+  code."
   [path ns line column ^LineNumberingPushbackReader reader]
   (binding [analyzer.jvm/run-passes analyzer-passes
             *ns* ns
