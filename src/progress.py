@@ -34,7 +34,7 @@ def start(message):
     if bar:
         bar.stop()
 
-    bar = ProgressBar("[Tutkain] Running tests...")
+    bar = ProgressBar(message)
     bar.start()
 
 
