@@ -9,7 +9,7 @@
 (def ^:private base64-decoder
   (Base64/getDecoder))
 
-(defn base64-reader
+(defn ^LineNumberingPushbackReader base64-reader
   [blob]
   (->
     base64-decoder

@@ -7,7 +7,11 @@
    [clojure.tools.analyzer.passes.uniquify :as uniquify]
    [clojure.tools.reader :as reader]
    [tutkain.base64 :refer [base64-reader]]
-   [tutkain.backchannel :as bc :refer [handle respond-to]]))
+   [tutkain.backchannel :as bc :refer [handle respond-to]])
+  (:import
+   (clojure.lang LineNumberingPushbackReader)))
+
+#_(set! *warn-on-reflection* true)
 
 (def ^:private analyzer-passes
   (passes/schedule #{#'source-info/source-info #'uniquify/uniquify-locals}))
@@ -20,7 +24,7 @@
   LineNumberingPushbackReader, read code from the reader in the context of the
   file and the namespace, and return a lazy sequence of ASTs nodes resulting
   from analyzing the code."
-  [path ns line column reader]
+  [path ns line column ^LineNumberingPushbackReader reader]
   (binding [analyzer.jvm/run-passes analyzer-passes
             *ns* ns
             *file* path]
