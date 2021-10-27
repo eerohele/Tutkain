@@ -17,7 +17,7 @@
   (passes/schedule #{#'source-info/source-info #'uniquify/uniquify-locals}))
 
 (def ^:private reader-opts
-  {:features #{:clj :t.a.jvm} :read-cond :allow})
+  {:eof ::EOF :features #{:clj :t.a.jvm} :read-cond :allow})
 
 (defn reader->nodes
   "Given a file path, namespace, line, column, and a
@@ -28,16 +28,15 @@
   (binding [analyzer.jvm/run-passes analyzer-passes
             *ns* ns
             *file* path]
-    (let [eof (Object.)
-          reader (doto reader
+    (let [reader (doto reader
                    (.setLineNumber (int line))
                    (bc/set-column! (int column)))]
       (sequence
         (comp
-          (take-while #(not (identical? eof %)))
+          (take-while #(not (identical? ::EOF %)))
           (map analyzer.jvm/analyze)
           (mapcat analyzer.ast/nodes))
-        (repeatedly #(reader/read (assoc reader-opts :eof eof) reader))))))
+        (repeatedly #(reader/read reader-opts reader))))))
 
 (defn node->position
   "Given an tools.analyzer node, return the position information for that
