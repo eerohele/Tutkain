@@ -1,6 +1,7 @@
 (ns tutkain.base64
   (:require
-   [tutkain.backchannel :refer [handle respond-to]])
+   [tutkain.backchannel :refer [handle respond-to]]
+   [tutkain.format :refer [Throwable->str]])
   (:import
    (clojure.lang Compiler Compiler$CompilerException LineNumberingPushbackReader)
    (java.io ByteArrayInputStream InputStreamReader FileNotFoundException)
@@ -27,6 +28,6 @@
         (Compiler/load reader path filename)
         (respond-to message {:filename filename :result :ok})
         (catch Compiler$CompilerException ex
-          (respond-to message {:filename filename :result :fail :reason :compiler-ex :ex (Throwable->map ex)}))))
+          (respond-to message {:filename filename :result :fail :reason :compiler-ex :ex (Throwable->str ex)}))))
     (catch FileNotFoundException ex
-      (respond-to message {:filename filename :result :fail :reason :not-found :ex (Throwable->map ex)}))))
+      (respond-to message {:filename filename :result :fail :reason :not-found :ex (Throwable->str ex)}))))
