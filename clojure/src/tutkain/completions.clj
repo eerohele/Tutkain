@@ -154,21 +154,24 @@
 
 (comment (static-member-candidates java.lang.String),)
 
-(defn path-files [^String path]
+(defn path-files
+  [^String path]
   (cond
     (.endsWith path "/*")
-    (for [^File jar (.listFiles (File. path)) :when (.endsWith ^String (.getName jar) ".jar")
-          file (path-files (.getPath jar))]
-      file)
+    (sequence
+      (comp
+        (filter #(.endsWith ^String (.getName %) ".jar"))
+        (mapcat #(-> % .getPath path-files)))
+      (-> path File. .getParent File. .listFiles))
 
     (.endsWith path ".jar")
-    (try (for [^JarEntry entry (enumeration-seq (.entries (JarFile. path)))]
-           (.getName entry))
-      (catch Exception e))
+    (try
+      (map (memfn ^JarEntry getName)
+        (-> path JarFile. .entries enumeration-seq))
+      (catch Exception _))
 
     :else
-    (for [^File file (file-seq (File. path))]
-      (.replace ^String (.getPath file) path ""))))
+    (map #(.replace ^String (.getPath %) path "") (-> path File. file-seq))))
 
 (def class-files
   (->>
