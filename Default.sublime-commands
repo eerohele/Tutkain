@@ -72,6 +72,10 @@
         "command": "tutkain_apropos",
     },
     {
+        "caption": "Tutkain: Dir",
+        "command": "tutkain_dir",
+    },
+    {
         "caption": "Tutkain: Prompt",
         "command": "tutkain_prompt"
     },
