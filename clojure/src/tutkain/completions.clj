@@ -251,13 +251,24 @@
 (def class-candidate-list
   (delay (concat @system-module-resources @top-level-classes @nested-classes)))
 
-(def special-forms
-  '[def if do let quote var fn loop recur throw try monitor-enter monitor-exit dot new set!])
-
-(defn special-form-candidates
-  "Return all Clojure special form candidates."
-  []
-  (map #(hash-map :candidate (name %) :type :special-form :ns "clojure.core") special-forms))
+(def special-form-candidates
+  "All Clojure special form candidates."
+  [{:candidate "def" :ns "clojure.core" :type :special-form}
+   {:candidate "do" :ns "clojure.core" :type :special-form}
+   {:candidate "dot" :ns "clojure.core" :type :special-form}
+   {:candidate "fn" :ns "clojure.core" :type :special-form}
+   {:candidate "if" :ns "clojure.core" :type :special-form}
+   {:candidate "let" :ns "clojure.core" :type :special-form}
+   {:candidate "loop" :ns "clojure.core" :type :special-form}
+   {:candidate "monitor-enter" :ns "clojure.core" :type :special-form}
+   {:candidate "monitor-exit" :ns "clojure.core" :type :special-form}
+   {:candidate "new" :ns "clojure.core" :type :special-form}
+   {:candidate "quote" :ns "clojure.core" :type :special-form}
+   {:candidate "recur" :ns "clojure.core" :type :special-form}
+   {:candidate "set!" :ns "clojure.core" :type :special-form}
+   {:candidate "throw" :ns "clojure.core" :type :special-form}
+   {:candidate "try" :ns "clojure.core" :type :special-form}
+   {:candidate "var" :ns "clojure.core" :type :special-form}])
 
 (defn annotate-namespace
   [ns]
@@ -377,7 +388,7 @@
                        (.startsWith prefix ".") (ns-java-method-candidates ns)
                        (scoped? prefix) (scoped-candidates prefix ns)
                        (.contains prefix ".") (concat (ns-candidates ns) (class-candidates prefix))
-                       :else (concat (special-form-candidates)
+                       :else (concat special-form-candidates
                                (ns-candidates ns)
                                (ns-var-candidates ns)
                                (ns-class-candidates ns)))]
