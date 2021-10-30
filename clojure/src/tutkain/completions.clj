@@ -362,13 +362,19 @@
       (take-while candidate?)
       (mapcat (fn [{^String class-name :candidate}]
                 (into [(annotate-class class-name)]
-                  (map (fn [^Constructor constructor]
-                         {:candidate (str class-name ".")
-                          :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes constructor))
-                          :return-type (or (some-> class-name (.split "\\.") last) "")
-                          :type :method})
-                    (when-some [^Class class (some-> class-name symbol resolve)]
-                      (.getConstructors class))))))
+                  (try
+                    (map (fn [^Constructor constructor]
+                           {:candidate (str class-name ".")
+                            :arglists (try
+                                        (mapv (memfn ^Class getSimpleName) (.getParameterTypes constructor))
+                                        (catch java.lang.IllegalAccessError _)
+                                        (catch java.util.ServiceConfigurationError _))
+                            :return-type (or (some-> class-name (.split "\\.") last) "")
+                            :type :method})
+                      (when-some [^Class class (some-> class-name symbol resolve)]
+                        (.getConstructors class)))
+                    (catch java.lang.NoClassDefFoundError _)
+                    (catch java.lang.IllegalAccessError _)))))
       @class-candidate-list)))
 
 (comment (seq (class-candidates "java.util.concurrent.Linked")) ,)
