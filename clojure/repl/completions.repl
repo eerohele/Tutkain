@@ -111,27 +111,6 @@
                         :return-type "java.time.OffsetDateTime"}}
           (set (candidates ".atTime" *ns*))))
 
-;; Constructors in java.lang
-(xr/check! (partial set/subset?
-             #{{:candidate "String."
-                :arglists ["int[]" "int" "int"]
-                :return-type "java.lang.String"
-                :type :method}})
-  (set (candidates "String" *ns*)))
-
-;; Constructors outside java.lang
-(import '(java.net URL))
-(xr/check! (partial set/subset?
-             #{{:candidate "URL."
-                :arglists ["URL" "String"]
-                :return-type "java.net.URL"
-                :type :method}
-               {:candidate "URL."
-                :arglists ["String"]
-                :return-type "java.net.URL"
-                :type :method}})
-  (set (candidates "URL" *ns*)))
-
 (candidates "java.util.Date/" *ns*)
 (xr/check! ::specs/completions (candidates "java.util.Spliterator$" *ns*))
 (assert (every? #(.contains (:candidate %) "$") (candidates "java.util.Spliterator$" *ns*)))

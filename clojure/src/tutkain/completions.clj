@@ -10,7 +10,7 @@
    (clojure.lang Reflector)
    (java.util.jar JarFile)
    (java.io File)
-   (java.lang.reflect Constructor Field Member Method Modifier)
+   (java.lang.reflect Field Member Method Modifier)
    (java.util.jar JarEntry)
    (java.util.concurrent ConcurrentHashMap)))
 
@@ -307,16 +307,7 @@
   [ns]
   (eduction
     (map key)
-    (mapcat
-      (fn [class-name]
-        (into [(annotate-class class-name)]
-          (when-some [^Class class (-> class-name symbol resolve)]
-            (map (fn [^Constructor constructor]
-                   {:candidate (str class-name ".")
-                    :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes constructor))
-                    :return-type (qualified-class-name class)
-                    :type :method})
-              (.getConstructors class))))))
+    (map annotate-class)
     (ns-imports ns)))
 
 (comment (ns-class-candidates 'clojure.main),)
@@ -360,21 +351,7 @@
       ;; until the first class that's not a candidate.
       (drop-while (complement candidate?))
       (take-while candidate?)
-      (mapcat (fn [{^String class-name :candidate}]
-                (into [(annotate-class class-name)]
-                  (try
-                    (map (fn [^Constructor constructor]
-                           {:candidate (str class-name ".")
-                            :arglists (try
-                                        (mapv (memfn ^Class getSimpleName) (.getParameterTypes constructor))
-                                        (catch java.lang.IllegalAccessError _)
-                                        (catch java.util.ServiceConfigurationError _))
-                            :return-type (or (some-> class-name (.split "\\.") last) "")
-                            :type :method})
-                      (when-some [^Class class (some-> class-name symbol resolve)]
-                        (.getConstructors class)))
-                    (catch java.lang.NoClassDefFoundError _)
-                    (catch java.lang.IllegalAccessError _)))))
+      (map (fn [{^String class-name :candidate}] (annotate-class class-name)))
       @class-candidate-list)))
 
 (comment (seq (class-candidates "java.util.concurrent.Linked")) ,)
