@@ -3,6 +3,6 @@
   "auto_complete_selector": "(meta.symbol - meta.function.parameters - meta.special-form) | (constant.other.keyword - punctuation.definition.keyword) | (constant.character - punctuation.definition.character.begin)",
   "auto_complete_triggers":
   [
-    {"selector": "source.clojure", "characters": ".", "rhs_empty": true},
+    {"selector": "source.clojure", "characters": "."},
   ]
 }
