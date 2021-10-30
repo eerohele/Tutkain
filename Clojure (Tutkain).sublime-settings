@@ -4,5 +4,6 @@
   "auto_complete_triggers":
   [
     {"selector": "source.clojure", "characters": "."},
+    {"selector": "source.clojure", "characters": "/"},
   ]
 }
