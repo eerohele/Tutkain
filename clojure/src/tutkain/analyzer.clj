@@ -45,7 +45,7 @@
   {:line line
    :column column
    :form form
-   :end-column (if (zero? end-column)
+   :end-column (if (and end-column (zero? end-column))
                  (-> form str count (+ column))
                  end-column)})
 
