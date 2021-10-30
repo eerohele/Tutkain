@@ -21,10 +21,10 @@
 
 (defn annotate-keyword
   [kw]
-  {:candidate (str kw) :type :keyword})
+  {:candidate kw :type :keyword})
 
 (defn all-keywords
-  "Return every interned keyword in the Clojure runtime."
+  "Return the name of every interned keyword in the Clojure runtime."
   []
   (let [^Field field (.getDeclaredField clojure.lang.Keyword "table")]
     (.setAccessible field true)
@@ -45,9 +45,10 @@
               (eduction
                 (filter #(= (namespace %) ns-alias-name))
                 (map #(str "::" ns-alias "/" (name %)))
-                (map annotate-keyword)
                 keywords)))
     aliases))
+
+(comment (qualified-auto-resolved-keywords (all-keywords) (ns-aliases 'clojure.main)),)
 
 (defn unqualified-auto-resolved-keywords
   "Given a list of keywords and an ns symbol, return all unqualified
@@ -56,7 +57,6 @@
   (eduction
     (filter #(= (namespace %) (str ns)))
     (map #(str "::" (name %)))
-    (map annotate-keyword)
     keywords))
 
 (comment (unqualified-auto-resolved-keywords (all-keywords) 'clojure.main),)
@@ -65,14 +65,14 @@
   "Given a map of ns alias to ns, return a list of keyword namespace alias
   candidates."
   [aliases]
-  (map (comp annotate-keyword #(str "::" (name %)) name first) aliases))
+  (map (comp #(str "::" %) name first) aliases))
 
 (comment (keyword-namespace-aliases (ns-aliases 'clojure.main)),)
 
 (defn simple-keywords
   "Given a list of keywords, return a list of simple keyword candidates."
   [keywords]
-  (map annotate-keyword keywords))
+  (map str keywords))
 
 (comment (simple-keywords (all-keywords)),)
 
@@ -80,11 +80,12 @@
   "Given a list of keywords, a map of ns alias to ns symbol, and a context
   ns, return the keyword candidates available in that context."
   [keywords aliases ns]
-  (concat
-    (qualified-auto-resolved-keywords keywords aliases)
-    (unqualified-auto-resolved-keywords keywords ns)
-    (keyword-namespace-aliases aliases)
-    (simple-keywords keywords)))
+  (map annotate-keyword
+    (lazy-cat
+      (qualified-auto-resolved-keywords keywords aliases)
+      (unqualified-auto-resolved-keywords keywords ns)
+      (keyword-namespace-aliases aliases)
+      (simple-keywords keywords))))
 
 (comment
   (keyword-candidates (all-keywords) (ns-aliases 'clojure.main) 'clojure.main)
