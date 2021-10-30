@@ -18,7 +18,8 @@ KINDS = {
     "method": (sublime.KIND_ID_FUNCTION, "i", "Instance method"),
     "static-method": (sublime.KIND_ID_FUNCTION, "c", "Static method"),
     "keyword": sublime.KIND_KEYWORD,
-    "protocol": sublime.KIND_TYPE
+    "protocol": sublime.KIND_TYPE,
+    "package": sublime.KIND_NAMESPACE
 }
 
 

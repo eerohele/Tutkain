@@ -281,6 +281,15 @@
 
 (comment (ns-candidates 'clojure.main),)
 
+(defn package-candidates
+  []
+  (eduction
+    (map (memfn ^Package getName))
+    (remove empty?)
+    (map #(hash-map :candidate % :type :package))
+    (dedupe)
+    (Package/getPackages)))
+
 (defn ns-var-candidates
   "Given an ns symbol, return all vars that are available in the context of
   that namespace."
@@ -387,12 +396,14 @@
         (concat special-form-candidates
           (ns-candidates ns)
           (ns-var-candidates ns)
-          (ns-class-candidates ns))))))
+          (ns-class-candidates ns)
+          (package-candidates))))))
 
 (comment
   (candidates "ran" 'clojure.core)
   (candidates "Strin" 'clojure.core)
   (candidates "Throwable" 'clojure.core)
+
   (time (dorun (candidates "m" 'clojure.core)))
   (time (dorun (candidates "java." *ns*)))
 
