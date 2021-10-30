@@ -204,30 +204,25 @@
           .findAll
           (eduction
             (mapcat #(-> % .open .list .iterator iterator-seq))
-            (map classname)
-            (map annotate-class))
-          (sort-by :candidate)))
+            (map classname))
+          sort))
       (catch ClassNotFoundException _))))
 
 (def top-level-classes
   (future
-    (->>
+    (sort
       (eduction
         (filter #(re-find #"^[^\$]+\.class" %))
         (map classname)
-        (map annotate-class)
-        @class-files)
-      (sort-by :candidate))))
+        @class-files))))
 
 (def nested-classes
   (future
-    (->>
+    (sort
       (eduction
         (filter #(re-find #"^[^\$]+(\$[^\d]\w*)+\.class" %))
         (map classname)
-        (map annotate-class)
-        @class-files)
-      (sort-by :candidate))))
+        @class-files))))
 
 (defn resolve-class
   "Given an ns symbol and a symbol, if the symbol resolves to a class in the
@@ -357,6 +352,7 @@
   [^String prefix]
   (let [candidate? (partial candidate? prefix)]
     (eduction
+      (map annotate-class)
       ;; Ignore nested classes if the prefix does not contain a dollar sign.
       (remove #(and (not (.contains prefix "$")) (.contains ^String (:candidate %) "$")))
       ;; The class candidate list is long and sorted, so instead of filtering
