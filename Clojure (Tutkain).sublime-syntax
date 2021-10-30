@@ -507,6 +507,8 @@ contexts:
   classdef-tail:
     - include: metadata
     - include: comment
+    - include: discard
+    - include: list-end
     - match: '{{symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.type.clojure
       set:
@@ -515,8 +517,7 @@ contexts:
         - match: '\['
           scope: punctuation.section.brackets.begin.edn
           set:
-          - include: metadata
-          - include: comment
+          - include: forms
           - meta_scope: meta.function.parameters.clojure
           - match: '\]'
             scope: punctuation.section.brackets.end.edn

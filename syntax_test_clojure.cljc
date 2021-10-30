@@ -2152,6 +2152,8 @@
   (deftype DeclareType [])
 ;  ^^^^^^^ storage.type.class.clojure
 ;          ^^^^^^^^^^^ entity.name.type.clojure
+;                      ^ punctuation.section.brackets.begin.edn
+;                       ^ punctuation.section.brackets.end.edn
 
   (deftype-custom DeclareWithCustomDeftype)
 ;  ^^^^^^^^^^^^^^ - storage.type.class.clojure
@@ -2185,6 +2187,9 @@
   ; style of function declarations, but not added to the symbol index,
   ; since they're not added to the namespace.
   (deftype DeclareType [foo]
+  ;                    ^ meta.function.parameters.clojure punctuation.section.brackets.begin.edn
+  ;                     ^^^ meta.reader-form.edn meta.symbol.edn
+  ;                        ^ meta.function.parameters.clojure punctuation.section.brackets.end.edn
     Foo
     (bar ^:quux [_])
   ;  ^^^ entity.name.function.clojure
@@ -2253,12 +2258,18 @@
                 (when-not (map? dict)
                   (throw (new Exception "GrowingMap initer failed to produce a map")))
                 (set! inner dict)))))))
+;                                     ^ punctuation.section.parens.end.edn
 
 (defn new-growing-map
   ([make] (new-growing-map make nil))
   ([make init] {:pre [(ifn? make) (or (nil? init) (map? init))]}
    (new GrowingMap make init)))
 
+ (deftype #_Foo #_[bar] #_(baz [quux]))
+;         ^^^^^ comment.block.edn comment.discard.edn
+;               ^^^^^^^ comment.block.edn comment.discard.edn
+;                       ^^^^^^^^^^^^^^ comment.block.edn comment.discard.edn
+;                                     ^ punctuation.section.parens.end.edn
 
 
 ; # defrecord
