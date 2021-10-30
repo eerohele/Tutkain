@@ -92,8 +92,8 @@
   )
 
 (defn namespaces
-  "Given an ns symbol, return a list of ns symbols available in the context of
-  that ns."
+  "Given an ns symbol, return a list of ns and ns alias symbols available in
+  the context of that ns."
   [ns]
   (concat (map ns-name (all-ns)) (keys (ns-aliases ns))))
 
