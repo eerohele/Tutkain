@@ -379,6 +379,10 @@
 
 (comment (seq (class-candidates "java.util.concurrent.Linked")) ,)
 
+(defn ^:private candidates-for-prefix
+  [prefix candidates]
+  (sort-by :candidate (filter #(candidate? prefix %) candidates)))
+
 (defn candidates
   "Given a string prefix and ns symbol, return auto-completion candidates for
   the string prefix.
@@ -386,16 +390,27 @@
   See the comment form below for examples."
   [^String prefix ns]
   (when (seq prefix)
-    (let [candidates (cond
-                       (.startsWith prefix ":") (keyword-candidates (all-keywords) (ns-aliases ns) ns)
-                       (.startsWith prefix ".") (ns-java-method-candidates ns)
-                       (scoped? prefix) (scoped-candidates prefix ns)
-                       (.contains prefix ".") (concat (ns-candidates ns) (class-candidates prefix))
-                       :else (concat special-form-candidates
-                               (ns-candidates ns)
-                               (ns-var-candidates ns)
-                               (ns-class-candidates ns)))]
-      (sort-by :candidate (filter #(candidate? prefix %) candidates)))))
+    (cond
+      (.startsWith prefix ":")
+      (candidates-for-prefix prefix (keyword-candidates (all-keywords) (ns-aliases ns) ns))
+
+      (.startsWith prefix ".")
+      (candidates-for-prefix prefix (ns-java-method-candidates ns))
+
+      (scoped? prefix)
+      (candidates-for-prefix prefix (scoped-candidates prefix ns))
+
+      (.contains prefix ".")
+      (concat
+        (candidates-for-prefix prefix (ns-candidates ns))
+        (class-candidates prefix))
+
+      :else
+      (candidates-for-prefix prefix
+        (concat special-form-candidates
+          (ns-candidates ns)
+          (ns-var-candidates ns)
+          (ns-class-candidates ns))))))
 
 (comment
   (candidates "ran" 'clojure.core)
