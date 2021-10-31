@@ -281,13 +281,13 @@
 
 (comment (ns-candidates 'clojure.main),)
 
-(defn package-candidates
-  []
-  (eduction
-    (map (memfn ^Package getName))
-    (remove empty?)
-    (map #(hash-map :candidate % :type :package))
-    (dedupe)
+(def package-candidates
+  (sequence
+    (comp
+      (map (memfn ^Package getName))
+      (remove empty?)
+      (map #(hash-map :candidate % :type :package))
+      (dedupe))
     (Package/getPackages)))
 
 (defn ns-var-candidates
@@ -395,7 +395,7 @@
           (ns-candidates ns)
           (ns-var-candidates ns)
           (ns-class-candidates ns)
-          (package-candidates))))))
+          package-candidates)))))
 
 (comment
   (candidates "ran" 'clojure.core)
@@ -404,6 +404,7 @@
 
   (time (dorun (candidates "m" 'clojure.core)))
   (time (dorun (candidates "java." *ns*)))
+  (time (dorun (candidates "java" *ns*)))
 
   (require '[clj-async-profiler.core :as prof])
   (prof/profile (dorun (candidates "java." *ns*)))
