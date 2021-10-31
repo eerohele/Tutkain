@@ -350,18 +350,16 @@
 
 (defn class-candidates
   [^String prefix]
-  (let [candidate? (partial candidate? prefix)]
-    (eduction
-      (map annotate-class)
-      ;; Ignore nested classes if the prefix does not contain a dollar sign.
-      (remove #(and (not (.contains prefix "$")) (.contains ^String (:candidate %) "$")))
-      ;; The class candidate list is long and sorted, so instead of filtering
-      ;; the entire list, we drop until we get the first candidate, then take
-      ;; until the first class that's not a candidate.
-      (drop-while (complement candidate?))
-      (take-while candidate?)
-      (map (fn [{^String class-name :candidate}] (annotate-class class-name)))
-      @class-candidate-list)))
+  (eduction
+    ;; Ignore nested classes if the prefix does not contain a dollar sign.
+    (remove #(and (not (.contains prefix "$")) (.contains ^String % "$")))
+    ;; The class candidate list is long and sorted, so instead of filtering
+    ;; the entire list, we drop until we get the first candidate, then take
+    ;; until the first class that's not a candidate.
+    (drop-while #(not (.startsWith ^String % prefix)))
+    (take-while #(.startsWith ^String % prefix))
+    (map annotate-class)
+    @class-candidate-list))
 
 (comment (seq (class-candidates "java.util.concurrent.Linked")) ,)
 
