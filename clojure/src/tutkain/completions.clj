@@ -155,74 +155,9 @@
 
 (comment (static-member-candidates java.lang.String),)
 
-(defn path-files
-  [^String path]
-  (cond
-    (.endsWith path "/*")
-    (sequence
-      (comp
-        (filter #(.endsWith ^String (.getName %) ".jar"))
-        (mapcat #(-> % .getPath path-files)))
-      (-> path File. .getParent File. .listFiles))
-
-    (.endsWith path ".jar")
-    (try
-      (map (memfn ^JarEntry getName)
-        (-> path JarFile. .entries enumeration-seq))
-      (catch Exception _))
-
-    :else
-    (map #(.replace ^String (.getPath %) path "") (-> path File. file-seq))))
-
-(def class-files
-  (->>
-    ["sun.boot.class.path" "java.ext.dirs" "java.class.path"]
-    (eduction
-      (keep #(some-> ^String % System/getProperty (.split File/pathSeparator)))
-      cat
-      (mapcat path-files)
-      (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__")))))
-    delay))
-
-(defn- classname [^String file]
-  (.. file (replace ".class" "") (replace "/" ".")))
-
 (defn annotate-class
   [class-name]
   {:candidate (name class-name) :type :class})
-
-(def system-module-resources
-  "A future that, on JDK11 and newer, holds a seq of all classes in every Java
-  module in the current JDK.
-
-  On < JDK11, holds nil."
-  (future
-    (try
-      (when-some [module-finder (Class/forName "java.lang.module.ModuleFinder")]
-        (->>
-          (Reflector/invokeStaticMethod module-finder "ofSystem" (into-array Object []))
-          .findAll
-          (eduction
-            (mapcat #(-> % .open .list .iterator iterator-seq))
-            (map classname))
-          sort))
-      (catch ClassNotFoundException _))))
-
-(def top-level-classes
-  (future
-    (sort
-      (eduction
-        (filter #(re-find #"^[^\$]+\.class" %))
-        (map classname)
-        @class-files))))
-
-(def nested-classes
-  (future
-    (sort
-      (eduction
-        (filter #(re-find #"^[^\$]+(\$[^\d]\w*)+\.class" %))
-        (map classname)
-        @class-files))))
 
 (defn resolve-class
   "Given an ns symbol and a symbol, if the symbol resolves to a class in the
@@ -244,8 +179,65 @@
       doc (assoc :doc doc)
       arglists (assoc :arglists (map pr-str arglists)))))
 
-(def class-candidate-list
-  (delay (concat @system-module-resources @top-level-classes @nested-classes)))
+(defn path-files
+  [^String path]
+  (cond
+    (.endsWith path "/*")
+    (sequence
+      (comp
+        (filter #(.endsWith ^String (.getName %) ".jar"))
+        (mapcat #(-> % .getPath path-files)))
+      (-> path File. .getParent File. .listFiles))
+
+    (.endsWith path ".jar")
+    (try
+      (map (memfn ^JarEntry getName)
+        (-> path JarFile. .entries enumeration-seq))
+      (catch Exception _))
+
+    :else
+    (map #(.replace ^String (.getPath %) path "") (-> path File. file-seq))))
+
+(def non-base-class-names
+  "A future that holds a sorted list of the names of all non-base Java classes
+  in the class path."
+  (->>
+    ["sun.boot.class.path" "java.ext.dirs" "java.class.path"]
+    (eduction
+      (keep #(some-> ^String % System/getProperty (.split File/pathSeparator)))
+      cat
+      (mapcat path-files)
+      (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__"))))
+      (remove #(re-find #".+\$\d.*" %))
+      (map #(.. % (replace ".class" "") (replace "/" "."))))
+    future))
+
+(def ^:private base-class-names
+  "A future that, on JDK11 and newer, holds a sorted list of all classes in
+  every Java module in the current JDK.
+
+  On < JDK11, holds nil."
+  (future
+    (try
+      (when-some [module-finder (Class/forName "java.lang.module.ModuleFinder")]
+        (->>
+          (Reflector/invokeStaticMethod module-finder "ofSystem" (into-array Object []))
+          .findAll
+          (eduction
+            (mapcat #(-> % .open .list .iterator iterator-seq))
+            ;; Remove anonymous nested classes
+            (remove #(re-find #".+\$\d.+\.class" %))
+            (map #(.. % (replace ".class" "") (replace "/" "."))))))
+      (catch ClassNotFoundException _))))
+
+(def ^:private all-class-names
+  (future (sort (concat @base-class-names @non-base-class-names))))
+
+(def ^:private top-level-class-names
+  (future (remove #(.contains ^String % "$") @all-class-names)))
+
+(def ^:private nested-class-names
+  (future (filter #(.contains ^String % "$") @all-class-names)))
 
 (def special-form-candidates
   "All Clojure special form candidates."
@@ -348,20 +340,31 @@
   [^String prefix {:keys [^String candidate]}]
   (.startsWith candidate prefix))
 
-(defn class-candidates
+(defn top-level-class-candidates
   [^String prefix]
   (eduction
-    ;; Ignore nested classes if the prefix does not contain a dollar sign.
-    (remove #(and (not (.contains prefix "$")) (.contains ^String % "$")))
     ;; The class candidate list is long and sorted, so instead of filtering
     ;; the entire list, we drop until we get the first candidate, then take
     ;; until the first class that's not a candidate.
     (drop-while #(not (.startsWith ^String % prefix)))
     (take-while #(.startsWith ^String % prefix))
     (map annotate-class)
-    @class-candidate-list))
+    @top-level-class-names))
 
-(comment (seq (class-candidates "java.util.concurrent.Linked")) ,)
+(comment
+  (seq (top-level-class-candidates "clojure.lang"))
+  (seq (top-level-class-candidates "java.time"))
+  ,)
+
+(defn nested-class-candidates
+  [^String prefix]
+  (eduction
+    (drop-while #(not (.startsWith ^String % prefix)))
+    (take-while #(.startsWith ^String % prefix))
+    (map annotate-class)
+    @nested-class-names))
+
+(comment (seq (nested-class-candidates "java.util.Spliterator")) ,)
 
 (defn ^:private candidates-for-prefix
   [prefix candidates]
@@ -384,10 +387,13 @@
       (scoped? prefix)
       (candidates-for-prefix prefix (scoped-candidates prefix ns))
 
+      (and (.contains prefix ".") (.contains prefix "$"))
+      (nested-class-candidates prefix)
+
       (.contains prefix ".")
       (concat
         (candidates-for-prefix prefix (ns-candidates ns))
-        (class-candidates prefix))
+        (top-level-class-candidates prefix))
 
       :else
       (candidates-for-prefix prefix
