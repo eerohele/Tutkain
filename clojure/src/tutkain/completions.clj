@@ -358,6 +358,9 @@
   [^String prefix ns]
   (when (seq prefix)
     (cond
+      ;; Special case
+      (= prefix ".") []
+
       (.startsWith prefix ":")
       (candidates-for-prefix prefix (keyword-candidates (all-keywords) (ns-aliases ns) ns))
 
