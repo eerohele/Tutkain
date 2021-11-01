@@ -1,6 +1,7 @@
 (ns tutkain.java
   (:require
    [clojure.java.io :as io]
+   [clojure.main :as main]
    [clojure.repl :as repl]
    [tutkain.backchannel :refer [handle respond-to]])
   (:import
@@ -36,6 +37,26 @@
                       (.replaceAll "\\$.+?\\." "\\.")
                       (.replace ".jar!" "-sources.jar!")))]
       (URL. (.replace new-url ".class" ".java")))))
+
+(defn qualified-class-name
+  [^Class class]
+  (let [class-name (.getSimpleName class)]
+    (if-some [package-name (some-> class .getPackage .getName)]
+      (str package-name "." class-name)
+      class-name)))
+
+(defn ^Class resolve-class
+  "Given an ns symbol and a symbol, if the symbol resolves to a class in the
+  context of the given namespace, return that class (java.lang.Class)."
+  [ns sym]
+  (try (let [val (ns-resolve ns sym)]
+         (when (class? val) val))
+    (catch Exception e
+      (when (not= ClassNotFoundException
+              (class (main/repl-exception e)))
+        (throw e)))))
+
+(comment (resolve-class 'clojure.core 'String) ,)
 
 (defn resolve-stacktrace
   "Given a java.lang.Throwable, return a seq of maps representing its resolved

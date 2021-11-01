@@ -4,8 +4,8 @@
 
   Originally adapted from nrepl.util.completion."
   (:require
-   [clojure.main :as main]
-   [tutkain.backchannel :refer [handle respond-to]])
+   [tutkain.backchannel :refer [handle respond-to]]
+   [tutkain.java :as java])
   (:import
    (clojure.lang Reflector)
    (java.util.jar JarFile)
@@ -104,13 +104,6 @@
   [^Member member]
   (-> member .getModifiers Modifier/isStatic))
 
-(defn ^:private qualified-class-name
-  [^Class class]
-  (let [class-name (.getSimpleName class)]
-    (if-some [package-name (some-> class .getPackage .getName)]
-      (str package-name "." class-name)
-      class-name)))
-
 (defn ns-java-method-candidates
   "Given an ns symbol, return all Java methods that are available in the
   context of that ns."
@@ -119,10 +112,10 @@
     (map val)
     (mapcat #(.getMethods ^Class %))
     (map (fn [^Method method]
-           {:class (-> method .getDeclaringClass qualified-class-name)
+           {:class (-> method .getDeclaringClass java/qualified-class-name)
             :candidate (str "." (.getName method))
             :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
-            :return-type (-> method .getReturnType qualified-class-name)
+            :return-type (-> method .getReturnType java/qualified-class-name)
             :type :method}))
     (distinct)
     (ns-imports ns)))
@@ -146,11 +139,11 @@
   (eduction
     (filter static?)
     (map (fn [^Method method]
-           {:class (qualified-class-name class)
+           {:class (java/qualified-class-name class)
             :candidate (.getName method)
             :type :static-method
             :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
-            :return-type (-> method .getReturnType qualified-class-name)}))
+            :return-type (-> method .getReturnType java/qualified-class-name)}))
     (.getMethods class)))
 
 (comment (static-member-candidates java.lang.String),)
@@ -158,19 +151,6 @@
 (defn annotate-class
   [class-name]
   {:candidate (name class-name) :type :class})
-
-(defn resolve-class
-  "Given an ns symbol and a symbol, if the symbol resolves to a class in the
-  context of the given namespace, return that class (java.lang.Class)."
-  [ns sym]
-  (try (let [val (ns-resolve ns sym)]
-         (when (class? val) val))
-    (catch Exception e
-      (when (not= ClassNotFoundException
-              (class (main/repl-exception e)))
-        (throw e)))))
-
-(comment (resolve-class 'clojure.core 'String) ,)
 
 (defn annotate-var [var]
   (let [{macro :macro arglists :arglists var-name :name doc :doc} (meta var)
@@ -328,7 +308,7 @@
   [^String prefix ns]
   (when-let [prefix-scope (first (.split prefix "/"))]
     (let [scope (symbol prefix-scope)
-          candidates (if-let [class (resolve-class ns scope)]
+          candidates (if-let [class (java/resolve-class ns scope)]
                        (concat (static-member-candidates class) (field-candidates class))
                        (when-let [ns (or (find-ns scope) (scope (ns-aliases ns)))]
                          (ns-public-var-candidates ns)))]
