@@ -50,11 +50,16 @@
 (recv)
 (xr/check! ::ret)
 
+(def eval-context (atom {}))
+
 (backchannel/handle
   {:op :load
+   :eval-context eval-context
    :file "/my/path/math.clj"
    :code (string->base64 "(defn square [x] (* x x)") ;; no closing paren
    :out-fn #(.put recvq %)})
+
+(xr/check! (partial instance? Throwable) (get @eval-context #'*e))
 
 (def ex (recv))
 (xr/check! ::ex ex)
