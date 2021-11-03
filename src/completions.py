@@ -81,8 +81,7 @@ def get_completions(view, prefix, locations):
             "dialect": dialect
         }, handler=lambda response: (
             completion_list.set_completions(
-                map(completion_item, response.get(edn.Keyword("completions"), [])),
-                flags=sublime.DYNAMIC_COMPLETIONS
+                map(completion_item, response.get(edn.Keyword("completions"), []))
             )
         ))
 
