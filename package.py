@@ -1170,7 +1170,7 @@ def fetch_locals(view, point, form, handler):
     ) and (
         "analyzer.clj" in client.capabilities
     ) and (
-        outermost := sexp.outermost(view, point, edge=False)
+        outermost := sexp.outermost(view, point, edge=False, ignore={"comment"})
     ):
         line, column = view.rowcol(form.begin())
         end_column = column + form.size()
