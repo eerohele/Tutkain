@@ -538,21 +538,22 @@ class TutkainConnectCommand(WindowCommand):
         if settings().get("tap_panel"):
             tap.create_panel(self.window)
 
-        active_view = self.window.active_view()
         view = self.get_or_create_view(view_id)
-        set_layout(self.window)
-        client = self.connect(dialect, host, int(port), lambda: view.close())
-        repl_view_settings = settings().get("repl_view_settings", {})
-        repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
 
-        print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
-        print_loop.name = f"tutkain.{client.id}.print_loop"
-        print_loop.start()
+        if client := self.connect(dialect, host, int(port), lambda: view.close()):
+            active_view = self.window.active_view()
+            set_layout(self.window)
+            repl_view_settings = settings().get("repl_view_settings", {})
+            repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
 
-        # Activate the output view and the view that was active prior to
-        # creating the output view.
-        self.window.focus_view(view)
-        self.window.focus_view(active_view)
+            print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
+            print_loop.name = f"tutkain.{client.id}.print_loop"
+            print_loop.start()
+
+            # Activate the output view and the view that was active prior to
+            # creating the output view.
+            self.window.focus_view(view)
+            self.window.focus_view(active_view)
 
     def input(self, args):
         if "dialect" in args and "host" in args and "port" in args:
