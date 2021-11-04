@@ -62,24 +62,36 @@ def completion_item(item):
 
 
 def get_completions(view, prefix, point):
-    if view.match_selector(
-        point,
-        "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
-    ) and (dialect := dialects.for_point(view, point)) and (client := state.get_client(dialect)):
-        if scope := selectors.expand_by_selector(view, point, "meta.symbol | constant.other.keyword"):
-            prefix = view.substr(scope)
+    # The AC widget won't show up after typing a character that's in word_separators.
+    #
+    # Removing the forward slash from word_separators is a no go, though. Therefore,
+    # we're gonna do this awful hack where we remove the forward slash from
+    # word_separators for the duration of the AC interaction.
+    word_separators = view.settings().get("word_separators")
 
-        completion_list = sublime.CompletionList()
+    try:
+        view.settings().set("word_separators", word_separators.replace("/", ""))
 
-        client.backchannel.send({
-            "op": edn.Keyword("completions"),
-            "prefix": prefix,
-            "ns": namespace.name(view),
-            "dialect": dialect
-        }, handler=lambda response: (
-            completion_list.set_completions(
-                map(completion_item, response.get(edn.Keyword("completions"), []))
-            )
-        ))
+        if view.match_selector(
+            point,
+            "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",
+        ) and (dialect := dialects.for_point(view, point)) and (client := state.get_client(dialect)):
+            if scope := selectors.expand_by_selector(view, point, "meta.symbol | constant.other.keyword"):
+                prefix = view.substr(scope)
 
-        return completion_list
+            completion_list = sublime.CompletionList()
+
+            client.backchannel.send({
+                "op": edn.Keyword("completions"),
+                "prefix": prefix,
+                "ns": namespace.name(view),
+                "dialect": dialect
+            }, handler=lambda response: (
+                completion_list.set_completions(
+                    map(completion_item, response.get(edn.Keyword("completions"), []))
+                )
+            ))
+
+            return completion_list
+    finally:
+        view.settings().set("word_separators", word_separators)
