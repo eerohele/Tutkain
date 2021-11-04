@@ -538,10 +538,10 @@ class TutkainConnectCommand(WindowCommand):
         if settings().get("tap_panel"):
             tap.create_panel(self.window)
 
+        active_view = self.window.active_view()
         view = self.get_or_create_view(view_id)
 
         if client := self.connect(dialect, host, int(port), lambda: view.close()):
-            active_view = self.window.active_view()
             set_layout(self.window)
             repl_view_settings = settings().get("repl_view_settings", {})
             repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
