@@ -1,0 +1,7 @@
+Hey there! Tutkain has been updated.
+
+Restart both your REPL and Sublime Text to make sure everything works correctly.
+
+For a full list of changes in this version, see:
+
+https://github.com/eerohele/Tutkain/blob/master/CHANGELOG.md
