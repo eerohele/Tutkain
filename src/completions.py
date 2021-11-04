@@ -61,9 +61,7 @@ def completion_item(item):
     )
 
 
-def get_completions(view, prefix, locations):
-    point = locations[0] - 1
-
+def get_completions(view, prefix, point):
     if view.match_selector(
         point,
         "source.clojure & (meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword)",

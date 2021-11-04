@@ -788,7 +788,8 @@ class TutkainEventListener(EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         if settings().get("auto_complete"):
-            return completions.get_completions(view, prefix, locations)
+            point = locations[0] - 1
+            return completions.get_completions(view, prefix, point)
 
 
 class TutkainExpandSelectionImplCommand(TextCommand):
