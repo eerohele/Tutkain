@@ -57,6 +57,6 @@ def focus_view(view: View, dialect: edn.Keyword) -> None:
         active_repl_view := views.active_repl_view(window)
     ) and views.get_dialect(active_repl_view) != dialect:
         # Focus the REPL view for the given dialect
-        window.focus_view(state.active_repl_view(dialect))
+        window.focus_view(state.repl_view(window, dialect))
         # Focus the view that was initially active
         window.focus_view(view)

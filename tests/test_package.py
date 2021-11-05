@@ -127,8 +127,8 @@ class TestJVMClient(PackageTestCase):
         dialect = edn.Keyword("clj")
         self.repl_view = sublime.active_window().new_file()
         views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
-        state.register_client(self.client)
-        state.set_active_client(dialect, self.client)
+        state.set_view_client(self.repl_view, dialect, self.client)
+        state.set_repl_view(self.repl_view, dialect)
         self.backchannel = self.conduct_handshake()
 
     @classmethod
@@ -662,8 +662,8 @@ class TestJSClient(PackageTestCase):
         dialect = edn.Keyword("cljs")
         self.repl_view = sublime.active_window().new_file()
         views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
-        state.register_client(self.client)
-        state.set_active_client(dialect, self.client)
+        state.set_view_client(self.repl_view, dialect, self.client)
+        state.set_repl_view(self.repl_view, dialect)
         self.backchannel = self.conduct_handshake()
 
     @classmethod
@@ -746,8 +746,8 @@ class TestBabashkaClient(PackageTestCase):
         dialect = edn.Keyword("bb")
         self.repl_view = sublime.active_window().new_file()
         views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
-        state.register_client(self.client)
-        state.set_active_client(dialect, self.client)
+        state.set_view_client(self.repl_view, dialect, self.client)
+        state.set_repl_view(self.repl_view, dialect)
         self.conduct_handshake()
 
     # TODO: Extract into base class

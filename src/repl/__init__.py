@@ -100,8 +100,6 @@ class Client(ABC):
         self.name = name
         self.sendq = queue.Queue()
         self.printq = queue.Queue()
-        self.server = None
-        self.client = None
         self.handler = None
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}.{self.id}")
         self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
@@ -235,8 +233,6 @@ class JVMClient(Client):
             if (host := ret.get(edn.Keyword("host"))) and (port := ret.get(edn.Keyword("port"))):
                 self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
                 self.print(ret.get(edn.Keyword("greeting")))
-                self.server = ret.get(edn.Keyword("server"))
-                self.client = ret.get(edn.Keyword("client"))
             else:
                 self.print(ret)
 
