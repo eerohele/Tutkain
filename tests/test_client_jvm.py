@@ -229,9 +229,17 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
         message = edn.read(self.backchannel.recv())
+        id = message.get(edn.Keyword("id"))
+
+        self.assertEquals({
+            edn.Keyword("op"): edn.Keyword("load"),
+            edn.Keyword("code"): base64.encode("(ns foo.bar) (defn x [y] y".encode("utf-8")),
+            edn.Keyword("file"): None,
+            edn.Keyword("id"): id
+        }, message)
 
         response = edn.kwmap({
-            "id": message.get(edn.Keyword("id")),
+            "id": id,
             "tag": edn.Keyword("ret"),
             # Can't be bothered to stick a completely realistic exception map
             # here, this'll do
@@ -241,6 +249,7 @@ class TestJVMClient(PackageTestCase):
 
         self.backchannel.send(response)
         self.assertEquals(response, self.get_print())
+        self.assertEquals("(tutkain.repl/switch-ns foo.bar)\n", self.server.recv())
 
     def test_view_common(self):
         self.view.assign_syntax("Packages/Tutkain/Clojure Common (Tutkain).sublime-syntax")
