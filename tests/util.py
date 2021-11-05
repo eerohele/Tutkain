@@ -5,6 +5,7 @@ from threading import Event, Thread
 
 from unittest import TestCase
 
+from Tutkain.api import edn
 from Tutkain.package import settings
 
 
@@ -94,3 +95,56 @@ def stop_client(client):
     if client:
         client.shutdown(socket.SHUT_RDWR)
         client.close()
+
+
+class PackageTestCase(TestCase):
+    @classmethod
+    def setUpClass(self):
+        sublime.run_command("new_window")
+        self.window = sublime.active_window()
+
+    @classmethod
+    def tearDownClass(self):
+        if self.window:
+            self.window.run_command("close_window")
+
+    def setUp(self, syntax="Clojure (Tutkain).sublime-syntax"):
+        self.view = self.window.new_file()
+        self.view.set_name("tutkain.clj")
+        self.view.set_scratch(True)
+        self.view.window().focus_view(self.view)
+        self.view.assign_syntax(syntax)
+
+    def tearDown(self):
+        if self.view:
+            self.view.close()
+
+    def set_view_content(self, chars):
+        self.view.run_command("select_all")
+        self.view.run_command("right_delete")
+        self.view.run_command("append", {"characters": chars})
+
+    def set_selections(self, *pairs):
+        self.view.sel().clear()
+
+        for begin, end in pairs:
+            self.view.sel().add(sublime.Region(begin, end))
+
+    def eval_context(self, file="NO_SOURCE_FILE", line=1, column=1):
+        actual = edn.read(self.backchannel.recv())
+        id = actual.get(edn.Keyword("id"))
+
+        response = edn.kwmap({
+             "id": id,
+             "op": edn.Keyword("set-eval-context"),
+             "file": file,
+             "line": line,
+             "column": column,
+        })
+
+        self.assertEquals(response, actual)
+
+        self.backchannel.send(edn.kwmap({
+            "id": id,
+            "file": file
+        }))
