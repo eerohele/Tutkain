@@ -214,10 +214,18 @@
   (future (sort (concat @base-class-names @non-base-class-names))))
 
 (def ^:private top-level-class-names
-  (future (remove #(.contains ^String % "$") @all-class-names)))
+  (future
+    (eduction
+      (remove #(.contains ^String % "$"))
+      (map annotate-class)
+      @all-class-names)))
 
 (def ^:private nested-class-names
-  (future (filter #(.contains ^String % "$") @all-class-names)))
+  (future
+    (eduction
+      (filter #(.contains ^String % "$"))
+      (map annotate-class)
+      @all-class-names)))
 
 (def special-form-candidates
   "All Clojure special form candidates."
@@ -317,9 +325,8 @@
     ;; The class candidate list is long and sorted, so instead of filtering
     ;; the entire list, we drop until we get the first candidate, then take
     ;; until the first class that's not a candidate.
-    (drop-while #(not (.startsWith ^String % prefix)))
-    (take-while #(.startsWith ^String % prefix))
-    (map annotate-class)
+    (drop-while (complement (partial candidate? prefix)))
+    (take-while (partial candidate? prefix))
     @top-level-class-names))
 
 (comment
@@ -330,9 +337,8 @@
 (defn nested-class-candidates
   [^String prefix]
   (eduction
-    (drop-while #(not (.startsWith ^String % prefix)))
-    (take-while #(.startsWith ^String % prefix))
-    (map annotate-class)
+    (drop-while (complement (partial candidate? prefix)))
+    (take-while (partial candidate? prefix))
     @nested-class-names))
 
 (comment (seq (nested-class-candidates "java.util.Spliterator")) ,)
