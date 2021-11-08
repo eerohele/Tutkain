@@ -407,8 +407,14 @@ contexts:
     - match: '{{qualified_symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
       push:
+        - match: '\)'
+          scope: punctuation.section.parens.end.edn
+          pop: 2
         - match: '(?=\S)'
           set:
+          - match: '\)'
+            scope: punctuation.section.parens.end.edn
+            pop: 2
           - include: main
           - match: ''
             set:

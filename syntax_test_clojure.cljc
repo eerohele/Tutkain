@@ -2027,11 +2027,19 @@
                (debugf "Unhandled event %s" event)]))
 ;                                                   ^ punctuation.section.parens.end.edn - invalid
 
+  (defmethod event-handler)
+;                         ^ punctuation.section.parens.end.edn - invalid
+
+  (defmethod event-handler :)
+;                           ^ punctuation.section.parens.end.edn - invalid
+
 ; # defprotocol
 
   (defprotocol DeclareProtocol)
 ;  ^^^^^^^^^^^ storage.type.interface.clojure
 ;              ^^^^^^^^^^^^^^^ entity.name.type.clojure
+;                             ^ punctuation.section.parens.end.edn - invalid
+;
 
   (defprotocol ^:private DeclareProtocol)
 ;  ^^^^^^^^^^^ storage.type.interface.clojure
