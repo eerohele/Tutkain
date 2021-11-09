@@ -2033,6 +2033,13 @@
   (defmethod event-handler :)
 ;                           ^ punctuation.section.parens.end.edn - invalid
 
+  (#_defmethod #_event-handler #_:foo #_[bar] #_baz)
+;  ^^^^^^^^^^^ comment.discard.edn
+;              ^^^^^^^^^^^^^^^ comment.discard.edn
+;                              ^^^^^^ comment.discard.edn
+;                                     ^^^^^^^ comment.discard.edn
+;                                             ^^^^^ comment.discard.edn
+
 ; # defprotocol
 
   (defprotocol DeclareProtocol)
@@ -2451,7 +2458,10 @@
 ;    ^^^^^ entity.name.function.clojure
 ;              ^^^ constant.language.edn
 
-
+  (extend-protocol #_clojure.lang.IDeref #_String #_(deref [this] ,,,))
+;                  ^^^^^^^^^^^^^^^^^^^^^ comment.discard.edn
+;                                        ^^^^^^^^ comment.discard.edn
+;                                                 ^^^^^^^^ comment.discard.edn
 
 ; # extend-type
 

@@ -404,6 +404,7 @@ contexts:
   defmethod-tail:
     - include: comment
     - include: metadata
+    - include: discard
     - match: '{{qualified_symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
       push:
@@ -463,6 +464,7 @@ contexts:
   class-specs:
     - include: comment
     - include: list-end
+    - include: discard
     - match: '{{qualified_symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.other.inherited-class.clojure
     - match: '\('
