@@ -82,6 +82,7 @@
                                          {:tag :ret
                                           :val (format/pp-str ret)})
                                        (pretty-print ret))
+                                     (flush)
                                      true))))
                              (catch Throwable ex
                                (set! *e ex)
@@ -91,6 +92,7 @@
                                   :val (format/Throwable->str ex)
                                   :ns (str (.name *ns*))
                                   :form s})
+                               (flush)
                                true))))))
                    (catch Throwable ex
                      (set! *e ex)

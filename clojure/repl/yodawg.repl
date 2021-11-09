@@ -95,6 +95,26 @@
 (brecv)
 (xr/check! ::ret) ;; err
 
+;; flush after eval
+(rsend '(print "foo"))
+(rrecv)
+(check-result! user=> (print "foo"))
+(rrecv)
+(check-result! nil)
+(brecv)
+(xr/check! #{{:tag :out :val "foo"}})
+
+;; flush after eval that throws
+(rsend '(do (print "foo") (/ 4 0)))
+(rrecv)
+(check-result! user=> (do (print "foo") (/ 4 0)))
+(rrecv)
+(xr/check! nil?)
+(brecv)
+(xr/check! ::ret) ;; err
+(brecv)
+(xr/check! #{{:tag :out :val "foo"}})
+
 (rsend '(tap> {:foo :bar}))
 (rrecv)
 (check-result! user=> (tap> {:foo :bar}))

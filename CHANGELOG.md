@@ -65,6 +65,9 @@ All notable changes to this project will be documented in this file.
 
   Tutkain no longer relies on the internal `shadow.cljs.devtools.server.repl-impl/do-repl` function.
 
+- Fix prints from (`print`, `spec/explain`, `criterium/bench`, etc.) not
+  showing up
+
 ## 0.10.0 (alpha) - 2021-09-15
 
 - Improve the UI of the **Tutkain: Show Unsuccessful Tests** command #65 (thx @pedrorgirardi)
