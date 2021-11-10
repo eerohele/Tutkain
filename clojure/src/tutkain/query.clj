@@ -27,7 +27,7 @@
                              (re-find (re-matcher re (str name))))))
                  (map lookup/prep-meta)
                  (all-ns))]
-      (respond-to message {:results (sort-by :name vars)}))))
+      (respond-to message {:results (sort-by (juxt :ns :name) vars)}))))
 
 (defmethod handle :dir
   [{:keys [ns sym] :as message}]
