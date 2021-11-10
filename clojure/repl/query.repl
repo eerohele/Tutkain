@@ -22,7 +22,7 @@
   {:op :apropos
    :pattern "duplicate"}
   send-op
-  :vars) ;; string
+  :results) ;; string
 
 (xr/check! ::results)
 
@@ -30,7 +30,7 @@
   {:op :apropos
    :pattern ".*dupl.*"}
   send-op
-  :vars) ;; regexp
+  :results) ;; regexp
 
 (xr/check! ::results)
 
@@ -38,7 +38,7 @@
   {:op :apropos
    :pattern ""}
   send-op
-  :vars)
+  :results)
 
 (xr/check! empty?)
 
@@ -47,7 +47,7 @@
   {:op :apropos
    :pattern "CollReduce"}
   send-op
-  :vars)
+  :results)
 
 (set (map :type *1))
 (xr/check! (partial some #{:protocol}))
@@ -59,7 +59,7 @@
   {:op :apropos
    :pattern "leaf"}
   send-op
-  :vars)
+  :results)
 
 (set (map :type *1))
 (xr/check! (partial some #{:multimethod}))

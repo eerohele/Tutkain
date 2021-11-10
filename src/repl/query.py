@@ -12,21 +12,20 @@ def goto(window, items, index):
 
 def handle_response(window, kinds, response):
     items = []
-    vars = response.get(edn.Keyword("vars"), [])
+    results = response.get(edn.Keyword("results"), [])
 
-    for var in vars:
-        ns = var.get(edn.Keyword("ns"))
-        symbol = var.get(edn.Keyword("name"))
+    for result in results:
+        symbol = result.get(edn.Keyword("name"))
         name = "/".join([ns, symbol.name])
-        docstring = var.get(edn.Keyword("doc"), "")
+        docstring = result.get(edn.Keyword("doc"), "")
 
         if "\n" in docstring:
             docstring = docstring.split("\n")[0] + "…"
 
-        arglists = " ".join(var.get(edn.Keyword("arglists"), []))
+        arglists = " ".join(result.get(edn.Keyword("arglists"), []))
         kind = sublime.KIND_AMBIGUOUS
 
-        if type := var.get(edn.Keyword("type")):
+        if type := result.get(edn.Keyword("type")):
             kind = kinds.get(type.name, sublime.KIND_AMBIGUOUS)
 
         items.append(
@@ -35,13 +34,13 @@ def handle_response(window, kinds, response):
 
     if symbol := response.get(edn.Keyword("symbol")):
         selected_index = list(
-            map(lambda v: v.get(edn.Keyword("name")), vars)
+            map(lambda v: v.get(edn.Keyword("name")), results)
         ).index(edn.Symbol(symbol))
     else:
         selected_index = -1
 
     window.show_quick_panel(
         items,
-        lambda index: goto(window, vars, index),
+        lambda index: goto(window, results, index),
         selected_index=selected_index
     )
