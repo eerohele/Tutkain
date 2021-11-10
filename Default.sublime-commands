@@ -76,6 +76,10 @@
         "command": "tutkain_dir",
     },
     {
+        "caption": "Tutkain: Loaded Libs",
+        "command": "tutkain_loaded_libs",
+    },
+    {
         "caption": "Tutkain: Explore Stack Trace",
         "command": "tutkain_explore_stack_trace",
     },

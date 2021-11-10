@@ -13,7 +13,7 @@
 (spec/def ::ret string?)
 (spec/def ::fn string?)
 (spec/def ::spec string?)
-(spec/def ::type #{:function :macro :multimethod :protocol :var})
+(spec/def ::type #{:function :macro :multimethod :protocol :var :namespace})
 
 (spec/def ::fnspec
   (spec/keys :opt-un [::args ::ret ::fn]))

@@ -47,3 +47,13 @@
                    (ns-publics sym-ns))]
         (respond-to message {:symbol (name sym)
                              :results (sort-by :name vars)})))))
+
+(defmethod handle :loaded-libs
+  [message]
+  (let [libs (eduction
+               (map lookup/ns-meta)
+               (map lookup/prep-meta)
+               (filter :file)
+               (remove (comp #{"NO_SOURCE_PATH"} :file))
+               (loaded-libs))]
+    (respond-to message {:results libs})))

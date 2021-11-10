@@ -63,3 +63,15 @@
 
 (set (map :type *1))
 (xr/check! (partial some #{:multimethod}))
+
+(spec/def ::lib-results
+  (spec/keys
+    :req-un [::specs/name ::specs/type ::specs/file ::specs/column ::specs/line]
+    :opt-un [::specs/doc]))
+
+(->
+  {:op :loaded-libs}
+  send-op
+  :results)
+
+(xr/check! (spec/coll-of ::lib-results :min-count 85))

@@ -1271,6 +1271,19 @@ class TutkainDirCommand(TextCommand):
             self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
 
 
+class TutkainLoadedLibsCommand(TextCommand):
+    def run(self, _):
+        window = self.view.window()
+        dialect = dialects.for_view(self.view) or edn.Keyword("clj")
+
+        if client := state.client(window, dialect):
+            client.backchannel.send({
+                "op": edn.Keyword("loaded-libs"),
+            }, lambda response: query.handle_response(window, completions.KINDS, response))
+        else:
+            self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
+
+
 class TutkainExploreStackTraceCommand(TextCommand):
     def goto(self, elements, index):
         if index == -1 and (window := self.view.window()):

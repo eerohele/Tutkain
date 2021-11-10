@@ -25,6 +25,15 @@
     (keep #(some->> (get (spec/get-spec v) %) spec/describe pr-str (vector %)))
     [:args :ret :fn]))
 
+(defn ns-meta
+  [ns]
+  (merge (meta ns)
+    {:name (ns-name ns)
+     :file (->> ns ns-interns vals first meta :file)
+     :line 0
+     :column 0
+     :type :namespace}))
+
 (defn sym-meta
   "Given an ns symbol and a symbol, return the metadata for the var that symbol
   names.
@@ -36,11 +45,7 @@
   the :fnspec key."
   [ns sym]
   (if-some [found-ns (find-ns sym)]
-    (merge (meta found-ns)
-      {:name (ns-name found-ns)
-       :file (->> found-ns ns-interns vals first meta :file)
-       :line 0
-       :column 0})
+    (ns-meta found-ns)
     (let [var (ns-resolve ns sym)
           fnspec* (fnspec var)]
       (cond-> (if (special-symbol? sym)
