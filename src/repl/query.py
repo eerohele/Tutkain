@@ -52,5 +52,6 @@ def handle_response(window, kinds, response):
     window.show_quick_panel(
         items,
         lambda index: goto(window, results, index),
+        on_highlight=lambda index: goto(window, results, index),
         selected_index=selected_index
     )
