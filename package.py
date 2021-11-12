@@ -556,6 +556,7 @@ class TutkainConnectCommand(WindowCommand):
             # creating the output view.
             self.window.focus_view(view)
             self.window.focus_view(active_view)
+            client.ready = True
 
     def input(self, args):
         if "dialect" in args and "host" in args and "port" in args:
@@ -741,11 +742,17 @@ class TutkainEventListener(EventListener):
     def on_deactivated_async(self, view):
         inline.clear(view)
 
-    def on_activated_async(self, view):
+    def on_activated(self, view):
         if dialect := view.settings().get("tutkain_repl_view_dialect"):
             state.set_repl_view(view, edn.Keyword(dialect))
         elif sublime.active_window().active_panel() != "input" and settings().get("auto_switch_namespace", True):
-            if (dialect := dialects.for_view(view)) and (window := view.window()) and (client := state.client(window, dialect)):
+            if (
+                dialect := dialects.for_view(view)
+            ) and (
+                window := view.window()
+            ) and (
+                client := state.client(window, dialect)
+            ) and client.ready:
                 ns = namespace.name(view) or namespace.default(dialect)
                 client.switch_namespace(ns)
 

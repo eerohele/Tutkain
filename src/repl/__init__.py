@@ -106,6 +106,7 @@ class Client(ABC):
         self.backchannel_opts = backchannel_opts
         self.capabilities = set()
         self.lock = Lock()
+        self.ready = False
 
     def send_loop(self):
         """Start a loop that reads strings from `self.sendq` and sends them to
