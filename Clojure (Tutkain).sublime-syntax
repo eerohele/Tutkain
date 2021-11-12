@@ -402,6 +402,7 @@ contexts:
     - include: list-tail
 
   defmethod-tail:
+    - include: list-end
     - include: comment
     - include: metadata
     - include: discard

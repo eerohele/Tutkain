@@ -2040,6 +2040,9 @@
 ;                                     ^^^^^^^ comment.discard.edn
 ;                                             ^^^^^ comment.discard.edn
 
+  (defmethod)
+;           ^ punctuation.section.parens.end.edn - invalid
+
 ; # defprotocol
 
   (defprotocol DeclareProtocol)
