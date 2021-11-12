@@ -231,7 +231,7 @@
         ]
     },
     {
-        "keys": ["ctrl+shift+tab"],
+        "keys": ["alt+tab"],
         "command": "tutkain_indent_sexp",
         "args": {"scope": "outermost"},
         "context": [
