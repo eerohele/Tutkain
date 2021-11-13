@@ -4,8 +4,10 @@ from ...api import edn
 from . import info
 
 
-def goto(window, items, index):
-    if index != -1:
+def goto(window, view, items, index):
+    if index == -1:
+        window.focus_view(view)
+    else:
         item = items[index]
         info.goto(window, info.parse_location(item))
 
@@ -49,9 +51,11 @@ def handle_response(window, kinds, response):
     else:
         selected_index = -1
 
+    active_view = window.active_view()
+
     window.show_quick_panel(
         items,
-        lambda index: goto(window, results, index),
-        on_highlight=lambda index: goto(window, results, index),
+        lambda index: goto(window, active_view, results, index),
+        on_highlight=lambda index: goto(window, active_view, results, index),
         selected_index=selected_index
     )
