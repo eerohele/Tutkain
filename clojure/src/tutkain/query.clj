@@ -1,5 +1,7 @@
 (ns tutkain.query
+  (:refer-clojure :exclude [loaded-libs])
   (:require
+   [clojure.core :as core]
    [tutkain.backchannel :refer [handle respond-to]]
    [tutkain.lookup :as lookup]))
 
@@ -48,12 +50,18 @@
         (respond-to message {:symbol (name sym)
                              :results (sort-by :name vars)})))))
 
-(defmethod handle :loaded-libs
+(defmulti loaded-libs :dialect)
+
+(defmethod loaded-libs :default
   [message]
   (let [libs (eduction
                (map lookup/ns-meta)
                (map lookup/prep-meta)
                (filter :file)
                (remove (comp #{"NO_SOURCE_PATH"} :file))
-               (loaded-libs))]
+               (core/loaded-libs))]
     (respond-to message {:results libs})))
+
+(defmethod handle :loaded-libs
+  [message]
+  (loaded-libs message))

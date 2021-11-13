@@ -70,7 +70,8 @@
     :opt-un [::specs/doc]))
 
 (->
-  {:op :loaded-libs}
+  {:op :loaded-libs
+   :dialect :clj}
   send-op
   :results)
 

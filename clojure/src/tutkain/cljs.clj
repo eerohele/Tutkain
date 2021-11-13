@@ -6,7 +6,8 @@
    [cljs.repl :as repl]
    [tutkain.completions :as completions]
    [tutkain.lookup :as lookup]
-   [tutkain.backchannel :refer [handle respond-to]]))
+   [tutkain.backchannel :refer [handle respond-to]]
+   [tutkain.query :as query]))
 
 (set! *warn-on-reflection* true)
 
@@ -196,18 +197,37 @@
   [env ns ns-alias sym]
   (get (some->> (ns-alias->ns-sym env ns ns-alias) (analyzer.api/ns-interns env)) sym))
 
+(defn ^:private ns-meta
+  [env ns]
+  (merge (meta ns)
+    {:name ns
+     :file (some->> ns (analyzer.api/ns-interns env) vals first :file)
+     :line 0
+     :column 0
+     :type :namespace}))
+
 (defn ^:private sym-meta
   [env ns ident]
   (let [sym (symbol (name ident))]
-    (if (qualified-symbol? ident)
+    (cond
+      (qualified-symbol? ident)
       (qualified-sym-meta env ns (symbol (namespace ident)) sym)
-      (if-some [found-ns (find-ns sym)]
-        (merge (meta found-ns)
-          {:name sym
-           :file (->> sym (analyzer.api/ns-interns env) vals first :file)
-           :line 0
-           :column 0})
-        (or (special-sym-meta sym) (core-sym-meta env sym) (ns-sym-meta env ns sym))))))
+
+      (analyzer.api/find-ns env sym)
+      (ns-meta env sym)
+
+      :else
+      (or
+        (special-sym-meta sym)
+        (core-sym-meta env sym)
+        (ns-sym-meta env ns sym)))))
+
+(comment
+  (sym-meta env 'my.browser.app 'my.browser.app)
+  (sym-meta env 'my.browser.app 'let)
+  (sym-meta env 'my.browser.app 'mapcat)
+  (sym-meta env 'my.browser.app 'pprint/pprint)
+  ,,,)
 
 (defn info
   "Given a compiler environment, a symbol that names an ident, and an ns
@@ -223,3 +243,21 @@
   (let [env (compiler-env build-id)
         sym (symbol ident)]
     (respond-to message {:info (info env sym (parse-ns ns))})))
+
+(defmethod query/loaded-libs :cljs
+  [{:keys [build-id] :as message}]
+  (let [env (compiler-env build-id)
+        results (eduction
+                  (map (partial ns-meta env))
+                  (map lookup/prep-meta)
+                  (filter :file)
+                  (remove (comp #{"NO_SOURCE_PATH"} :file))
+                  (analyzer.api/all-ns env))]
+    (respond-to message {:results (sort-by (juxt :ns :name) results)})))
+
+(comment
+  (->
+    (query/loaded-libs {:build-id :browser :out-fn prn :dialect :cljs})
+    (with-out-str)
+    (read-string))
+  ,,,)

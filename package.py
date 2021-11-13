@@ -1286,6 +1286,7 @@ class TutkainLoadedLibsCommand(TextCommand):
         if client := state.client(window, dialect):
             client.backchannel.send({
                 "op": edn.Keyword("loaded-libs"),
+                "dialect": dialect
             }, lambda response: query.handle_response(window, completions.KINDS, response))
         else:
             self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")

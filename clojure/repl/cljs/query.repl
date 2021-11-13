@@ -1,0 +1,40 @@
+(ns repl.cljs.query
+  (:require
+   [clojure.java.io :as io]
+   [clojure.spec.alpha :as spec]
+   [cognitect.transcriptor :as xr]
+   [shadow.cljs.devtools.server :as server]
+   [shadow.cljs.devtools.api :as shadow]
+   [tutkain.backchannel.test :refer [send-op]]
+   [tutkain.lookup.specs :as specs]
+   [tutkain.cljs :as cljs]
+   [tutkain.query]))
+
+(def build-id :browser)
+
+;; Start shadow-cljs watch
+
+(xr/on-exit #(server/stop!))
+(do (server/start!) (shadow/watch build-id))
+(defn env [] (cljs/compiler-env build-id))
+
+;; Touch the file to ensure the keywords in that file are in the compiler
+;; environment. Not sure why I need to do this.
+(run!
+  #(-> (io/file %) (.setLastModified (System/currentTimeMillis)))
+  ["dev/src/my/other.cljs" "dev/src/my/app.cljs"])
+(Thread/sleep 3000)
+
+(spec/def ::lib-results
+  (spec/keys
+    :req-un [::specs/name ::specs/type ::specs/file ::specs/column ::specs/line]
+    :opt-un [::specs/doc]))
+
+(->
+  {:op :loaded-libs
+   :build-id build-id
+   :dialect :cljs}
+  send-op
+  :results)
+
+(xr/check! (spec/coll-of ::lib-results :min-count 49))
