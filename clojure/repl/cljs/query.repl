@@ -37,4 +37,4 @@
   send-op
   :results)
 
-(xr/check! (spec/coll-of ::lib-results :min-count 49))
+(xr/check! (spec/coll-of ::lib-results :min-count 1))
