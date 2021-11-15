@@ -198,26 +198,22 @@
   (get (some->> (ns-alias->ns-sym env ns ns-alias) (analyzer.api/ns-interns env)) sym))
 
 (defn ^:private ns-meta
-  [env ns]
-  (merge (meta ns)
-    {:name ns
-     :file (some->> ns (analyzer.api/ns-interns env) vals first :file)
-     :line 0
-     :column 0
-     :type :namespace}))
+  [env sym]
+  (when(analyzer.api/find-ns env sym)
+    (merge (meta sym)
+      {:name sym
+       :file (some->> sym (analyzer.api/ns-interns env) vals first :file)
+       :line 0
+       :column 0
+       :type :namespace})))
 
 (defn ^:private sym-meta
   [env ns ident]
   (let [sym (symbol (name ident))]
-    (cond
-      (qualified-symbol? ident)
+    (if (qualified-symbol? ident)
       (qualified-sym-meta env ns (symbol (namespace ident)) sym)
-
-      (analyzer.api/find-ns env sym)
-      (ns-meta env sym)
-
-      :else
       (or
+        (ns-meta env sym)
         (special-sym-meta sym)
         (core-sym-meta env sym)
         (ns-sym-meta env ns sym)))))
