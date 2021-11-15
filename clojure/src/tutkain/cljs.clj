@@ -194,8 +194,11 @@
   (get (analyzer.api/ns-interns env ns) sym))
 
 (defn ^:private qualified-sym-meta
-  [env ns ns-alias sym]
-  (get (some->> (ns-alias->ns-sym env ns ns-alias) (analyzer.api/ns-interns env)) sym))
+  [env ns ident]
+  (when (qualified-symbol? ident)
+    (let [ns-alias (-> ident namespace symbol)
+          interns (analyzer.api/ns-interns env (ns-alias->ns-sym env ns ns-alias))]
+      (-> ident name symbol interns))))
 
 (defn ^:private ns-meta
   [env sym]
@@ -209,20 +212,20 @@
 
 (defn ^:private sym-meta
   [env ns ident]
-  (let [sym (symbol (name ident))]
-    (if (qualified-symbol? ident)
-      (qualified-sym-meta env ns (symbol (namespace ident)) sym)
-      (or
-        (ns-meta env sym)
-        (special-sym-meta sym)
-        (core-sym-meta env sym)
-        (ns-sym-meta env ns sym)))))
+  (or
+    (qualified-sym-meta env ns ident)
+    (ns-meta env ident)
+    (special-sym-meta ident)
+    (core-sym-meta env ident)
+    (ns-sym-meta env ns ident)))
 
 (comment
+  (def env (compiler-env :browser))
+  (sym-meta env 'my.browser.app 'pprint/pprint)
   (sym-meta env 'my.browser.app 'my.browser.app)
   (sym-meta env 'my.browser.app 'let)
   (sym-meta env 'my.browser.app 'mapcat)
-  (sym-meta env 'my.browser.app 'pprint/pprint)
+  (sym-meta env 'my.browser.app 'start)
   ,,,)
 
 (defn info
