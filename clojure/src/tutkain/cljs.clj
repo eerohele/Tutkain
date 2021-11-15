@@ -199,7 +199,7 @@
 
 (defn ^:private ns-meta
   [env sym]
-  (when(analyzer.api/find-ns env sym)
+  (when (analyzer.api/find-ns env sym)
     (merge (meta sym)
       {:name sym
        :file (some->> sym (analyzer.api/ns-interns env) vals first :file)
