@@ -131,15 +131,15 @@
 
 (set
   (analyzer/local-positions
-  {:file "/path/to/my.clj"
-   :ns *ns*
-   :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
-   :form 'bar/baz
-   :start-line 0
-   :start-column 0
-   :line 0
-   :column 19
-   :end-column 26}))
+    {:file "/path/to/my.clj"
+     :ns *ns*
+     :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
+     :form 'bar/baz
+     :start-line 0
+     :start-column 0
+     :line 0
+     :column 19
+     :end-column 26}))
 
 (xr/check!
   (partial set/subset?
