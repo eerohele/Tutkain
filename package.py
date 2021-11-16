@@ -1331,8 +1331,10 @@ class TutkainExploreStackTraceCommand(TextCommand):
 
 class TutkainPromptCommand(WindowCommand):
     def on_done(self, client, code):
-        client.eval(code, "NO_SOURCE_FILE")
-        history.update(self.window, code)
+        if code:
+            client.eval(code, "NO_SOURCE_FILE")
+            history.update(self.window, code)
+
         self.prompt(client)
 
     def on_change(self, _):
