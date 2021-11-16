@@ -1,4 +1,6 @@
 from sublime import Region, View
+from typing import Union
+
 
 SEXP_DELIMITERS = "punctuation.section.parens | punctuation.section.brackets | punctuation.section.braces | punctuation.definition.string"
 SEXP_BEGIN = "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin | punctuation.definition.string.begin"
@@ -84,3 +86,13 @@ def match_many(view: View, point: int, *selectors: str):
             return False
 
     return True
+
+
+def filter_region(view: View, region: Region, selector: str) -> Union[Region, None]:
+    """Given a View, a Region, and a selector, return a new Region that only
+    contains points that match the selector."""
+    points = range(region.begin(), region.end())
+    matching_points = list(filter(lambda n: view.match_selector(n, selector), points))
+    begin = matching_points[0]
+    end = matching_points[-1] + 1
+    return Region(begin, end)

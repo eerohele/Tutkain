@@ -644,7 +644,11 @@ class TutkainShowInformationCommand(TextCommand):
         else:
             form = forms.find_adjacent(self.view, start_point)
 
-        lookup(self.view, form, lambda response: self.handler(form, response))
+        if form:
+            # Ugly hack: for e.g. #'foo/bar, forms.find_adjacent returns the
+            # whole thing, when here we actually want just foo/bar.
+            form = selectors.filter_region(self.view, form, selector)
+            lookup(self.view, form, lambda response: self.handler(form, response))
 
 
 class TutkainGotoDefinitionCommand(TextCommand):

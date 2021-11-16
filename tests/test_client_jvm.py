@@ -336,6 +336,24 @@ class TestJVMClient(PackageTestCase):
                 edn.Keyword("id"): response.get(edn.Keyword("id"))
             }, response)
 
+    def test_lookup_var(self):
+        self.set_view_content("#'foo/bar")
+
+        for n in range(0, 9):
+            self.set_selections((n, n))
+
+            self.view.run_command("tutkain_show_information")
+
+            response = edn.read(self.backchannel.recv())
+
+            self.assertEquals({
+                edn.Keyword("op"): edn.Keyword("lookup"),
+                edn.Keyword("ident"): "foo/bar",
+                edn.Keyword("ns"): None,
+                edn.Keyword("dialect"): edn.Keyword("clj"),
+                edn.Keyword("id"): response.get(edn.Keyword("id"))
+            }, response)
+
     def test_lookup_head(self):
         self.set_view_content("(map inc )")
         self.set_selections((9, 9))
