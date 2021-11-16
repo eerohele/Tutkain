@@ -45,9 +45,12 @@ def handle_response(window, kinds, response):
                 )
 
     if symbol := response.get(edn.Keyword("symbol")):
-        selected_index = list(
-            map(lambda v: v.get(edn.Keyword("name")), results)
-        ).index(edn.Symbol(symbol))
+        names = list(map(lambda v: v.get(edn.Keyword("name")), results))
+
+        if symbol in names:
+            selected_index = names.index(symbol)
+        else:
+            selected_index = 0
     else:
         selected_index = -1
 

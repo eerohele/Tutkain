@@ -47,7 +47,7 @@
                    (map meta-with-type)
                    (map lookup/prep-meta)
                    (ns-publics sym-ns))]
-        (respond-to message {:symbol (name sym)
+        (respond-to message {:symbol sym
                              :results (sort-by :name vars)})))))
 
 (defmulti loaded-libs :dialect)
