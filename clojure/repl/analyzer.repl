@@ -6,7 +6,7 @@
    [cognitect.transcriptor :as xr]
    [tutkain.analyzer :as analyzer]
    [tutkain.backchannel :as backchannel]
-   [tutkain.backchannel.test :refer [string->base64 string->reader]]))
+   [tutkain.backchannel.test :refer [send-op string->base64 string->reader]]))
 
 (spec/def ::op
   #{:const :map :def})
@@ -148,7 +148,6 @@
 
 (->
   {:op :locals
-   :out-fn prn
    :file "/path/to/my.clj"
    :ns "user"
    :context (string->base64 "(defn f [x] (inc x))")
@@ -158,10 +157,8 @@
    :line 0
    :column 9
    :end-column 10}
-  backchannel/handle
-  with-out-str
-  edn/read-string
+  send-op
   :positions)
 
-(xr/check! (spec/coll-of ::position))
+(xr/check! (spec/coll-of ::position :min-count 2))
 
