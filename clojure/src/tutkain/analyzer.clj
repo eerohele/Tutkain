@@ -50,13 +50,14 @@
                  end-column)})
 
 (defn index-by-position
-  "Given a sequence of tools.analyzer AST nodes, return a map where the key is
-  the position of the node and the val is the unique name of the node."
+  "Given a sequence of tools.analyzer AST nodes, filter nodes that represent a
+  local or a binding symbol, and return a map where the key is the position of
+  the node and the val is the unique name of the node."
   [nodes]
   (into {}
     (comp
-      (map (juxt node->position :name))
-      (filter second))
+      (filter (comp #{:binding :local} :op))
+      (map (juxt node->position :name)))
     nodes))
 
 (defn local-positions

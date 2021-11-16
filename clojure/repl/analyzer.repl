@@ -110,7 +110,7 @@
   analyzer/index-by-position)
 
 (xr/check!
-  (spec/every-kv ::position simple-symbol? :min-count 6 :max-count 6))
+  (spec/every-kv ::position simple-symbol? :min-count 5 :max-count 5))
 
 (set
   (analyzer/local-positions
