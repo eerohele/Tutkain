@@ -79,13 +79,12 @@
   (with-open [reader (base64-reader context)]
     (let [nodes (reader->nodes file ns start-line start-column reader)
           position->unique-name (index-by-position nodes)
-          position {:form (-> form name symbol)
-                    :line line
-                    :column column
-                    :end-column end-column}
-          unique-name->node (group-by :name nodes)
-          unique-name (position->unique-name position)]
-      (map node->position (unique-name->node unique-name)))))
+          position {:form (-> form name symbol) :line line :column column :end-column end-column}]
+      (when-some [unique-name (get position->unique-name position)]
+        (eduction
+          (filter #(= unique-name (:name %)))
+          (map node->position)
+          nodes)))))
 
 (defn ^:private parse-namespace
   [ns]
