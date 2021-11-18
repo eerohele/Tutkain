@@ -6,7 +6,7 @@
    [cljs.repl :as repl]
    [tutkain.completions :as completions]
    [tutkain.lookup :as lookup]
-   [tutkain.backchannel :refer [handle respond-to]]
+   [tutkain.backchannel :refer [respond-to]]
    [tutkain.query :as query]))
 
 (set! *warn-on-reflection* true)
