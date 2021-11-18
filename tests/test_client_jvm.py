@@ -44,7 +44,7 @@ class TestJVMClient(PackageTestCase):
             server.send(f"""{{:greeting "Clojure 1.11.0-alpha1" :host "localhost", :port {backchannel.port}}}""")
 
             # Client loads modules
-            for _ in range(7):
+            for _ in range(8):
                 module = edn.read(backchannel.recv())
 
                 backchannel.send(edn.kwmap({

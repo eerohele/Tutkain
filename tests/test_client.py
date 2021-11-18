@@ -49,7 +49,7 @@ class TestJVMClient(TestCase):
 
             with Server(send_edn) as backchannel:
                 server.send(f"""{{:greeting "Clojure 1.11.0-alpha1" :host "localhost", :port {backchannel.port}}}""")
-                filenames = {"java.clj", "lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "query.clj", "analyzer.clj"}
+                filenames = {"java.clj", "lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "query.clj", "analyzer.clj", "analyzer/jvm.clj"}
 
                 for filename in filenames:
                     response = edn.read(backchannel.recv())
