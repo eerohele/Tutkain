@@ -1,11 +1,10 @@
-(ns repl.analyzer
+(ns repl.jvm-analyzer
   (:require
-   [clojure.edn :as edn]
    [clojure.set :as set]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.analyzer :as analyzer]
-   [tutkain.backchannel :as backchannel]
+   [tutkain.analyzer.jvm :as jvm]
    [tutkain.backchannel.test :refer [send-op string->base64 string->reader]]))
 
 (spec/def ::op
@@ -37,43 +36,52 @@
                       ::end-column]))
 
 ;; Analyze multiple forms
-(analyzer/reader->nodes "/path/to/my.clj" *ns* 0 0 (string->reader "1 2"))
+(seq (jvm/analyze 0 0 (string->reader "1 2")))
+
 (xr/check! (spec/coll-of ::node :min-count 2))
 
 ;; Line and column number
-(def nodes (set (analyzer/reader->nodes "/path/to/my.clj" *ns* 1 2 (string->reader "(def x 1)"))))
+(def nodes
+  (set (jvm/analyze 1 2 (string->reader "(def x 1)"))))
+
 (xr/check! (spec/coll-of ::node) nodes)
 (xr/check! (partial set/subset? #{{:line 1 :column 2 :end-column 11}})
   (set/project (map :env nodes) [:line :column :end-column]))
 
-(set
-  (analyzer/local-positions
-    {:file "/path/to/my.clj"
-     :ns *ns*
-     :context (string->base64 "(defn f [x] (inc x))")
-     :form 'x
-     :start-line 0
-     :start-column 0
-     :line 0
-     :column 9
-     :end-column 10}))
+(->
+  {:op :locals
+   :file "/path/to/my.clj"
+   :ns "user"
+   :context (string->base64 "(defn f [x] (inc x))")
+   :form "x"
+   :start-line 0
+   :start-column 0
+   :line 0
+   :column 9
+   :end-column 10}
+  send-op
+  :positions
+  set)
 
 (xr/check!
   (partial set/subset? #{{:form 'x :line 0 :column 9 :end-column 10}
                          {:form 'x :line 0 :column 17 :end-column 18}}))
 
-(set
-  (analyzer/local-positions
-    {:file "/path/to/my.clj"
-     :ns *ns*
-     ;; newline doesn't mess up :end-column
-     :context (string->base64 "(defn f [x] (doto x\n  inc))")
-     :form 'x
-     :start-line 0
-     :start-column 0
-     :line 0
-     :column 18
-     :end-column 19}))
+(->
+  {:op :locals
+   :file "/path/to/my.clj"
+   :ns "user"
+   ;; newline doesn't mess up :end-column
+   :context (string->base64 "(defn f [x] (doto x\n  inc))")
+   :form "x"
+   :start-line 0
+   :start-column 0
+   :line 0
+   :column 18
+   :end-column 19}
+  send-op
+  :positions
+  set)
 
 (xr/check!
   (partial set/subset? #{{:form 'x :line 0 :column 9 :end-column 10}
@@ -82,17 +90,20 @@
 (into #{}
   (mapcat
     (fn [[form [column end-column]]]
-      (analyzer/local-positions
-        {:file "/path/to/my.clj"
-         :ns *ns*
+      (->
+        {:op :locals
+         :file "/path/to/my.clj"
+         :ns "user"
          :context (string->base64 "(defn f [{:keys [x y z]}] (+ x y z))")
          :form form
          :start-line 0
          :start-column 0
          :line 0
          :column column
-         :end-column end-column})))
-  {'x [17 18] 'y [19 20] 'z [21 22]})
+         :end-column end-column}
+        send-op
+        :positions)))
+  {"x" [17 18] "y" [19 20] "z" [21 22]})
 
 (xr/check!
   (partial set/subset?
@@ -106,40 +117,46 @@
 (->>
   "(defn f [x] (+ x (let [x 2] (inc x)) x))"
   string->reader
-  (analyzer/reader->nodes "/path/to/my.clj" *ns* 0 0)
+  (jvm/analyze 0 0)
   analyzer/index-by-position)
 
 (xr/check!
   (spec/every-kv ::position simple-symbol? :min-count 5 :max-count 5))
 
-(set
-  (analyzer/local-positions
-  {:file "/path/to/my.clj"
-   :ns *ns*
+(->
+  {:op :locals
+   :file "/path/to/my.clj"
+   :ns "user"
    :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
-   :form 'baz
+   :form "baz"
    :start-line 0
    :start-column 0
    :line 0
    :column 30
-   :end-column 33}))
+   :end-column 33}
+  send-op
+  :positions
+  set)
 
 (xr/check!
   (partial set/subset?
     #{{:line 0 :column 19 :form 'baz :end-column 26}
       {:line 0 :column 30 :form 'baz :end-column 33}}))
 
-(set
-  (analyzer/local-positions
-    {:file "/path/to/my.clj"
-     :ns *ns*
-     :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
-     :form 'bar/baz
-     :start-line 0
-     :start-column 0
-     :line 0
-     :column 19
-     :end-column 26}))
+(->
+  {:op :locals
+   :file "/path/to/my.clj"
+   :ns "user"
+   :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
+   :form "bar/baz"
+   :start-line 0
+   :start-column 0
+   :line 0
+   :column 19
+   :end-column 26}
+  send-op
+  :positions
+  set)
 
 (xr/check!
   (partial set/subset?
@@ -161,4 +178,3 @@
   :positions)
 
 (xr/check! (spec/coll-of ::position :min-count 2))
-

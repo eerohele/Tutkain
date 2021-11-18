@@ -246,6 +246,10 @@ class JVMClient(Client):
             "query.clj": [],
             "analyzer.clj": [
                 edn.Symbol("clojure.tools.reader"),
+                edn.Symbol("clojure.tools.analyzer.ast")
+            ],
+            "analyzer/jvm.clj": [
+                edn.Symbol("tutkain.analyzer"),
                 edn.Symbol("clojure.tools.analyzer.jvm")
             ]
         })
@@ -324,6 +328,13 @@ class JSClient(Client):
             "completions.clj": [],
             "cljs.clj": [],
             "shadow.clj": [],
+            "analyzer.clj": [
+                edn.Symbol("clojure.tools.reader"),
+                edn.Symbol("clojure.tools.analyzer.ast")
+            ],
+            "analyzer/js.clj": [
+                edn.Symbol("tutkain.analyzer")
+            ]
         })
 
         self.start_workers()

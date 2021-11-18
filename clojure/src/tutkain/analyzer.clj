@@ -1,42 +1,34 @@
 (ns tutkain.analyzer
   (:require
-   [clojure.tools.analyzer.jvm :as analyzer.jvm]
    [clojure.tools.analyzer.ast :as analyzer.ast]
-   [clojure.tools.analyzer.passes :as passes]
-   [clojure.tools.analyzer.passes.source-info :as source-info]
-   [clojure.tools.analyzer.passes.uniquify :as uniquify]
    [clojure.tools.reader :as reader]
-   [tutkain.base64 :refer [base64-reader]]
-   [tutkain.backchannel :as bc :refer [handle respond-to]])
+   [tutkain.backchannel :as bc :refer [handle]])
   (:import
    (clojure.lang LineNumberingPushbackReader)))
 
 #_(set! *warn-on-reflection* true)
 
-(def ^:private analyzer-passes
-  (passes/schedule #{#'source-info/source-info #'uniquify/uniquify-locals}))
+(defn analyze
+  "Read code from a reader and return a seq of ASTs nodes for the code.
 
-(def ^:private reader-opts
-  {:eof ::EOF :features #{:clj :t.a.jvm} :read-cond :allow})
-
-(defn reader->nodes
-  "Given a file path, namespace, line, column, and a
-  LineNumberingPushbackReader, read code from the reader in the context of the
-  file and the namespace, and return a lazy sequence of ASTs nodes for the
-  code."
-  [path ns line column ^LineNumberingPushbackReader reader]
-  (binding [analyzer.jvm/run-passes analyzer-passes
-            *ns* ns
-            *file* path]
-    (let [reader (doto reader
-                   (.setLineNumber (int line))
-                   (bc/set-column! (int column)))]
-      (sequence
-        (comp
-          (take-while #(not (identical? ::EOF %)))
-          (map analyzer.jvm/analyze)
-          (mapcat analyzer.ast/nodes))
-        (repeatedly #(reader/read reader-opts reader))))))
+  Keyword arguments:
+    :analyzer -- A fn that takes a form and returns an AST
+    :reader -- A LineNumberingPushbackReader to read from
+    :start-column -- The column number to set the reader to
+    :start-line -- The line number to set the reader to
+    :reader-opts -- A map of options to pass to clojure.tools.reader/read
+    :xform -- A transducer to transform resulting sequence of AST nodes (optional)"
+  [& {:keys [^LineNumberingPushbackReader reader analyzer reader-opts start-column start-line xform]
+      :or {xform (map identity)}}]
+  (let [reader (doto reader
+                 (.setLineNumber (int start-line))
+                 (bc/set-column! (int start-column)))]
+    (eduction
+      (take-while #(not (identical? ::EOF %)))
+      (map analyzer)
+      (mapcat analyzer.ast/nodes)
+      xform
+      (repeatedly #(reader/read (assoc reader-opts :eof ::EOF) reader)))))
 
 (defn node->position
   "Given an tools.analyzer node, return the position information for that
@@ -45,7 +37,9 @@
   {:line line
    :column column
    :form form
-   :end-column (if (and end-column (zero? end-column))
+   :end-column (if (or
+                     (and column (nil? end-column))
+                     (and end-column (zero? end-column)))
                  (-> form str count (+ column))
                  end-column)})
 
@@ -56,48 +50,31 @@
   [nodes]
   (into {}
     (comp
-      (filter (comp #{:binding :local} :op))
+      (filter (every-pred :form (comp #{:binding :local} :op)))
       (map (juxt node->position :name)))
     nodes))
 
 (defn local-positions
-  "Given a map of data about a local, find all positions in :context where the
-  local is used. Keys:
+  "Given a seq of tools.analyzer AST nodes and map indicating the position of a
+  local, return all positions where that local is used."
+  [nodes position]
+  (let [position->unique-name (index-by-position nodes)]
+    (when-some [unique-name (get position->unique-name position)]
+      (eduction
+        (filter #(= unique-name (:name %)))
+        (map node->position)
+        nodes))))
 
-  :context -- The Base64-encoded code string where the local is used.
-  :form -- The form (symbol) whose positions to search.
-  :file (Optional) -- The path to the file that contains :context.
-  :ns (Optional) -- The namespace that contains :context.
-  :start-line -- The line number where :context begins.
-  :start-column -- The column number where :context begins.
-  :line -- The line number of :form.
-  :column -- The column number where :form begins.
-  :end-column -- The column number where :form ends.
+(defn position
+  "Given a :locals message, return the position of the local in the message."
+  [{:keys [form line column end-column]}]
+  {:form (-> form symbol name symbol)
+   :line line
+   :column column
+   :end-column end-column})
 
-  See analyzer.repl for examples."
-  [{:keys [context form file ns start-line start-column line column end-column]}]
-  (with-open [reader (base64-reader context)]
-    (let [nodes (reader->nodes file ns start-line start-column reader)
-          position->unique-name (index-by-position nodes)
-          position {:form (-> form name symbol) :line line :column column :end-column end-column}]
-      (when-some [unique-name (get position->unique-name position)]
-        (eduction
-          (filter #(= unique-name (:name %)))
-          (map node->position)
-          nodes)))))
-
-(defn ^:private parse-namespace
-  [ns]
-  (or (some-> ns symbol find-ns) (the-ns 'user)))
+(defmulti locals :dialect)
 
 (defmethod handle :locals
   [message]
-  (try
-    (let [positions (->
-                      message
-                      (update :form symbol)
-                      (update :ns parse-namespace)
-                      local-positions)]
-      (respond-to message {:positions positions}))
-    (catch Throwable ex
-      (respond-to message {:tag :ret :debug true :val (pr-str (Throwable->map ex))}))))
+  (locals message))

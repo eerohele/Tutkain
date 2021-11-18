@@ -1193,6 +1193,7 @@ def fetch_locals(view, point, form, handler):
         if local := view.substr(form).strip():
             client.backchannel.send({
                 "op": edn.Keyword("locals"),
+                "dialect": dialect,
                 "file": view.file_name() or "NO_SOURCE_FILE",
                 "ns": namespace.name(view),
                 "context": base64.encode(context.encode("utf-8")),
