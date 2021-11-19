@@ -229,7 +229,8 @@
    :column 9
    :end-column 10}
   send-op
-  :positions)
+  :positions
+  set)
 
 (xr/check!
   (partial set/subset?
