@@ -44,7 +44,8 @@
     (env/with-compiler-env (compiler-env build-id)
       (analyzer.api/no-warn
         (let [ns (parse-namespace ns)]
-          (binding [*file* file
+          (binding [cljs.analyzer/*passes* []
+                    *file* file
                     *ns* (create-ns ns)
                     reader/*alias-map* (apply merge
                                          ((juxt :requires :require-macros)
