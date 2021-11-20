@@ -24,19 +24,18 @@
   nodes."
   (map
     (fn [node]
-      (assoc node
-        :form (-> node :info :name)
-        :name (unique-name node)))))
+      (assoc node :unique-name (unique-name node)))))
 
 (defn analyze
   [start-line start-column reader]
-  (analyzer/analyze
-    :start-line start-line
-    :start-column start-column
-    :reader reader
-    :reader-opts {:read-cond :allow :features #{:cljs}}
-    :analyzer (fn [form] (cljs.analyzer/analyze (analyzer.api/empty-env) form))
-    :xform uniquify))
+  (let [env (analyzer.api/empty-env)]
+    (analyzer/analyze
+      :start-line start-line
+      :start-column start-column
+      :reader reader
+      :reader-opts {:read-cond :allow :features #{:cljs}}
+      :analyzer #(cljs.analyzer/analyze env %)
+      :xform uniquify)))
 
 (defmethod analyzer/locals :cljs
   [{:keys [build-id context start-column start-line file ns] :as message}]

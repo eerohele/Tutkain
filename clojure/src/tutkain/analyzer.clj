@@ -2,9 +2,8 @@
   (:require
    [clojure.tools.analyzer.ast :as analyzer.ast]
    [clojure.tools.reader :as reader]
-   [tutkain.backchannel :as bc :refer [handle]])
-  (:import
-   (clojure.lang LineNumberingPushbackReader)))
+   [clojure.tools.reader.reader-types :as readers]
+   [tutkain.backchannel :refer [handle]]))
 
 #_(set! *warn-on-reflection* true)
 
@@ -14,34 +13,38 @@
   Keyword arguments:
     :analyzer -- A fn that takes a form and returns an AST
     :reader -- A LineNumberingPushbackReader to read from
-    :start-column -- The column number to set the reader to
-    :start-line -- The line number to set the reader to
-    :reader-opts -- A map of options to pass to clojure.tools.reader/read
-    :xform -- A transducer to transform resulting sequence of AST nodes (optional)"
-  [& {:keys [^LineNumberingPushbackReader reader analyzer reader-opts start-column start-line xform]
+    :reader-opts -- A map of options to pass to clojure.tools.reader/read"
+  [& {:keys [reader analyzer reader-opts start-line start-column xform]
       :or {xform (map identity)}}]
-  (let [reader (doto reader
-                 (.setLineNumber (int start-line))
-                 (bc/set-column! (int start-column)))]
-    (eduction
-      (take-while #(not (identical? ::EOF %)))
-      (map analyzer)
-      (mapcat analyzer.ast/nodes)
-      xform
-      (repeatedly #(reader/read (assoc reader-opts :eof ::EOF) reader)))))
+  (eduction
+    (take-while #(not (identical? ::EOF %)))
+    (map analyzer)
+    (mapcat analyzer.ast/nodes)
+    xform
+    (repeatedly
+      #(reader/read (assoc reader-opts :eof ::EOF)
+         (readers/->IndexingPushbackReader
+           reader start-line start-column true nil 0 *file* false)))))
+
+(defn ^:private node-form
+  [node]
+  (or (:form node) (-> node :info :name)))
 
 (defn node->position
   "Given an tools.analyzer node, return the position information for that
   node."
-  [{form :form {:keys [line column end-column]} :env}]
-  {:line line
-   :column column
-   :form form
-   :end-column (if (or
-                     (and column (nil? end-column))
-                     (and end-column (zero? end-column)))
-                 (-> form str count (+ column))
-                 end-column)})
+  [node]
+  (let [form (node-form node)]
+    (some->
+      form
+      meta
+      (select-keys [:line :column :end-column])
+      not-empty
+      (assoc :form form))))
+
+(defn ^:private node-name
+  [node]
+  (or (:unique-name node) (:name node)))
 
 (defn index-by-position
   "Given a sequence of tools.analyzer AST nodes, filter nodes that represent a
@@ -50,8 +53,8 @@
   [nodes]
   (into {}
     (comp
-      (filter (every-pred :form (comp #{:binding :local} :op)))
-      (map (juxt node->position :name)))
+      (filter (every-pred node-form (comp #{:binding :local :letfn} :op)))
+      (map (juxt node->position node-name)))
     nodes))
 
 (defn local-positions
@@ -61,7 +64,7 @@
   (let [position->unique-name (index-by-position nodes)]
     (when-some [unique-name (get position->unique-name position)]
       (eduction
-        (filter #(= unique-name (:name %)))
+        (filter #(= unique-name (node-name %)))
         (map node->position)
         nodes))))
 

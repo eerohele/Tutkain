@@ -54,18 +54,18 @@
    :ns "user"
    :context (string->base64 "(defn f [x] (inc x))")
    :form "x"
-   :start-line 0
-   :start-column 0
-   :line 0
-   :column 9
-   :end-column 10}
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 10
+   :end-column 11}
   send-op
   :positions
   set)
 
 (xr/check!
-  (partial set/subset? #{{:form 'x :line 0 :column 9 :end-column 10}
-                         {:form 'x :line 0 :column 17 :end-column 18}}))
+  (partial set/subset? #{{:form 'x :line 1 :column 10 :end-column 11}
+                         {:form 'x :line 1 :column 18 :end-column 19}}))
 
 (->
   {:op :locals
@@ -74,18 +74,18 @@
    ;; newline doesn't mess up :end-column
    :context (string->base64 "(defn f [x] (doto x\n  inc))")
    :form "x"
-   :start-line 0
-   :start-column 0
-   :line 0
-   :column 18
-   :end-column 19}
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 19
+   :end-column 20}
   send-op
   :positions
   set)
 
 (xr/check!
-  (partial set/subset? #{{:form 'x :line 0 :column 9 :end-column 10}
-                         {:form 'x :line 0 :column 18 :end-column 19}}))
+  (partial set/subset? #{{:form 'x :line 1 :column 10 :end-column 11}
+                         {:form 'x :line 1 :column 19 :end-column 20}}))
 
 (into #{}
   (mapcat
@@ -96,28 +96,28 @@
          :ns "user"
          :context (string->base64 "(defn f [{:keys [x y z]}] (+ x y z))")
          :form form
-         :start-line 0
-         :start-column 0
-         :line 0
+         :start-line 1
+         :start-column 1
+         :line 1
          :column column
          :end-column end-column}
         send-op
         :positions)))
-  {"x" [17 18] "y" [19 20] "z" [21 22]})
+  {"x" [18 19] "y" [20 21] "z" [22 23]})
 
 (xr/check!
   (partial set/subset?
-    #{{:line 0 :column 17 :form 'x :end-column 18}
-      {:line 0 :column 29 :form 'x :end-column 30}
-      {:line 0 :column 19 :form 'y :end-column 20}
-      {:line 0 :column 31 :form 'y :end-column 32}
-      {:line 0 :column 21 :form 'z :end-column 22}
-      {:line 0 :column 33 :form 'z :end-column 34}}))
+    #{{:line 1 :column 18 :form 'x :end-column 19}
+      {:line 1 :column 30 :form 'x :end-column 31}
+      {:line 1 :column 20 :form 'y :end-column 21}
+      {:line 1 :column 32 :form 'y :end-column 33}
+      {:line 1 :column 22 :form 'z :end-column 23}
+      {:line 1 :column 34 :form 'z :end-column 35}}))
 
 (->>
   "(defn f [x] (+ x (let [x 2] (inc x)) x))"
   string->reader
-  (jvm/analyze 0 0)
+  (jvm/analyze 1 1)
   analyzer/index-by-position)
 
 (xr/check!
@@ -127,21 +127,62 @@
   {:op :locals
    :file "/path/to/my.clj"
    :ns "user"
-   :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
-   :form "baz"
-   :start-line 0
-   :start-column 0
-   :line 0
-   :column 30
-   :end-column 33}
+   :context (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
+   :form "x"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 10
+   :end-column 11}
   send-op
   :positions
   set)
 
 (xr/check!
   (partial set/subset?
-    #{{:line 0 :column 19 :form 'baz :end-column 26}
-      {:line 0 :column 30 :form 'baz :end-column 33}}))
+    #{{:line 1 :column 10 :end-column 11 :form 'x}
+      {:line 1 :column 24 :end-column 25 :form 'x}}))
+
+(->
+  {:op :locals
+   :file "/path/to/my.clj"
+   :ns "user"
+   :context (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
+   :form "x"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 19
+   :end-column 20}
+  send-op
+  :positions
+  set)
+
+(xr/check!
+  (partial set/subset?
+    #{{:line 1 :column 19 :end-column 20 :form 'x}
+      {:line 1 :column 33 :end-column 34 :form 'x}
+      {:line 1 :column 55 :end-column 56 :form 'x}}))
+
+(->
+  {:op :locals
+   :file "/path/to/my.clj"
+   :ns "user"
+   :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
+   :form "baz"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 31
+   :end-column 34}
+  send-op
+  :positions
+  set)
+
+(xr/check!
+  (partial set/subset?
+    #{{:line 1 :column 20 :form 'baz :end-column 27}
+      {:line 1 :column 31 :form 'baz :end-column 34}}))
 
 (->
   {:op :locals
@@ -149,19 +190,19 @@
    :ns "user"
    :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
    :form "bar/baz"
-   :start-line 0
-   :start-column 0
-   :line 0
-   :column 19
-   :end-column 26}
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 20
+   :end-column 27}
   send-op
   :positions
   set)
 
 (xr/check!
   (partial set/subset?
-    #{{:line 0 :column 19 :form 'baz :end-column 26}
-      {:line 0 :column 30 :form 'baz :end-column 33}}))
+    #{{:line 1 :column 20 :form 'baz :end-column 27}
+      {:line 1 :column 31 :form 'baz :end-column 34}}))
 
 (->
   {:op :locals
@@ -169,11 +210,11 @@
    :ns "user"
    :context (string->base64 "(defn f [x] (inc x))")
    :form 'x
-   :start-line 0
-   :start-column 0
-   :line 0
-   :column 9
-   :end-column 10}
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 10
+   :end-column 11}
   send-op
   :positions)
 
