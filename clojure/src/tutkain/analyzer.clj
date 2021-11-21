@@ -13,7 +13,10 @@
   Keyword arguments:
     :analyzer -- A fn that takes a form and returns an AST
     :reader -- A LineNumberingPushbackReader to read from
-    :reader-opts -- A map of options to pass to clojure.tools.reader/read"
+    :reader-opts -- A map of options to pass to clojure.tools.reader/read
+    :start-column -- The column number to set the reader to
+    :start-line -- The line number to set the reader to
+    :xform -- A transducer to transform resulting sequence of AST nodes (optional)"
   [& {:keys [reader analyzer reader-opts start-line start-column xform]
       :or {xform (map identity)}}]
   (eduction
