@@ -45,7 +45,7 @@
       not-empty
       (assoc :form form))))
 
-(defn ^:private node-name
+(defn ^:private node-unique-name
   [node]
   (or (:unique-name node) (:name node)))
 
@@ -57,7 +57,7 @@
   (into {}
     (comp
       (filter (every-pred node-form (comp #{:binding :local :letfn} :op)))
-      (map (juxt node->position node-name)))
+      (map (juxt node->position node-unique-name)))
     nodes))
 
 (defn local-positions
@@ -67,7 +67,7 @@
   (let [position->unique-name (index-by-position nodes)]
     (when-some [unique-name (get position->unique-name position)]
       (eduction
-        (filter #(= unique-name (node-name %)))
+        (filter #(= unique-name (node-unique-name %)))
         (map node->position)
         nodes))))
 
