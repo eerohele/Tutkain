@@ -9,28 +9,13 @@ All notable changes to this project will be documented in this file.
 
 - Add **Tutkain: Explore Stack Trace** command
 
-  When your evaluation throws an exception, you can use **Tutkain: Explore Stack Trace** to explore the stack trace for that exception (the current value of `*e`).
-
-  When exploring the stack trace, Tutkain will also navigate to Java sources if it finds them. Tutkain looks for Java base module sources in `$JAVA_HOME/src.zip` and `$JAVA_HOME/lib/src.zip`. Alternatively, you can set the `tutkain.java.src.zip` system property to point to the Java base module source ZIP file.
-
-  For Java dependencies, Tutkain will look for a file with the suffix `*-sources.jar` next to the JAR file that contains the Java classes. If you have Maven installed, to easily download sources for all of the Java dependencies in your project, run:
-
-  ```
-  # with Clojure CLI
-  clj -A:my:aliases -Spom
-
-  # or with Leiningen
-  lein pom
-
-  # Then
-  mvn dependency:sources
-  ```
-
-  You will have to redownload sources (run the `mvn` command) again whenever you update your project dependencies.
+  See [Dealing with exceptions](https://tutkain.flowthing.me/#dealing-with-exceptions) for more information.
 
 - Add **Tutkain: Dir** command
 
-  When your caret is on top of a symbol that resolves to a var, you can run **Tutkain: Dir** to show a list of all vars in that var's namespace.
+  See [Listing all public vars in a namespace](https://tutkain.flowthing.me/#listing-all-public-vars-in-a-namespace).
+
+- Add locals highlighting support for ClojureScript
 
 - If you evaluate a view with a syntax error, show an error in the REPL view
 - Tutkain now switches to the namespace in the current view after evaluating a view (via **Tutkain: Evaluate** » **View**)
@@ -59,7 +44,7 @@ All notable changes to this project will be documented in this file.
 
 - Add **Tutkain: Prompt** command
 
-  **Tutkain: Prompt** opens an input panel at the bottom of the screen that prompts you for things to evaluate. It is intended to be used with nested clojure.main REPLs. For "regular" evaluation needs, you should continue to prefer `comment` forms etc.
+  See [Prompting the user for evaluations](https://tutkain.flowthing.me/#prompting-the-user-for-evaluations).
 
 - Improve shadow-cljs support backwards compatibility
 
@@ -67,6 +52,10 @@ All notable changes to this project will be documented in this file.
 
 - Fix prints from (`print`, `spec/explain`, `criterium/bench`, etc.) not
   showing up
+
+- Fix **Tutkain: Apropos** result sorting
+- Add **Tutkain: Loaded Libs** command
+- Prevent disconnect on evaluating empty input
 
 ## 0.10.0 (alpha) - 2021-09-15
 
