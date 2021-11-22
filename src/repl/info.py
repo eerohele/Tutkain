@@ -41,10 +41,11 @@ def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIE
                 archive = ZipFile(jar_path, "r")
                 source_file = archive.read(path)
                 view_name = jar_path + "!/" + path
-                descriptor, path = tempfile.mkstemp(pathlib.Path(path).suffix)
+                _, path = tempfile.mkstemp(pathlib.Path(path).suffix)
 
                 try:
-                    with os.fdopen(descriptor, "w", encoding="utf-8") as file:
+                    # Use as_posix() for Windows compatibility
+                    with open(pathlib.Path(path).as_posix(), "w") as file:
                         file.write(source_file.decode())
 
                     view = window.open_file(f"{path}:{line}:{column}", flags=flags)
