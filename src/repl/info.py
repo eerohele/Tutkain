@@ -44,7 +44,7 @@ def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIE
                 descriptor, path = tempfile.mkstemp(pathlib.Path(path).suffix)
 
                 try:
-                    with os.fdopen(descriptor, "w") as file:
+                    with os.fdopen(descriptor, "w", encoding="utf-8") as file:
                         file.write(source_file.decode())
 
                     view = window.open_file(f"{path}:{line}:{column}", flags=flags)
