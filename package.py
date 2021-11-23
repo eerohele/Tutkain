@@ -4,6 +4,7 @@ from functools import partial
 import json
 import os
 import sublime
+import sublime_plugin
 from threading import Thread
 
 from sublime_plugin import (
