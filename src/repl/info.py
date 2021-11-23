@@ -13,12 +13,12 @@ from zipfile import ZipFile
 from ...api import edn
 
 
-def rename(view, name):
+def on_loaded(view, f):
     if view is not None:
         if view.is_loading():
-            sublime.set_timeout(lambda: rename(view, name), 100)
+            sublime.set_timeout(lambda: on_loaded(view, f), 100)
         else:
-            view.set_name(name)
+            f()
 
 
 def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU):
@@ -37,23 +37,33 @@ def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIE
             # If the path after the ! starts with a forward slash, strip it. ZipFile can't
             # find the file inside the archive otherwise.
             if os.path.isfile(jar_path):
-                path = parts[1][1:] if parts[1].startswith("/") else parts[1]
+                path_after_bang = parts[1][1:] if parts[1].startswith("/") else parts[1]
                 archive = ZipFile(jar_path, "r")
-                source_file = archive.read(path)
-                view_name = jar_path + "!/" + path
-                _, path = tempfile.mkstemp(pathlib.Path(path).suffix)
+                zipinfo = archive.getinfo(path_after_bang)
+                view_name = jar_path + "!/" + path_after_bang
+                path = pathlib.Path(path_after_bang)
+                descriptor, temp_path = tempfile.mkstemp(path.suffix)
+
+                def cleanup():
+                    if os.path.exists(temp_path):
+                        os.close(descriptor)
+                        os.remove(temp_path)
 
                 try:
-                    # Use as_posix() for Windows compatibility
-                    with open(pathlib.Path(path).as_posix(), "w") as file:
-                        file.write(source_file.decode())
-
+                    path = pathlib.Path(temp_path)
+                    zipinfo.filename = path.name
+                    archive.extract(zipinfo, path.parent)
                     view = window.open_file(f"{path}:{line}:{column}", flags=flags)
                     view.set_scratch(True)
                     view.set_read_only(True)
-                    rename(view, view_name)
-                finally:
-                    os.remove(path)
+
+                    def after_load():
+                        view.set_name(view_name)
+                        cleanup()
+
+                    on_loaded(view, after_load)
+                except:
+                    cleanup()
 
 
 def parse_location(info):
