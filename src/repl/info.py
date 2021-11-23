@@ -13,14 +13,6 @@ from zipfile import ZipFile
 from ...api import edn
 
 
-def on_loaded(view, f):
-    if view is not None:
-        if view.is_loading():
-            sublime.set_timeout(lambda: on_loaded(view, f), 100)
-        else:
-            f()
-
-
 def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU):
     if location:
         resource = location["resource"]
@@ -44,26 +36,24 @@ def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIE
                 path = pathlib.Path(path_after_bang)
                 descriptor, temp_path = tempfile.mkstemp(path.suffix)
 
-                def cleanup():
-                    if os.path.exists(temp_path):
-                        os.close(descriptor)
-                        os.remove(temp_path)
-
                 try:
                     path = pathlib.Path(temp_path)
                     zipinfo.filename = path.name
                     archive.extract(zipinfo, path.parent)
                     view = window.open_file(f"{path}:{line}:{column}", flags=flags)
+
+                    view.settings().set("tutkain_temp_file", {
+                        "path": temp_path,
+                        "descriptor": descriptor,
+                        "name": view_name
+                    })
+
                     view.set_scratch(True)
                     view.set_read_only(True)
-
-                    def after_load():
-                        view.set_name(view_name)
-                        cleanup()
-
-                    on_loaded(view, after_load)
                 except:
-                    cleanup()
+                    if os.path.exists(temp_path):
+                        os.close(descriptor)
+                        os.remove(temp_path)
 
 
 def parse_location(info):

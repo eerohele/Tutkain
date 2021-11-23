@@ -159,6 +159,26 @@ def set_layout(window):
 
         window.set_layout(layout)
 
+class TemporaryFileEventListener(sublime_plugin.ViewEventListener):
+    @classmethod
+    def is_applicable(_, settings):
+        return settings.has("tutkain_temp_file")
+
+    def on_load(self):
+        try:
+            if temp_file := self.view.settings().get("tutkain_temp_file"):
+                path = temp_file.get("path")
+                descriptor = temp_file.get("descriptor")
+                name = temp_file.get("name")
+
+                self.view.set_name(name)
+
+                if os.path.exists(path):
+                    os.close(descriptor)
+                    os.remove(path)
+        except:
+            pass
+
 
 class TutkainClearOutputViewCommand(WindowCommand):
     def clear_view(self, view):
