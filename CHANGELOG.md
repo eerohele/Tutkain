@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 - Add **Tutkain: Explore Stack Trace** command
 
-  See [Dealing with exceptions](https://tutkain.flowthing.me/#dealing-with-exceptions) for more information.
+  See [Exploring exception stack traces](https://tutkain.flowthing.me/#exploring-exception-stack-traces) for more information.
 
 - Add **Tutkain: Dir** command
 
