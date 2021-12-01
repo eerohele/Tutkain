@@ -168,7 +168,7 @@ class Client(ABC):
         except OSError as error:
             log.error({"event": "error", "error": error})
         finally:
-            self.print(":tutkain/disconnected")
+            self.print(":tutkain/disconnected\n")
 
             # Put a None into the queue to tell consumers to stop reading it.
             self.print(None)
