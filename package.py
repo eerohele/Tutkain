@@ -155,7 +155,7 @@ def set_layout(window):
             layout = {
                 "cells": [[0, 0, 1, 1], [0, 1, 1, 2]],
                 "cols": [0.0, 1.0],
-                "rows": [0.0, 0.75, 1.0],
+                "rows": [0.0, 0.5, 1.0],
             }
 
         window.set_layout(layout)

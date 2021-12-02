@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Set horizontal window layout to half-and-half for code view and REPL view
+
 ## 0.11.0 (alpha) - 2021-11-23
 
 - Improved support for nested clojure.main REPLs
