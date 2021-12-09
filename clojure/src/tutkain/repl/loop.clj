@@ -1,5 +1,15 @@
 (ns tutkain.repl.loop)
 
+(defn help
+  []
+  (println "Commands:
+
+    ? — show this help
+    q — quit
+    . — show current value (without truncation)
+    - — go up one level
+"))
+
 (defn inspect
   "Given a (presumably nested) coll, start a loop for navigating the coll.
 
@@ -8,9 +18,11 @@
   Input ? for help.
 
   For all other inputs, print value at (get-in coll (conj keypath key))."
-  [coll & {:keys [print print-length]
-           :or {print prn print-length 16}}]
-  (binding [*print-length* print-length]
+  [coll & {:keys [print print-length print-level]
+           :or {print prn print-length 8 print-level 8}}]
+  (binding [*print-length* print-length
+            *print-level* print-level]
+    (help)
     (print coll)
     (loop [keypath []]
       (printf "%s=> " keypath)
@@ -23,13 +35,7 @@
 
           (= input '?)
           (do
-            (println "Commands:
-
-    ? — show this help
-    q — quit
-    . — show current value (without truncation)
-    - — go up one level
-          ")
+            (help)
             (recur keypath))
 
           :else (let [v (get-in coll keypath)]
@@ -38,6 +44,11 @@
                     (do
                       (print :top)
                       (print v)
+                      (recur keypath))
+
+                    (and (= input '-) (empty? keypath))
+                    (do
+                      (print (get-in coll keypath))
                       (recur keypath))
 
                     (= input '-)
