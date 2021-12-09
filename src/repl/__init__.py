@@ -69,21 +69,17 @@ class Client(ABC):
                     "requires": requires
                 }, self.module_loaded)
 
-    @abstractmethod
     def handshake(self):
-        pass
+        log.debug({
+            "event": "client/handshake",
+            "data": self.executor.submit(lambda: read_until_prompt(self.socket)).result(timeout=5)
+        })
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
         self.buffer = self.socket.makefile(mode="rw")
         log.debug({"event": "client/connect", "host": self.host, "port": self.port})
-
-        log.debug({
-            "event": "client/handshake",
-            "data": self.executor.submit(lambda: read_until_prompt(self.socket)).result(timeout=5)
-        })
-
         return self
 
     def source_path(self, filename):
@@ -92,7 +88,7 @@ class Client(ABC):
         Windows compatibility)."""
         return posixpath.join(pathlib.Path(self.source_root).as_posix(), filename)
 
-    def __init__(self, source_root, host, port, name, backchannel_opts={}):
+    def __init__(self, source_root, host, port, name, options={}):
         self.id = str(uuid.uuid4())
         self.source_root = source_root
         self.host = host
@@ -103,7 +99,7 @@ class Client(ABC):
         self.handler = None
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}.{self.id}")
         self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
-        self.backchannel_opts = backchannel_opts
+        self.options = options
         self.capabilities = set()
         self.lock = Lock()
         self.ready = False
@@ -194,6 +190,7 @@ class Client(ABC):
 
 class JVMClient(Client):
     def handshake(self):
+        super().handshake()
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
         self.write_line(BASE64_BLOB)
@@ -208,8 +205,8 @@ class JVMClient(Client):
 
             self.buffer.readline()
 
-        backchannel_port = self.backchannel_opts.get("port", 0)
-        backchannel_bind_address = self.backchannel_opts.get("bind_address", "localhost")
+        backchannel_port = self.options.get("backchannel", {}).get("port", 0)
+        backchannel_bind_address = self.options.get("backchannel", {}).get("bind_address", "localhost")
         self.write_line(f"""(try (tutkain.repl/repl {{:port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))""")
         line = self.buffer.readline()
 
@@ -254,28 +251,35 @@ class JVMClient(Client):
             ]
         })
 
-        self.start_workers()
-
-    def __init__(self, source_root, host, port, backchannel_opts={}):
-        super().__init__(source_root, host, port, "tutkain.clojure.client", backchannel_opts=backchannel_opts)
+    def __init__(self, source_root, host, port, options={}):
+        super().__init__(source_root, host, port, "tutkain.clojure.client", options=options)
 
     def connect(self):
         super().connect()
-        # Start a promptless REPL so that we don't need to keep sinking the prompt.
-        self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
-        self.handshake()
+
+        if self.options.get("backchannel", {}).get("enabled", True):
+            # Start a promptless REPL so that we don't need to keep sinking the prompt.
+            self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
+            self.handshake()
+
+        self.start_workers()
+
         return self
 
     def switch_namespace(self, ns):
         self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
 
     def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.backchannel.send({
-            "op": edn.Keyword("set-eval-context"),
-            "file": file,
-            "line": line + 1,
-            "column": column + 1
-        }, lambda _: self.sendq.put(code), handler)
+        if self.options.get("backchannel", {}).get("enabled", True):
+            self.backchannel.send({
+                "op": edn.Keyword("set-eval-context"),
+                "file": file,
+                "line": line + 1,
+                "column": column + 1
+            }, lambda _: self.sendq.put(code), handler)
+        else:
+            self.printq.put(code + "\n")
+            self.sendq.put(code)
 
 
 class JSClient(Client):
@@ -313,7 +317,7 @@ class JSClient(Client):
 
             self.buffer.readline()
 
-        backchannel_port = self.backchannel_opts.get("port", 0)
+        backchannel_port = self.options.get("backchannel", {}).get("port", 0)
         self.write_line(f"""(tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}})""")
 
         ret = edn.read_line(self.buffer)

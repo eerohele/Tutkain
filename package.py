@@ -516,7 +516,7 @@ class TutkainConnectCommand(WindowCommand):
             None,
         ) if view_id else self.window.new_file()
 
-    def make_client(self, dialect, host, port, on_cancel):
+    def make_client(self, dialect, host, port, backchannel, on_cancel):
         if dialect == edn.Keyword("cljs"):
             def prompt(ids, on_done):
                 self.choose_build_id(ids, on_cancel, on_done)
@@ -527,17 +527,20 @@ class TutkainConnectCommand(WindowCommand):
             return repl.BabashkaClient(source_root(), host, port)
         else:
             return repl.JVMClient(
-                source_root(), host, port, backchannel_opts={
-                    "port": settings().get("clojure").get("backchannel").get("port"),
-                    "bind_address": settings().get("clojure").get("backchannel").get("bind_address", "localhost")
+                source_root(), host, port, options={
+                    "backchannel": {
+                        "enabled": backchannel,
+                        "port": settings().get("clojure").get("backchannel").get("port"),
+                        "bind_address": settings().get("clojure").get("backchannel").get("bind_address", "localhost")
+                    }
                 }
             )
 
-    def connect(self, dialect, host, port, view):
+    def connect(self, dialect, host, port, view, backchannel):
         on_cancel = lambda: view.close()
 
         try:
-            client = self.make_client(dialect, host, port, on_cancel)
+            client = self.make_client(dialect, host, port, backchannel, on_cancel)
             client.connect()
             state.set_view_client(view, dialect, client)
             state.set_repl_view(view, dialect)
@@ -555,7 +558,7 @@ class TutkainConnectCommand(WindowCommand):
             on_cancel()
             self.window.status_message(f"ERR: connection to {host}:{port} refused.")
 
-    def run(self, dialect, host, port, view_id=None):
+    def run(self, dialect, host, port, backchannel=True, view_id=None):
         dialect = edn.Keyword(dialect)
 
         if settings().get("tap_panel"):
@@ -564,10 +567,13 @@ class TutkainConnectCommand(WindowCommand):
         active_view = self.window.active_view()
         view = self.get_or_create_view(view_id)
 
-        if client := self.connect(dialect, host, int(port), view):
+        if client := self.connect(dialect, host, int(port), view, backchannel):
             set_layout(self.window)
             repl_view_settings = settings().get("repl_view_settings", {})
             repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
+
+            if not backchannel:
+                view.assign_syntax("Plain Text.tmLanguage")
 
             print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
             print_loop.name = f"tutkain.{client.id}.print_loop"
@@ -770,16 +776,21 @@ class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if dialect := view.settings().get("tutkain_repl_view_dialect"):
             state.set_repl_view(view, edn.Keyword(dialect))
-        elif sublime.active_window().active_panel() != "input" and settings().get("auto_switch_namespace", True):
-            if (
-                dialect := dialects.for_view(view)
-            ) and (
-                window := view.window()
-            ) and (
-                client := state.client(window, dialect)
-            ) and client.ready:
-                ns = namespace.name(view) or namespace.default(dialect)
-                client.switch_namespace(ns)
+        elif (
+            sublime.active_window().active_panel() != "input"
+        ) and (
+            settings().get("auto_switch_namespace", True)
+        ) and (
+            settings().get("clojure").get("backchannel").get("enabled", False)
+        ) and (
+            dialect := dialects.for_view(view)
+        ) and (
+            window := view.window()
+        ) and (
+            client := state.client(window, dialect)
+        ) and client.ready:
+            ns = namespace.name(view) or namespace.default(dialect)
+            client.switch_namespace(ns)
 
     def on_hover(self, view, point, hover_zone):
         if settings().get("lookup_on_hover") and view.match_selector(
