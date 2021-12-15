@@ -748,9 +748,6 @@ class TutkainEventListener(EventListener):
     def on_init(self, views):
         reconnect(views)
 
-    def on_modified_async(self, view):
-        inline.clear(view)
-
     def on_selection_modified_async(self, view):
         if settings().get("highlight_locals", True) and (sel := view.sel()):
             try:
