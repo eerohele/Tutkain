@@ -29,6 +29,7 @@ from .src import namespace
 from .src import test
 from .src import repl
 from .src import completions
+from .src import settings
 from .src.progress import ProgressBar
 from .src.repl import info
 from .src.repl import query
@@ -91,12 +92,8 @@ def make_color_scheme(cache_dir):
                     )
 
 
-def settings():
-    return sublime.load_settings("Tutkain.sublime-settings")
-
-
 def plugin_loaded():
-    start_logging(settings().get("debug", False))
+    start_logging(settings.load().get("debug", False))
     preferences = sublime.load_settings("Preferences.sublime-settings")
     cache_dir = os.path.join(sublime.cache_path(), "Tutkain")
     make_color_scheme(cache_dir)
@@ -145,7 +142,7 @@ def set_layout(window):
         "cols": [0.0, 1.0],
         "rows": [0.0, 1.0],
     }:
-        if settings().get("layout") == "vertical":
+        if settings.load().get("layout") == "vertical":
             layout = {
                 "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
                 "cols": [0.0, 0.5, 1.0],
@@ -528,8 +525,8 @@ class TutkainConnectCommand(WindowCommand):
         else:
             return repl.JVMClient(
                 source_root(), host, port, backchannel_opts={
-                    "port": settings().get("clojure").get("backchannel").get("port"),
-                    "bind_address": settings().get("clojure").get("backchannel").get("bind_address", "localhost")
+                    "port": settings.load().get("clojure").get("backchannel").get("port"),
+                    "bind_address": settings.load().get("clojure").get("backchannel").get("bind_address", "localhost")
                 }
             )
 
@@ -558,7 +555,7 @@ class TutkainConnectCommand(WindowCommand):
     def run(self, dialect, host, port, view_id=None):
         dialect = edn.Keyword(dialect)
 
-        if settings().get("tap_panel"):
+        if settings.load().get("tap_panel"):
             tap.create_panel(self.window)
 
         active_view = self.window.active_view()
@@ -566,7 +563,7 @@ class TutkainConnectCommand(WindowCommand):
 
         if client := self.connect(dialect, host, int(port), view):
             set_layout(self.window)
-            repl_view_settings = settings().get("repl_view_settings", {})
+            repl_view_settings = settings.load().get("repl_view_settings", {})
             repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
 
             print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
@@ -749,7 +746,7 @@ class TutkainEventListener(EventListener):
         reconnect(views)
 
     def on_selection_modified_async(self, view):
-        if settings().get("highlight_locals", True) and (sel := view.sel()):
+        if settings.load().get("highlight_locals", True) and (sel := view.sel()):
             try:
                 point = sel[0].begin()
 
@@ -767,7 +764,7 @@ class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if dialect := view.settings().get("tutkain_repl_view_dialect"):
             state.set_repl_view(view, edn.Keyword(dialect))
-        elif sublime.active_window().active_panel() != "input" and settings().get("auto_switch_namespace", True):
+        elif sublime.active_window().active_panel() != "input" and settings.load().get("auto_switch_namespace", True):
             if (
                 dialect := dialects.for_view(view)
             ) and (
@@ -779,7 +776,7 @@ class TutkainEventListener(EventListener):
                 client.switch_namespace(ns)
 
     def on_hover(self, view, point, hover_zone):
-        if settings().get("lookup_on_hover") and view.match_selector(
+        if settings.load().get("lookup_on_hover") and view.match_selector(
             point,
             "source.clojure & (meta.symbol | constant.other.keyword.qualified | constant.other.keyword.auto-qualified)"
         ):
@@ -816,7 +813,7 @@ class TutkainEventListener(EventListener):
             state.forget_repl_view(view, dialect)
 
     def on_query_completions(self, view, prefix, locations):
-        if settings().get("auto_complete"):
+        if settings.load().get("auto_complete"):
             point = locations[0] - 1
             return completions.get_completions(view, prefix, point)
 
@@ -1386,10 +1383,11 @@ class TutkainPromptCommand(WindowCommand):
 
 class TutkainToggleAutoSwitchNamespaceCommand(TextCommand):
     def run(self, _):
-        current = settings().get("auto_switch_namespace")
-        settings().set("auto_switch_namespace", not current)
+        s = settings.load()
+        current = s.get("auto_switch_namespace")
+        s.set("auto_switch_namespace", not current)
 
-        if settings().get("auto_switch_namespace"):
+        if s.get("auto_switch_namespace"):
             self.view.window().status_message(f"[⏽] [Tutkain] Automatic namespace switching enabled.")
 
             if (sel := self.view.sel()) and (

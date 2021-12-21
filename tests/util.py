@@ -6,7 +6,7 @@ from threading import Event, Thread
 from unittest import TestCase
 
 from Tutkain.api import edn
-from Tutkain.package import settings
+from Tutkain.src import settings
 
 
 class ViewTestCase(TestCase):
@@ -19,7 +19,7 @@ class ViewTestCase(TestCase):
         self.view.sel().clear()
         self.view.window().focus_view(self.view)
         self.view.assign_syntax(syntax)
-        settings().set("highlight_locals", False)
+        settings.load().set("highlight_locals", False)
 
     @classmethod
     def tearDownClass(self):
