@@ -195,7 +195,7 @@ class TutkainClearOutputViewCommand(WindowCommand):
                     self.clear_view(view)
 
             elif view_name == "tap":
-                if view := self.window.find_output_panel(tap.panel_name):
+                if view := self.window.find_output_panel(tap.PANEL_NAME):
                     self.clear_view(view)
 
 
@@ -803,7 +803,7 @@ class TutkainEventListener(EventListener):
                 client.halt()
 
             if window := view.window():
-                window.destroy_output_panel(tap.panel_name)
+                window.destroy_output_panel(tap.PANEL_NAME)
                 active_view = window.active_view()
 
                 if active_view:

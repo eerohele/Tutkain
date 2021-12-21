@@ -28,8 +28,8 @@ def print_loop(view, client):
                 val = item.get(edn.Keyword("val"))
 
                 if tag == edn.Keyword("tap"):
-                    view.window().run_command("show_panel", {"panel": f"output.{tap.panel_name}"})
-                    panel = view.window().find_output_panel(tap.panel_name)
+                    window.run_command("show_panel", {"panel": f"output.{tap.PANEL_NAME}"})
+                    panel = window.find_output_panel(tap.PANEL_NAME)
                     append_to_view(panel, val)
                 # Print invisible Unicode characters (U+2063) around stdout and
                 # stderr to prevent them from getting syntax highlighting.
