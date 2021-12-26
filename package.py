@@ -794,7 +794,7 @@ class TutkainEventListener(EventListener):
     def on_activated(self, view):
         if repl.views.get_dialect(view):
             client_id = view.settings().get("tutkain_repl_client_id")
-            state.set_active_client(client_id)
+            state.set_active_connection(client_id)
         elif sublime.active_window().active_panel() != "input" and settings.load().get("auto_switch_namespace", True):
             if (
                 dialect := dialects.for_view(view)
@@ -1439,4 +1439,4 @@ class TutkainChooseActiveRuntimeCommand(WindowCommand):
         return ClientIdInputHandler()
 
     def run(self, client_id):
-        state.set_active_client(client_id)
+        state.set_active_connection(client_id)

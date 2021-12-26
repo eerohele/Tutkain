@@ -25,7 +25,7 @@ class Connection:
 
 __state = State(
     connections=defaultdict(dict),
-    active_client=defaultdict(dict)
+    active_connection=defaultdict(dict)
 )
 
 
@@ -38,14 +38,14 @@ def forget_connection(connection: Connection) -> None:
         connections.pop(connection.client.id)
 
         if get_client(connection.dialect) == connection.client:
-            __state["active_client"].pop(connection.dialect)
+            __state["active_connection"].pop(connection.dialect)
 
             # If there's only one remaining connection with the same dialect as
             # the one we're currently disconnecting, set that as the active client.
             alts = list(filter(lambda this: this.dialect == connection.dialect, connections.values()))
 
             if len(alts) == 1:
-                __state["active_client"][connection.dialect] = alts[0].client
+                __state["active_connection"][connection.dialect] = alts[0]
 
         window = connection.view.window() or active_window()
 
@@ -68,18 +68,19 @@ def register_connection(view: View, dialect: Dialect, client: repl.Client) -> No
     connection.client.on_close = lambda: forget_connection(connection)
 
     __state["connections"][connection.client.id] = connection
-    __state["active_client"][connection.dialect] = connection.client
+    __state["active_connection"][connection.dialect] = connection
 
 
 def get_client(dialect: Dialect) -> Union[repl.Client, None]:
-    return __state["active_client"].get(dialect)
+    if connection := __state["active_connection"].get(dialect):
+        return connection.client
 
 
-def set_active_client(client_id: str) -> Union[repl.Client, None]:
+def set_active_connection(client_id: str) -> Union[repl.Client, None]:
     if connection := __state["connections"].get(client_id):
-        __state["active_client"][connection.dialect] = connection.client
+        __state["active_connection"][connection.dialect] = connection
 
 
-def get_active_client_view(dialect: Dialect) -> View:
-    client = __state["active_client"][dialect]
-    return __state["connections"][client.id].view
+def get_active_connection_view(dialect: Dialect) -> View:
+    connection = __state["active_connection"][dialect]
+    return __state["connections"][connection.client.id].view

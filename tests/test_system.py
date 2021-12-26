@@ -219,7 +219,7 @@ class TestConnectDisconnect(TestCase):
             Clojure 1.11.0-alpha1
             user=> (inc 1)
             2
-            """, lambda: self.content(state.get_active_client_view(edn.Keyword("clj")))
+            """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
         self.disconnect(view)
@@ -387,7 +387,7 @@ class TestConnectDisconnect(TestCase):
             Clojure 1.11.0-alpha1
             user=> (inc 1)
             2
-            """, lambda: self.content(state.get_active_client_view(edn.Keyword("clj")))
+            """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
         js_view = self.make_scratch_view("ClojureScript (Tutkain).sublime-syntax")
@@ -407,7 +407,7 @@ class TestConnectDisconnect(TestCase):
             ClojureScript 1.10.844
             cljs.user=> (js/parseInt "42")
             42
-            """, lambda: self.content(state.get_active_client_view(edn.Keyword("cljs")))
+            """, lambda: self.content(state.get_active_connection_view(edn.Keyword("cljs")))
         )
 
         self.disconnect(js_view)
@@ -432,7 +432,7 @@ class TestConnectDisconnect(TestCase):
             2
             user=> (inc 2)
             3
-            """, lambda: self.content(state.get_active_client_view(edn.Keyword("clj")))
+            """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
         self.disconnect(jvm_view)
@@ -477,7 +477,7 @@ class TestConnectDisconnect(TestCase):
             ClojureScript 1.10.844
             cljs.user=> (js/parseInt "42")
             42
-            """, lambda: self.content(state.get_active_client_view(edn.Keyword("cljs")))
+            """, lambda: self.content(state.get_active_connection_view(edn.Keyword("cljs")))
         )
 
         self.disconnect(js_view)
@@ -502,7 +502,7 @@ class TestConnectDisconnect(TestCase):
             2
             user=> (inc 2)
             3
-            """, lambda: self.content(state.get_active_client_view(edn.Keyword("clj")))
+            """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
         self.disconnect(jvm_view)
