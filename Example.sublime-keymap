@@ -163,7 +163,8 @@
     // Connect to a socket server.
     {
         "keys": ["ctrl+c", "ctrl+x"],
-        "command": "tutkain_connect"
+        "command": "tutkain_connect",
+        "args": {"host": "localhost", "output": "panel"}
     },
 
     // Disconnect from a socket server.
