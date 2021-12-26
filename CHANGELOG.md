@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+- BREAKING CHANGE: Remove all default key bindings (indent on Enter, ParEdit
+  key bindings for preventing unbalanced S-expression delimiters) #78
+
+  See [this message](https://github.com/eerohele/Tutkain/blob/develop/messages/0.12.0.txt) for information on how to restore those key bindings so that
+  Tutkain works the same way it did before.
+
+- Add support for using a panel instead of a view for REPL output #79
+
+  To use a panel instead of a view, modify the key binding for your `tutkain_connect` command to pass the `"output"` argument:
+
+  ```json
+  {
+      "keys": ["ctrl+c", "ctrl+x"],
+      "command": "tutkain_connect",
+      "args": {"host": "localhost", "output": "panel"}
+  },
+  ```
+
+  By default, Tutkain continues to use a regular view for REPL output. This is subject to change while Tutkain remains in alpha.
+
+- Fix inline evaluation result placement
+- Don't hide evaluation results when modifying the current selection #80
 - Set horizontal window layout to half-and-half for code view and REPL view
 
 ## 0.11.0 (alpha) - 2021-11-23
