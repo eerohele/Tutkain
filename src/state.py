@@ -40,6 +40,13 @@ def forget_connection(connection: Connection) -> None:
         if get_client(connection.dialect) == connection.client:
             __state["active_client"].pop(connection.dialect)
 
+            # If there's only one remaining connection with the same dialect as
+            # the one we're currently disconnecting, set that as the active client.
+            alts = list(filter(lambda this: this.dialect == connection.dialect, connections.values()))
+
+            if len(alts) == 1:
+                __state["active_client"][connection.dialect] = alts[0].client
+
         window = connection.view.window() or active_window()
 
         # Destroy output panel if this is the only remaining connection that
