@@ -2,7 +2,7 @@ import sublime
 import queue
 
 from Tutkain.api import edn
-from Tutkain.package import source_root, start_logging, stop_logging
+from Tutkain.package import source_root
 from Tutkain.src import repl
 from Tutkain.src.repl import views
 from Tutkain.src import base64
@@ -61,7 +61,6 @@ class TestJVMClient(PackageTestCase):
     @classmethod
     def setUpClass(self):
         super().setUpClass()
-        start_logging(True)
 
         def write_greeting(buf):
             buf.write("user=> ")
@@ -80,7 +79,6 @@ class TestJVMClient(PackageTestCase):
     @classmethod
     def tearDownClass(self):
         super().tearDownClass()
-        stop_logging()
 
         if self.repl_view:
             self.repl_view.close()
