@@ -19,6 +19,13 @@ REPL_VIEW_DEFAULT_SETTINGS = {
     "gutter": False,
 }
 
+INTERNAL_SETTINGS = {
+    "tutkain_repl_client_id",
+    "tutkain_repl_view_dialect",
+    "tutkain_repl_host",
+    "tutkain_repl_port",
+}
+
 
 def get_host(view: View) -> Union[str, None]:
     """Given a Tutkain REPL view, return the hostname associated with the
@@ -57,19 +64,11 @@ def configure(view, dialect, client_id, host, port, settings={}):
 
     view_count = len(window.views_in_group(target_group))
 
-    # User is not allowed to change these settings:
-    internal_settings = {
-        "tutkain_repl_client_id",
-        "tutkain_repl_view_dialect",
-        "tutkain_repl_host",
-        "tutkain_repl_port",
-    }
-
     # Default Tutkain REPL view settings merged with user overwrites:
     settings_ = {**REPL_VIEW_DEFAULT_SETTINGS, **settings}
 
     for settings_name, settings_value in settings_.items():
-        if settings_name not in internal_settings:
+        if settings_name not in INTERNAL_SETTINGS:
             view.settings().set(settings_name, settings_value)
 
     view.set_name(f"REPL · {dialects.name(dialect)} · {host}:{port}")
