@@ -24,6 +24,10 @@ All notable changes to this project will be documented in this file.
 
   By default, Tutkain continues to use a regular view for REPL output. This is subject to change while Tutkain remains in alpha.
 
+- Add **Tutkain: Choose Active Runtime** command.
+
+  You can use it to choose which runtime to evaluate against when you use a panel for REPL output and you're connected to multiple runtimes that use the same Clojure dialect.
+
 - Fix inline evaluation result placement
 - Don't hide evaluation results when modifying the current selection #80
 - Set horizontal window layout to half-and-half for code view and REPL view
