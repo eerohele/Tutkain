@@ -1,0 +1,180 @@
+┌──────────────╼═══════════════════════════════════════════════╾──────────────┐
+╽       ___       ___       ___       ___       ___       ___       ___       ╽
+║      /\  \     /\__\     /\  \     /\__\     /\  \     /\  \     /\__\      ║
+║      \:\  \   /:/ _/_    \:\  \   /:/ _/_   /::\  \   _\:\  \   /:| _|_     ║
+║      /::\__\ /:/_/\__\   /::\__\ /::-"\__\ /::\:\__\ /\/::\__\ /::|/\__\    ║
+║     /:/\/__/ \:\/:/  /  /:/\/__/ \;:;-",-" \/\::/  / \::/\/__/ \/|::/  /    ║
+║     \/__/     \::/  /   \/__/     |:|  |     /:/  /   \:\__\     |:/  /     ║
+║                \/__/               \|__|     \/__/     \/__/     \/__/      ║
+╿                                                                             ╿
+└───────────────────┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄──────────────────┘
+
+Hey there! Tutkain has been updated.
+
+Restart both your REPL server and Sublime Text to make sure Tutkain keeps
+working correctly.
+
+For a full list of changes in this version, see the changelog for v0.12.0:
+
+    https://github.com/eerohele/Tutkain/blob/master/CHANGELOG.md
+
+IMPORTANT: In this version of Tutkain, these key bindings are no longer enabled
+by default:
+
+- Automatically indent code when on pressing the Enter key
+- ParEdit key bindings for preventing unbalanced S-expression delimiters
+  (parenthesis, brackets, braces) and double quotes
+- ParEdit key binding for inserting a semicolon at the beginning of the line
+  when pressing Enter on a line with a semicolon
+
+This change is to prevent Tutkain from forcing its own ParEdit and
+auto-indentation implementations on you.
+
+If you want to restore these key bindings and make Tutkain work the way it did
+before this update, do this:
+
+1. In Sublime Text, open the Command Palette (Tools » Command Palette).
+2. Select Tutkain: Edit Key Bindings.
+3. Copy-paste these key binding definitions into the right-hand side pane:
+
+  {
+    "keys": ["enter"],
+    "command": "tutkain_insert_newline",
+    "context": [
+      {
+        "key": "selector",
+        "operator": "equal",
+        "operand": "source.edn | source.clojure"
+      },
+      {
+        "key": "auto_complete_visible",
+        "operator": "equal",
+        "operand": false
+      },
+      {
+        "key": "panel_has_focus",
+        "operator": "equal",
+        "operand": false
+      },
+    ]
+  },
+
+  {
+      "keys": ["("],
+      "command": "tutkain_paredit_open_round",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": ["["],
+      "command": "tutkain_paredit_open_square",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": ["{"],
+      "command": "tutkain_paredit_open_curly",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": [")"],
+      "command": "tutkain_paredit_close_round",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": ["]"],
+      "command": "tutkain_paredit_close_square",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": ["}"],
+      "command": "tutkain_paredit_close_curly",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": ["\""],
+      "command": "tutkain_paredit_double_quote",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": ["delete"],
+      "command": "tutkain_paredit_forward_delete",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": ["backspace"],
+      "command": "tutkain_paredit_backward_delete",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
+
+  {
+      "keys": [";"],
+      "command": "tutkain_paredit_semicolon",
+      "context": [
+        {
+          "key": "selector",
+          "operator": "equal",
+          "operand": "source.edn | source.clojure"
+        }
+      ]
+  },
