@@ -31,6 +31,10 @@ BASE64_BLOB = "(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn
 
 
 class Client(ABC):
+    @abstractmethod
+    def dialect_name(self):
+        pass
+
     """A `Client` connects to a Clojure socket server, then sends over code
     that a) starts a custom REPL on top of the default REPL and b) starts a
     backchannel socket server. The `Client` then connects to the backchannel
@@ -107,6 +111,7 @@ class Client(ABC):
         self.capabilities = set()
         self.lock = Lock()
         self.ready = False
+        self.on_close = lambda: None
 
     def send_loop(self):
         """Start a loop that reads strings from `self.sendq` and sends them to
@@ -120,6 +125,7 @@ class Client(ABC):
         self.buffer.write(":repl/quit")
         self.buffer.flush()
         self.socket.shutdown(socket.SHUT_RDWR)
+        self.on_close()
         log.debug({"event": "thread/exit"})
 
     @abstractmethod
@@ -168,7 +174,12 @@ class Client(ABC):
         except OSError as error:
             log.error({"event": "error", "error": error})
         finally:
-            self.print(":tutkain/disconnected\n")
+            self.print(
+                edn.kwmap({
+                    "tag": edn.Keyword("err"),
+                    "val": f"[Tutkain] Disconnected from {self.dialect_name()} runtime at {self.host}:{self.port}.\n"
+                })
+            )
 
             # Put a None into the queue to tell consumers to stop reading it.
             self.print(None)
@@ -193,6 +204,9 @@ class Client(ABC):
 
 
 class JVMClient(Client):
+    def dialect_name(self):
+        return "Clojure"
+
     def handshake(self):
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
@@ -279,6 +293,9 @@ class JVMClient(Client):
 
 
 class JSClient(Client):
+    def dialect_name(self):
+        return "ClojureScript"
+
     def __init__(self, source_root, host, port, prompt_for_build_id):
         super().__init__(source_root, host, port, "tutkain.cljs.client")
         self.prompt_for_build_id = prompt_for_build_id
@@ -352,6 +369,9 @@ class JSClient(Client):
 
 
 class BabashkaClient(Client):
+    def dialect_name(self):
+        return "Babashka"
+
     def __init__(self, source_root, host, port):
         super().__init__(source_root, host, port, "tutkain.bb.client")
 

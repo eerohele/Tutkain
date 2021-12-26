@@ -2,7 +2,6 @@ import sublime
 
 from Tutkain.api import edn
 from Tutkain.src.repl import views
-from Tutkain.src.repl import tap
 from unittest import TestCase
 
 
@@ -20,7 +19,7 @@ class TestClear(TestCase):
     def setUp(self):
         self.window = sublime.active_window()
         self.repl_view = self.window.new_file()
-        self.tap_panel = tap.create_panel(self.window)
+        self.tap_panel = views.create_tap_panel(self.window, "view")
 
     def tearDown(self):
         if self.tap_panel:

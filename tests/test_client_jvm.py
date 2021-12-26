@@ -72,8 +72,7 @@ class TestJVMClient(PackageTestCase):
         dialect = edn.Keyword("clj")
         self.repl_view = sublime.active_window().new_file()
         views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
-        state.set_view_client(self.repl_view, dialect, self.client)
-        state.set_repl_view(self.repl_view, dialect)
+        state.register_connection(self.repl_view, dialect, self.client)
         self.backchannel = self.conduct_handshake()
 
     @classmethod

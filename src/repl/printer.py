@@ -1,6 +1,8 @@
 from ..log import log
+from .. import settings
 from ...api import edn
-from . import tap
+from . import views
+import sublime
 
 
 def print_characters(view, characters):
@@ -16,33 +18,56 @@ def append_to_view(view, characters):
         view.run_command("move_to", {"to": "eof"})
 
 
+def append_to_tap_panel(view, val):
+    if settings.load().get("tap_panel", False):
+        window = view.window() or sublime.active_window()
+
+        if view.element() is None:
+            output = "view"
+        else:
+            output = "panel"
+
+        views.show_tap_panel(window, output)
+        panel = window.find_output_panel(views.tap_panel_name(output))
+        append_to_view(panel, val)
+
+
+def show_repl_panel(view):
+    if view.element() == "output:output" and (
+        settings.load().get("auto_show_output_panel", True)
+    ):
+        views.show_output_panel(sublime.active_window())
+
+
 def print_loop(view, client):
     try:
         log.debug({"event": "thread/start"})
 
         while item := client.printq.get():
             if not isinstance(item, dict):
+                show_repl_panel(view)
                 append_to_view(view, item)
             else:
                 tag = item.get(edn.Keyword("tag"))
                 val = item.get(edn.Keyword("val"))
 
                 if tag == edn.Keyword("tap"):
-                    window.run_command("show_panel", {"panel": f"output.{tap.PANEL_NAME}"})
-                    panel = window.find_output_panel(tap.PANEL_NAME)
-                    append_to_view(panel, val)
-                # Print invisible Unicode characters (U+2063) around stdout and
-                # stderr to prevent them from getting syntax highlighting.
-                #
-                # This is probably somewhat evil, but the performance is *so*
-                # much better than with view.add_regions.
-                elif tag == edn.Keyword("err"):
-                    append_to_view(view, '⁣⁣' + val + '⁣⁣')
-                elif tag == edn.Keyword("out"):
-                    append_to_view(view, '⁣' + val + '⁣')
-                elif edn.Keyword("debug") in item:
-                    log.debug({"event": "info", "item": item.get(edn.Keyword("val"))})
-                elif val := item.get(edn.Keyword("val")):
-                    append_to_view(view, val)
+                    append_to_tap_panel(view, val)
+                else:
+                    show_repl_panel(view)
+
+                    # Print invisible Unicode characters (U+2063) around stdout and
+                    # stderr to prevent them from getting syntax highlighting.
+                    #
+                    # This is probably somewhat evil, but the performance is *so*
+                    # much better than with view.add_regions.
+                    if tag == edn.Keyword("err"):
+                        append_to_view(view, '⁣⁣' + val + '⁣⁣')
+                    elif tag == edn.Keyword("out"):
+                        append_to_view(view, '⁣' + val + '⁣')
+                    elif edn.Keyword("debug") in item:
+                        log.debug({"event": "info", "item": item.get(edn.Keyword("val"))})
+                    elif val := item.get(edn.Keyword("val")):
+                        append_to_view(view, val)
     finally:
         log.debug({"event": "thread/exit"})
