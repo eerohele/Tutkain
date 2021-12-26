@@ -30,7 +30,6 @@ from .src import test
 from .src import repl
 from .src import completions
 from .src import settings
-from .src.progress import ProgressBar
 from .src.repl import info
 from .src.repl import query
 from .src.repl import history
