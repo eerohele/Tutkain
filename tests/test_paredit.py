@@ -1,5 +1,3 @@
-from unittest import skip
-
 from .util import ViewTestCase
 
 
