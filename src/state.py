@@ -68,17 +68,9 @@ def get_client(dialect: Dialect) -> Union[repl.Client, None]:
     return __state["active_client"].get(dialect)
 
 
-def get_client_by_id(id: str) -> Union[repl.Client, None]:
-    if connection := __state["connections"].get(id):
-        return connection.client
-
-
-def set_active_client(view: View) -> Union[repl.Client, None]:
-    client_id = view.settings().get("tutkain_repl_client_id")
-    dialect = edn.Keyword(view.settings().get("tutkain_repl_view_dialect"))
-
-    if client := get_client_by_id(client_id):
-        __state["active_client"][dialect] = client
+def set_active_client(client_id: str) -> Union[repl.Client, None]:
+    if connection := __state["connections"].get(client_id):
+        __state["active_client"][connection.dialect] = connection.client
 
 
 def get_active_client_view(dialect: Dialect) -> View:

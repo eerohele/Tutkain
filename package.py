@@ -793,7 +793,8 @@ class TutkainEventListener(EventListener):
 
     def on_activated(self, view):
         if repl.views.get_dialect(view):
-            state.set_active_client(view)
+            client_id = view.settings().get("tutkain_repl_client_id")
+            state.set_active_client(client_id)
         elif sublime.active_window().active_panel() != "input" and settings.load().get("auto_switch_namespace", True):
             if (
                 dialect := dialects.for_view(view)
@@ -1413,3 +1414,29 @@ class TutkainToggleAutoSwitchNamespaceCommand(TextCommand):
                 client.switch_namespace(ns)
         else:
             self.view.window().status_message(f"[⭘] [Tutkain] Automatic namespace switching disabled.")
+
+
+class ClientIdInputHandler(ListInputHandler):
+    def placeholder(self):
+        return "Choose connected runtime to activate"
+
+    def make_item(self, connection):
+        if connection.view.element() is None:
+            output = "view"
+        else:
+            output = "panel"
+
+        annotation = f"{dialects.name(connection.dialect)} ({output})"
+        text = f"{connection.client.host}:{connection.client.port}"
+        return sublime.ListInputItem(text, connection.client.id, annotation=annotation)
+
+    def list_items(self):
+        return list(map(self.make_item, list(state.get_connections().values())))
+
+
+class TutkainChooseActiveRuntimeCommand(WindowCommand):
+    def input(self, args):
+        return ClientIdInputHandler()
+
+    def run(self, client_id):
+        state.set_active_client(client_id)
