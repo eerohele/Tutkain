@@ -462,7 +462,7 @@ class TutkainEvaluateCommand(TextCommand):
                         if inline_result:
                             def handler(response):
                                 inline.clear(self.view)
-                                inline.show(self.view, region.end(), response.get(edn.Keyword("val")), inline_result)
+                                inline.show(self.view, eval_region.end(), response.get(edn.Keyword("val")), inline_result)
 
                             evaluate(self.view, client, code, eval_region.begin(), handler)
                         else:
