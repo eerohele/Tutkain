@@ -399,12 +399,12 @@
 
             :repl-result
             (fn [{:keys [read-result]} ret]
-              (if (contains? @eval-context :continuation-id)
-                (send-over-backchannel
-                  {:id (:continuation-id @eval-context)
-                   :tag :ret
-                   :val ret})
-                (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
+              (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
+                (if (contains? @eval-context :continuation-id)
+                  (send-over-backchannel
+                    {:id (:continuation-id @eval-context)
+                     :tag :ret
+                     :val ret})
                   (out-fn ret))))
 
             :repl-val

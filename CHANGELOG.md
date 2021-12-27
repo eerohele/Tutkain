@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix inline evaluation result placement
 - Don't hide evaluation results when modifying the current selection #80
+- Prevent errant `nil` prints when using inline evaluation results with ClojureScript
 - Set horizontal window layout to half-and-half for code view and REPL view
 
 ## 0.11.0 (alpha) - 2021-11-23
