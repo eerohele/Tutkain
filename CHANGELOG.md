@@ -24,6 +24,8 @@ All notable changes to this project will be documented in this file.
 
   By default, Tutkain continues to use a regular view for REPL output. This is subject to change while Tutkain remains in alpha.
 
+- Fix symbol information lookup and auto-completion support when connecting to a shadow-cljs socket server without first connecting to a Clojure server
+
 - Add **Tutkain: Choose Active Runtime** command.
 
   You can use it to choose which runtime to evaluate against when you use a panel for REPL output and you're connected to multiple runtimes that use the same Clojure dialect.

@@ -134,7 +134,7 @@ def clojurescript_handshake(server):
     with Server(send_edn) as backchannel:
         server.send(f"""{{:greeting "ClojureScript 1.10.844\\n" :host "localhost", :port {backchannel.port}}}""")
 
-        for _ in range(6):
+        for _ in range(8):
             backchannel.recv()
 
         return backchannel

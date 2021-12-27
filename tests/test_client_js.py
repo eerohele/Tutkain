@@ -52,7 +52,7 @@ class TestJSClient(PackageTestCase):
         with Server(send_edn) as backchannel:
             server.send(f"""{{:greeting "ClojureScript 1.10.844" :host "localhost", :port {backchannel.port}}}""")
 
-            for _ in range(6):
+            for _ in range(8):
                 backchannel.recv()
 
             # TODO: Add test for no runtime

@@ -342,7 +342,9 @@ class JSClient(Client):
 
         self.load_modules({
             "lookup.clj": [],
+            "java.clj": [],
             "completions.clj": [],
+            "query.clj": [],
             "cljs.clj": [],
             "shadow.clj": [],
             "analyzer.clj": [
