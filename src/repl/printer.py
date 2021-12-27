@@ -33,9 +33,7 @@ def append_to_tap_panel(view, val):
 
 
 def show_repl_panel(view):
-    if view.element() == "output:output" and (
-        settings.load().get("auto_show_output_panel", True)
-    ):
+    if view.element() == "output:output":
         views.show_output_panel(sublime.active_window())
 
 
