@@ -602,10 +602,12 @@ class TutkainDisconnectCommand(WindowCommand):
     def on_done(self, connection):
         if connection:
             window = sublime.active_window()
-            active_view = window.active_view()
-            connection.view.close()
-            connection.client.halt()
-            window.focus_view(active_view)
+
+            if window.id() == connection.view.window().id():
+                active_view = window.active_view()
+                connection.view.close()
+                connection.client.halt()
+                window.focus_view(active_view)
 
     def make_quick_panel_item(self, connection):
         if connection.view.element() is None:
