@@ -340,6 +340,10 @@ class JSClient(Client):
         greeting = ret.get(edn.Keyword("greeting"))
         self.print(greeting)
 
+        # NOTE: If you make changes to module loading, make sure you manually
+        # test connecting to a ClojureScript runtime *without* connecting to
+        # a Clojure runtime first to make sure we're loading everything we
+        # need.
         self.load_modules({
             "lookup.clj": [],
             "java.clj": [],
