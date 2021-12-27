@@ -602,8 +602,9 @@ class TutkainDisconnectCommand(WindowCommand):
     def on_done(self, connection):
         if connection:
             window = sublime.active_window()
+            connection_window = connection.view.window()
 
-            if window.id() == connection.view.window().id():
+            if window and connection_window and window.id() == connection_window.id():
                 active_view = window.active_view()
                 connection.view.close()
                 connection.client.halt()
