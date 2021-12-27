@@ -663,5 +663,20 @@
         "command": "hide_panel",
         "args": {"panel": "output.tutkain.tap_panel"},
         "context": [{"key": "panel", "operand": "output.tutkain.tap_panel"}]
-    }
+    },
+
+    // Show output panel
+    {
+        "keys": ["ctrl+p", "ctrl+r"],
+        "command": "show_panel",
+        "args": {"panel": "output.tutkain.output_panel"}
+    },
+
+    // Hide output panel
+    {
+        "keys": ["ctrl+p", "ctrl+r"],
+        "command": "hide_panel",
+        "args": {"panel": "output.tutkain.output_panel"},
+        "context": [{"key": "panel", "operand": "output.tutkain.output_panel"}]
+    },
 ]
