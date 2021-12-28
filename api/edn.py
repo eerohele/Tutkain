@@ -356,17 +356,16 @@ def write_set(b, xs):
 def write_dict(b, d):
     b.write("{")
 
-    xs = list(d.items())
+    if xs := list(d.items()):
+        for k, v in xs[:-1]:
+            write1(b, k)
+            b.write(" ")
+            write1(b, v)
+            b.write(" ")
 
-    for k, v in xs[:-1]:
-        write1(b, k)
+        write1(b, xs[-1][0])
         b.write(" ")
-        write1(b, v)
-        b.write(" ")
-
-    write1(b, xs[-1][0])
-    b.write(" ")
-    write1(b, xs[-1][1])
+        write1(b, xs[-1][1])
 
     b.write("}")
 
