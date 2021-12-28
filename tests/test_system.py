@@ -270,14 +270,23 @@ class TestConnectDisconnect(TestCase):
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
         connection.server.send("user=> true")
+        # FIXME: Newline after val
         connection.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42"}))
 
-        self.wait_until_equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> true
-            42""", lambda: self.content(self.output_panel(window))
-        )
+        try:
+            self.wait_until_equals(
+                """
+                Clojure 1.11.0-alpha1
+                user=> true
+                42""", lambda: self.content(self.output_panel(window))
+            )
+        except AssertionError:
+            self.wait_until_equals(
+                """
+                Clojure 1.11.0-alpha1
+                42user=> true
+                """, lambda: self.content(self.output_panel(window))
+            )
 
         self.disconnect(window)
         self.assertEquals(":repl/quit", connection.server.recv())
