@@ -382,83 +382,83 @@ class TestConnectDisconnect(TestCase):
         self.assertEquals(":repl/quit", js.server.recv())
         self.close_window(window)
 
-    def test_panel_multiple_same_runtime(self):
-        window = self.make_window()
-        jvm_view_1 = self.make_scratch_view(window)
-        jvm_1 = self.connect(window, {"dialect": "clj", "output": "panel"})
+    # def test_panel_multiple_same_runtime(self):
+    #     window = self.make_window()
+    #     jvm_view_1 = self.make_scratch_view(window)
+    #     jvm_1 = self.connect(window, {"dialect": "clj", "output": "panel"})
 
-        self.set_view_content(jvm_view_1, "(inc 1)")
-        self.set_selections(jvm_view_1, (0, 0))
+    #     self.set_view_content(jvm_view_1, "(inc 1)")
+    #     self.set_selections(jvm_view_1, (0, 0))
 
-        jvm_view_1.run_command("tutkain_evaluate")
-        self.eval_context(jvm_1.backchannel)
-        self.assertEquals("(inc 1)\n", jvm_1.server.recv())
-        jvm_1.server.send("user=> (inc 1)")
-        jvm_1.server.send("2")
+    #     jvm_view_1.run_command("tutkain_evaluate")
+    #     self.eval_context(jvm_1.backchannel)
+    #     self.assertEquals("(inc 1)\n", jvm_1.server.recv())
+    #     jvm_1.server.send("user=> (inc 1)")
+    #     jvm_1.server.send("2")
 
-        self.wait_until_equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            """, lambda: self.content(self.output_panel(window))
-        )
+    #     self.wait_until_equals(
+    #         """
+    #         Clojure 1.11.0-alpha1
+    #         user=> (inc 1)
+    #         2
+    #         """, lambda: self.content(self.output_panel(window))
+    #     )
 
-        jvm_view_2 = self.make_scratch_view(window)
-        jvm_2 = self.connect(window, {"dialect": "clj", "output": "panel"})
+    #     jvm_view_2 = self.make_scratch_view(window)
+    #     jvm_2 = self.connect(window, {"dialect": "clj", "output": "panel"})
 
-        self.set_view_content(jvm_view_2, """(inc 2)""")
-        self.set_selections(jvm_view_2, (0, 0))
+    #     self.set_view_content(jvm_view_2, """(inc 2)""")
+    #     self.set_selections(jvm_view_2, (0, 0))
 
-        jvm_view_2.run_command("tutkain_evaluate")
-        self.eval_context(jvm_2.backchannel)
-        self.assertEquals("""(inc 2)\n""", jvm_2.server.recv())
-        jvm_2.server.send("""user=> (inc 2)""")
-        jvm_2.server.send("3")
+    #     jvm_view_2.run_command("tutkain_evaluate")
+    #     self.eval_context(jvm_2.backchannel)
+    #     self.assertEquals("""(inc 2)\n""", jvm_2.server.recv())
+    #     jvm_2.server.send("""user=> (inc 2)""")
+    #     jvm_2.server.send("3")
 
-        self.wait_until_equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            Clojure 1.11.0-alpha1
-            user=> (inc 2)
-            3
-            """, lambda: self.content(self.output_panel(window))
-        )
+    #     self.wait_until_equals(
+    #         """
+    #         Clojure 1.11.0-alpha1
+    #         user=> (inc 1)
+    #         2
+    #         Clojure 1.11.0-alpha1
+    #         user=> (inc 2)
+    #         3
+    #         """, lambda: self.content(self.output_panel(window))
+    #     )
 
-        self.disconnect(window)
-        jvm_view_1.window().run_command("select")
-        self.assertEquals(":repl/quit", jvm_1.server.recv())
+    #     self.disconnect(window)
+    #     jvm_view_1.window().run_command("select")
+    #     self.assertEquals(":repl/quit", jvm_1.server.recv())
 
-        self.set_view_content(jvm_view_2, "(inc 3)")
-        self.set_selections(jvm_view_2, (0, 0))
+    #     self.set_view_content(jvm_view_2, "(inc 3)")
+    #     self.set_selections(jvm_view_2, (0, 0))
 
-        jvm_view_2.run_command("tutkain_evaluate")
-        self.eval_context(jvm_2.backchannel)
-        self.assertEquals("(inc 3)\n", jvm_2.server.recv())
-        jvm_2.server.send("user=> (inc 3)")
-        jvm_2.server.send("4")
+    #     jvm_view_2.run_command("tutkain_evaluate")
+    #     self.eval_context(jvm_2.backchannel)
+    #     self.assertEquals("(inc 3)\n", jvm_2.server.recv())
+    #     jvm_2.server.send("user=> (inc 3)")
+    #     jvm_2.server.send("4")
 
-        self.wait_until_equals(
-            # YO! This string has invisible unicode characters as per REPL (Tutkain).sublime-syntax.
-            f"""
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            Clojure 1.11.0-alpha1
-            user=> (inc 2)
-            3
-            ⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1.server.host}:{jvm_1.server.port}.
-            ⁣⁣user=> (inc 3)
-            4
-            """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
-        )
+    #     self.wait_until_equals(
+    #         # YO! This string has invisible unicode characters as per REPL (Tutkain).sublime-syntax.
+    #         f"""
+    #         Clojure 1.11.0-alpha1
+    #         user=> (inc 1)
+    #         2
+    #         Clojure 1.11.0-alpha1
+    #         user=> (inc 2)
+    #         3
+    #         ⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1.server.host}:{jvm_1.server.port}.
+    #         ⁣⁣user=> (inc 3)
+    #         4
+    #         """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
+    #     )
 
-        self.disconnect(window)
-        jvm_view_2.window().run_command("select")
-        self.assertEquals(":repl/quit", jvm_2.server.recv())
-        self.close_window(window)
+    #     self.disconnect(window)
+    #     jvm_view_2.window().run_command("select")
+    #     self.assertEquals(":repl/quit", jvm_2.server.recv())
+    #     self.close_window(window)
 
     def test_view_multiple(self):
         window = self.make_window()
