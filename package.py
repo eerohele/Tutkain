@@ -385,8 +385,9 @@ class TutkainEvaluateCommand(TextCommand):
     def noop(*args):
         pass
 
-    def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, snippet=None, inline_result=False, dialect=None):
+    def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, snippet=None, inline_result=False, output="view", dialect=None):
         assert scope in {"input", "form", "ns", "innermost", "outermost", "view"}
+        assert output in {"view", "clipboard"}
 
         point = self.view.sel()[0].begin()
 
@@ -463,6 +464,15 @@ class TutkainEvaluateCommand(TextCommand):
                             def handler(response):
                                 inline.clear(self.view)
                                 inline.show(self.view, eval_region.end(), response.get(edn.Keyword("val")), inline_result)
+
+                            evaluate(self.view, client, code, eval_region.begin(), handler)
+                        elif output == "clipboard":
+                            def handler(response):
+                                if response.get(edn.Keyword("tag")) == edn.Keyword("err"):
+                                    client.printq.put(response)
+                                else:
+                                    self.view.window().status_message("[Tutkain] Evaluation result copied to clipboard.")
+                                    sublime.set_clipboard(response.get(edn.Keyword("val")).rstrip())
 
                             evaluate(self.view, client, code, eval_region.begin(), handler)
                         else:
