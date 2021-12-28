@@ -33,6 +33,12 @@ All notable changes to this project will be documented in this file.
 - Fix inline evaluation result placement
 - Don't hide evaluation results when modifying the current selection #80
 - Prevent errant `nil` prints when using inline evaluation results with ClojureScript
+- Add `extend_comment` (default `true`) argument to the `tutkain_insert_newline`
+  command
+
+  If you set `extend_comment` to `false`, pressing Enter will no longer
+  automatically insert a double semicolon at the beginning of the new line.
+
 - Set horizontal window layout to half-and-half for code view and REPL view
 
 ## 0.11.0 (alpha) - 2021-11-23
