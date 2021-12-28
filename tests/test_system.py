@@ -15,30 +15,29 @@ class TestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.original_settings = settings.load().to_dict()
-        sublime.run_command("new_window")
-        self.window = sublime.active_window()
-        self.window.run_command("show_panel", {"panel": "console"})
 
     def tearDown(self):
         settings.load().update(self.original_settings)
 
-        if window := self.window:
-            window.destroy_output_panel("tutkain.tap_panel")
-            window.destroy_output_panel(repl.views.output_panel_name())
+    def close_window(self, window):
+        window.destroy_output_panel("tutkain.tap_panel")
+        window.destroy_output_panel(repl.views.output_panel_name())
+        window.run_command("close_window")
 
-    def make_scratch_view(self, syntax="Clojure (Tutkain).sublime-syntax"):
-        view = self.window.new_file()
+    def make_window(self):
+        sublime.run_command("new_window")
+        window = sublime.active_window()
+        window.run_command("show_panel", {"panel": "console"})
+        return window
+
+    def make_scratch_view(self, window, syntax="Clojure (Tutkain).sublime-syntax"):
+        view = window.new_file()
         view.set_name("*scratch*")
         view.set_scratch(True)
         view.sel().clear()
         view.window().focus_view(view)
         view.assign_syntax(syntax)
         return view
-
-    @classmethod
-    def tearDownClass(self):
-        if window := self.window:
-            window.run_command("close_window")
 
     def content(self, view):
         return view and view.substr(sublime.Region(0, view.size()))
@@ -141,17 +140,17 @@ def clojurescript_handshake(server):
 
 
 class TestConnectDisconnect(TestCase):
-    def run_connect_command(self, args):
-        self.window.run_command("tutkain_connect", args)
+    def run_connect_command(self, window, args):
+        window.run_command("tutkain_connect", args)
 
-    def connect(self, args):
+    def connect(self, window, args):
         def write_greeting(buf):
             buf.write("user=> ")
             buf.flush()
 
         server = Server(send_text, greeting=write_greeting).start()
         default_args = {"host": server.host, "port": server.port}
-        sublime.set_timeout_async(lambda: self.run_connect_command({**default_args, **args}), 0)
+        sublime.set_timeout_async(lambda: self.run_connect_command(window, {**default_args, **args}), 0)
         dialect = args.get("dialect", "clj")
 
         if dialect == "clj":
@@ -161,8 +160,8 @@ class TestConnectDisconnect(TestCase):
 
         return types.SimpleNamespace(server=server, backchannel=backchannel)
 
-    def disconnect(self, view):
-        view.window().run_command("tutkain_disconnect")
+    def disconnect(self, window):
+        window.run_command("tutkain_disconnect")
 
     def eval_context(self, backchannel, file="NO_SOURCE_FILE", line=1, column=1):
         actual = edn.read(backchannel.recv())
@@ -183,8 +182,8 @@ class TestConnectDisconnect(TestCase):
             "file": file
         }))
 
-    def output_panel(self):
-        return self.window.find_output_panel(repl.views.output_panel_name())
+    def output_panel(self, window):
+        return window.find_output_panel(repl.views.output_panel_name())
 
     def wait_until_equals(self, expected, actual, sleep=0.1, tryNumber=0, tries=10):
         if self.dedent(expected) != (a := actual()):
@@ -204,8 +203,9 @@ class TestConnectDisconnect(TestCase):
         return textwrap.dedent(string)
 
     def test_smoke_view(self):
-        view = self.make_scratch_view()
-        connection = self.connect({"dialect": "clj", "output": "view"})
+        window = self.make_window()
+        view = self.make_scratch_view(window)
+        connection = self.connect(window, {"dialect": "clj", "output": "view"})
         self.set_view_content(view, "(inc 1)")
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
@@ -222,27 +222,31 @@ class TestConnectDisconnect(TestCase):
             """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
-        self.disconnect(view)
+        self.disconnect(window)
         self.assertEquals(":repl/quit", connection.server.recv())
+        self.close_window(window)
 
     def test_view_tap_panel_enabled(self):
-        view = self.make_scratch_view()
+        window = self.make_window()
+        self.make_scratch_view(window)
         settings.load().set("tap_panel", True)
-        connection = self.connect({"dialect": "clj", "output": "view"})
+        connection = self.connect(window, {"dialect": "clj", "output": "view"})
         connection.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42"}))
 
         self.wait_until_equals(
             """42""",
-            lambda: self.content(self.window.find_output_panel("tutkain.tap_panel"))
+            lambda: self.content(window.find_output_panel("tutkain.tap_panel"))
         )
 
-        self.disconnect(view)
+        self.disconnect(window)
         self.assertEquals(":repl/quit", connection.server.recv())
+        self.close_window(window)
 
     def test_view_tap_panel_disabled(self):
-        view = self.make_scratch_view()
+        window = self.make_window()
+        self.make_scratch_view(window)
         settings.load().set("tap_panel", False)
-        connection = self.connect({"dialect": "clj", "output": "view"})
+        connection = self.connect(window, {"dialect": "clj", "output": "view"})
         connection.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42"}))
 
         # TODO: Flaky
@@ -250,16 +254,18 @@ class TestConnectDisconnect(TestCase):
 
         self.assertEquals(
             """""",
-            self.content(self.window.find_output_panel("tutkain.tap_panel"))
+            self.content(window.find_output_panel("tutkain.tap_panel"))
         )
 
-        self.disconnect(view)
+        self.disconnect(window)
         self.assertEquals(":repl/quit", connection.server.recv())
+        self.close_window(window)
 
     def test_panel_tap_panel_enabled(self):
-        view = self.make_scratch_view()
+        window = self.make_window()
+        view = self.make_scratch_view(window)
         settings.load().set("tap_panel", True)
-        connection = self.connect({"dialect": "clj", "output": "panel"})
+        connection = self.connect(window, {"dialect": "clj", "output": "panel"})
         self.set_view_content(view, "(tap> 42)")
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
@@ -270,16 +276,18 @@ class TestConnectDisconnect(TestCase):
             """
             Clojure 1.11.0-alpha1
             user=> true
-            42""", lambda: self.content(self.output_panel())
+            42""", lambda: self.content(self.output_panel(window))
         )
 
-        self.disconnect(view)
+        self.disconnect(window)
         self.assertEquals(":repl/quit", connection.server.recv())
+        self.close_window(window)
 
     def test_panel_tap_panel_disabled(self):
-        view = self.make_scratch_view()
+        window = self.make_window()
+        view = self.make_scratch_view(window)
         settings.load().set("tap_panel", False)
-        connection = self.connect({"dialect": "clj", "output": "panel"})
+        connection = self.connect(window, {"dialect": "clj", "output": "panel"})
         self.set_view_content(view, "(tap> 42)")
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
@@ -290,15 +298,17 @@ class TestConnectDisconnect(TestCase):
             """
             Clojure 1.11.0-alpha1
             user=> true
-            """, lambda: self.content(self.output_panel())
+            """, lambda: self.content(self.output_panel(window))
         )
 
-        self.disconnect(view)
+        self.disconnect(window)
         self.assertEquals(":repl/quit", connection.server.recv())
+        self.close_window(window)
 
     def test_smoke_panel(self):
-        view = self.make_scratch_view()
-        connection = self.connect({"dialect": "clj", "output": "panel"})
+        window = self.make_window()
+        view = self.make_scratch_view(window)
+        connection = self.connect(window, {"dialect": "clj", "output": "panel"})
         self.set_view_content(view, "(inc 1)")
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
@@ -312,15 +322,17 @@ class TestConnectDisconnect(TestCase):
             Clojure 1.11.0-alpha1
             user=> (inc 1)
             2
-            """, lambda: self.content(self.output_panel())
+            """, lambda: self.content(self.output_panel(window))
         )
 
-        self.disconnect(view)
+        self.disconnect(window)
         self.assertEquals(":repl/quit", connection.server.recv())
+        self.close_window(window)
 
     def test_panel_multiple(self):
-        jvm_view = self.make_scratch_view()
-        jvm = self.connect({"dialect": "clj", "output": "panel"})
+        window = self.make_window()
+        jvm_view = self.make_scratch_view(window)
+        jvm = self.connect(window, {"dialect": "clj", "output": "panel"})
 
         self.set_view_content(jvm_view, "(inc 1)")
         self.set_selections(jvm_view, (0, 0))
@@ -336,11 +348,11 @@ class TestConnectDisconnect(TestCase):
             Clojure 1.11.0-alpha1
             user=> (inc 1)
             2
-            """, lambda: self.content(self.output_panel())
+            """, lambda: self.content(self.output_panel(window))
         )
 
-        js_view = self.make_scratch_view("ClojureScript (Tutkain).sublime-syntax")
-        js = self.connect({"dialect": "cljs", "output": "panel"})
+        js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
+        js = self.connect(window, {"dialect": "cljs", "output": "panel"})
 
         self.set_view_content(js_view, """(js/parseInt "42")""")
         self.set_selections(js_view, (0, 0))
@@ -359,19 +371,21 @@ class TestConnectDisconnect(TestCase):
             ClojureScript 1.10.844
             cljs.user=> (js/parseInt "42")
             42
-            """, lambda: self.content(self.output_panel())
+            """, lambda: self.content(self.output_panel(window))
         )
 
-        self.disconnect(jvm_view)
+        self.disconnect(window)
         jvm_view.window().run_command("select")
         self.assertEquals(":repl/quit", jvm.server.recv())
-        self.disconnect(js_view)
+        self.disconnect(window)
         js_view.window().run_command("select")
         self.assertEquals(":repl/quit", js.server.recv())
+        self.close_window(window)
 
     def test_panel_multiple_same_runtime(self):
-        jvm_view_1 = self.make_scratch_view()
-        jvm_1 = self.connect({"dialect": "clj", "output": "panel"})
+        window = self.make_window()
+        jvm_view_1 = self.make_scratch_view(window)
+        jvm_1 = self.connect(window, {"dialect": "clj", "output": "panel"})
 
         self.set_view_content(jvm_view_1, "(inc 1)")
         self.set_selections(jvm_view_1, (0, 0))
@@ -387,11 +401,11 @@ class TestConnectDisconnect(TestCase):
             Clojure 1.11.0-alpha1
             user=> (inc 1)
             2
-            """, lambda: self.content(self.output_panel())
+            """, lambda: self.content(self.output_panel(window))
         )
 
-        jvm_view_2 = self.make_scratch_view()
-        jvm_2 = self.connect({"dialect": "clj", "output": "panel"})
+        jvm_view_2 = self.make_scratch_view(window)
+        jvm_2 = self.connect(window, {"dialect": "clj", "output": "panel"})
 
         self.set_view_content(jvm_view_2, """(inc 2)""")
         self.set_selections(jvm_view_2, (0, 0))
@@ -410,10 +424,10 @@ class TestConnectDisconnect(TestCase):
             Clojure 1.11.0-alpha1
             user=> (inc 2)
             3
-            """, lambda: self.content(self.output_panel())
+            """, lambda: self.content(self.output_panel(window))
         )
 
-        self.disconnect(jvm_view_1)
+        self.disconnect(window)
         jvm_view_1.window().run_command("select")
         self.assertEquals(":repl/quit", jvm_1.server.recv())
 
@@ -441,13 +455,15 @@ class TestConnectDisconnect(TestCase):
             """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
-        self.disconnect(jvm_view_2)
+        self.disconnect(window)
         jvm_view_2.window().run_command("select")
         self.assertEquals(":repl/quit", jvm_2.server.recv())
+        self.close_window(window)
 
     def test_view_multiple(self):
-        jvm_view = self.make_scratch_view()
-        jvm = self.connect({"dialect": "clj", "output": "view"})
+        window = self.make_window()
+        jvm_view = self.make_scratch_view(window)
+        jvm = self.connect(window, {"dialect": "clj", "output": "view"})
 
         self.set_view_content(jvm_view, "(inc 1)")
         self.set_selections(jvm_view, (0, 0))
@@ -466,8 +482,8 @@ class TestConnectDisconnect(TestCase):
             """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
-        js_view = self.make_scratch_view("ClojureScript (Tutkain).sublime-syntax")
-        js = self.connect({"dialect": "cljs", "output": "view"})
+        js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
+        js = self.connect(window, {"dialect": "cljs", "output": "view"})
 
         self.set_view_content(js_view, """(js/parseInt "42")""")
         self.set_selections(js_view, (0, 0))
@@ -486,7 +502,7 @@ class TestConnectDisconnect(TestCase):
             """, lambda: self.content(state.get_active_connection_view(edn.Keyword("cljs")))
         )
 
-        self.disconnect(js_view)
+        self.disconnect(window)
         # Move down to select ClojureScript runtime
         js_view.window().run_command("move", {"by": "lines", "forward": True})
         js_view.window().run_command("select")
@@ -511,13 +527,15 @@ class TestConnectDisconnect(TestCase):
             """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
-        self.disconnect(jvm_view)
+        self.disconnect(window)
         # Don't need to select because there's only one remaining runtime
         self.assertEquals(":repl/quit", jvm.server.recv())
+        self.close_window(window)
 
     def test_panel_and_view(self):
-        jvm_view = self.make_scratch_view()
-        jvm = self.connect({"dialect": "clj", "output": "panel"})
+        window = self.make_window()
+        jvm_view = self.make_scratch_view(window)
+        jvm = self.connect(window, {"dialect": "clj", "output": "panel"})
 
         self.set_view_content(jvm_view, "(inc 1)")
         self.set_selections(jvm_view, (0, 0))
@@ -533,11 +551,11 @@ class TestConnectDisconnect(TestCase):
             Clojure 1.11.0-alpha1
             user=> (inc 1)
             2
-            """, lambda: self.content(self.output_panel())
+            """, lambda: self.content(self.output_panel(window))
         )
 
-        js_view = self.make_scratch_view("ClojureScript (Tutkain).sublime-syntax")
-        js = self.connect({"dialect": "cljs", "output": "view"})
+        js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
+        js = self.connect(window, {"dialect": "cljs", "output": "view"})
 
         self.set_view_content(js_view, """(js/parseInt "42")""")
         self.set_selections(js_view, (0, 0))
@@ -556,7 +574,7 @@ class TestConnectDisconnect(TestCase):
             """, lambda: self.content(state.get_active_connection_view(edn.Keyword("cljs")))
         )
 
-        self.disconnect(js_view)
+        self.disconnect(window)
         # Move down to select ClojureScript runtime
         js_view.window().run_command("move", {"by": "lines", "forward": True})
         js_view.window().run_command("select")
@@ -581,6 +599,7 @@ class TestConnectDisconnect(TestCase):
             """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
         )
 
-        self.disconnect(jvm_view)
+        self.disconnect(window)
         # Don't need to select because there's only one remaining runtime
         self.assertEquals(":repl/quit", jvm.server.recv())
+        self.close_window(window)
