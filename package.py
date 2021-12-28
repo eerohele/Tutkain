@@ -873,8 +873,8 @@ class TutkainInterruptEvaluationCommand(WindowCommand):
 
 
 class TutkainInsertNewlineCommand(TextCommand):
-    def run(self, edit):
-        indent.insert_newline_and_indent(self.view, edit)
+    def run(self, edit, extend_comment=True):
+        indent.insert_newline_and_indent(self.view, edit, extend_comment)
 
 
 class TutkainIndentSexpCommand(TextCommand):

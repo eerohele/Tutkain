@@ -38,11 +38,11 @@ def restore_cursors(view):
         view.sel().add(Region(end, end))
 
 
-def insert_newline_and_indent(view, edit):
+def insert_newline_and_indent(view, edit, extend_comment=True):
     for region in view.sel():
         point = region.begin()
 
-        if selectors.inside_comment(view, point):
+        if extend_comment and selectors.inside_comment(view, point):
             view.run_command("insert", {"characters": "\n;; "})
         else:
             open_bracket = sexp.find_open(view, point)

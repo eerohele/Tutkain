@@ -17,13 +17,13 @@ class TestPruneRegion(ViewTestCase):
 
 
 class TestIndentInsertNewLineCommand(ViewTestCase):
-    def becomes(self, a, b, selections=[(0, 0)], newlines=1, clean=True):
+    def becomes(self, a, b, selections=[(0, 0)], newlines=1, clean=True, extend_comment=True):
         self.set_view_content(cleandoc(a) if clean else a)
 
         self.set_selections(*selections)
 
         for n in range(newlines):
-            self.view.run_command("tutkain_insert_newline")
+            self.view.run_command("tutkain_insert_newline", {"extend_comment": extend_comment})
 
         self.assertEquals(cleandoc(b) if clean else b, self.view_content())
 
@@ -375,6 +375,21 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
                 ))
             """,
             selections=[(23, 23)],
+        )
+
+    def test_extend_comment(self):
+        self.becomes(
+            """;; foo""",
+            """;; foo\n;;\x20""",
+            selections=[(6, 6)]
+        )
+
+        self.becomes(
+            """;; foo""",
+            """;; foo\n""",
+            selections=[(6, 6)],
+            extend_comment=False,
+            clean=False
         )
 
 
