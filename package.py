@@ -111,15 +111,15 @@ def plugin_unloaded():
     preferences.clear_on_change("Tutkain")
 
 
-def evaluate(view, client, code, point=None, handler=None):
+def evaluate(view, client, code, point=None, options={}):
     if point:
         line, column = view.rowcol(point)
     else:
         line, column = 0, 0
 
-    file = view.file_name() or "NO_SOURCE_FILE"
-
-    client.eval(code, file, line, column, handler)
+    options["line"] = line
+    options["column"] = column
+    client.evaluate(code, options)
 
 
 def source_root():
@@ -465,7 +465,7 @@ class TutkainEvaluateCommand(TextCommand):
                                 inline.clear(self.view)
                                 inline.show(self.view, eval_region.end(), response.get(edn.Keyword("val")), inline_result)
 
-                            evaluate(self.view, client, code, eval_region.begin(), handler)
+                            evaluate(self.view, client, code, eval_region.begin(), {"handler": handler})
                         elif output == "clipboard":
                             def handler(response):
                                 if response.get(edn.Keyword("tag")) == edn.Keyword("err"):
@@ -474,7 +474,7 @@ class TutkainEvaluateCommand(TextCommand):
                                     self.view.window().status_message("[Tutkain] Evaluation result copied to clipboard.")
                                     sublime.set_clipboard(response.get(edn.Keyword("val")).rstrip())
 
-                            evaluate(self.view, client, code, eval_region.begin(), handler)
+                            evaluate(self.view, client, code, eval_region.begin(), {"handler": handler})
                         else:
                             evaluate(self.view, client, code, eval_region.begin())
 
@@ -1381,7 +1381,7 @@ class TutkainExploreStackTraceCommand(TextCommand):
 class TutkainPromptCommand(WindowCommand):
     def on_done(self, client, code):
         if code:
-            client.eval(code, "NO_SOURCE_FILE")
+            client.evaluate(code, {"file": "NO_SOURCE_FILE"})
             history.update(self.window, code)
 
         self.prompt(client)

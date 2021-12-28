@@ -129,11 +129,11 @@ class Client(ABC):
         log.debug({"event": "thread/exit"})
 
     @abstractmethod
-    def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
+    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0, "handler": None}):
         """Given a string of Clojure code, send it for evaluation to the
         Clojure runtime this client is connected to.
 
-        Accepts these optional parameters:
+        Accepts a map of options:
         - `file`: the absolute path to the source file this evaluation is
                   associated with (default `"NO_SOURCE_FILE"`)
         - `line`: the line number the code is positioned at (default `0`)
@@ -192,6 +192,14 @@ class Client(ABC):
                 log.debug({"event": "client/disconnect"})
             except OSError as error:
                 log.debug({"event": "error", "exception": error})
+
+    def eval_context_message(self, options):
+        return {
+            "op": edn.Keyword("set-eval-context"),
+            "file": options.get("file", "NO_SOURCE_FILE"),
+            "line": options.get("line", 0) + 1,
+            "column": options.get("column", 0) + 1,
+        }
 
     def halt(self):
         """Halt this client."""
@@ -283,13 +291,11 @@ class JVMClient(Client):
     def switch_namespace(self, ns):
         self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
 
-    def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.backchannel.send({
-            "op": edn.Keyword("set-eval-context"),
-            "file": file,
-            "line": line + 1,
-            "column": column + 1
-        }, lambda _: self.sendq.put(code), handler)
+    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0, "handler": None}):
+        self.backchannel.send(
+            self.eval_context_message(options),
+            lambda _: self.sendq.put(code), options.get("handler")
+        )
 
 
 class JSClient(Client):
@@ -365,13 +371,11 @@ class JSClient(Client):
     def switch_namespace(self, ns):
         self.sendq.put(f"(in-ns '{ns})")
 
-    def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.backchannel.send({
-            "op": edn.Keyword("set-eval-context"),
-            "file": file,
-            "line": line + 1,
-            "column": column + 1
-        }, lambda _: self.sendq.put(code), handler)
+    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0, "handler": None}):
+        self.backchannel.send(
+            self.eval_context_message(options),
+            lambda _: self.sendq.put(code), options.get("handler")
+        )
 
 
 class BabashkaClient(Client):
@@ -401,6 +405,6 @@ class BabashkaClient(Client):
         # we just print everything without syntax highlighting.
         self.printq.put(edn.kwmap({"tag": edn.Keyword("out"), "val": item}))
 
-    def eval(self, code, file="NO_SOURCE_FILE", line=0, column=0, handler=None):
-        self.set_handler(handler)
+    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0, "handler": None}):
+        self.set_handler(options.get("handler"))
         self.sendq.put(code)

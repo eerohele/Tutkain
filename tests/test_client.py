@@ -58,7 +58,7 @@ class TestJVMClient(TestCase):
 
                 self.assertEquals("Clojure 1.11.0-alpha1", client.printq.get(timeout=1))
 
-                client.eval("(inc 1)")
+                client.evaluate("(inc 1)")
 
                 response = edn.read(backchannel.recv())
                 id = response.get(edn.Keyword("id"))
