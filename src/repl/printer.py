@@ -57,7 +57,7 @@ def print_loop(view, client):
 
                     if output == edn.Keyword("clipboard"):
                         sublime.set_clipboard(val[:-1])
-                        view.window().status_message("[Tutkain] Evaluation result copied to clipboard.")
+                        sublime.active_window().status_message("[Tutkain] Evaluation result copied to clipboard.")
                     elif output == edn.Keyword("inline"):
                         view_id = item.get(edn.Keyword("view-id"))
                         window = view.window() or sublime.active_window()
