@@ -152,11 +152,9 @@
               ([read-result]
                ;; (tap> [:repl-from-stdin read-result repl-state])
                (when (some? read-result)
-                 (when-not
-                   ;; FIXME: add :prompt? to eval context
-                   (or (contains? @eval-context :continuation-id)
+                 (when-not (#{:inline :clipboard} (get-in @eval-context [:response :output]))
                      ;; FIXME: this also conceals user-issued in-ns calls
-                     (and (list? (:form read-result)) (= 'in-ns (first (:form read-result)))))
+                     (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
                    (println (format "%s=> %s" (ns-name (:ns repl-state)) (:source read-result))))
                  (let [{:keys [eof? error? ex source]} read-result]
                    (cond
@@ -400,12 +398,10 @@
             :repl-result
             (fn [{:keys [read-result]} ret]
               (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
-                (if (contains? @eval-context :continuation-id)
-                  (send-over-backchannel
-                    {:id (:continuation-id @eval-context)
-                     :tag :ret
-                     :val ret})
-                  (out-fn ret))))
+                (let [response (:response @eval-context)]
+                  (if (#{:inline :clipboard} (:output response))
+                    (send-over-backchannel (assoc response :tag :ret :val ret))
+                    (out-fn ret)))))
 
             :repl-val
             (fn [_ ret]

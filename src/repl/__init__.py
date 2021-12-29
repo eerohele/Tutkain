@@ -104,7 +104,6 @@ class Client(ABC):
         self.name = name
         self.sendq = queue.Queue()
         self.printq = queue.Queue()
-        self.handler = None
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}.{self.id}")
         self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
         self.backchannel_opts = backchannel_opts
@@ -129,7 +128,7 @@ class Client(ABC):
         log.debug({"event": "thread/exit"})
 
     @abstractmethod
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0, "handler": None}):
+    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
         """Given a string of Clojure code, send it for evaluation to the
         Clojure runtime this client is connected to.
 
@@ -137,9 +136,7 @@ class Client(ABC):
         - `file`: the absolute path to the source file this evaluation is
                   associated with (default `"NO_SOURCE_FILE"`)
         - `line`: the line number the code is positioned at (default `0`)
-        - `column`: the column number the code is positioned at (default `0`)
-        - `handler`: a function of one argument, the evaluation result (default
-                    `None`)"""
+        - `column`: the column number the code is positioned at (default `0`)"""
         pass
 
     @abstractmethod
@@ -151,17 +148,8 @@ class Client(ABC):
     def print(self, item):
         self.printq.put(item)
 
-    def set_handler(self, handler):
-        with self.lock:
-            self.handler = handler
-
     def handle(self, item):
-        item = item.replace("\r", "")
-
-        if handler := self.handler:
-            handler(item)
-        else:
-            self.print(item)
+        self.print(item.replace("\r", ""))
 
     def recv_loop(self):
         """Start a loop that reads evaluation responses from a socket and puts
@@ -194,12 +182,17 @@ class Client(ABC):
                 log.debug({"event": "error", "exception": error})
 
     def eval_context_message(self, options):
-        return {
+        message = {
             "op": edn.Keyword("set-eval-context"),
             "file": options.get("file", "NO_SOURCE_FILE"),
             "line": options.get("line", 0) + 1,
             "column": options.get("column", 0) + 1,
         }
+
+        if response := options.get("response"):
+            message["response"] = edn.kwmap(response)
+
+        return message
 
     def halt(self):
         """Halt this client."""
@@ -291,10 +284,10 @@ class JVMClient(Client):
     def switch_namespace(self, ns):
         self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
 
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0, "handler": None}):
+    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
         self.backchannel.send(
             self.eval_context_message(options),
-            lambda _: self.sendq.put(code), options.get("handler")
+            lambda _: self.sendq.put(code)
         )
 
 
@@ -371,10 +364,10 @@ class JSClient(Client):
     def switch_namespace(self, ns):
         self.sendq.put(f"(in-ns '{ns})")
 
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0, "handler": None}):
+    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
         self.backchannel.send(
             self.eval_context_message(options),
-            lambda _: self.sendq.put(code), options.get("handler")
+            lambda _: self.sendq.put(code)
         )
 
 
@@ -397,7 +390,6 @@ class BabashkaClient(Client):
         return self
 
     def switch_namespace(self, ns):
-        self.set_handler(lambda _: None)
         self.sendq.put(f"(in-ns '{ns})")
 
     def print(self, item):
@@ -405,6 +397,5 @@ class BabashkaClient(Client):
         # we just print everything without syntax highlighting.
         self.printq.put(edn.kwmap({"tag": edn.Keyword("out"), "val": item}))
 
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0, "handler": None}):
-        self.set_handler(options.get("handler"))
+    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
         self.sendq.put(code)

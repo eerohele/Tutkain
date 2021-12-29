@@ -461,20 +461,19 @@ class TutkainEvaluateCommand(TextCommand):
                         code = self.view.substr(eval_region)
 
                         if inline_result:
-                            def handler(response):
-                                inline.clear(self.view)
-                                inline.show(self.view, eval_region.end(), response.get(edn.Keyword("val")), inline_result)
-
-                            evaluate(self.view, client, code, eval_region.begin(), {"handler": handler})
+                            evaluate(self.view, client, code, eval_region.begin(), {
+                                "response": {
+                                    "output": edn.Keyword("inline"),
+                                    "view-id": self.view.id(),
+                                    "point": eval_region.end()
+                                }
+                            })
                         elif output == "clipboard":
-                            def handler(response):
-                                if response.get(edn.Keyword("tag")) == edn.Keyword("err"):
-                                    client.printq.put(response)
-                                else:
-                                    self.view.window().status_message("[Tutkain] Evaluation result copied to clipboard.")
-                                    sublime.set_clipboard(response.get(edn.Keyword("val")).rstrip())
-
-                            evaluate(self.view, client, code, eval_region.begin(), {"handler": handler})
+                            evaluate(self.view, client, code, eval_region.begin(), {
+                                "response": {
+                                    "output": edn.Keyword("clipboard")
+                                }
+                            })
                         else:
                             evaluate(self.view, client, code, eval_region.begin())
 
@@ -516,9 +515,7 @@ class TutkainConnectCommand(WindowCommand):
             )
 
     def get_or_create_view(self, view_id, output):
-        if view_id and (
-            view := next(filter(lambda view: view.id() == view_id, self.window.views()), None)
-        ):
+        if view_id and (view := repl.views.find_by_id(self.window, view_id)):
             return view
         elif output == "panel":
             name = repl.views.output_panel_name()

@@ -125,3 +125,7 @@ def create_tap_panel(window, output):
     panel.settings().set("scroll_past_end", False)
     panel.assign_syntax("REPL (Tutkain).sublime-syntax")
     return panel
+
+
+def find_by_id(window, id):
+    return next(filter(lambda view: view.id() == id, window.views()), None)

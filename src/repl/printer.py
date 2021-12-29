@@ -1,5 +1,6 @@
 from ..log import log
 from .. import settings
+from .. import inline
 from ...api import edn
 from . import views
 import sublime
@@ -52,20 +53,33 @@ def print_loop(view, client):
                 if tag == edn.Keyword("tap"):
                     append_to_tap_panel(view, val)
                 else:
-                    show_repl_panel(view)
+                    output = item.get(edn.Keyword("output"), edn.Keyword("view"))
 
-                    # Print invisible Unicode characters (U+2063) around stdout and
-                    # stderr to prevent them from getting syntax highlighting.
-                    #
-                    # This is probably somewhat evil, but the performance is *so*
-                    # much better than with view.add_regions.
-                    if tag == edn.Keyword("err"):
-                        append_to_view(view, '⁣⁣' + val + '⁣⁣')
-                    elif tag == edn.Keyword("out"):
-                        append_to_view(view, '⁣' + val + '⁣')
-                    elif edn.Keyword("debug") in item:
-                        log.debug({"event": "info", "item": item.get(edn.Keyword("val"))})
-                    elif val := item.get(edn.Keyword("val")):
-                        append_to_view(view, val)
+                    if output == edn.Keyword("clipboard"):
+                        sublime.set_clipboard(val[:-1])
+                        view.window().status_message("[Tutkain] Evaluation result copied to clipboard.")
+                    elif output == edn.Keyword("inline"):
+                        view_id = item.get(edn.Keyword("view-id"))
+                        window = view.window() or sublime.active_window()
+
+                        if target_view := views.find_by_id(window, view_id):
+                            inline.clear(target_view)
+                            inline.show(target_view, item.get(edn.Keyword("point")), val)
+                    else:
+                        show_repl_panel(view)
+
+                        # Print invisible Unicode characters (U+2063) around stdout and
+                        # stderr to prevent them from getting syntax highlighting.
+                        #
+                        # This is probably somewhat evil, but the performance is *so*
+                        # much better than with view.add_regions.
+                        if tag == edn.Keyword("err"):
+                            append_to_view(view, '⁣⁣' + val + '⁣⁣')
+                        elif tag == edn.Keyword("out"):
+                            append_to_view(view, '⁣' + val + '⁣')
+                        elif edn.Keyword("debug") in item:
+                            log.debug({"event": "info", "item": item.get(edn.Keyword("val"))})
+                        elif val := item.get(edn.Keyword("val")):
+                            append_to_view(view, val)
     finally:
         log.debug({"event": "thread/exit"})

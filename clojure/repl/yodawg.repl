@@ -148,19 +148,19 @@
         :file "/my/path/app.clj"
         :line 1
         :column 2
-        :continuation-id -1
+        :response {:output :clipboard}
         :id 1})
 
 (brecv)
 (rsend '(inc 1))
 (brecv)
-(xr/check! #{{:id -1 :tag :ret :val "2\n"}})
+(xr/check! #{{:tag :ret :val "2\n" :output :clipboard}})
 
 (bsend {:op :set-eval-context
         :file "/my/path/app.clj"
         :line 3
         :column 4
-        :continuation-id -2
+        :response {:output :clipboard}
         :id 2})
 
 (brecv)

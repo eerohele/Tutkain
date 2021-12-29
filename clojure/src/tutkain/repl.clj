@@ -60,40 +60,39 @@
              (loop []
                (when
                  (try
-                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)]
-                     (with-bindings (:thread-bindings @eval-context)
+                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
+                         {:keys [thread-bindings response]} @eval-context
+                         backchannel-response? (#{:inline :clipboard} (:output response))]
+                     (with-bindings thread-bindings
                        (when-not (identical? form EOF)
-                         (let [continuation? (contains? @eval-context :continuation-id)]
-                           (try
-                             (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
-                               (do (eval form) true)
-                               (do
-                                 ;; FIXME: add :prompt? to eval context
-                                 (when-not continuation?
-                                   (plain-print (format "%s=> %s" (ns-name *ns*) s)))
-                                 (let [ret (eval form)]
-                                   (when-not (= :repl/quit ret)
-                                     (set! *3 *2)
-                                     (set! *2 *1)
-                                     (set! *1 ret)
-                                     (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
-                                     (if continuation?
-                                       (send-over-backchannel
-                                         {:tag :ret
-                                          :val (format/pp-str ret)})
-                                       (pretty-print ret))
-                                     (flush)
-                                     true))))
-                             (catch Throwable ex
-                               (set! *e ex)
-                               (swap! eval-context assoc #'*e *e)
-                               (send-over-backchannel
-                                 {:tag :err
-                                  :val (format/Throwable->str ex)
-                                  :ns (str (.name *ns*))
-                                  :form s})
-                               (flush)
-                               true))))))
+                         (try
+                           (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
+                             (do (eval form) true)
+                             (do
+                               (when-not backchannel-response?
+                                 (plain-print (format "%s=> %s" (ns-name *ns*) s)))
+                               (let [ret (eval form)]
+                                 (when-not (= :repl/quit ret)
+                                   (set! *3 *2)
+                                   (set! *2 *1)
+                                   (set! *1 ret)
+                                   (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
+                                   (if backchannel-response?
+                                     (send-over-backchannel
+                                       (assoc response :tag :ret :val (format/pp-str ret)))
+                                     (pretty-print ret))
+                                   (flush)
+                                   true))))
+                           (catch Throwable ex
+                             (set! *e ex)
+                             (swap! eval-context assoc #'*e *e)
+                             (send-over-backchannel
+                               {:tag :err
+                                :val (format/Throwable->str ex)
+                                :ns (str (.name *ns*))
+                                :form s})
+                             (flush)
+                             true)))))
                    (catch Throwable ex
                      (set! *e ex)
                      (swap! eval-context assoc #'*e *e)

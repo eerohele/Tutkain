@@ -35,21 +35,16 @@
     (-> ^Field field (doto (.setAccessible true)) (.set reader column))))
 
 (defmethod handle :set-eval-context
-  [{:keys [^LineNumberingPushbackReader eval-context in file line column continuation-id]
-    :or {line 0 column 0} :as message}]
+  [{:keys [^LineNumberingPushbackReader eval-context in file line column response]
+    :or {line 0 column 0 response {}} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
   (let [file (or file "NO_SOURCE_PATH")
         source-path (or (some-> file File. .getName) "NO_SOURCE_FILE")]
     (reset! eval-context
-      (cond-> {:thread-bindings {#'*file* file #'*source-path* source-path}}
-        continuation-id (assoc :continuation-id continuation-id)))
+      {:thread-bindings {#'*file* file #'*source-path* source-path} :response response})
     (respond-to message
-      (cond->
-        {:thread-bindings {:file file :source-path source-path}
-         :line line
-         :column column}
-        continuation-id (assoc :continuation-id continuation-id)))))
+      {:thread-bindings {:file file :source-path source-path} :response response})))
 
 (defmethod handle :interrupt
   [{:keys [^Thread repl-thread]}]
@@ -137,9 +132,4 @@
       (.start))
     {:eval-context eval-context
      :socket socket
-     :send-over-backchannel (fn [{:keys [tag] :as message}]
-                              (let [continuation-id (:continuation-id @eval-context)]
-                                (@eventual-send-fn
-                                 (cond-> message
-                                   (and continuation-id (#{:ret :err} tag))
-                                   (assoc :id continuation-id)))))}))
+     :send-over-backchannel (fn [message] (@eventual-send-fn message))}))
