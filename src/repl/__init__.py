@@ -96,7 +96,7 @@ class Client(ABC):
         Windows compatibility)."""
         return posixpath.join(pathlib.Path(self.source_root).as_posix(), filename)
 
-    def __init__(self, source_root, host, port, name, backchannel_opts={}):
+    def __init__(self, source_root, host, port, name, options={}):
         self.id = str(uuid.uuid4())
         self.source_root = source_root
         self.host = host
@@ -106,7 +106,7 @@ class Client(ABC):
         self.printq = queue.Queue()
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}.{self.id}")
         self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
-        self.backchannel_opts = backchannel_opts
+        self.options = options
         self.capabilities = set()
         self.lock = Lock()
         self.ready = False
@@ -223,8 +223,9 @@ class JVMClient(Client):
 
             self.buffer.readline()
 
-        backchannel_port = self.backchannel_opts.get("port", 0)
-        backchannel_bind_address = self.backchannel_opts.get("bind_address", "localhost")
+        backchannel_opts = self.options.get("backchannel", {})
+        backchannel_port = backchannel_opts.get("port", 0)
+        backchannel_bind_address = backchannel_opts.get("bind_address", "localhost")
         self.write_line(f"""(try (tutkain.repl/repl {{:port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))""")
         line = self.buffer.readline()
 
@@ -269,8 +270,8 @@ class JVMClient(Client):
             ]
         })
 
-    def __init__(self, source_root, host, port, backchannel_opts={}):
-        super().__init__(source_root, host, port, "tutkain.clojure.client", backchannel_opts=backchannel_opts)
+    def __init__(self, source_root, host, port, options={}):
+        super().__init__(source_root, host, port, "tutkain.clojure.client", options=options)
 
     def connect(self):
         super().connect()
@@ -328,7 +329,7 @@ class JSClient(Client):
 
             self.buffer.readline()
 
-        backchannel_port = self.backchannel_opts.get("port", 0)
+        backchannel_port = self.options.get("backchannel", {}).get("port", 0)
         self.write_line(f"""(tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}})""")
 
         ret = edn.read_line(self.buffer)

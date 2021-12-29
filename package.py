@@ -534,9 +534,11 @@ class TutkainConnectCommand(WindowCommand):
             return repl.BabashkaClient(source_root(), host, port)
         else:
             return repl.JVMClient(
-                source_root(), host, port, backchannel_opts={
-                    "port": settings.load().get("clojure").get("backchannel").get("port"),
-                    "bind_address": settings.load().get("clojure").get("backchannel").get("bind_address", "localhost")
+                source_root(), host, port, options={
+                    "backchannel": {
+                        "port": settings.load().get("clojure").get("backchannel").get("port"),
+                        "bind_address": settings.load().get("clojure").get("backchannel").get("bind_address", "localhost")
+                    }
                 }
             )
 
