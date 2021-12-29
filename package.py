@@ -122,12 +122,6 @@ def evaluate(view, client, code, point=None, options={}):
     client.evaluate(code, options)
 
 
-def source_root():
-    return os.path.join(
-        sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain"
-    )
-
-
 def set_layout(window):
     # Set up a two-row layout.
     #
@@ -529,12 +523,12 @@ class TutkainConnectCommand(WindowCommand):
                 self.choose_build_id(ids, on_cancel, on_done)
 
             # FIXME: Backchannel port option
-            return repl.JSClient(source_root(), host, port, prompt)
+            return repl.JSClient(host, port, prompt)
         elif dialect == edn.Keyword("bb"):
-            return repl.BabashkaClient(source_root(), host, port)
+            return repl.BabashkaClient(host, port)
         else:
             return repl.JVMClient(
-                source_root(), host, port, options={
+                host, port, options={
                     "backchannel": {
                         "port": settings.load().get("clojure").get("backchannel").get("port"),
                         "bind_address": settings.load().get("clojure").get("backchannel").get("bind_address", "localhost")

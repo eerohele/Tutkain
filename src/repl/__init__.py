@@ -14,6 +14,7 @@ from . import backchannel
 from ...api import edn
 from ..log import log
 from .. import base64
+from .. import settings
 
 
 def read_until_prompt(socket: socket.SocketType):
@@ -62,7 +63,7 @@ class Client(ABC):
 
     def load_modules(self, modules):
         for filename, requires in modules.items():
-            path = os.path.join(self.source_root, filename)
+            path = os.path.join(settings.source_root(), filename)
 
             with open(path, "rb") as file:
                 self.backchannel.send({
@@ -94,11 +95,10 @@ class Client(ABC):
         """Given the name of a Clojure source file belonging to this package,
         return the absolute path to that source file as a POSIX path (for
         Windows compatibility)."""
-        return posixpath.join(pathlib.Path(self.source_root).as_posix(), filename)
+        return posixpath.join(pathlib.Path(settings.source_root()).as_posix(), filename)
 
-    def __init__(self, source_root, host, port, name, options={}):
+    def __init__(self, host, port, name, options={}):
         self.id = str(uuid.uuid4())
-        self.source_root = source_root
         self.host = host
         self.port = port
         self.name = name
@@ -270,8 +270,8 @@ class JVMClient(Client):
             ]
         })
 
-    def __init__(self, source_root, host, port, options={}):
-        super().__init__(source_root, host, port, "tutkain.clojure.client", options=options)
+    def __init__(self, host, port, options={}):
+        super().__init__(host, port, "tutkain.clojure.client", options=options)
 
     def connect(self):
         super().connect()
@@ -295,8 +295,8 @@ class JSClient(Client):
     def dialect_name(self):
         return "ClojureScript"
 
-    def __init__(self, source_root, host, port, prompt_for_build_id):
-        super().__init__(source_root, host, port, "tutkain.cljs.client")
+    def __init__(self, host, port, prompt_for_build_id):
+        super().__init__(host, port, "tutkain.cljs.client")
         self.prompt_for_build_id = prompt_for_build_id
 
     def connect(self):
@@ -375,8 +375,8 @@ class BabashkaClient(Client):
     def dialect_name(self):
         return "Babashka"
 
-    def __init__(self, source_root, host, port):
-        super().__init__(source_root, host, port, "tutkain.bb.client")
+    def __init__(self, host, port):
+        super().__init__(host, port, "tutkain.bb.client")
 
     def handshake(self):
         self.write_line("""(println "Babashka" (System/getProperty "babashka.version"))""")

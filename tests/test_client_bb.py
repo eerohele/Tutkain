@@ -2,7 +2,7 @@ import sublime
 import queue
 
 from Tutkain.api import edn
-from Tutkain.package import source_root, start_logging, stop_logging
+from Tutkain.package import start_logging, stop_logging
 from Tutkain.src import repl
 from Tutkain.src.repl import views
 from Tutkain.src import state
@@ -50,11 +50,7 @@ class TestBabashkaClient(PackageTestCase):
 
         self.server.start()
 
-        self.client = repl.BabashkaClient(
-            source_root(),
-            self.server.host,
-            self.server.port
-        )
+        self.client = repl.BabashkaClient(self.server.host, self.server.port)
 
         self.server.executor.submit(self.client.connect)
         dialect = edn.Keyword("bb")

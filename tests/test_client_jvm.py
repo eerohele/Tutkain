@@ -2,7 +2,6 @@ import sublime
 import queue
 
 from Tutkain.api import edn
-from Tutkain.package import source_root
 from Tutkain.src import repl
 from Tutkain.src.repl import views
 from Tutkain.src import base64
@@ -71,7 +70,7 @@ class TestJVMClient(PackageTestCase):
             buf.flush()
 
         self.server = Server(send_text, greeting=write_greeting).start()
-        self.client = repl.JVMClient(source_root(), self.server.host, self.server.port)
+        self.client = repl.JVMClient(self.server.host, self.server.port)
         self.server.executor.submit(self.client.connect)
         dialect = edn.Keyword("clj")
         self.repl_view = sublime.active_window().new_file()

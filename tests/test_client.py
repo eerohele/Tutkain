@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from Tutkain.api import edn
-from Tutkain.package import source_root, start_logging, stop_logging
+from Tutkain.package import start_logging, stop_logging
 from Tutkain.src import repl
 
 from .mock import Server, send_edn, send_text
@@ -22,7 +22,7 @@ class TestJVMClient(TestCase):
             buf.flush()
 
         with Server(send_text, greeting=write_greeting) as server:
-            client = repl.JVMClient(source_root(), server.host, server.port)
+            client = repl.JVMClient(server.host, server.port)
 
             server.executor.submit(client.connect)
             # Client starts clojure.main/repl
