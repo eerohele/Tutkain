@@ -13,6 +13,10 @@ from .mock import Server, send_edn, send_text
 from .util import PackageTestCase
 
 
+def select_keys(d, ks):
+    return {k: d[k] for k in ks}
+
+
 class TestJVMClient(PackageTestCase):
     @classmethod
     def conduct_handshake(self):
@@ -550,3 +554,109 @@ class TestJVMClient(PackageTestCase):
         }))
 
         print(self.get_print())
+
+    def test_evaluate_to_clipboard(self):
+        self.set_view_content("(inc 1)")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"scope": "outermost", "output": "clipboard"})
+
+        # Client sends eval context over backchannel
+        eval_context = edn.read(self.backchannel.recv())
+
+        self.assertEquals(
+            edn.kwmap({
+                "op": edn.Keyword("set-eval-context"),
+                "file": "NO_SOURCE_FILE",
+                "line": 1,
+                "column": 1,
+                "response": edn.kwmap({
+                    "output": edn.Keyword("clipboard")
+                }),
+            }),
+            select_keys(eval_context, [
+                edn.Keyword("op"),
+                edn.Keyword("file"),
+                edn.Keyword("line"),
+                edn.Keyword("column"),
+                edn.Keyword("response")
+            ])
+        )
+
+        # Backchannel sends eval context response
+        self.backchannel.send(edn.kwmap({
+            "id": eval_context.get(edn.Keyword("id")),
+            "op": edn.Keyword("set-eval-context"),
+            "thread-bindings": edn.kwmap({"file": "NO_SOURCE_FILE", "line": 1, "column": 1}),
+            "response": edn.kwmap({
+                "output": edn.Keyword("clipboard")
+            }),
+        }))
+
+        # Client sends code string over eval channel
+        self.assertEquals("(inc 1)\n", self.server.recv())
+
+        response = edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "2",
+            "output": edn.Keyword("clipboard")
+        })
+
+        # Server sends response over backchannel
+        self.backchannel.send(response)
+        self.assertEquals(response, self.get_print())
+
+    def test_evaluate_to_inline(self):
+        self.set_view_content("(inc 1)")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"scope": "outermost", "inline_result": True})
+
+        # Client sends eval context over backchannel
+        eval_context = edn.read(self.backchannel.recv())
+
+        self.assertEquals(
+            edn.kwmap({
+                "op": edn.Keyword("set-eval-context"),
+                "file": "NO_SOURCE_FILE",
+                "line": 1,
+                "column": 1,
+                "response": edn.kwmap({
+                    "point": 7,
+                    "output": edn.Keyword("inline"),
+                    "view-id": self.view.id()
+                }),
+            }),
+            select_keys(eval_context, [
+                edn.Keyword("op"),
+                edn.Keyword("file"),
+                edn.Keyword("line"),
+                edn.Keyword("column"),
+                edn.Keyword("response")
+            ])
+        )
+
+        # Backchannel sends eval context response
+        self.backchannel.send(edn.kwmap({
+            "id": eval_context.get(edn.Keyword("id")),
+            "op": edn.Keyword("set-eval-context"),
+            "thread-bindings": edn.kwmap({"file": "NO_SOURCE_FILE", "line": 1, "column": 1}),
+            "response": edn.kwmap({
+                "point": 7,
+                "output": edn.Keyword("inline"),
+                "view-id": self.view.id()
+            })
+        }))
+
+        # Client sends code string over eval channel
+        self.assertEquals("(inc 1)\n", self.server.recv())
+
+        response = edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "2",
+            "output": eval_context.get(edn.Keyword("response")).get(edn.Keyword("output")),
+            "view-id": eval_context.get(edn.Keyword("response")).get(edn.Keyword("view-id")),
+            "point": 7
+        })
+
+        # Server sends response over backchannel
+        self.backchannel.send(response)
+        self.assertEquals(response, self.get_print())
