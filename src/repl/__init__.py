@@ -78,6 +78,14 @@ class Client(ABC):
     def handshake(self):
         pass
 
+    def read_greeting(self):
+        greeting = read_until_prompt(self.socket)
+
+        if not self.has_backchannel():
+            self.printq.put(greeting.decode("utf-8"))
+
+        return greeting
+
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
@@ -86,7 +94,7 @@ class Client(ABC):
 
         log.debug({
             "event": "client/handshake",
-            "data": self.executor.submit(lambda: read_until_prompt(self.socket)).result(timeout=5)
+            "data": self.executor.submit(self.read_greeting).result(timeout=5)
         })
 
         return self
@@ -96,6 +104,9 @@ class Client(ABC):
         return the absolute path to that source file as a POSIX path (for
         Windows compatibility)."""
         return posixpath.join(pathlib.Path(settings.source_root()).as_posix(), filename)
+
+    def has_backchannel(self):
+        return self.options.get("backchannel", {}).get("enabled", True)
 
     def __init__(self, host, port, name, options={}):
         self.id = str(uuid.uuid4())
@@ -275,9 +286,12 @@ class JVMClient(Client):
 
     def connect(self):
         super().connect()
-        # Start a promptless REPL so that we don't need to keep sinking the prompt.
-        self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
-        self.handshake()
+
+        if self.has_backchannel():
+            # Start a promptless REPL so that we don't need to keep sinking the prompt.
+            self.write_line("""(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))""")
+            self.handshake()
+
         self.start_workers()
         return self
 
@@ -285,18 +299,21 @@ class JVMClient(Client):
         self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
 
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.backchannel.send(
-            self.eval_context_message(options),
-            lambda _: self.sendq.put(code)
-        )
+        if self.has_backchannel():
+            self.backchannel.send(
+                self.eval_context_message(options),
+                lambda _: self.sendq.put(code)
+            )
+        else:
+            self.sendq.put(code)
 
 
 class JSClient(Client):
     def dialect_name(self):
         return "ClojureScript"
 
-    def __init__(self, host, port, prompt_for_build_id):
-        super().__init__(host, port, "tutkain.cljs.client")
+    def __init__(self, host, port, prompt_for_build_id, options={}):
+        super().__init__(host, port, "tutkain.cljs.client", options=options)
         self.prompt_for_build_id = prompt_for_build_id
 
     def connect(self):
@@ -365,10 +382,13 @@ class JSClient(Client):
         self.sendq.put(f"(in-ns '{ns})")
 
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.backchannel.send(
-            self.eval_context_message(options),
-            lambda _: self.sendq.put(code)
-        )
+        if self.has_backchannel():
+            self.backchannel.send(
+                self.eval_context_message(options),
+                lambda _: self.sendq.put(code)
+            )
+        else:
+            self.sendq.put(code)
 
 
 class BabashkaClient(Client):
@@ -388,6 +408,9 @@ class BabashkaClient(Client):
         super().connect()
         self.handshake()
         return self
+
+    def has_backchannel(self):
+        return False
 
     def switch_namespace(self, ns):
         self.sendq.put(f"(in-ns '{ns})")

@@ -517,30 +517,36 @@ class TutkainConnectCommand(WindowCommand):
         else:
             return self.window.new_file()
 
-    def make_client(self, dialect, host, port, on_cancel):
+    def make_client(self, dialect, host, port, backchannel, on_cancel):
         if dialect == edn.Keyword("cljs"):
             def prompt(ids, on_done):
                 self.choose_build_id(ids, on_cancel, on_done)
 
-            # FIXME: Backchannel port option
-            return repl.JSClient(host, port, prompt)
+            return repl.JSClient(host, port, prompt, options={
+                "backchannel": {
+                    "enabled": backchannel,
+                    "port": settings.load().get("clojurescript").get("backchannel").get("port"),
+                    "bind_address": settings.load().get("clojurescript").get("backchannel").get("bind_address", "localhost")
+                }
+            })
         elif dialect == edn.Keyword("bb"):
             return repl.BabashkaClient(host, port)
         else:
             return repl.JVMClient(
                 host, port, options={
                     "backchannel": {
+                        "enabled": backchannel,
                         "port": settings.load().get("clojure").get("backchannel").get("port"),
                         "bind_address": settings.load().get("clojure").get("backchannel").get("bind_address", "localhost")
                     }
                 }
             )
 
-    def connect(self, dialect, host, port, view):
+    def connect(self, dialect, host, port, backchannel, view):
         on_cancel = lambda: view.close()
 
         try:
-            client = self.make_client(dialect, host, port, on_cancel)
+            client = self.make_client(dialect, host, port, backchannel, on_cancel)
             client.connect()
             state.register_connection(view, dialect, client)
             return client
@@ -557,7 +563,7 @@ class TutkainConnectCommand(WindowCommand):
             on_cancel()
             self.window.status_message(f"ERR: connection to {host}:{port} refused.")
 
-    def run(self, dialect, host, port, view_id=None, output="view"):
+    def run(self, dialect, host, port, view_id=None, output="view", backchannel=True):
         assert output in {"view", "panel"}
 
         dialect = edn.Keyword(dialect)
@@ -567,12 +573,15 @@ class TutkainConnectCommand(WindowCommand):
         active_view = self.window.active_view()
         view = self.get_or_create_view(view_id, output)
 
-        if client := self.connect(dialect, host, int(port), view):
+        if client := self.connect(dialect, host, int(port), backchannel, view):
             if output == "view":
                 set_layout(self.window)
 
             repl_view_settings = settings.load().get("repl_view_settings", {})
             repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
+
+            if dialect == edn.Keyword("bb") or (not backchannel and len(state.get_connections()) == 1):
+                view.assign_syntax("Plain Text.tmLanguage")
 
             print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
             print_loop.name = f"tutkain.{client.id}.print_loop"
@@ -806,7 +815,7 @@ class TutkainEventListener(EventListener):
                 dialect := dialects.for_view(view)
             ) and (
                 client := state.get_client(dialect)
-            ) and client.ready:
+            ) and client.has_backchannel() and client.ready:
                 ns = namespace.name(view) or namespace.default(dialect)
                 client.switch_namespace(ns)
 
