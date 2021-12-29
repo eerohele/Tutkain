@@ -269,8 +269,6 @@ class JVMClient(Client):
             ]
         })
 
-        self.start_workers()
-
     def __init__(self, source_root, host, port, backchannel_opts={}):
         super().__init__(source_root, host, port, "tutkain.clojure.client", backchannel_opts=backchannel_opts)
 
@@ -279,6 +277,7 @@ class JVMClient(Client):
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
         self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
         self.handshake()
+        self.start_workers()
         return self
 
     def switch_namespace(self, ns):
