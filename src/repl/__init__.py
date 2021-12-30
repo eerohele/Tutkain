@@ -305,6 +305,7 @@ class JVMClient(Client):
                 lambda _: self.sendq.put(code)
             )
         else:
+            self.printq.put(code + "\n")
             self.sendq.put(code)
 
 
@@ -388,6 +389,7 @@ class JSClient(Client):
                 lambda _: self.sendq.put(code)
             )
         else:
+            self.printq.put(code + "\n")
             self.sendq.put(code)
 
 
@@ -421,4 +423,5 @@ class BabashkaClient(Client):
         self.printq.put(edn.kwmap({"tag": edn.Keyword("out"), "val": item}))
 
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
+        self.printq.put(code + "\n")
         self.sendq.put(code)
