@@ -519,16 +519,19 @@ class TutkainConnectCommand(WindowCommand):
 
     def make_client(self, dialect, host, port, backchannel, on_cancel):
         if dialect == edn.Keyword("cljs"):
-            def prompt(ids, on_done):
-                self.choose_build_id(ids, on_cancel, on_done)
+            if not backchannel:
+                sublime.error_message("[Tutkain]: The backchannel: false argument to tutkain_connect is currently not supported for ClojureScript.")
+            else:
+                def prompt(ids, on_done):
+                    self.choose_build_id(ids, on_cancel, on_done)
 
-            return repl.JSClient(host, port, prompt, options={
-                "backchannel": {
-                    "enabled": backchannel,
-                    "port": settings.load().get("clojurescript").get("backchannel").get("port"),
-                    "bind_address": settings.load().get("clojurescript").get("backchannel").get("bind_address", "localhost")
-                }
-            })
+                return repl.JSClient(host, port, prompt, options={
+                    "backchannel": {
+                        "enabled": backchannel,
+                        "port": settings.load().get("clojurescript").get("backchannel").get("port"),
+                        "bind_address": settings.load().get("clojurescript").get("backchannel").get("bind_address", "localhost")
+                    }
+                })
         elif dialect == edn.Keyword("bb"):
             return repl.BabashkaClient(host, port)
         else:
