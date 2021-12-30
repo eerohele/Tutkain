@@ -150,13 +150,21 @@ class TestConnectDisconnect(TestCase):
 
         server = Server(send_text, greeting=write_greeting).start()
         default_args = {"host": server.host, "port": server.port}
-        sublime.set_timeout_async(lambda: self.run_connect_command(window, {**default_args, **args}), 0)
+
+        if args.get("backchannel", True):
+            sublime.set_timeout_async(lambda: self.run_connect_command(window, {**default_args, **args}), 0)
+        else:
+            self.run_connect_command(window, {**default_args, **args})
+
         dialect = args.get("dialect", "clj")
 
-        if dialect == "clj":
-            backchannel = clojure_handshake(server)
-        elif dialect == "cljs":
-            backchannel = clojurescript_handshake(server)
+        if args.get("backchannel", True):
+            if dialect == "clj":
+                backchannel = clojure_handshake(server)
+            elif dialect == "cljs":
+                backchannel = clojurescript_handshake(server)
+        else:
+            backchannel = None
 
         return types.SimpleNamespace(server=server, backchannel=backchannel)
 
@@ -611,4 +619,37 @@ class TestConnectDisconnect(TestCase):
         self.disconnect(window)
         # Don't need to select because there's only one remaining runtime
         self.assertEquals(":repl/quit", jvm.server.recv())
+        self.close_window(window)
+
+    def test_no_backchannel(self):
+        window = self.make_window()
+        view = self.make_scratch_view(window)
+        connection = self.connect(window, {"dialect": "clj", "backchannel": False})
+
+        self.wait_until_equals(
+            """user=> """,
+            lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
+        )
+
+        self.set_view_content(view, "(inc 1)")
+        self.set_selections(view, (0, 0))
+        view.run_command("tutkain_evaluate")
+        self.assertEquals("(inc 1)\n", connection.server.recv())
+
+        self.wait_until_equals(
+            """user=> (inc 1)\n""",
+            lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
+        )
+
+        connection.server.send("2")
+
+        self.wait_until_equals(
+            """
+            user=> (inc 1)
+            2
+            """, lambda: self.content(state.get_active_connection_view(edn.Keyword("clj")))
+        )
+
+        self.disconnect(window)
+        self.assertEquals(":repl/quit", connection.server.recv())
         self.close_window(window)
