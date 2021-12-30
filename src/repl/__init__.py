@@ -401,14 +401,11 @@ class BabashkaClient(Client):
         super().__init__(host, port, "tutkain.bb.client")
 
     def handshake(self):
-        self.write_line("""(println "Babashka" (System/getProperty "babashka.version"))""")
-        self.print(self.buffer.readline())
-        self.buffer.readline()
-        self.start_workers()
+        pass
 
     def connect(self):
         super().connect()
-        self.handshake()
+        self.start_workers()
         return self
 
     def has_backchannel(self):
@@ -416,11 +413,6 @@ class BabashkaClient(Client):
 
     def switch_namespace(self, ns):
         self.sendq.put(f"(in-ns '{ns})")
-
-    def print(self, item):
-        # Babashka currently has no backchannel we can use for err and out, so
-        # we just print everything without syntax highlighting.
-        self.printq.put(edn.kwmap({"tag": edn.Keyword("out"), "val": item}))
 
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
         self.printq.put(code + "\n")

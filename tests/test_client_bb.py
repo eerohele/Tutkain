@@ -16,20 +16,6 @@ class TestBabashkaClient(PackageTestCase):
         return self.client.printq.get(timeout=5)
 
     @classmethod
-    def conduct_handshake(self):
-        server = self.server
-
-        # Client sends version print
-        server.recv()
-
-        # Server responds
-        server.send("""Babashka 0.3.6""")
-        server.send("nil")
-
-        # Babashka version info is printed on the client
-        self.client.printq.get(timeout=5)
-
-    @classmethod
     def setUpClass(self):
         super().setUpClass()
         start_logging(False)
@@ -51,13 +37,12 @@ class TestBabashkaClient(PackageTestCase):
         self.server.start()
 
         self.client = repl.BabashkaClient(self.server.host, self.server.port)
-
         self.server.executor.submit(self.client.connect)
+        self.client.printq.get(timeout=1)
         dialect = edn.Keyword("bb")
         self.repl_view = sublime.active_window().new_file()
         views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
         state.register_connection(self.repl_view, dialect, self.client)
-        self.conduct_handshake()
 
     # TODO: Extract into base class
     @classmethod
@@ -82,20 +67,7 @@ class TestBabashkaClient(PackageTestCase):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
-        self.server.send("""user=> (range 10)""")
         self.assertEquals("(range 10)\n", self.server.recv())
-
-        self.assertEquals(
-            edn.kwmap({"tag": edn.Keyword("out"), "val": "user=> (range 10)\n"}),
-            self.get_print()
-        )
-
+        self.assertEquals("(range 10)\n", self.get_print())
         self.server.send("(0 1 2 3 4 5 6 7 8 9)")
-
-        self.assertEquals(
-            edn.kwmap({
-                "tag": edn.Keyword("out"),
-                "val": "(0 1 2 3 4 5 6 7 8 9)\n"
-            }),
-            self.get_print()
-        )
+        self.assertEquals("(0 1 2 3 4 5 6 7 8 9)\n", self.get_print())
