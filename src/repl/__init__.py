@@ -14,6 +14,7 @@ from . import backchannel
 from ...api import edn
 from ..log import log
 from .. import base64
+from .. import dialects
 from .. import settings
 
 
@@ -32,10 +33,6 @@ BASE64_BLOB = "(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn
 
 
 class Client(ABC):
-    @abstractmethod
-    def dialect_name(self):
-        pass
-
     """A `Client` connects to a Clojure socket server, then sends over code
     that a) starts a custom REPL on top of the default REPL and b) starts a
     backchannel socket server. The `Client` then connects to the backchannel
@@ -108,11 +105,12 @@ class Client(ABC):
     def has_backchannel(self):
         return self.options.get("backchannel", {}).get("enabled", True)
 
-    def __init__(self, host, port, name, options={}):
+    def __init__(self, host, port, name, dialect, options={}):
         self.id = str(uuid.uuid4())
         self.host = host
         self.port = port
         self.name = name
+        self.dialect = dialect
         self.sendq = queue.Queue()
         self.printq = queue.Queue()
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}.{self.id}")
@@ -176,7 +174,7 @@ class Client(ABC):
             self.print(
                 edn.kwmap({
                     "tag": edn.Keyword("err"),
-                    "val": f"[Tutkain] Disconnected from {self.dialect_name()} runtime at {self.host}:{self.port}.\n"
+                    "val": f"[Tutkain] Disconnected from {dialects.name(self.dialect)} runtime at {self.host}:{self.port}.\n"
                 })
             )
 
@@ -216,9 +214,6 @@ class Client(ABC):
 
 
 class JVMClient(Client):
-    def dialect_name(self):
-        return "Clojure"
-
     def handshake(self):
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
@@ -282,7 +277,7 @@ class JVMClient(Client):
         })
 
     def __init__(self, host, port, options={}):
-        super().__init__(host, port, "tutkain.clojure.client", options=options)
+        super().__init__(host, port, "tutkain.clojure.client", edn.Keyword("clj"), options=options)
 
     def connect(self):
         super().connect()
@@ -310,11 +305,11 @@ class JVMClient(Client):
 
 
 class JSClient(Client):
-    def dialect_name(self):
-        return "ClojureScript"
+    def dialect(self):
+        return edn.Keyword("cljs")
 
     def __init__(self, host, port, prompt_for_build_id, options={}):
-        super().__init__(host, port, "tutkain.cljs.client", options=options)
+        super().__init__(host, port, "tutkain.cljs.client", edn.Keyword("cljs"), options=options)
         self.prompt_for_build_id = prompt_for_build_id
 
     def connect(self):
@@ -394,11 +389,8 @@ class JSClient(Client):
 
 
 class BabashkaClient(Client):
-    def dialect_name(self):
-        return "Babashka"
-
     def __init__(self, host, port):
-        super().__init__(host, port, "tutkain.bb.client")
+        super().__init__(host, port, "tutkain.bb.client", edn.Keyword("bb"))
 
     def handshake(self):
         pass
