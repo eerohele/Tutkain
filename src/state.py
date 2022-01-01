@@ -19,7 +19,6 @@ class State(TypedDict):
 @dataclass(eq=True, frozen=True)
 class Connection:
     client: repl.Client
-    dialect: Dialect
     view: View
 
 
@@ -37,15 +36,15 @@ def forget_connection(connection: Connection) -> None:
     if connections := get_connections():
         connections.pop(connection.client.id)
 
-        if get_client(connection.dialect) == connection.client:
-            __state["active_connection"].pop(connection.dialect)
+        if get_client(connection.client.dialect) == connection.client:
+            __state["active_connection"].pop(connection.client.dialect)
 
             # If there's only one remaining connection with the same dialect as
             # the one we're currently disconnecting, set that as the active client.
-            alts = list(filter(lambda this: this.dialect == connection.dialect, connections.values()))
+            alts = list(filter(lambda this: this.dialect == connection.client.dialect, connections.values()))
 
             if len(alts) == 1:
-                __state["active_connection"][connection.dialect] = alts[0]
+                __state["active_connection"][connection.client.dialect] = alts[0]
 
         window = connection.view.window() or active_window()
 
@@ -57,18 +56,18 @@ def forget_connection(connection: Connection) -> None:
 
         # Clear test markers if this is the only remaining connection for
         # this dialect.
-        if not list(filter(lambda this: this.dialect == connection.dialect, connections)):
+        if not list(filter(lambda this: this.dialect == connection.client.dialect, connections)):
             if view := window.active_view():
-                if dialects.for_view(view) == connection.dialect:
+                if dialects.for_view(view) == connection.client.dialect:
                     view.run_command("tutkain_clear_test_markers")
 
 
-def register_connection(view: View, dialect: Dialect, client: repl.Client) -> None:
-    connection = Connection(client, dialect, view)
+def register_connection(view: View, client: repl.Client) -> None:
+    connection = Connection(client, view)
     connection.client.on_close = lambda: forget_connection(connection)
 
     __state["connections"][connection.client.id] = connection
-    __state["active_connection"][connection.dialect] = connection
+    __state["active_connection"][connection.client.dialect] = connection
 
 
 def get_client(dialect: Dialect) -> Union[repl.Client, None]:
@@ -78,7 +77,7 @@ def get_client(dialect: Dialect) -> Union[repl.Client, None]:
 
 def set_active_connection(client_id: str) -> Union[repl.Client, None]:
     if connection := __state["connections"].get(client_id):
-        __state["active_connection"][connection.dialect] = connection
+        __state["active_connection"][connection.client.dialect] = connection
 
 
 def get_active_connection_view(dialect: Dialect) -> View:

@@ -551,7 +551,7 @@ class TutkainConnectCommand(WindowCommand):
         try:
             client = self.make_client(dialect, host, port, backchannel, on_cancel)
             client.connect()
-            state.register_connection(view, dialect, client)
+            state.register_connection(view, client)
             return client
         except TimeoutError:
             on_cancel()
@@ -1444,7 +1444,7 @@ class ClientIdInputHandler(ListInputHandler):
         else:
             output = "panel"
 
-        annotation = f"{dialects.name(connection.dialect)} ({output})"
+        annotation = f"{dialects.name(connection.client.dialect)} ({output})"
         text = f"{connection.client.host}:{connection.client.port}"
         return sublime.ListInputItem(text, connection.client.id, annotation=annotation)
 
