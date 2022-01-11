@@ -3,6 +3,7 @@ from .. import settings
 from .. import inline
 from ...api import edn
 from . import views
+from . import formatter
 import sublime
 
 
@@ -11,7 +12,14 @@ def print_characters(view, characters):
         view.run_command("append", {"characters": characters, "scroll_to_end": True})
 
 
+def show_repl_panel(view):
+    if view and view.element() == "output:output":
+        views.show_output_panel(sublime.active_window())
+
+
 def append_to_view(view, characters):
+    show_repl_panel(view)
+
     if view and characters:
         view.set_read_only(False)
         print_characters(view, characters)

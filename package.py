@@ -190,7 +190,7 @@ class TutkainRunTests(TextCommand):
         dialect = edn.Keyword("clj")
 
         if scope == "ns":
-            client = state.get_client(dialect)
+            client = state.get_client(self.view.window(), dialect)
             dialects.focus_view(self.view, dialect)
             test.run(self.view, client)
         elif scope == "var":
@@ -199,7 +199,7 @@ class TutkainRunTests(TextCommand):
             test_var = test.current(self.view, point)
 
             if test_var:
-                client = state.get_client(dialect)
+                client = state.get_client(self.view.window(), dialect)
                 dialects.focus_view(self.view, dialect)
                 test.run(self.view, client, test_vars=[test_var])
 
@@ -366,7 +366,7 @@ class TutkainEvaluateCommand(TextCommand):
         else:
             dialect = dialects.for_point(self.view, point) or edn.Keyword("clj")
 
-        client = state.get_client(dialect)
+        client = state.get_client(self.view.window(), dialect)
 
         if client is None:
             self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
@@ -584,7 +584,7 @@ def lookup(view, form, handler):
     if not view.settings().get("tutkain_repl_view_dialect") and form and (
         dialect := dialects.for_point(view, form.begin())
     ) and (
-        client := state.get_client(dialect)
+        client := state.get_client(view.window(), dialect)
     ):
         client.backchannel.send({
             "op": edn.Keyword("lookup"),
@@ -712,11 +712,11 @@ class TutkainEventListener(EventListener):
         if repl.views.get_dialect(view):
             client_id = view.settings().get("tutkain_repl_client_id")
             state.set_active_connection(client_id)
-        elif sublime.active_window().active_panel() != "input" and settings.load().get("auto_switch_namespace", True):
+        elif (window := sublime.active_window()) and window.active_panel() != "input" and settings.load().get("auto_switch_namespace", True):
             if (
                 dialect := dialects.for_view(view)
             ) and (
-                client := state.get_client(dialect)
+                client := state.get_client(window, dialect)
             ) and client.has_backchannel() and client.ready:
                 ns = namespace.name(view) or namespace.default(dialect)
                 client.switch_namespace(ns)
@@ -742,7 +742,7 @@ class TutkainEventListener(EventListener):
                 })
 
     def on_pre_close(self, view):
-        if (dialect := repl.views.get_dialect(view)) and (client := state.get_client(dialect)):
+        if (dialect := repl.views.get_dialect(view)) and (client := state.get_client(view.window(), dialect)):
             client.halt()
 
     def on_query_completions(self, view, prefix, locations):
@@ -777,7 +777,7 @@ class TutkainExpandSelectionCommand(WindowCommand):
 class TutkainInterruptEvaluationCommand(WindowCommand):
     def run(self):
         dialect = edn.Keyword("clj")
-        client = state.get_client(dialect)
+        client = state.get_client(self.window, dialect)
 
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
@@ -1127,7 +1127,7 @@ def fetch_locals(view, point, form, handler):
     if (
         dialect := dialects.for_point(view, point)
     ) and (
-        client := state.get_client(dialect)
+        client := state.get_client(view.window(), dialect)
     ) and (
         "analyzer.clj" in client.capabilities
     ) and (
@@ -1195,7 +1195,7 @@ class TutkainAproposCommand(WindowCommand):
     def run(self, pattern=None):
         dialect = edn.Keyword("clj")
 
-        if client := state.get_client(dialect):
+        if client := state.get_client(self.window, dialect):
             if pattern is None:
                 panel = self.window.show_input_panel(
                     "Apropos",
@@ -1217,7 +1217,7 @@ class TutkainDirCommand(TextCommand):
         window = self.view.window()
         dialect = dialects.for_view(self.view)
 
-        if client := state.get_client(dialect):
+        if client := state.get_client(window, dialect):
             if sel := self.view.sel():
                 point = sel[0].begin()
 
@@ -1236,7 +1236,7 @@ class TutkainLoadedLibsCommand(TextCommand):
         window = self.view.window()
         dialect = dialects.for_view(self.view) or edn.Keyword("clj")
 
-        if client := state.get_client(dialect):
+        if client := state.get_client(window, dialect):
             client.backchannel.send({
                 "op": edn.Keyword("loaded-libs"),
                 "dialect": dialect
@@ -1276,7 +1276,7 @@ class TutkainExploreStackTraceCommand(TextCommand):
             )
 
     def run(self, _):
-        if client := state.get_client(edn.Keyword("clj")):
+        if client := state.get_client(self.view.window(), edn.Keyword("clj")):
             client.backchannel.send({
                 "op": edn.Keyword("resolve-stacktrace")
             }, self.handler)
@@ -1308,7 +1308,7 @@ class TutkainPromptCommand(WindowCommand):
         view.settings().set("tutkain_repl_input_panel", True)
 
     def run(self):
-        if client := state.get_client(edn.Keyword("clj")):
+        if client := state.get_client(self.window, edn.Keyword("clj")):
             self.prompt(client)
         else:
             self.window.status_message("ERR: Not connected to a REPL.")
@@ -1321,12 +1321,13 @@ class TutkainToggleAutoSwitchNamespaceCommand(TextCommand):
         s.set("auto_switch_namespace", not current)
 
         if s.get("auto_switch_namespace"):
-            self.view.window().status_message(f"[⏽] [Tutkain] Automatic namespace switching enabled.")
+            window = self.view.window()
+            window.status_message(f"[⏽] [Tutkain] Automatic namespace switching enabled.")
 
             if (sel := self.view.sel()) and (
                 dialect := dialects.for_point(self.view, sel[0].begin())
             ) and (
-                client := state.get_client(dialect)
+                client := state.get_client(window, dialect)
             ) and (ns := namespace.name(self.view) or namespace.default(dialect)):
                 client.switch_namespace(ns)
         else:

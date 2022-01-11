@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sublime import View, active_window
+from sublime import View, Window
 from typing import Union, TypedDict
 from dataclasses import dataclass
 from . import repl
@@ -19,6 +19,7 @@ class State(TypedDict):
 @dataclass(eq=True, frozen=True)
 class Connection:
     client: repl.Client
+    window: Window
     view: View
 
 
@@ -36,7 +37,7 @@ def forget_connection(connection: Connection) -> None:
     if connections := get_connections():
         connections.pop(connection.client.id)
 
-        if get_client(connection.client.dialect) == connection.client:
+        if get_client(connection.window, connection.client.dialect) == connection.client:
             __state["active_connection"].pop(connection.client.dialect)
 
             # If there's only one remaining connection with the same dialect as
@@ -46,32 +47,35 @@ def forget_connection(connection: Connection) -> None:
             if len(alts) == 1:
                 __state["active_connection"][connection.client.dialect] = alts[0]
 
-        window = connection.view.window() or active_window()
+        # Destroy output panel if this is the only remaining connection for
+        # this window.
+        if not list(filter(lambda this: this.window.id() == connection.window.id(), connections)):
+            connection.window.destroy_output_panel(repl.views.tap_panel_name(connection.view))
 
         # Destroy output panel if this is the only remaining connection that
         # uses the panel.
         if not list(filter(lambda this: this.view.element() == "output:output", connections)):
             # TODO: Never destroy the panel, just clear it instead?
-            window.destroy_output_panel(repl.views.output_panel_name())
+            connection.window.destroy_output_panel(repl.views.output_panel_name())
 
         # Clear test markers if this is the only remaining connection for
         # this dialect.
         if not list(filter(lambda this: this.dialect == connection.client.dialect, connections)):
-            if view := window.active_view():
+            if view := connection.window.active_view():
                 if dialects.for_view(view) == connection.client.dialect:
                     view.run_command("tutkain_clear_test_markers")
 
 
-def register_connection(view: View, client: repl.Client) -> None:
-    connection = Connection(client, view)
+def register_connection(view: View, window: Window, client: repl.Client) -> None:
+    connection = Connection(client, window, view)
     connection.client.on_close = lambda: forget_connection(connection)
 
     __state["connections"][connection.client.id] = connection
     __state["active_connection"][connection.client.dialect] = connection
 
 
-def get_client(dialect: Dialect) -> Union[repl.Client, None]:
-    if connection := __state["active_connection"].get(dialect):
+def get_client(window: Window, dialect: Dialect) -> Union[repl.Client, None]:
+    if window and (connection := __state["active_connection"].get(dialect)):
         return connection.client
 
 
