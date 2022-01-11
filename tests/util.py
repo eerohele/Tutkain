@@ -1,9 +1,11 @@
 import sublime
 import socket
 
+from concurrent import futures
 from threading import Event, Thread
 
 from unittest import TestCase
+from unittesting import DeferrableTestCase
 
 from Tutkain.api import edn
 from Tutkain.src import settings
@@ -97,9 +99,11 @@ def stop_client(client):
         client.close()
 
 
+# class PackageTestCase(DeferrableTestCase):
 class PackageTestCase(TestCase):
     @classmethod
     def setUpClass(self):
+        self.executor = futures.ThreadPoolExecutor()
         sublime.run_command("new_window")
         self.window = sublime.active_window()
 
@@ -108,11 +112,16 @@ class PackageTestCase(TestCase):
         if self.window:
             self.window.run_command("close_window")
 
+        self.executor.shutdown(wait=False)
+
     def setUp(self, syntax="Clojure (Tutkain).sublime-syntax"):
         self.view = self.window.new_file()
         self.view.set_name("tutkain.clj")
         self.view.set_scratch(True)
-        self.view.window().focus_view(self.view)
+
+        if window := self.view.window():
+            window.focus_view(self.view)
+
         self.view.assign_syntax(syntax)
 
     def tearDown(self):
@@ -146,5 +155,8 @@ class PackageTestCase(TestCase):
 
         self.backchannel.send(edn.kwmap({
             "id": id,
-            "file": file
+            "file": file,
+            "thread-bindings": edn.kwmap({
+                "file": file
+            })
         }))

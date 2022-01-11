@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import io
 import socket
 import queue
@@ -6,20 +7,8 @@ from concurrent import futures
 from Tutkain.api import edn
 
 
-def send_text(buffer, message):
-    buffer.write(message)
-    buffer.write("\n")
-    buffer.flush()
-
-
-def send_edn(buffer, message):
-    edn.write(buffer, message)
-
-
-class Server(object):
-    def __init__(self, send_fn, port=0, greeting=lambda _: None, timeout=1):
-        self.send_fn = send_fn
-        self.conn = None
+class Server(ABC):
+    def __init__(self, port=0, greeting=lambda _: None, timeout=1):
         self.executor = futures.ThreadPoolExecutor()
         self.greeting = greeting
         self.port = port
@@ -33,8 +22,9 @@ class Server(object):
     def recv(self, timeout=1):
         return self.recvq.get(timeout=timeout)
 
+    @abstractmethod
     def send(self, message):
-        self.send_fn(self.buffer(), message)
+        pass
 
     def wait(self):
         self.conn, _ = self.socket.accept()
@@ -65,3 +55,14 @@ class Server(object):
 
     def __exit__(self, type, value, traceback):
         self.stop()
+
+
+class REPL(Server):
+    def send(self, message):
+        self.buffer().write(message + "\n")
+        self.buffer().flush()
+
+
+class Backchannel(Server):
+    def send(self, message):
+        edn.write(self.buffer(), message)

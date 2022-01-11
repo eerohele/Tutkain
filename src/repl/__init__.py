@@ -1,21 +1,28 @@
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
+from inspect import cleandoc
 import io
 import queue
 import os
 import pathlib
 import posixpath
 import socket
+import sublime
 import types
 import uuid
-from threading import Lock
+from threading import Lock, Thread
 
 from . import backchannel
 from ...api import edn
 from ..log import log
 from .. import base64
 from .. import dialects
+from .. import progress
 from .. import settings
+from .. import state
+from . import formatter
+from . import printer
+from . import views
 
 
 def read_until_prompt(socket: socket.SocketType):
@@ -79,7 +86,7 @@ class Client(ABC):
         greeting = read_until_prompt(self.socket)
 
         if not self.has_backchannel():
-            self.printq.put(greeting.decode("utf-8"))
+            self.print(greeting.decode("utf-8"))
 
         return greeting
 
@@ -155,10 +162,7 @@ class Client(ABC):
         pass
 
     def print(self, item):
-        self.printq.put(item)
-
-    def handle(self, item):
-        self.print(item.replace("\r", ""))
+        self.printq.put(formatter.format(item))
 
     def recv_loop(self):
         """Start a loop that reads evaluation responses from a socket and puts
@@ -167,7 +171,7 @@ class Client(ABC):
             while response := self.socket.recv(io.DEFAULT_BUFFER_SIZE):
                 item = response.decode("utf-8")
                 log.debug({"event": "client/recv", "item": item})
-                self.handle(item)
+                self.print(item)
         except OSError as error:
             log.error({"event": "error", "error": error})
         finally:
@@ -215,6 +219,8 @@ class Client(ABC):
 
 class JVMClient(Client):
     def handshake(self):
+        # Start a promptless REPL so that we don't need to keep sinking the prompt.
+        self.write_line("""(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))""")
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
         self.write_line(BASE64_BLOB)
@@ -283,8 +289,6 @@ class JVMClient(Client):
         super().connect()
 
         if self.has_backchannel():
-            # Start a promptless REPL so that we don't need to keep sinking the prompt.
-            self.write_line("""(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))""")
             self.handshake()
 
         self.start_workers()
@@ -300,7 +304,7 @@ class JVMClient(Client):
                 lambda _: self.sendq.put(code)
             )
         else:
-            self.printq.put(code + "\n")
+            self.print(code + "\n")
             self.sendq.put(code)
 
 
@@ -308,9 +312,8 @@ class JSClient(Client):
     def dialect(self):
         return edn.Keyword("cljs")
 
-    def __init__(self, host, port, prompt_for_build_id, options={}):
+    def __init__(self, host, port, options={}):
         super().__init__(host, port, "tutkain.cljs.client", edn.Keyword("cljs"), options=options)
-        self.prompt_for_build_id = prompt_for_build_id
 
     def connect(self):
         super().connect()
@@ -319,11 +322,14 @@ class JSClient(Client):
         self.write_line("""(sort (shadow.cljs.devtools.api/get-build-ids))""")
         build_id_options = edn.read_line(self.buffer)
 
-        self.executor.submit(
-            self.prompt_for_build_id,
-            build_id_options,
-            lambda index: self.handshake(build_id_options[index])
-        )
+        if build_id := self.options.get("build_id"):
+            self.handshake(build_id)
+        else:
+            self.executor.submit(
+                self.options.get("prompt_for_build_id"),
+                build_id_options,
+                lambda index: self.handshake(build_id_options[index])
+            )
 
         return self
 
@@ -384,7 +390,7 @@ class JSClient(Client):
                 lambda _: self.sendq.put(code)
             )
         else:
-            self.printq.put(code + "\n")
+            self.print(code + "\n")
             self.sendq.put(code)
 
 
@@ -407,5 +413,111 @@ class BabashkaClient(Client):
         self.sendq.put(f"(in-ns '{ns})")
 
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.printq.put(code + "\n")
+        self.print(code + "\n")
         self.sendq.put(code)
+
+
+def set_layout(window):
+    # Set up a two-row layout.
+    #
+    # TODO: Make configurable? This will clobber pre-existing layouts —
+    # maybe add a setting for toggling this bit?
+
+    # Only change the layout if the current layout has one row and one column.
+    if window.get_layout() == {
+        "cells": [[0, 0, 1, 1]],
+        "cols": [0.0, 1.0],
+        "rows": [0.0, 1.0],
+    }:
+        if settings.load().get("layout") == "vertical":
+            layout = {
+                "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
+                "cols": [0.0, 0.5, 1.0],
+                "rows": [0.0, 1.0],
+            }
+        else:
+            layout = {
+                "cells": [[0, 0, 1, 1], [0, 1, 1, 2]],
+                "cols": [0.0, 1.0],
+                "rows": [0.0, 0.5, 1.0],
+            }
+
+        window.set_layout(layout)
+
+
+def start(view, client):
+    window = view.window() or sublime.active_window()
+    views.create_tap_panel(view)
+
+    try:
+        client.connect()
+        state.register_connection(view, window, client)
+
+        if view.element() is None:
+            set_layout(window)
+
+        views.configure(view, client.dialect, client.id, client.host, client.port, settings.load().get("repl_view_settings", {}))
+
+        if client.dialect == edn.Keyword("bb") or (not client.has_backchannel() and len(state.get_connections()) == 1):
+            view.assign_syntax("Plain Text.tmLanguage")
+
+        if view.element() is None:
+            window.focus_view(view)
+        else:
+            views.show_output_panel(window)
+
+        client.ready = True
+        return client
+    except TimeoutError:
+        view.close()
+        sublime.error_message(cleandoc("""
+            Timed out trying to connect to socket REPL server.
+
+            Are you trying to connect to an nREPL server? Tutkain no longer supports nREPL.
+
+            See https://tutkain.flowthing.me/#starting-a-socket-repl for more information.
+            """))
+
+
+def start_printer(client, view):
+    print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client.printq))
+    print_loop.name = f"tutkain.{client.id}.print_loop"
+    print_loop.start()
+    return print_loop
+
+
+def on_select_disconnect_connection(connection):
+    if connection:
+        window = sublime.active_window()
+        connection_window = connection.view.window()
+        connection.client.halt()
+
+        if window and connection_window and window.id() == connection_window.id():
+            active_view = window.active_view()
+            connection.view.close()
+            window.focus_view(active_view)
+
+
+def make_quick_panel_item(connection):
+    if connection.view.element() is None:
+        output = "view"
+    else:
+        output = "panel"
+
+    annotation = f"{dialects.name(connection.client.dialect)} ({output})"
+    trigger = f"{connection.client.host}:{connection.client.port}"
+    return sublime.QuickPanelItem(trigger, annotation=annotation)
+
+
+def stop(window):
+    if connections := list(state.get_connections().values()):
+        progress.stop()
+
+        if len(connections) == 1:
+            on_select_disconnect_connection(connections[0])
+        else:
+            window.show_quick_panel(
+                list(map(make_quick_panel_item, connections)),
+                lambda index: index != -1 and on_select_disconnect_connection(connections[index]),
+                placeholder="Choose the connection to close"
+            )

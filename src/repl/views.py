@@ -1,6 +1,6 @@
 from ...api import edn
 from .. import dialects
-from sublime import View, Window
+from sublime import View, Window, active_window
 from typing import Union
 
 REPL_VIEW_DEFAULT_SETTINGS = {
@@ -92,8 +92,8 @@ def configure(view, dialect, client_id, host, port, settings={}):
     return view
 
 
-def tap_panel_name(output):
-    if output == "view":
+def tap_panel_name(view):
+    if view.element() is None:
         return "tutkain.tap_panel"
     else:
         return output_panel_name()
@@ -103,17 +103,19 @@ def show_output_panel(window):
     window.run_command("show_panel", {"panel": f"output.{output_panel_name()}"})
 
 
-def show_tap_panel(window, output):
-    window.run_command("show_panel", {"panel": f"output.{tap_panel_name(output)}"})
+def show_tap_panel(view):
+    window = view.window() or active_window()
+    window.run_command("show_panel", {"panel": f"output.{tap_panel_name(view)}"})
 
 
-def tap_panel(window, output):
-    return window.find_output_panel(tap_panel_name(output))
+def tap_panel(view):
+    window = view.window() or active_window()
+    return window.find_output_panel(tap_panel_name(view))
 
 
-def create_tap_panel(window, output):
-    name = tap_panel_name(output)
-
+def create_tap_panel(view):
+    window = view.window() or active_window()
+    name = tap_panel_name(view)
     panel = window.find_output_panel(name)
 
     if window.find_output_panel(name) is None:
@@ -129,3 +131,13 @@ def create_tap_panel(window, output):
 
 def find_by_id(window, id):
     return next(filter(lambda view: view.id() == id, window.views()), None)
+
+
+def get_or_create_view(window, output, view_id=None):
+    if view_id and (view := find_by_id(window, view_id)):
+        return view
+    elif output == "panel":
+        name = output_panel_name()
+        return window.find_output_panel(name) or window.create_output_panel(name)
+    else:
+        return window.new_file()

@@ -4,7 +4,7 @@ from Tutkain.api import edn
 from Tutkain.package import start_logging, stop_logging
 from Tutkain.src import repl
 
-from .mock import Server, send_edn, send_text
+from .mock import REPL, Backchannel
 
 
 class TestJVMClient(TestCase):
@@ -21,7 +21,7 @@ class TestJVMClient(TestCase):
             buf.write("user=> ")
             buf.flush()
 
-        with Server(send_text, greeting=write_greeting) as server:
+        with REPL(greeting=write_greeting) as server:
             client = repl.JVMClient(server.host, server.port)
 
             server.executor.submit(client.connect)
@@ -47,8 +47,8 @@ class TestJVMClient(TestCase):
             server.send("#'tutkain.repl/repl")
             server.recv()
 
-            with Server(send_edn) as backchannel:
-                server.send(f"""{{:greeting "Clojure 1.11.0-alpha1" :host "localhost", :port {backchannel.port}}}""")
+            with Backchannel() as backchannel:
+                server.send(f"""{{:greeting "Clojure 1.11.0-alpha1\\n" :host "localhost", :port {backchannel.port}}}""")
                 filenames = {"java.clj", "lookup.clj", "completions.clj", "load_blob.clj", "test.clj", "query.clj", "analyzer.clj", "analyzer/jvm.clj"}
 
                 for filename in filenames:
@@ -56,7 +56,10 @@ class TestJVMClient(TestCase):
                     self.assertEquals(edn.Keyword("load-base64"), response.get(edn.Keyword("op")))
                     self.assertTrue(response.get(edn.Keyword("filename")) in filenames)
 
-                self.assertEquals("Clojure 1.11.0-alpha1", client.printq.get(timeout=1))
+                self.assertEquals({
+                    "target": "view",
+                    "val": "Clojure 1.11.0-alpha1\n"
+                }, client.printq.get(timeout=1))
 
                 client.evaluate("(inc 1)")
 
@@ -83,7 +86,10 @@ class TestJVMClient(TestCase):
 
                 self.assertEquals("(inc 1)\n", server.recv())
                 server.send("2")
-                self.assertEquals("2\n", client.printq.get(timeout=1))
+                self.assertEquals({
+                    "target": "view",
+                    "val": "2\n"
+                }, client.printq.get(timeout=1))
 
             client.halt()
             self.assertEquals(":repl/quit", server.recv())

@@ -121,34 +121,6 @@ def evaluate(view, client, code, point=None, options={}):
     options["column"] = column
     client.evaluate(code, options)
 
-
-def set_layout(window):
-    # Set up a two-row layout.
-    #
-    # TODO: Make configurable? This will clobber pre-existing layouts —
-    # maybe add a setting for toggling this bit?
-
-    # Only change the layout if the current layout has one row and one column.
-    if window.get_layout() == {
-        "cells": [[0, 0, 1, 1]],
-        "cols": [0.0, 1.0],
-        "rows": [0.0, 1.0],
-    }:
-        if settings.load().get("layout") == "vertical":
-            layout = {
-                "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
-                "cols": [0.0, 0.5, 1.0],
-                "rows": [0.0, 1.0],
-            }
-        else:
-            layout = {
-                "cells": [[0, 0, 1, 1], [0, 1, 1, 2]],
-                "cols": [0.0, 1.0],
-                "rows": [0.0, 0.5, 1.0],
-            }
-
-        window.set_layout(layout)
-
 class TemporaryFileEventListener(ViewEventListener):
     @classmethod
     def is_applicable(_, settings):
@@ -187,7 +159,7 @@ class TutkainClearOutputViewCommand(WindowCommand):
                     self.clear_view(view)
 
             elif view_name == "tap":
-                if view := repl.views.tap_panel(self.window, "view"):
+                if view := repl.views.tap_panel(repl.views.active_output_view(self.window)):
                     self.clear_view(view)
 
 
@@ -356,13 +328,17 @@ class TutkainEvaluateCommand(TextCommand):
         return self.without_discard_macro(eval_region)
 
     def evaluate_view(self, client, code):
+        view = self.view
+        window = view.window()
+        ns = namespace.name(view)
+
         def handler(response):
-            client.print(response)
             progress.stop()
-            self.view.window().status_message("[Tutkain] Evaluating view... done.")
+            window.status_message("[Tutkain] Evaluating view... done.")
             # Switch to current namespace after loading view
-            if ns := namespace.name(self.view):
+            if not response.get(edn.Keyword("exception")) and ns:
                 client.switch_namespace(ns)
+            client.print(response)
 
         progress.start("[Tutkain] Evaluating view...")
 
@@ -499,106 +475,60 @@ class EvaluationScopeInputHandler(ListInputHandler):
 
 
 class TutkainConnectCommand(WindowCommand):
-    def choose_build_id(self, ids, on_cancel, on_done):
+    def choose_build_id(self, view, ids, on_done):
         if items := list(map(lambda id: id.name, ids)):
             self.window.show_quick_panel(
                 items,
-                lambda index: on_cancel() if index == -1 else on_done(index),
+                lambda index: view.close() if index == -1 else on_done(index),
                 placeholder="Choose shadow-cljs build ID",
                 flags=sublime.MONOSPACE_FONT
             )
 
-    def get_or_create_view(self, view_id, output):
-        if view_id and (view := repl.views.find_by_id(self.window, view_id)):
-            return view
-        elif output == "panel":
-            name = repl.views.output_panel_name()
-            return self.window.find_output_panel(name) or self.window.create_output_panel(name)
-        else:
-            return self.window.new_file()
-
-    def make_client(self, dialect, host, port, backchannel, on_cancel):
-        if dialect == edn.Keyword("cljs"):
-            if not backchannel:
-                sublime.error_message("[Tutkain]: The backchannel: false argument to tutkain_connect is currently not supported for ClojureScript.")
-            else:
-                def prompt(ids, on_done):
-                    self.choose_build_id(ids, on_cancel, on_done)
-
-                return repl.JSClient(host, port, prompt, options={
-                    "backchannel": {
-                        "enabled": backchannel,
-                        "port": settings.load().get("clojurescript").get("backchannel").get("port"),
-                        "bind_address": settings.load().get("clojurescript").get("backchannel").get("bind_address", "localhost")
-                    }
-                })
-        elif dialect == edn.Keyword("bb"):
-            return repl.BabashkaClient(host, port)
-        else:
-            return repl.JVMClient(
-                host, port, options={
-                    "backchannel": {
-                        "enabled": backchannel,
-                        "port": settings.load().get("clojure").get("backchannel").get("port"),
-                        "bind_address": settings.load().get("clojure").get("backchannel").get("bind_address", "localhost")
-                    }
-                }
-            )
-
-    def connect(self, dialect, host, port, backchannel, view):
-        on_cancel = lambda: view.close()
-
+    def connect(self, dialect, host, port, view, output, backchannel, build_id):
         try:
-            client = self.make_client(dialect, host, port, backchannel, on_cancel)
-            client.connect()
-            state.register_connection(view, client)
-            return client
-        except TimeoutError:
-            on_cancel()
-            sublime.error_message(cleandoc("""
-                Timed out trying to connect to socket REPL server.
-
-                Are you trying to connect to an nREPL server? Tutkain no longer supports nREPL.
-
-                See https://tutkain.flowthing.me/#starting-a-socket-repl for more information.
-                """))
+            if dialect == edn.Keyword("cljs"):
+                if not backchannel:
+                    sublime.error_message("[Tutkain]: The backchannel: false argument to tutkain_connect is currently not supported for ClojureScript.")
+                else:
+                    client = repl.JSClient(
+                        host,
+                        port,
+                        options={
+                            "build_id": build_id,
+                            "prompt_for_build_id": lambda ids, on_done: self.choose_build_id(view, ids, on_done),
+                            "backchannel": settings.backchannel_options(dialect, backchannel)
+                        }
+                    )
+            elif dialect == edn.Keyword("bb"):
+                client = repl.BabashkaClient(host, port)
+            else:
+                client = repl.JVMClient(
+                    host,
+                    port,
+                    options={"backchannel": settings.backchannel_options(dialect, backchannel)}
+                )
         except ConnectionRefusedError:
-            on_cancel()
+            view.close()
             self.window.status_message(f"ERR: connection to {host}:{port} refused.")
 
-    def run(self, dialect, host, port, view_id=None, output="view", backchannel=True):
-        assert output in {"view", "panel"}
+        repl.start(view, client)
+        repl.start_printer(client, view)
 
-        dialect = edn.Keyword(dialect)
-
-        repl.views.create_tap_panel(self.window, output)
-
+    def run(self, dialect, host, port, view_id=None, output="view", backchannel=True, build_id=None):
         active_view = self.window.active_view()
-        view = self.get_or_create_view(view_id, output)
 
-        if client := self.connect(dialect, host, int(port), backchannel, view):
-            if output == "view":
-                set_layout(self.window)
-
-            repl_view_settings = settings.load().get("repl_view_settings", {})
-            repl.views.configure(view, dialect, client.id, client.host, client.port, repl_view_settings)
-
-            if dialect == edn.Keyword("bb") or (not backchannel and len(state.get_connections()) == 1):
-                view.assign_syntax("Plain Text.tmLanguage")
-
-            print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client))
-            print_loop.name = f"tutkain.{client.id}.print_loop"
-            print_loop.start()
-
-            if output == "view":
-                # Activate the output view and the view that was active prior to
-                # creating the output view.
-                self.window.focus_view(view)
-                self.window.focus_view(active_view)
-            else:
-                repl.views.show_output_panel(self.window)
-
-            client.ready = True
+        try:
+            self.connect(
+                edn.Keyword(dialect),
+                host,
+                int(port),
+                repl.views.get_or_create_view(self.window, output, view_id),
+                output,
+                backchannel,
+                edn.Keyword(build_id) if build_id else None
+            )
+        finally:
+            self.window.focus_view(active_view)
 
     def input(self, args):
         if "dialect" in args and "host" in args and "port" in args:
@@ -614,39 +544,8 @@ class TutkainConnectCommand(WindowCommand):
 
 
 class TutkainDisconnectCommand(WindowCommand):
-    def on_done(self, connection):
-        if connection:
-            window = sublime.active_window()
-            connection_window = connection.view.window()
-
-            if window and connection_window and window.id() == connection_window.id():
-                active_view = window.active_view()
-                connection.view.close()
-                connection.client.halt()
-                window.focus_view(active_view)
-
-    def make_quick_panel_item(self, connection):
-        if connection.view.element() is None:
-            output = "view"
-        else:
-            output = "panel"
-
-        annotation = f"{dialects.name(connection.dialect)} ({output})"
-        trigger = f"{connection.client.host}:{connection.client.port}"
-        return sublime.QuickPanelItem(trigger, annotation=annotation)
-
     def run(self):
-        if connections := list(state.get_connections().values()):
-            progress.stop()
-
-            if len(connections) == 1:
-                self.on_done(connections[0])
-            else:
-                self.window.show_quick_panel(
-                    list(map(self.make_quick_panel_item, connections)),
-                    lambda index: index != -1 and self.on_done(connections[index]),
-                    placeholder="Choose the connection to close"
-                )
+        repl.stop(self.window)
 
 
 class TutkainNewScratchViewCommand(WindowCommand):

@@ -22,65 +22,28 @@ def append_to_view(view, characters):
 def append_to_tap_panel(view, val):
     if settings.load().get("tap_panel", False):
         window = view.window() or sublime.active_window()
-
-        if view.element() is None:
-            output = "view"
-        else:
-            output = "panel"
-
-        views.show_tap_panel(window, output)
-        panel = window.find_output_panel(views.tap_panel_name(output))
+        views.show_tap_panel(view)
+        panel = window.find_output_panel(views.tap_panel_name(view))
         append_to_view(panel, val)
 
 
-def show_repl_panel(view):
-    if view.element() == "output:output":
-        views.show_output_panel(sublime.active_window())
-
-
-def print_loop(view, client):
+def print_loop(view, q):
     try:
         log.debug({"event": "thread/start"})
 
-        while item := client.printq.get():
-            if not isinstance(item, dict):
-                show_repl_panel(view)
-                append_to_view(view, item)
-            else:
-                tag = item.get(edn.Keyword("tag"))
-                val = item.get(edn.Keyword("val"))
+        while item := q.get():
+            if item["target"] == "tap":
+                append_to_tap_panel(view, item["val"])
+            elif item["target"] == "view":
+                append_to_view(view, item["val"])
+            elif item["target"] == "clipboard":
+                sublime.set_clipboard(item["val"])
+                sublime.active_window().status_message("[Tutkain] Evaluation result copied to clipboard.")
+            elif item["target"] == "inline":
+                window = view.window() or sublime.active_window()
 
-                if tag == edn.Keyword("tap"):
-                    append_to_tap_panel(view, val)
-                else:
-                    output = item.get(edn.Keyword("output"), edn.Keyword("view"))
-
-                    if output == edn.Keyword("clipboard"):
-                        string = val[:-1] if val[-1] == "\n" else val
-                        sublime.set_clipboard(string)
-                        sublime.active_window().status_message("[Tutkain] Evaluation result copied to clipboard.")
-                    elif output == edn.Keyword("inline"):
-                        view_id = item.get(edn.Keyword("view-id"))
-                        window = view.window() or sublime.active_window()
-
-                        if target_view := views.find_by_id(window, view_id):
-                            inline.clear(target_view)
-                            inline.show(target_view, item.get(edn.Keyword("point")), val)
-                    else:
-                        show_repl_panel(view)
-
-                        # Print invisible Unicode characters (U+2063) around stdout and
-                        # stderr to prevent them from getting syntax highlighting.
-                        #
-                        # This is probably somewhat evil, but the performance is *so*
-                        # much better than with view.add_regions.
-                        if tag == edn.Keyword("err"):
-                            append_to_view(view, '⁣⁣' + val + '⁣⁣')
-                        elif tag == edn.Keyword("out"):
-                            append_to_view(view, '⁣' + val + '⁣')
-                        elif edn.Keyword("debug") in item:
-                            log.debug({"event": "info", "item": item.get(edn.Keyword("val"))})
-                        elif val := item.get(edn.Keyword("val")):
-                            append_to_view(view, val)
+                if target_view := views.find_by_id(window, item["view-id"]):
+                    inline.clear(target_view)
+                    inline.show(target_view, item["point"], item["val"])
     finally:
         log.debug({"event": "thread/exit"})

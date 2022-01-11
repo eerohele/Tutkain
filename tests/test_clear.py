@@ -19,7 +19,7 @@ class TestClear(TestCase):
     def setUp(self):
         self.window = sublime.active_window()
         self.repl_view = self.window.new_file()
-        self.tap_panel = views.create_tap_panel(self.window, "view")
+        self.tap_panel = views.create_tap_panel(self.repl_view)
 
     def tearDown(self):
         if self.tap_panel:

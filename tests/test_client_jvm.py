@@ -1,14 +1,14 @@
 import sublime
 import queue
+import unittest
 
 from Tutkain.api import edn
 from Tutkain.src import repl
-from Tutkain.src.repl import views
+from Tutkain.src.repl import formatter
 from Tutkain.src import base64
-from Tutkain.src import state
 from Tutkain.src import test
 
-from .mock import Server, send_edn, send_text
+from .mock import REPL, Backchannel
 from .util import PackageTestCase
 
 
@@ -16,51 +16,50 @@ def select_keys(d, ks):
     return {k: d[k] for k in ks}
 
 
+def conduct_handshake(server, client):
+    # Client starts clojure.main/repl
+    server.recv()
+
+    # Client switches into the bootstrap namespace
+    server.recv()
+    server.send("nil")
+
+    # Client defines load-base64 function
+    server.recv()
+    server.send("#'tutkain.bootstrap/load-base64")
+
+    # Client loads modules
+    server.recv()
+    server.send("#'tutkain.format/pp-str")
+    server.recv()
+    server.send("#'tutkain.backchannel/open")
+    server.recv()
+    server.send("""#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]""")
+    server.recv()
+    server.send("#'tutkain.repl/repl")
+
+    # Client starts REPL
+    server.recv()
+
+    backchannel = Backchannel().start()
+
+    server.send(f"""{{:greeting "Clojure 1.11.0-alpha1\\n", :host "localhost", :port {backchannel.port}}}""")
+
+    # Client loads modules
+    for _ in range(8):
+        module = edn.read(backchannel.recv())
+
+        backchannel.send(edn.kwmap({
+            "id": module.get(edn.Keyword("id")),
+            "result": edn.Keyword("ok"),
+            "filename": module.get(edn.Keyword("filename"))
+        }))
+
+    client.printq.get(timeout=5)
+    return backchannel
+
+
 class TestJVMClient(PackageTestCase):
-    @classmethod
-    def conduct_handshake(self):
-        server = self.server
-
-        # Client starts clojure.main/repl
-        server.recv()
-
-        # Client switches into the bootstrap namespace
-        server.recv()
-        server.send("nil")
-
-        # Client defines load-base64 function
-        server.recv()
-        server.send("#'tutkain.bootstrap/load-base64")
-
-        # Client loads modules
-        server.recv()
-        server.send("""#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]""")
-        server.recv()
-        server.send("#'tutkain.format/pp-str")
-        server.recv()
-        server.send("#'tutkain.backchannel/open")
-        server.recv()
-        server.send("#'tutkain.repl/repl")
-        server.recv()
-
-        with Server(send_edn) as backchannel:
-            server.send(f"""{{:greeting "Clojure 1.11.0-alpha1" :host "localhost", :port {backchannel.port}}}""")
-
-            # Client loads modules
-            for _ in range(8):
-                module = edn.read(backchannel.recv())
-
-                backchannel.send(edn.kwmap({
-                    "id": module.get(edn.Keyword("id")),
-                    "result": edn.Keyword("ok"),
-                    "filename": module.get(edn.Keyword("filename"))
-                }))
-
-            # Clojure version info is printed on the client
-            self.client.printq.get(timeout=5)
-
-            return backchannel
-
     @classmethod
     def setUpClass(self):
         super().setUpClass()
@@ -69,32 +68,17 @@ class TestJVMClient(PackageTestCase):
             buf.write("user=> ")
             buf.flush()
 
-        self.server = Server(send_text, greeting=write_greeting).start()
+        self.window = sublime.active_window()
+        self.server = REPL(greeting=write_greeting).start()
         self.client = repl.JVMClient(self.server.host, self.server.port)
-        self.server.executor.submit(self.client.connect)
-        dialect = edn.Keyword("clj")
-        self.repl_view = sublime.active_window().new_file()
-        views.configure(self.repl_view, dialect, "1", self.client.host, self.client.port)
-        state.register_connection(self.repl_view, dialect, self.client)
-        self.backchannel = self.conduct_handshake()
+        self.output_view = repl.views.get_or_create_view(self.window, "view")
+        handshake = self.executor.submit(conduct_handshake, self.server, self.client)
+        repl.start(self.output_view, self.client)
+        self.backchannel = handshake.result()
 
-    @classmethod
-    def tearDownClass(self):
-        super().tearDownClass()
-
-        if self.repl_view:
-            self.repl_view.close()
-
-        if self.server:
-            self.server.stop()
-
-        if self.client:
-            self.client.halt()
-
-    def setUp(self):
-        super().setUp()
-        self.server.recvq = queue.Queue()
-        self.backchannel.recvq = queue.Queue()
+        self.addClassCleanup(repl.stop, self.window)
+        self.addClassCleanup(self.backchannel.stop)
+        self.addClassCleanup(self.server.stop)
 
     def get_print(self):
         return self.client.printq.get(timeout=5)
@@ -103,20 +87,18 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("(comment (inc 1) (inc 2))")
         self.set_selections((9, 9), (17, 17))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
-
         self.eval_context(column=10)
         self.eval_context(column=18)
-
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.server.send("user=> (inc 1)")
-        self.assertEquals("user=> (inc 1)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (inc 1)\n"), self.get_print())
         self.assertEquals("(inc 2)\n", self.server.recv())
         self.server.send("user=> (inc 2)")
-        self.assertEquals("user=> (inc 2)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (inc 2)\n"), self.get_print())
         self.server.send("2")
-        self.assertEquals("2\n", self.get_print())
+        self.assertEquals(formatter.value("2\n"), self.get_print())
         self.server.send("3")
-        self.assertEquals("3\n", self.get_print())
+        self.assertEquals(formatter.value("3\n"), self.get_print())
 
     def test_outermost_empty(self):
         self.set_view_content("")
@@ -131,30 +113,26 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=10)
         self.assertEquals("(range 10)\n", self.server.recv())
         self.server.send("user=> (range 10)")
-        self.assertEquals("user=> (range 10)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (range 10)\n"), self.get_print())
         self.server.send("(0 1 2 3 4 5 6 7 8 9)")
-        self.assertEquals("(0 1 2 3 4 5 6 7 8 9)\n", self.get_print())
+        self.assertEquals(formatter.value("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
 
     def test_form(self):
         self.set_view_content("42 84")
         self.set_selections((0, 0), (3, 3))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
         self.eval_context()
-
         self.server.send("user=> 42")
-        self.assertEquals("user=> 42\n", self.get_print())
-
+        self.assertEquals(formatter.value("user=> 42\n"), self.get_print())
         self.eval_context(column=4)
-
         self.server.send("user=> 84")
-        self.assertEquals("user=> 84\n", self.get_print())
-
+        self.assertEquals(formatter.value("user=> 84\n"), self.get_print())
         self.assertEquals("42\n", self.server.recv())
         self.server.send("42")
-        self.assertEquals("42\n", self.get_print())
+        self.assertEquals(formatter.value("42\n"), self.get_print())
         self.assertEquals("84\n", self.server.recv())
         self.server.send("84")
-        self.assertEquals("84\n", self.get_print())
+        self.assertEquals(formatter.value("84\n"), self.get_print())
 
     def test_parameterized(self):
         self.set_view_content("{:a 1} {:b 2}")
@@ -163,45 +141,41 @@ class TestJVMClient(PackageTestCase):
         self.eval_context()
         self.assertEquals("((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.server.recv())
         self.server.send("user=> ((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})")
-        self.assertEquals("user=> ((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n", self.get_print())
+        self.assertEquals(formatter.value("user=> ((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n"), self.get_print())
         self.server.send("({:a 1} {:b 2} nil)")
-        self.assertEquals("({:a 1} {:b 2} nil)\n", self.get_print())
+        self.assertEquals(formatter.value("({:a 1} {:b 2} nil)\n"), self.get_print())
 
     def test_eval_in_ns(self):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
         self.eval_context()
-
         self.server.send("user=> (reset)")
-        self.assertEquals("user=> (reset)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (reset)\n"), self.get_print())
 
         # Clients sends ns first
         ret = self.server.recv()
         self.assertEquals(ret, "(tutkain.repl/switch-ns user)\n")
         self.assertEquals("(reset)\n", self.server.recv())
         self.server.send("nil")
-        self.assertEquals("nil\n", self.get_print())
+        self.assertEquals(formatter.value("nil\n"), self.get_print())
 
     def test_ns(self):
         self.set_view_content("(ns foo.bar) (ns baz.quux) (defn x [y] y)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "ns"})
         self.eval_context()
-
         self.server.send("user=> (ns foo.bar)")
-        self.assertEquals("user=> (ns foo.bar)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (ns foo.bar)\n"), self.get_print())
 
         self.assertEquals("(ns foo.bar)\n", self.server.recv())
         self.eval_context(column=14)
-
         self.server.send("user=> (ns baz.quux)")
-        self.assertEquals("user=> (ns baz.quux)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (ns baz.quux)\n"), self.get_print())
 
         self.assertEquals("(ns baz.quux)\n", self.server.recv())
-
         self.server.send("nil")  # foo.bar
-        self.assertEquals("nil\n", self.get_print())
+        self.assertEquals(formatter.value("nil\n"), self.get_print())
         self.server.send("nil")  # baz.quux
-        self.assertEquals("nil\n", self.get_print())
+        self.assertEquals(formatter.value("nil\n"), self.get_print())
 
     def test_view(self):
         self.set_view_content("(ns foo.bar) (defn x [y] y)")
@@ -220,7 +194,8 @@ class TestJVMClient(PackageTestCase):
 
         response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "nil"})
         self.backchannel.send(response)
-        self.assertEquals(response, self.get_print())
+
+        self.assertEquals(formatter.value("nil"), self.get_print())
         self.assertEquals("(tutkain.repl/switch-ns foo.bar)\n", self.server.recv())
 
     def test_view_syntax_error(self):
@@ -238,38 +213,41 @@ class TestJVMClient(PackageTestCase):
             edn.Keyword("id"): id
         }, message)
 
+        # Can't be bothered to stick a completely realistic exception map
+        # here, this'll do
+        ex_message = """{:via [{:type clojure.lang.Compiler$CompilerException, :message "Syntax error reading source at (NO_SOURCE_FILE)"}]}"""
+
         response = edn.kwmap({
             "id": id,
             "tag": edn.Keyword("ret"),
-            # Can't be bothered to stick a completely realistic exception map
-            # here, this'll do
-            "val": """{:via [{:type clojure.lang.Compiler$CompilerException, :message "Syntax error reading source at (NO_SOURCE_FILE)"}]}""",
+            "val": ex_message,
             "exception": True
         })
 
         self.backchannel.send(response)
-        self.assertEquals(response, self.get_print())
-        self.assertEquals("(tutkain.repl/switch-ns foo.bar)\n", self.server.recv())
+        self.assertEquals(formatter.value(ex_message), self.get_print())
 
     def test_view_common(self):
         self.view.assign_syntax("Packages/Tutkain/Clojure Common (Tutkain).sublime-syntax")
-        self.set_view_content("(ns foo.bar) (defn x [y] y)")
+        self.set_view_content("(ns baz.quux) (defn x [y] y)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
-        response = edn.read(self.backchannel.recv())
-        id = response.get(edn.Keyword("id"))
+        message = edn.read(self.backchannel.recv())
+        id = message.get(edn.Keyword("id"))
 
         self.assertEquals({
             edn.Keyword("op"): edn.Keyword("load"),
-            edn.Keyword("code"): base64.encode("(ns foo.bar) (defn x [y] y)".encode("utf-8")),
+            edn.Keyword("code"): base64.encode("(ns baz.quux) (defn x [y] y)".encode("utf-8")),
             edn.Keyword("file"): None,
             edn.Keyword("id"): id
-        }, response)
+        }, message)
 
-        response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "#'x"})
+        response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "#'baz.quux/x"})
         self.backchannel.send(response)
-        self.assertEquals(response, self.get_print())
+
+        self.assertEquals("(tutkain.repl/switch-ns baz.quux)\n", self.server.recv())
+        self.assertEquals(formatter.value("#'baz.quux/x"), self.get_print())
 
     def test_discard(self):
         self.set_view_content("#_(inc 1)")
@@ -278,10 +256,10 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=3)
 
         self.server.send("user=> (inc 1)")
-        self.assertEquals("user=> (inc 1)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (inc 1)\n"), self.get_print())
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals("2\n", self.get_print())
+        self.assertEquals(formatter.value("2\n"), self.get_print())
 
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
@@ -289,10 +267,10 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=3)
 
         self.server.send("user=> (inc 1)")
-        self.assertEquals("user=> (inc 1)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (inc 1)\n"), self.get_print())
         self.assertEquals("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals("2\n", self.get_print())
+        self.assertEquals(formatter.value("2\n"), self.get_print())
 
         self.set_view_content("(inc #_(dec 2) 4)")
         self.set_selections((14, 14))
@@ -300,10 +278,10 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=8)
 
         self.server.send("user=> (dec 2)")
-        self.assertEquals("user=> (dec 2)\n", self.get_print())
+        self.assertEquals(formatter.value("user=> (dec 2)\n"), self.get_print())
         self.assertEquals("(dec 2)\n", self.server.recv())
         self.server.send("1")
-        self.assertEquals("1\n", self.get_print())
+        self.assertEquals(formatter.value("1\n"), self.get_print())
 
         self.set_view_content("#_:a")
         self.set_selections((2, 2))
@@ -311,10 +289,10 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=3)
 
         self.server.send("user=> :a")
-        self.assertEquals("user=> :a\n", self.get_print())
+        self.assertEquals(formatter.value("user=> :a\n"), self.get_print())
         self.assertEquals(":a\n", self.server.recv())
         self.server.send(":a")
-        self.assertEquals(":a\n", self.get_print())
+        self.assertEquals(formatter.value(":a\n"), self.get_print())
 
     def test_lookup(self):
         self.set_view_content("(rand)")
@@ -406,7 +384,7 @@ class TestJVMClient(PackageTestCase):
         self.eval_context()
         self.assertEquals("""(Integer/parseInt "42")\n""", self.server.recv())
         self.server.send("""user=> (Integer/parseInt "42")""")
-        self.assertEquals("""user=> (Integer/parseInt "42")\n""", self.get_print())
+        self.assertEquals(formatter.value("""user=> (Integer/parseInt "42")\n"""), self.get_print())
 
     def test_async_run_tests_ns(self):
         code = """
@@ -419,8 +397,8 @@ class TestJVMClient(PackageTestCase):
 
         self.set_view_content(code)
         self.view.run_command("tutkain_run_tests", {"scope": "ns"})
-        response = edn.read(self.backchannel.recv())
-        id = response.get(edn.Keyword("id"))
+        message = edn.read(self.backchannel.recv())
+        id = message.get(edn.Keyword("id"))
 
         self.assertEquals(edn.kwmap({
             "op": edn.Keyword("test"),
@@ -429,7 +407,7 @@ class TestJVMClient(PackageTestCase):
             "vars": [],
             "code": base64.encode(code.encode("utf-8")),
             "id": id
-        }), response)
+        }), message)
 
         response = edn.kwmap({
             "id": id,
@@ -451,8 +429,9 @@ class TestJVMClient(PackageTestCase):
         })
 
         self.backchannel.send(response)
+        yield # Why?
 
-        self.assertEquals(response, self.get_print())
+        self.assertEquals(formatter.value("{:test 1, :pass 1, :fail 0, :error 0, :assert 1, :type :summary}"), self.get_print())
 
         self.assertEquals(
             [sublime.Region(78, 78)],
@@ -509,6 +488,7 @@ class TestJVMClient(PackageTestCase):
         })
 
         self.backchannel.send(response)
+        yield # Why?
 
         self.assertEquals(response, self.get_print())
         self.assertEquals(
@@ -594,15 +574,14 @@ class TestJVMClient(PackageTestCase):
         # Client sends code string over eval channel
         self.assertEquals("(inc 1)\n", self.server.recv())
 
-        response = edn.kwmap({
+        # Server sends response over backchannel
+        self.backchannel.send(edn.kwmap({
             "tag": edn.Keyword("ret"),
             "val": "2",
             "output": edn.Keyword("clipboard")
-        })
+        }))
 
-        # Server sends response over backchannel
-        self.backchannel.send(response)
-        self.assertEquals(response, self.get_print())
+        self.assertEquals(formatter.clipboard("2"), self.get_print())
 
     def test_evaluate_to_inline(self):
         self.set_view_content("(inc 1)")
@@ -648,14 +627,15 @@ class TestJVMClient(PackageTestCase):
         # Client sends code string over eval channel
         self.assertEquals("(inc 1)\n", self.server.recv())
 
-        response = edn.kwmap({
+        view_id = eval_context.get(edn.Keyword("response")).get(edn.Keyword("view-id"))
+
+        # Server sends response over backchannel
+        self.backchannel.send(edn.kwmap({
             "tag": edn.Keyword("ret"),
             "val": "2",
             "output": eval_context.get(edn.Keyword("response")).get(edn.Keyword("output")),
-            "view-id": eval_context.get(edn.Keyword("response")).get(edn.Keyword("view-id")),
+            "view-id": view_id,
             "point": 7
-        })
+        }))
 
-        # Server sends response over backchannel
-        self.backchannel.send(response)
-        self.assertEquals(response, self.get_print())
+        self.assertEquals(formatter.inline(7, view_id, "2"), self.get_print())
