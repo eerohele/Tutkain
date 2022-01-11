@@ -140,7 +140,6 @@ class Client(ABC):
         self.buffer.write(":repl/quit")
         self.buffer.flush()
         self.socket.shutdown(socket.SHUT_RDWR)
-        self.on_close()
         log.debug({"event": "thread/exit"})
 
     @abstractmethod
@@ -188,6 +187,7 @@ class Client(ABC):
             log.debug({"event": "thread/exit"})
 
             try:
+                self.on_close()
                 self.buffer.close()
                 self.socket.close()
                 log.debug({"event": "client/disconnect"})
