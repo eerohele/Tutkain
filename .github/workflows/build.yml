@@ -32,16 +32,16 @@ jobs:
           sh github.sh run_tests
           sh github.sh run_syntax_tests
 
-  windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: (new-object net.webclient).DownloadFile("https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.ps1","github.ps1")
-      - run: |
-          ./github.ps1 "bootstrap" -verbose
-          ./github.ps1 "install_package_control" -verbose
-          ./github.ps1 "run_tests" -verbose
-          ./github.ps1 "run_syntax_tests" -verbose
+  # windows:
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - run: (new-object net.webclient).DownloadFile("https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.ps1","github.ps1")
+  #     - run: |
+  #         ./github.ps1 "bootstrap" -verbose
+  #         ./github.ps1 "install_package_control" -verbose
+  #         ./github.ps1 "run_tests" -verbose
+  #         ./github.ps1 "run_syntax_tests" -verbose
 
   clojure:
     strategy:
