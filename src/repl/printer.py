@@ -22,7 +22,7 @@ def append_to_view(view, characters):
 
     if view and characters:
         view.set_read_only(False)
-        print_characters(view, characters)
+        print_characters(view, characters.replace("\r", ""))
         view.set_read_only(True)
         view.run_command("move_to", {"to": "eof"})
 
