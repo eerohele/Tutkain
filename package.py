@@ -742,8 +742,8 @@ class TutkainEventListener(EventListener):
                 })
 
     def on_pre_close(self, view):
-        if (dialect := repl.views.get_dialect(view)) and (client := state.get_client(view.window(), dialect)):
-            client.halt()
+        if connection := state.get_view_connection(view):
+            connection.client.halt()
 
     def on_query_completions(self, view, prefix, locations):
         if settings.load().get("auto_complete"):

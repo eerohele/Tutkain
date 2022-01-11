@@ -489,12 +489,12 @@ def start_printer(client, view):
 def on_select_disconnect_connection(connection):
     if connection:
         window = sublime.active_window()
-        connection_window = connection.view.window()
-        connection.client.halt()
+        active_view = window.active_view()
 
-        if window and connection_window and window.id() == connection_window.id():
-            active_view = window.active_view()
+        try:
+            connection.client.halt()
             connection.view.close()
+        finally:
             window.focus_view(active_view)
 
 

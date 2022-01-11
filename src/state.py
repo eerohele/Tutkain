@@ -25,7 +25,8 @@ class Connection:
 
 __state = State(
     connections=defaultdict(dict),
-    active_connection=defaultdict(dict)
+    active_connection=defaultdict(dict),
+    connection_by_view=defaultdict(dict)
 )
 
 
@@ -33,9 +34,13 @@ def get_connections():
     return __state["connections"]
 
 
-def forget_connection(connection: Connection) -> None:
-    if connections := get_connections():
-        connections.pop(connection.client.id)
+def register_connection(view: View, window: Window, client: repl.Client) -> None:
+    connection = Connection(client, window, view)
+
+    def forget_connection():
+        del __state["connections"][connection.client.id]
+        connections = __state["connections"]
+        del __state["connection_by_view"][connection.view.id()]
 
         if get_client(connection.window, connection.client.dialect) == connection.client:
             __state["active_connection"].pop(connection.client.dialect)
@@ -47,7 +52,7 @@ def forget_connection(connection: Connection) -> None:
             if len(alts) == 1:
                 __state["active_connection"][connection.client.dialect] = alts[0]
 
-        # Destroy output panel if this is the only remaining connection for
+        # Destroy tap panel if this is the only remaining connection for
         # this window.
         if not list(filter(lambda this: this.window.id() == connection.window.id(), connections)):
             connection.window.destroy_output_panel(repl.views.tap_panel_name(connection.view))
@@ -65,13 +70,11 @@ def forget_connection(connection: Connection) -> None:
                 if dialects.for_view(view) == connection.client.dialect:
                     view.run_command("tutkain_clear_test_markers")
 
-
-def register_connection(view: View, window: Window, client: repl.Client) -> None:
-    connection = Connection(client, window, view)
-    connection.client.on_close = lambda: forget_connection(connection)
+    connection.client.on_close = forget_connection
 
     __state["connections"][connection.client.id] = connection
     __state["active_connection"][connection.client.dialect] = connection
+    __state["connection_by_view"][connection.view.id()] = connection
 
 
 def get_client(window: Window, dialect: Dialect) -> Union[repl.Client, None]:
@@ -87,3 +90,7 @@ def set_active_connection(client_id: str) -> Union[repl.Client, None]:
 def get_active_connection_view(dialect: Dialect) -> View:
     connection = __state["active_connection"][dialect]
     return __state["connections"][connection.client.id].view
+
+
+def get_view_connection(view: View):
+    return __state["connection_by_view"][view.id()]
