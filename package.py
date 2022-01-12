@@ -481,48 +481,48 @@ class TutkainConnectCommand(WindowCommand):
             )
 
     def connect(self, dialect, host, port, view, output, backchannel, build_id):
-        try:
-            if dialect == edn.Keyword("cljs"):
-                if not backchannel:
-                    sublime.error_message("[Tutkain]: The backchannel: false argument to tutkain_connect is currently not supported for ClojureScript.")
-                else:
-                    client = repl.JSClient(
-                        host,
-                        port,
-                        options={
-                            "build_id": build_id,
-                            "prompt_for_build_id": lambda ids, on_done: self.choose_build_id(view, ids, on_done),
-                            "backchannel": settings.backchannel_options(dialect, backchannel)
-                        }
-                    )
-            elif dialect == edn.Keyword("bb"):
-                client = repl.BabashkaClient(host, port)
+        if dialect == edn.Keyword("cljs"):
+            if not backchannel:
+                sublime.error_message("[Tutkain]: The backchannel: false argument to tutkain_connect is currently not supported for ClojureScript.")
             else:
-                client = repl.JVMClient(
+                client = repl.JSClient(
                     host,
                     port,
-                    options={"backchannel": settings.backchannel_options(dialect, backchannel)}
+                    options={
+                        "build_id": build_id,
+                        "prompt_for_build_id": lambda ids, on_done: self.choose_build_id(view, ids, on_done),
+                        "backchannel": settings.backchannel_options(dialect, backchannel)
+                    }
                 )
-        except ConnectionRefusedError:
-            view.close()
-            self.window.status_message(f"ERR: connection to {host}:{port} refused.")
+        elif dialect == edn.Keyword("bb"):
+            client = repl.BabashkaClient(host, port)
+        else:
+            client = repl.JVMClient(
+                host,
+                port,
+                options={"backchannel": settings.backchannel_options(dialect, backchannel)}
+            )
 
         repl.start(view, client)
         repl.start_printer(client, view)
 
     def run(self, dialect, host, port, view_id=None, output="view", backchannel=True, build_id=None):
         active_view = self.window.active_view()
+        output_view = repl.views.get_or_create_view(self.window, output, view_id)
 
         try:
             self.connect(
                 edn.Keyword(dialect),
                 host,
                 int(port),
-                repl.views.get_or_create_view(self.window, output, view_id),
+                output_view,
                 output,
                 backchannel,
                 edn.Keyword(build_id) if build_id else None
             )
+        except ConnectionRefusedError:
+            output_view.close()
+            self.window.status_message(f"ERR: connection to {host}:{port} refused.")
         finally:
             self.window.focus_view(active_view)
 
