@@ -521,3 +521,7 @@ def stop(window):
                 lambda index: index != -1 and on_select_disconnect_connection(connections[index]),
                 placeholder="Choose the connection to close"
             )
+    # Close phantom views resulting from the REPL server dying
+    elif vs := filter(lambda view: views.get_client_id(view), window.views()):
+        for view in vs:
+            view.close()

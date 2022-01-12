@@ -31,6 +31,12 @@ def output_panel_name():
     return "tutkain.output_panel"
 
 
+def get_client_id(view: View) -> Union[str, None]:
+    """Given a Tutkain REPL view, return the client ID associated with the
+    view."""
+    return view.settings().get("tutkain_repl_client_id")
+
+
 def get_host(view: View) -> Union[str, None]:
     """Given a Tutkain REPL view, return the hostname associated with the
     view."""
