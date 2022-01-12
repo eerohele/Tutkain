@@ -25,13 +25,16 @@ class Connection:
 
 __state = State(
     connections=defaultdict(dict),
-    active_connection=defaultdict(dict),
-    connection_by_view=defaultdict(dict)
+    active_connection=defaultdict(dict)
 )
 
 
 def get_connections():
     return __state["connections"]
+
+
+def get_connection_by_id(client_id: Union[str, None]) -> Union[Connection, None]:
+    get_connections().get(client_id)
 
 
 def register_connection(view: View, window: Window, client: repl.Client) -> None:
@@ -40,7 +43,6 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
     def forget_connection():
         del __state["connections"][connection.client.id]
         connections = __state["connections"]
-        del __state["connection_by_view"][connection.view.id()]
 
         if get_client(connection.window, connection.client.dialect) == connection.client:
             __state["active_connection"].pop(connection.client.dialect)
@@ -74,7 +76,6 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
 
     __state["connections"][connection.client.id] = connection
     __state["active_connection"][connection.client.dialect] = connection
-    __state["connection_by_view"][connection.view.id()] = connection
 
 
 def get_client(window: Window, dialect: Dialect) -> Union[repl.Client, None]:
@@ -90,7 +91,3 @@ def set_active_connection(client_id: str) -> Union[repl.Client, None]:
 def get_active_connection_view(dialect: Dialect) -> View:
     connection = __state["active_connection"][dialect]
     return __state["connections"][connection.client.id].view
-
-
-def get_view_connection(view: View):
-    return __state["connection_by_view"][view.id()]

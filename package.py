@@ -742,7 +742,7 @@ class TutkainEventListener(EventListener):
                 })
 
     def on_pre_close(self, view):
-        if connection := state.get_view_connection(view):
+        if connection := state.get_connection_by_id(repl.views.get_client_id(view)):
             connection.client.halt()
 
     def on_query_completions(self, view, prefix, locations):
