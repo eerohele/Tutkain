@@ -1,10 +1,7 @@
-from concurrent.futures import TimeoutError
-from inspect import cleandoc
 from functools import partial
 import json
 import os
 import sublime
-from threading import Thread
 
 from sublime_plugin import (
     EventListener,
@@ -34,7 +31,6 @@ from .src.repl import info
 from .src.repl import query
 from .src.repl import history
 from .src.repl import ports
-from .src.repl import printer
 
 
 from .src.log import start_logging, stop_logging
