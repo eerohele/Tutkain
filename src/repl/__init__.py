@@ -510,7 +510,7 @@ def make_quick_panel_item(connection):
 
 
 def stop(window):
-    if connections := list(state.get_connections().values()):
+    if connections := list(filter(lambda this: this.window.id() == window.id(), state.get_connections().values())):
         progress.stop()
 
         if len(connections) == 1:
