@@ -20,6 +20,7 @@ from .. import dialects
 from .. import progress
 from .. import settings
 from .. import state
+from .. import status
 from . import formatter
 from . import printer
 from . import views
@@ -444,6 +445,7 @@ def set_layout(window):
 
 def start(view, client):
     window = view.window() or sublime.active_window()
+    active_view = window.active_view()
     views.create_tap_panel(view)
 
     try:
@@ -464,6 +466,9 @@ def start(view, client):
             views.show_output_panel(window)
 
         client.ready = True
+
+        status.set_connection_status(active_view, client)
+
         return client
     except TimeoutError:
         view.close()

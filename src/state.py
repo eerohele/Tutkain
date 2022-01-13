@@ -4,6 +4,7 @@ from typing import Union, TypedDict
 from dataclasses import dataclass
 from . import repl
 from . import dialects
+from . import status
 from ..api import edn
 
 
@@ -41,6 +42,8 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
     connection = Connection(client, window, view)
 
     def forget_connection():
+        status.erase_connection_status(window.active_view())
+
         del __state["connections"][connection.client.id]
         connections = __state["connections"]
 
