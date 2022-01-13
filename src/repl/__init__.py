@@ -309,9 +309,6 @@ class JVMClient(Client):
 
 
 class JSClient(Client):
-    def dialect(self):
-        return edn.Keyword("cljs")
-
     def __init__(self, host, port, options={}):
         super().__init__(host, port, "tutkain.cljs.client", edn.Keyword("cljs"), options=options)
 
