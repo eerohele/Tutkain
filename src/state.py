@@ -42,8 +42,6 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
     connection = Connection(client, window, view)
 
     def forget_connection():
-        status.erase_connection_status(window.active_view())
-
         del __state["connections"][connection.client.id]
         connections = __state["connections"]
 
@@ -74,6 +72,8 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
             if view := connection.window.active_view():
                 if dialects.for_view(view) == connection.client.dialect:
                     view.run_command("tutkain_clear_test_markers")
+
+        window and status.erase_connection_status(window.active_view())
 
     connection.client.on_close = forget_connection
 
