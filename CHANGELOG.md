@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
   See [this message](https://github.com/eerohele/Tutkain/blob/develop/messages/0.12.0.txt) for information on how to restore those key bindings so that
   Tutkain works the same way it did before.
 
+- A POSSIBLY BREAKING CHANGE: I no longer have access to a Windows machine to test Tutkain on, so Windows support may be broken. Sorry. If you'd like to help fix and test it, please open an issue.
+
 - Add support for using a panel instead of a view for REPL output #79
 
   To use a panel instead of a view, modify the key binding for your `tutkain_connect` command to pass the `"output"` argument:
@@ -23,6 +25,43 @@ All notable changes to this project will be documented in this file.
   ```
 
   By default, Tutkain continues to use a regular view for REPL output. This is subject to change while Tutkain remains in alpha.
+
+- Add support for copying evaluation result into your clipboard
+
+  To use it, define a key binding like this (via **Tutkain: Edit Key Bindings**):
+
+  ```json
+  {
+      "keys": ["ctrl+c", "ctrl+p"],
+      "command": "tutkain_evaluate",
+      "args": {"scope": "outermost", "output": "clipboard"},
+      "context": [{
+        "key": "selector",
+        "operator": "equal",
+        "operand": "source.clojure"
+      }]
+  },
+  ```
+
+- Add support for disabling the backchannel
+
+  By default, when Tutkain connects to a Clojure runtime, it opens a second socket connection that it uses for tooling-related messages such as auto-completions etc.
+
+  You can now ask Tutkain not to open that connection. To do that, define a key binding like this:
+
+  ```json
+  {
+      "keys": ["ctrl+c", "ctrl+m"],
+      "command": "tutkain_connect",
+      "args": {
+        "host": "localhost",
+        "backchannel": false,
+        "output": "panel"
+      }
+  },
+  ```
+
+- Show connection status indicator in status bar
 
 - Fix symbol information lookup and auto-completion support when connecting to a shadow-cljs socket server without first connecting to a Clojure server
 
