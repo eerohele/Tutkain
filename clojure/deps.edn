@@ -1,24 +1,24 @@
 {:paths ["src" "resources"]
 
- :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.879"}}
+ :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.11.4"}}
                   :extra-paths ["dev/cljs"]}
 
-           :shadow-cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.15.10"}}
+           :shadow-cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.16.12"}}
                          :extra-paths ["dev/shadow"]}
 
-           :figwheel {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.14"}}
+           :figwheel {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.15"}}
                       :extra-paths ["dev/figwheel"]}
 
-           :dev {:extra-deps {org.clojure/clojure {:mvn/version "1.11.0-alpha3"}
-                              org.clojure/test.check {:mvn/version "1.1.0"}
-                              org.clojure/tools.deps.alpha {:mvn/version "0.12.1048"}
+           :dev {:extra-deps {org.clojure/clojure {:mvn/version "1.11.0-alpha4"}
+                              org.clojure/test.check {:mvn/version "1.1.1"}
+                              org.clojure/tools.deps.alpha {:mvn/version "0.12.1109"}
                               org.clojure/tools.trace {:mvn/version "0.7.11"}
-                              org.clojure/tools.analyzer.jvm {:mvn/version "1.2.0"}
+                              org.clojure/tools.analyzer.jvm {:mvn/version "1.2.2"}
                               com.cognitect/transcriptor {:mvn/version "0.1.5"}
                               com.clojure-goes-fast/clj-async-profiler {:mvn/version "0.5.1"}
                               criterium/criterium {:mvn/version "0.4.6"}
                               me.flowthing/shiv {:git/url "https://gist.github.com/eerohele/8611d1a98bd2d5e8ddda14d8394d720a"
-                                                 :sha "9423badd88039186864fe18a9f2ef37c7bb596c3"}}
+                                                 :sha "1fcde34f51c9c69710eb75c268eed1f88fa27b05"}}
                  :exec-fn shiv/start-server
                  :exec-args {:name "server"
                              :port 0
