@@ -752,6 +752,9 @@ class TutkainEventListener(EventListener):
             point = locations[0] - 1
             return completions.get_completions(view, prefix, point)
 
+    def on_pre_close_project(self, window):
+        repl.stop(window)
+
 
 class TutkainExpandSelectionImplCommand(TextCommand):
     """Internal, do not use. Use the tutkain_expand_selection window command
