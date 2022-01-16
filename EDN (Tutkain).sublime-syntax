@@ -1,125 +1,194 @@
 %YAML 1.2
 ---
-# https://www.sublimetext.com/docs/syntax.html
+# http://www.sublimetext.com/docs/syntax.html
+version: 2
 name: EDN (Tutkain)
-file_extensions: [edn]
+file_extensions:
+  - edn
 scope: source.edn
-
-variables:
-  whitespace: '(?:\s|(,))*'
-  end_chars: '\s,()\[\]{}";'
-  end: '(?=$|[{{end_chars}}])'
-  number_end: '(?=$|[{{end_chars}}''`#])'
-  non_symbol_chars: \s,;\(\)\[\]{}\"`~@\^\\\/
-  symbol_head: '(?:\+(?!\d)|-(?!\d)|\.|[^{{non_symbol_chars}}:#''\d+-\.])'
-  symbol: '(?:/|{{symbol_head}}[^{{non_symbol_chars}}]*)'
-  qualified_symbol: '(?:/|{{symbol}}|({{symbol}})(/)({{symbol}})*){{end}}'
-  keyword_namespace: '[^{{non_symbol_chars}}:/]*'
-  keyword: '[[^{{non_symbol_chars}}:]|/][[^{{non_symbol_chars}}:]/:]*'
-  constant: '(nil|true|false){{end}}'
-  regexp_name: '[a-zA-Z][a-zA-Z0-9]*'
-  sign: '[-+]?'
-  exponent: (?:[eE]{{sign}}\d+)
-
 contexts:
-  main:
-    - include: stray-brackets
-    - include: forms
-
-  # https://clojure.org/reference/reader
-  forms:
-    - include: constant
-
-    # Literals
-    - include: string
-    - include: numbers
-    - include: symbolic
-    - include: keywords
-
-    # Macro characters
-    - include: macro_characters
-
-    # S-expressions
-    - include: sexp
-
-    # Comma
-    - include: comma
-
-    # Symbols
-    - include: symbol
-
-    # Fallback?
-    - match: '[^\s,;\(\)\[\]{}\"`~@\^\\]+'
-
-  # Constants
-
-  constant:
-    - match: '{{constant}}'
-      scope: meta.reader-form.edn constant.language.edn
-
-  # Symbols
-
-  symbol:
-    - match: '{{qualified_symbol}}'
-      scope: meta.reader-form.edn meta.symbol.edn
-      captures:
-        1: meta.namespace.edn
-        2: punctuation.accessor.edn
-
-  # Literals
-
-  string:
-    - match: '"'
-      scope: punctuation.definition.string.begin.edn
-      push:
-      - meta_scope: meta.reader-form.edn string.quoted.double.edn
-      - match: '(\\)(u\h{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
-        scope: constant.character.escape.edn
-        captures:
-          1: punctuation.definition.character.escape.begin.edn
-          3: invalid.illegal.escape.string.edn
-          4: punctuation.definition.character.escape.begin.edn
-      - match: '"'
-        scope: punctuation.definition.string.end.edn
-        pop: true
-
-  numbers:
-    - include: deprecated
-    - include: integer_with_radix
-    - include: hex_integer
-    - include: decimal_integer
-    - include: float
-    - include: ratio
-
-  deprecated:
-    - match: '[-+]?0\d+N?{{number_end}}'
-      scope: meta.reader-form.edn invalid.deprecated.edn
+  # Rule: comment
+  comment|0:
+    - meta_content_scope: comment.line.edn
+    - match: '$\n?'
+      scope: comment.line.edn
       pop: true
-
-  integer_with_radix:
-    - match: '([-+]?)((?:[2-9]|[1-9]\d+)[Rr])[0-9A-Za-z]+{{number_end}}'
-      scope: meta.reader-form.edn constant.numeric.integer.other.edn
+  # Rule: hex-integer
+  hex-integer|0:
+    - meta_content_scope: meta.reader-form.edn constant.numeric.integer.hexadecimal.edn
+    - match: 'N'
+      scope: meta.reader-form.edn constant.numeric.integer.hexadecimal.edn storage.type.numeric.edn
+      pop: true
+    - match: '(?=\S)'
+      pop: true
+  # Rule: list
+  list|0:
+    - meta_content_scope: meta.sexp.list.edn
+    - match: 'nil'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.language.edn
+    - match: 'true'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.language.edn
+    - match: 'false'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.language.edn
+    - match: '"'
+      scope: meta.sexp.list.edn meta.reader-form.edn string.quoted.double.edn punctuation.definition.string.begin.edn
+      push: [list|meta, string|0]
+    - match: '([+-]?)0\d+N?'
+      scope: meta.sexp.list.edn meta.reader-form.edn invalid.deprecated.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)((?:[2-9]|[1-9]\d+)[Rr])[0-9A-Za-z]+'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.numeric.integer.other.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)(0[Xx])\h+'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.numeric.integer.hexadecimal.edn
       captures:
         1: punctuation.definition.numeric.sign.edn
         2: punctuation.definition.numeric.base.edn
-
-  hex_integer:
-    - match: '({{sign}})(0[Xx])\h+(N?){{number_end}}'
+      push: [list|meta, hex-integer|0]
+    - match: '([+-]?)\d+(N?)(?=[\s,\";\^\(\)\[\]{}\\])'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.numeric.integer.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: storage.type.numeric.edn
+    - match: '([+-]?)(?:0|[1-9][0-9]*)(?:(M)|(\.)[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|(\.)[0-9]*[eE][+-]?[0-9]+(M)?)(?=$|[\s,\";\^\(\)\[\]{}\\])'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.numeric.float.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: storage.type.numeric.edn
+        3: punctuation.separator.decimal.edn
+        4: storage.type.numeric.edn
+        5: storage.type.numeric.edn
+        6: punctuation.separator.decimal.edn
+        7: storage.type.numeric.edn
+    - match: '([+-]?)\d+(/)\d+'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.numeric.rational.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn 2:.edn punctuation.separator.rational.edn
+    - match: ':(:)+'
+      scope: meta.sexp.list.edn
+    - match: '(:)([^\s,\";\^\(\)\[\]{}\\]+)(/)[^\s,\";\^\(\)\[\]{}\\]*'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.other.keyword.qualified.edn
+      captures:
+        1: punctuation.definition.keyword.edn
+        2: meta.namespace.edn
+        3: punctuation.definition.constant.namespace.edn
+    - match: '(:)[^\s,\";\^\(\)\[\]{}\\]*'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.other.keyword.unqualified.edn
+      captures:
+        1: punctuation.definition.keyword.edn
+    - match: '##'
+      scope: meta.sexp.list.edn meta.reader-form.edn keyword.operator.macro.edn
+      push: [list|meta, symbolic|0]
+    - match: '\('
+      scope: meta.sexp.list.edn meta.sexp.list.edn punctuation.section.parens.begin.edn
+      push: [list|meta, list|0]
+    - match: '\['
+      scope: meta.sexp.list.edn meta.sexp.vector.edn punctuation.section.brackets.begin.edn
+      push: [list|meta, vector|0]
+    - match: '\{'
+      scope: meta.sexp.list.edn meta.sexp.map.edn punctuation.section.braces.begin.edn
+      push: [list|meta, map|0]
+    - match: '(#)({)'
+      scope: meta.sexp.list.edn meta.sexp.set.edn
+      captures:
+        1: keyword.operator.macro.edn
+        2: punctuation.section.braces.begin.edn
+      push: [list|meta, set|0]
+    - match: '(?<=^|[\s,()\[\]{}"]|#_)((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s])(?=$|[[\s,\";\^\(\)\[\]{}\\]])|((\\)[^[\s,\";\^\(\)\[\]{}\\]]*))'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.character.edn
+      captures:
+        2: punctuation.definition.character.begin.edn
+        4: invalid.illegal.character.edn
+        5: punctuation.definition.character.begin.edn
+    - match: '((#)_)'
+      scope: meta.sexp.list.edn comment.block.edn comment.discard.edn
+      captures:
+        1: punctuation.definition.comment.edn
+        2: keyword.operator.macro.edn
+    - match: '((#)")'
+      scope: meta.sexp.list.edn string.regexp.edn
+      captures:
+        1: punctuation.definition.string.begin.edn
+        2: keyword.operator.macro.edn
+      push: [list|meta, regexp|0]
+    - match: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*"))'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.other.instant.edn
+      captures:
+        2: keyword.operator.macro.edn
+        3: string.quoted.double.edn
+        4: punctuation.definition.string.begin.edn
+        5: punctuation.definition.string.end.edn
+        6: invalid.illegal.instant.edn
+    - match: '((#\s*uuid)\s*((")\h{8}-\h{4}-\h{4}-\h{4}-\h{12}("))|(#uuid\s*"[^"]*"))'
+      scope: meta.sexp.list.edn meta.reader-form.edn constant.other.uuid.edn
+      captures:
+        2: keyword.operator.macro.edn
+        3: string.quoted.double.edn
+        4: punctuation.definition.string.begin.edn
+        5: punctuation.definition.string.end.edn
+        6: invalid.illegal.uuid.edn
+    - match: '#'
+      scope: meta.sexp.list.edn meta.reader-form.edn keyword.operator.macro.edn
+      push: [list|meta, reader-tag|0]
+    - match: '([-+]?\d+)[^\s,\";\^\(\)\[\]{}\\e]|[''\/][^\s,\";\^\(\)\[\]{}\\]'
+      scope: meta.sexp.list.edn
+    - match: '((?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*))(/)(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)*'
+      scope: meta.sexp.list.edn meta.reader-form.edn meta.symbol.edn
+      captures:
+        1: meta.namespace.edn
+        2: punctuation.accessor.edn
+    - match: '/'
+      scope: meta.sexp.list.edn meta.reader-form.edn meta.symbol.edn
+    - match: '\.'
+      scope: meta.sexp.list.edn meta.reader-form.edn meta.symbol.edn
+    - match: '(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)'
+      scope: meta.sexp.list.edn meta.reader-form.edn meta.symbol.edn
+    - match: ','
+      scope: meta.sexp.list.edn punctuation.comma.edn comment.punctuation.comma.edn
+    - match: '\)'
+      scope: meta.sexp.list.edn punctuation.section.parens.end.edn
+      pop: true
+    - match: '\S'
+      scope: invalid.illegal.edn
+      pop: true
+  # Meta scope context for list
+  list|meta:
+    - meta_content_scope: meta.sexp.list.edn
+    - match: ''
+      pop: true
+  # Rule: main
+  main:
+    - match: 'nil'
+      scope: meta.reader-form.edn constant.language.edn
+    - match: 'true'
+      scope: meta.reader-form.edn constant.language.edn
+    - match: 'false'
+      scope: meta.reader-form.edn constant.language.edn
+    - match: '"'
+      scope: meta.reader-form.edn string.quoted.double.edn punctuation.definition.string.begin.edn
+      push: string|0
+    - match: '([+-]?)0\d+N?'
+      scope: meta.reader-form.edn invalid.deprecated.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)((?:[2-9]|[1-9]\d+)[Rr])[0-9A-Za-z]+'
+      scope: meta.reader-form.edn constant.numeric.integer.other.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)(0[Xx])\h+'
       scope: meta.reader-form.edn constant.numeric.integer.hexadecimal.edn
       captures:
         1: punctuation.definition.numeric.sign.edn
         2: punctuation.definition.numeric.base.edn
-        3: storage.type.numeric.edn
-
-  decimal_integer:
-    - match: '({{sign}})\d+(N?){{number_end}}'
+      push: hex-integer|0
+    - match: '([+-]?)\d+(N?)(?=[\s,\";\^\(\)\[\]{}\\])'
       scope: meta.reader-form.edn constant.numeric.integer.decimal.edn
       captures:
         1: punctuation.definition.numeric.sign.edn
         2: storage.type.numeric.edn
-
-  float:
-    - match: '({{sign}})(?:0|[1-9][0-9]*)(?:(M)|(\.)[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|(\.)[0-9]*[eE][+-]?[0-9]+(M)?){{number_end}}'
+    - match: '([+-]?)(?:0|[1-9][0-9]*)(?:(M)|(\.)[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|(\.)[0-9]*[eE][+-]?[0-9]+(M)?)(?=$|[\s,\";\^\(\)\[\]{}\\])'
       scope: meta.reader-form.edn constant.numeric.float.decimal.edn
       captures:
         1: punctuation.definition.numeric.sign.edn
@@ -129,153 +198,57 @@ contexts:
         5: storage.type.numeric.edn
         6: punctuation.separator.decimal.edn
         7: storage.type.numeric.edn
-
-  ratio:
-    - match: '({{sign}})\d+(/)\d+{{number_end}}'
+    - match: '([+-]?)\d+(/)\d+'
       scope: meta.reader-form.edn constant.numeric.rational.decimal.edn
       captures:
-        1: punctuation.definition.numeric.sign.edn
-        2: punctuation.separator.rational.edn
-
-  symbolic:
-    - match: '((##)(Inf)|(##)(-Inf)|(##)(NaN))'
-      captures:
-        1: meta.reader-form.edn
-        2: keyword.operator.macro.edn
-        3: constant.other.symbolic.edn
-        4: keyword.operator.macro.edn
-        5: constant.other.symbolic.edn
-        6: keyword.operator.macro.edn
-        7: constant.other.symbolic.edn
-
-  keywords:
-    - include: qualified_keyword
-    - include: unqualified_keyword
-
-  qualified_keyword:
-    - match: '(:)([^{{non_symbol_chars}}:]*)(/)({{keyword}})?{{end}}'
+        1: punctuation.definition.numeric.sign.edn 2:.edn punctuation.separator.rational.edn
+    - match: ':(:)+'
+    - match: '(:)([^\s,\";\^\(\)\[\]{}\\]+)(/)[^\s,\";\^\(\)\[\]{}\\]*'
       scope: meta.reader-form.edn constant.other.keyword.qualified.edn
       captures:
         1: punctuation.definition.keyword.edn
         2: meta.namespace.edn
         3: punctuation.definition.constant.namespace.edn
-
-  unqualified_keyword:
-    - match: '(:)(?:/|[^{{non_symbol_chars}}:][[^{{non_symbol_chars}}:]:]*)(?=$|[{{end_chars}}''`#])'
+    - match: '(:)[^\s,\";\^\(\)\[\]{}\\]*'
       scope: meta.reader-form.edn constant.other.keyword.unqualified.edn
       captures:
         1: punctuation.definition.keyword.edn
-
-  # Macro characters
-
-  macro_characters:
-    - include: character
-    - include: comment
-    - include: dispatch
-
-  character:
-    - match: '(?<=^|[\s,()\[\]{}"]|#_)((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s]){{end}}|((\\)[^\s,()\[\]{}";]*))'
+    - match: '##'
+      scope: meta.reader-form.edn keyword.operator.macro.edn
+      push: symbolic|0
+    - match: '\('
+      scope: meta.sexp.list.edn punctuation.section.parens.begin.edn
+      push: list|0
+    - match: '\['
+      scope: meta.sexp.vector.edn punctuation.section.brackets.begin.edn
+      push: vector|0
+    - match: '\{'
+      scope: meta.sexp.map.edn punctuation.section.braces.begin.edn
+      push: map|0
+    - match: '(#)({)'
+      scope: meta.sexp.set.edn
+      captures:
+        1: keyword.operator.macro.edn
+        2: punctuation.section.braces.begin.edn
+      push: set|0
+    - match: '(?<=^|[\s,()\[\]{}"]|#_)((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s])(?=$|[[\s,\";\^\(\)\[\]{}\\]])|((\\)[^[\s,\";\^\(\)\[\]{}\\]]*))'
       scope: meta.reader-form.edn constant.character.edn
       captures:
         2: punctuation.definition.character.begin.edn
         4: invalid.illegal.character.edn
         5: punctuation.definition.character.begin.edn
-
-  comment:
-    - match: '(;+|#!)(.|\s)*'
-      scope: comment.line.edn
-      captures:
-        1: punctuation.definition.comment.edn
-
-  dispatch:
-    - include: discard
-    - include: regexp
-    - include: tagged-literal
-    - include: qualified-map
-
-  # Dispatch
-
-  discard:
     - match: '((#)_)'
+      scope: comment.block.edn comment.discard.edn
       captures:
         1: punctuation.definition.comment.edn
         2: keyword.operator.macro.edn
-      push:
-        - meta_scope: comment.block.edn comment.discard.edn
-        - include: forms
-        - match: ''
-          pop: true
-
-  regexp_quote:
-    - match: '\\Q'
-      scope: punctuation.section.quotation.begin.edn
-      push:
-        - meta_content_scope: constant.character.escape.regexp
-        - match: '\\"'
-        - match: '(?=")'
-          pop: true
-        - match: '\\E'
-          scope: punctuation.section.quotation.end.edn
-          pop: true
-
-  regexp_shared:
-    - match: '(\\)(\\|0[0-3]?[0-7]{1,2}|x\h{2}|u\h{4}|x\{1?\h{1,5}\}|\N\{[a-zA-Z0-9\- ]+\}|[tnrfae]|c[A-Z]|[dDhHsSvVwW]|p\{[a-zA-Z]+\}|b\{g\}|[bBAGZz]|[RX]|[0-9]+|k<{{regexp_name}}>|[^a-zA-Z0-9])|((\\).)'
-      scope: constant.character.escape.regexp
+    - match: '((#)")'
+      scope: string.regexp.edn
       captures:
-          1: punctuation.definition.character.escape.begin.edn
-          3: invalid.illegal.escape.regexp.edn
-          4: punctuation.definition.character.escape.begin.edn
-    - match: '"'
-      scope: punctuation.definition.string.end.edn
-      pop: true
-    - match: '(\[)(\^)?(-)?'
-      captures:
-        1: punctuation.section.brackets.begin.edn
-        2: keyword.operator.negation.regexp.edn
-      push:
-      - match: '(?=")'
-        pop:   true
-      - match: '\]'
-        scope: punctuation.section.brackets.end.edn
-        pop: true
-      - match: '-(?!\])'
-        scope: keyword.operator.range.regexp.edn
-      - match: '&&'
-        scope: keyword.operator.intersection.regexp.edn
-      - include: regexp_shared
-    - match: '(?:[?*+]|\{\d+(?:,(?:\d+)?)?\})[?+]?'
-      scope: keyword.operator.quantifier.regexp.edn
-
-  regexp_group:
-    - include: regexp_quote
-    - include: regexp_shared
-    - match: '\|'
-      scope: keyword.operator.union.regexp.edn
-    - match: '(\()(\?(<{{regexp_name}}>|:|=|!|<=|<!|>|[idmsux]*(-[idmsux]+)?:|[idmsuxU]*(-[idmsuxU]+)?(?!:)))?'
-      captures:
-        1: punctuation.section.parens.begin.edn
-        2: keyword.operator.special.regexp.edn
-      push:
-      - match: '(?=")'
-        pop:   true
-      - match: '\)'
-        scope: punctuation.section.parens.end.edn
-        pop: true
-      - include: regexp_group
-    - match: '[\)]'
-      scope: invalid.illegal.stray-bracket-end.edn
-
-  regexp:
-    - match: '(#)"'
-      scope: punctuation.definition.string.begin.edn
-      captures:
-        1: keyword.operator.macro.edn
-      push:
-      - meta_scope: meta.reader-form.edn string.regexp.edn
-      - include: regexp_group
-
-  tagged-literal:
-    - match: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*")){{end}}'
+        1: punctuation.definition.string.begin.edn
+        2: keyword.operator.macro.edn
+      push: regexp|0
+    - match: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*"))'
       scope: meta.reader-form.edn constant.other.instant.edn
       captures:
         2: keyword.operator.macro.edn
@@ -283,7 +256,7 @@ contexts:
         4: punctuation.definition.string.begin.edn
         5: punctuation.definition.string.end.edn
         6: invalid.illegal.instant.edn
-    - match: '((#\s*uuid)\s*((")\h{8}-\h{4}-\h{4}-\h{4}-\h{12}("))|(#uuid\s*"[^"]*")){{end}}'
+    - match: '((#\s*uuid)\s*((")\h{8}-\h{4}-\h{4}-\h{4}-\h{12}("))|(#uuid\s*"[^"]*"))'
       scope: meta.reader-form.edn constant.other.uuid.edn
       captures:
         2: keyword.operator.macro.edn
@@ -291,75 +264,601 @@ contexts:
         4: punctuation.definition.string.begin.edn
         5: punctuation.definition.string.end.edn
         6: invalid.illegal.uuid.edn
-    - match: '(#{{qualified_symbol}}){{end}}'
-      scope: meta.reader-form.edn
+    - match: '#'
+      scope: meta.reader-form.edn keyword.operator.macro.edn
+      push: reader-tag|0
+    - match: '([-+]?\d+)[^\s,\";\^\(\)\[\]{}\\e]|[''\/][^\s,\";\^\(\)\[\]{}\\]'
+    - match: '((?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*))(/)(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)*'
+      scope: meta.reader-form.edn meta.symbol.edn
       captures:
-        1: keyword.operator.macro.edn
-        3: punctuation.definition.symbol.namespace.edn
-
-  qualified-map:
-    - match: '(#)(?=:)'
-      captures:
-          1: keyword.operator.macro.edn
-
-  # S-expressions
-
-  sexp:
-    - include: list
-    - include: vector
-    - include: map
-    - include: set
-
-  comma:
+        1: meta.namespace.edn
+        2: punctuation.accessor.edn
+    - match: '/'
+      scope: meta.reader-form.edn meta.symbol.edn
+    - match: '\.'
+      scope: meta.reader-form.edn meta.symbol.edn
+    - match: '(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)'
+      scope: meta.reader-form.edn meta.symbol.edn
     - match: ','
       scope: punctuation.comma.edn comment.punctuation.comma.edn
-
-  # List
-
-  list:
+    - match: '\S'
+      scope: invalid.illegal.edn
+  # Rule: map
+  map|0:
+    - meta_content_scope: meta.sexp.map.edn
+    - match: 'nil'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.language.edn
+    - match: 'true'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.language.edn
+    - match: 'false'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.language.edn
+    - match: '"'
+      scope: meta.sexp.map.edn meta.reader-form.edn string.quoted.double.edn punctuation.definition.string.begin.edn
+      push: [map|meta, string|0]
+    - match: '([+-]?)0\d+N?'
+      scope: meta.sexp.map.edn meta.reader-form.edn invalid.deprecated.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)((?:[2-9]|[1-9]\d+)[Rr])[0-9A-Za-z]+'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.numeric.integer.other.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)(0[Xx])\h+'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.numeric.integer.hexadecimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: punctuation.definition.numeric.base.edn
+      push: [map|meta, hex-integer|0]
+    - match: '([+-]?)\d+(N?)(?=[\s,\";\^\(\)\[\]{}\\])'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.numeric.integer.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: storage.type.numeric.edn
+    - match: '([+-]?)(?:0|[1-9][0-9]*)(?:(M)|(\.)[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|(\.)[0-9]*[eE][+-]?[0-9]+(M)?)(?=$|[\s,\";\^\(\)\[\]{}\\])'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.numeric.float.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: storage.type.numeric.edn
+        3: punctuation.separator.decimal.edn
+        4: storage.type.numeric.edn
+        5: storage.type.numeric.edn
+        6: punctuation.separator.decimal.edn
+        7: storage.type.numeric.edn
+    - match: '([+-]?)\d+(/)\d+'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.numeric.rational.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn 2:.edn punctuation.separator.rational.edn
+    - match: ':(:)+'
+      scope: meta.sexp.map.edn
+    - match: '(:)([^\s,\";\^\(\)\[\]{}\\]+)(/)[^\s,\";\^\(\)\[\]{}\\]*'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.other.keyword.qualified.edn
+      captures:
+        1: punctuation.definition.keyword.edn
+        2: meta.namespace.edn
+        3: punctuation.definition.constant.namespace.edn
+    - match: '(:)[^\s,\";\^\(\)\[\]{}\\]*'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.other.keyword.unqualified.edn
+      captures:
+        1: punctuation.definition.keyword.edn
+    - match: '##'
+      scope: meta.sexp.map.edn meta.reader-form.edn keyword.operator.macro.edn
+      push: [map|meta, symbolic|0]
     - match: '\('
-      scope: punctuation.section.parens.begin.edn
-      push:
-      - match: '\)'
-        scope: punctuation.section.parens.end.edn
-        pop: true
-      - include: main
-
-  # Vector
-
-  vector:
+      scope: meta.sexp.map.edn meta.sexp.list.edn punctuation.section.parens.begin.edn
+      push: [map|meta, list|0]
     - match: '\['
-      scope: punctuation.section.brackets.begin.edn
-      push:
-      - match: '\]'
-        scope: punctuation.section.brackets.end.edn
-        pop: true
-      - include: main
-
-  # Map
-
-  map:
+      scope: meta.sexp.map.edn meta.sexp.vector.edn punctuation.section.brackets.begin.edn
+      push: [map|meta, vector|0]
     - match: '\{'
-      scope: punctuation.section.braces.begin.edn
-      push:
-      - match: \}
-        scope: punctuation.section.braces.end.edn
-        pop: true
-      - include: main
-
-  # Set
-
-  set:
+      scope: meta.sexp.map.edn meta.sexp.map.edn punctuation.section.braces.begin.edn
+      push: [map|meta, map|0]
     - match: '(#)({)'
+      scope: meta.sexp.map.edn meta.sexp.set.edn
       captures:
         1: keyword.operator.macro.edn
         2: punctuation.section.braces.begin.edn
-      push:
-      - match: \}
-        scope: punctuation.section.braces.end.edn
-        pop: true
-      - include: main
-
-  stray-brackets:
-    - match: '[\]\)\}]'
-      scope: invalid.illegal.stray-bracket-end.edn
+      push: [map|meta, set|0]
+    - match: '(?<=^|[\s,()\[\]{}"]|#_)((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s])(?=$|[[\s,\";\^\(\)\[\]{}\\]])|((\\)[^[\s,\";\^\(\)\[\]{}\\]]*))'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.character.edn
+      captures:
+        2: punctuation.definition.character.begin.edn
+        4: invalid.illegal.character.edn
+        5: punctuation.definition.character.begin.edn
+    - match: '((#)_)'
+      scope: meta.sexp.map.edn comment.block.edn comment.discard.edn
+      captures:
+        1: punctuation.definition.comment.edn
+        2: keyword.operator.macro.edn
+    - match: '((#)")'
+      scope: meta.sexp.map.edn string.regexp.edn
+      captures:
+        1: punctuation.definition.string.begin.edn
+        2: keyword.operator.macro.edn
+      push: [map|meta, regexp|0]
+    - match: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*"))'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.other.instant.edn
+      captures:
+        2: keyword.operator.macro.edn
+        3: string.quoted.double.edn
+        4: punctuation.definition.string.begin.edn
+        5: punctuation.definition.string.end.edn
+        6: invalid.illegal.instant.edn
+    - match: '((#\s*uuid)\s*((")\h{8}-\h{4}-\h{4}-\h{4}-\h{12}("))|(#uuid\s*"[^"]*"))'
+      scope: meta.sexp.map.edn meta.reader-form.edn constant.other.uuid.edn
+      captures:
+        2: keyword.operator.macro.edn
+        3: string.quoted.double.edn
+        4: punctuation.definition.string.begin.edn
+        5: punctuation.definition.string.end.edn
+        6: invalid.illegal.uuid.edn
+    - match: '#'
+      scope: meta.sexp.map.edn meta.reader-form.edn keyword.operator.macro.edn
+      push: [map|meta, reader-tag|0]
+    - match: '([-+]?\d+)[^\s,\";\^\(\)\[\]{}\\e]|[''\/][^\s,\";\^\(\)\[\]{}\\]'
+      scope: meta.sexp.map.edn
+    - match: '((?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*))(/)(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)*'
+      scope: meta.sexp.map.edn meta.reader-form.edn meta.symbol.edn
+      captures:
+        1: meta.namespace.edn
+        2: punctuation.accessor.edn
+    - match: '/'
+      scope: meta.sexp.map.edn meta.reader-form.edn meta.symbol.edn
+    - match: '\.'
+      scope: meta.sexp.map.edn meta.reader-form.edn meta.symbol.edn
+    - match: '(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)'
+      scope: meta.sexp.map.edn meta.reader-form.edn meta.symbol.edn
+    - match: ','
+      scope: meta.sexp.map.edn punctuation.comma.edn comment.punctuation.comma.edn
+    - match: '\}'
+      scope: meta.sexp.map.edn punctuation.section.braces.end.edn
+      pop: true
+    - match: '\S'
+      scope: invalid.illegal.edn
+      pop: true
+  # Meta scope context for map
+  map|meta:
+    - meta_content_scope: meta.sexp.map.edn
+    - match: ''
+      pop: true
+  # Rule: prototype
+  prototype:
+    - match: ';+'
+      scope: comment.line.edn punctuation.definition.comment.edn
+      push: comment|0
+  # Rule: reader-tag
+  reader-tag|0:
+    - meta_content_scope: meta.reader-form.edn keyword.operator.macro.edn
+    - match: '((?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*))(/)(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)*'
+      scope: meta.reader-form.edn keyword.operator.macro.edn
+      pop: true
+    - match: '\S'
+      scope: invalid.illegal.edn
+      pop: true
+  # Rule: regexp-quote
+  regexp-quote|0:
+    - meta_content_scope: constant.character.escape.regexp.edn
+    - match: '\\"'
+      scope: constant.character.escape.regexp.edn
+    - match: '(?=")'
+      scope: constant.character.escape.regexp.edn
+      pop: true
+    - match: '\\E'
+      scope: constant.character.escape.regexp.edn punctuation.section.quotation.end.edn
+      pop: true
+  # Rule: regexp-set
+  regexp-set|0:
+    - match: '\^'
+      scope: keyword.operator.negation.regexp.edn
+      set: regexp-set|1
+    - match: '[^\[]-(?!\])'
+      scope: keyword.operator.range.regexp.edn
+      set: regexp-set|1
+    - match: '&&'
+      scope: keyword.operator.intersection.regexp.edn
+      set: regexp-set|1
+    - match: '(\\)(\\|0[0-3]?[0-7]{1,2}|x\h{2}|u\h{4}|x\{1?\h{1,5}\}|\N\{[a-zA-Z0-9\- ]+\}|[tnrfae]|c[A-Z]|[dDhHsSvVwW]|p\{[a-zA-Z]+\}|b\{g\}|[bBAGZz]|[RX]|[0-9]+|k<[a-zA-Z][a-zA-Z0-9]*>|[^a-zA-Z0-9])|((\\).)'
+      scope: constant.character.escape.regexp.edn
+      captures:
+        1: punctuation.definition.character.escape.begin.edn
+        3: invalid.illegal.escape.regexp.edn
+        4: punctuation.definition.character.escape.begin.edn
+      set: regexp-set|1
+    - match: '\['
+      scope: punctuation.section.brackets.begin.edn
+      set: [regexp-set|1, regexp-set|0]
+    - match: '(?:[?*+]|\{\d+(?:,(?:\d+)?)?\})[?+]?'
+      scope: keyword.operator.quantifier.regexp.edn
+      set: regexp-set|1
+    - match: '(?=")'
+      pop: true
+    - match: '\]'
+      scope: punctuation.section.brackets.end.edn
+      pop: true
+    - match: '(?=\S)'
+      set: regexp-set|1
+  # Rule: regexp-set
+  regexp-set|1:
+    - match: '[^\[]-(?!\])'
+      scope: keyword.operator.range.regexp.edn
+    - match: '&&'
+      scope: keyword.operator.intersection.regexp.edn
+    - match: '(\\)(\\|0[0-3]?[0-7]{1,2}|x\h{2}|u\h{4}|x\{1?\h{1,5}\}|\N\{[a-zA-Z0-9\- ]+\}|[tnrfae]|c[A-Z]|[dDhHsSvVwW]|p\{[a-zA-Z]+\}|b\{g\}|[bBAGZz]|[RX]|[0-9]+|k<[a-zA-Z][a-zA-Z0-9]*>|[^a-zA-Z0-9])|((\\).)'
+      scope: constant.character.escape.regexp.edn
+      captures:
+        1: punctuation.definition.character.escape.begin.edn
+        3: invalid.illegal.escape.regexp.edn
+        4: punctuation.definition.character.escape.begin.edn
+    - match: '\['
+      scope: punctuation.section.brackets.begin.edn
+      push: regexp-set|0
+    - match: '(?:[?*+]|\{\d+(?:,(?:\d+)?)?\})[?+]?'
+      scope: keyword.operator.quantifier.regexp.edn
+    - match: '(?=")'
+      pop: true
+    - match: '\]'
+      scope: punctuation.section.brackets.end.edn
+      pop: true
+  # Rule: regexp-special
+  regexp-special|0:
+    - match: '\\Q'
+      scope: constant.character.escape.regexp.edn punctuation.section.quotation.begin.edn
+      push: regexp-quote|0
+    - match: '(\\)(\\|0[0-3]?[0-7]{1,2}|x\h{2}|u\h{4}|x\{1?\h{1,5}\}|\N\{[a-zA-Z0-9\- ]+\}|[tnrfae]|c[A-Z]|[dDhHsSvVwW]|p\{[a-zA-Z]+\}|b\{g\}|[bBAGZz]|[RX]|[0-9]+|k<[a-zA-Z][a-zA-Z0-9]*>|[^a-zA-Z0-9])|((\\).)'
+      scope: constant.character.escape.regexp.edn
+      captures:
+        1: punctuation.definition.character.escape.begin.edn
+        3: invalid.illegal.escape.regexp.edn
+        4: punctuation.definition.character.escape.begin.edn
+    - match: '\['
+      scope: punctuation.section.brackets.begin.edn
+      push: regexp-set|0
+    - match: '(?:[?*+]|\{\d+(?:,(?:\d+)?)?\})[?+]?'
+      scope: keyword.operator.quantifier.regexp.edn
+    - match: '\|'
+      scope: keyword.operator.union.regexp.edn
+    - match: '(\()(\?(<[a-zA-Z][a-zA-Z0-9]*>|:|=|!|<=|<!|>|[idmsux]*(-[idmsux]+)?:|[idmsuxU]*(-[idmsuxU]+)?(?!:)))?'
+      captures:
+        1: punctuation.section.parens.begin.edn
+        2: keyword.operator.special.regexp.edn
+      push: regexp-special|0
+    - match: '(?=")'
+      pop: true
+    - match: '\)'
+      scope: punctuation.section.parens.end.edn
+      pop: true
+  # Rule: regexp
+  regexp|0:
+    - meta_content_scope: string.regexp.edn
+    - meta_include_prototype: false
+    - match: '\\Q'
+      scope: string.regexp.edn constant.character.escape.regexp.edn punctuation.section.quotation.begin.edn
+      push: [regexp|meta, regexp-quote|0]
+    - match: '(\\)(\\|0[0-3]?[0-7]{1,2}|x\h{2}|u\h{4}|x\{1?\h{1,5}\}|\N\{[a-zA-Z0-9\- ]+\}|[tnrfae]|c[A-Z]|[dDhHsSvVwW]|p\{[a-zA-Z]+\}|b\{g\}|[bBAGZz]|[RX]|[0-9]+|k<[a-zA-Z][a-zA-Z0-9]*>|[^a-zA-Z0-9])|((\\).)'
+      scope: string.regexp.edn constant.character.escape.regexp.edn
+      captures:
+        1: punctuation.definition.character.escape.begin.edn
+        3: invalid.illegal.escape.regexp.edn
+        4: punctuation.definition.character.escape.begin.edn
+    - match: '\['
+      scope: string.regexp.edn punctuation.section.brackets.begin.edn
+      push: [regexp|meta, regexp-set|0]
+    - match: '(?:[?*+]|\{\d+(?:,(?:\d+)?)?\})[?+]?'
+      scope: string.regexp.edn keyword.operator.quantifier.regexp.edn
+    - match: '\|'
+      scope: string.regexp.edn keyword.operator.union.regexp.edn
+    - match: '(\()(\?(<[a-zA-Z][a-zA-Z0-9]*>|:|=|!|<=|<!|>|[idmsux]*(-[idmsux]+)?:|[idmsuxU]*(-[idmsuxU]+)?(?!:)))?'
+      scope: string.regexp.edn
+      captures:
+        1: punctuation.section.parens.begin.edn
+        2: keyword.operator.special.regexp.edn
+      push: [regexp|meta, regexp-special|0]
+    - match: '"'
+      scope: string.regexp.edn punctuation.definition.string.end.edn
+      pop: true
+  # Meta scope context for regexp
+  regexp|meta:
+    - meta_content_scope: string.regexp.edn
+    - match: ''
+      pop: true
+  # Rule: set
+  set|0:
+    - meta_content_scope: meta.sexp.set.edn
+    - match: 'nil'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.language.edn
+    - match: 'true'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.language.edn
+    - match: 'false'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.language.edn
+    - match: '"'
+      scope: meta.sexp.set.edn meta.reader-form.edn string.quoted.double.edn punctuation.definition.string.begin.edn
+      push: [set|meta, string|0]
+    - match: '([+-]?)0\d+N?'
+      scope: meta.sexp.set.edn meta.reader-form.edn invalid.deprecated.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)((?:[2-9]|[1-9]\d+)[Rr])[0-9A-Za-z]+'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.numeric.integer.other.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)(0[Xx])\h+'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.numeric.integer.hexadecimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: punctuation.definition.numeric.base.edn
+      push: [set|meta, hex-integer|0]
+    - match: '([+-]?)\d+(N?)(?=[\s,\";\^\(\)\[\]{}\\])'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.numeric.integer.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: storage.type.numeric.edn
+    - match: '([+-]?)(?:0|[1-9][0-9]*)(?:(M)|(\.)[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|(\.)[0-9]*[eE][+-]?[0-9]+(M)?)(?=$|[\s,\";\^\(\)\[\]{}\\])'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.numeric.float.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: storage.type.numeric.edn
+        3: punctuation.separator.decimal.edn
+        4: storage.type.numeric.edn
+        5: storage.type.numeric.edn
+        6: punctuation.separator.decimal.edn
+        7: storage.type.numeric.edn
+    - match: '([+-]?)\d+(/)\d+'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.numeric.rational.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn 2:.edn punctuation.separator.rational.edn
+    - match: ':(:)+'
+      scope: meta.sexp.set.edn
+    - match: '(:)([^\s,\";\^\(\)\[\]{}\\]+)(/)[^\s,\";\^\(\)\[\]{}\\]*'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.other.keyword.qualified.edn
+      captures:
+        1: punctuation.definition.keyword.edn
+        2: meta.namespace.edn
+        3: punctuation.definition.constant.namespace.edn
+    - match: '(:)[^\s,\";\^\(\)\[\]{}\\]*'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.other.keyword.unqualified.edn
+      captures:
+        1: punctuation.definition.keyword.edn
+    - match: '##'
+      scope: meta.sexp.set.edn meta.reader-form.edn keyword.operator.macro.edn
+      push: [set|meta, symbolic|0]
+    - match: '\('
+      scope: meta.sexp.set.edn meta.sexp.list.edn punctuation.section.parens.begin.edn
+      push: [set|meta, list|0]
+    - match: '\['
+      scope: meta.sexp.set.edn meta.sexp.vector.edn punctuation.section.brackets.begin.edn
+      push: [set|meta, vector|0]
+    - match: '\{'
+      scope: meta.sexp.set.edn meta.sexp.map.edn punctuation.section.braces.begin.edn
+      push: [set|meta, map|0]
+    - match: '(#)({)'
+      scope: meta.sexp.set.edn meta.sexp.set.edn
+      captures:
+        1: keyword.operator.macro.edn
+        2: punctuation.section.braces.begin.edn
+      push: [set|meta, set|0]
+    - match: '(?<=^|[\s,()\[\]{}"]|#_)((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s])(?=$|[[\s,\";\^\(\)\[\]{}\\]])|((\\)[^[\s,\";\^\(\)\[\]{}\\]]*))'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.character.edn
+      captures:
+        2: punctuation.definition.character.begin.edn
+        4: invalid.illegal.character.edn
+        5: punctuation.definition.character.begin.edn
+    - match: '((#)_)'
+      scope: meta.sexp.set.edn comment.block.edn comment.discard.edn
+      captures:
+        1: punctuation.definition.comment.edn
+        2: keyword.operator.macro.edn
+    - match: '((#)")'
+      scope: meta.sexp.set.edn string.regexp.edn
+      captures:
+        1: punctuation.definition.string.begin.edn
+        2: keyword.operator.macro.edn
+      push: [set|meta, regexp|0]
+    - match: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*"))'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.other.instant.edn
+      captures:
+        2: keyword.operator.macro.edn
+        3: string.quoted.double.edn
+        4: punctuation.definition.string.begin.edn
+        5: punctuation.definition.string.end.edn
+        6: invalid.illegal.instant.edn
+    - match: '((#\s*uuid)\s*((")\h{8}-\h{4}-\h{4}-\h{4}-\h{12}("))|(#uuid\s*"[^"]*"))'
+      scope: meta.sexp.set.edn meta.reader-form.edn constant.other.uuid.edn
+      captures:
+        2: keyword.operator.macro.edn
+        3: string.quoted.double.edn
+        4: punctuation.definition.string.begin.edn
+        5: punctuation.definition.string.end.edn
+        6: invalid.illegal.uuid.edn
+    - match: '#'
+      scope: meta.sexp.set.edn meta.reader-form.edn keyword.operator.macro.edn
+      push: [set|meta, reader-tag|0]
+    - match: '([-+]?\d+)[^\s,\";\^\(\)\[\]{}\\e]|[''\/][^\s,\";\^\(\)\[\]{}\\]'
+      scope: meta.sexp.set.edn
+    - match: '((?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*))(/)(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)*'
+      scope: meta.sexp.set.edn meta.reader-form.edn meta.symbol.edn
+      captures:
+        1: meta.namespace.edn
+        2: punctuation.accessor.edn
+    - match: '/'
+      scope: meta.sexp.set.edn meta.reader-form.edn meta.symbol.edn
+    - match: '\.'
+      scope: meta.sexp.set.edn meta.reader-form.edn meta.symbol.edn
+    - match: '(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)'
+      scope: meta.sexp.set.edn meta.reader-form.edn meta.symbol.edn
+    - match: ','
+      scope: meta.sexp.set.edn punctuation.comma.edn comment.punctuation.comma.edn
+    - match: '\}'
+      scope: meta.sexp.set.edn punctuation.section.braces.end.edn
+      pop: true
+    - match: '\S'
+      scope: invalid.illegal.edn
+      pop: true
+  # Meta scope context for set
+  set|meta:
+    - meta_content_scope: meta.sexp.set.edn
+    - match: ''
+      pop: true
+  # Rule: string
+  string|0:
+    - meta_content_scope: meta.reader-form.edn string.quoted.double.edn
+    - meta_include_prototype: false
+    - match: '(\\)(u\h{4}|b|t|n|f|r|"|''''|\\|[0-3]?[0-7]{1,2})|((\\).)'
+      scope: meta.reader-form.edn string.quoted.double.edn constant.character.escape.edn
+      captures:
+        1: punctuation.definition.character.escape.begin.edn
+        3: invalid.illegal.escape.string.edn
+        4: punctuation.definition.character.escape.begin.edn
+    - match: '"'
+      scope: meta.reader-form.edn string.quoted.double.edn punctuation.definition.string.end.edn
+      pop: true
+  # Rule: symbolic
+  symbolic|0:
+    - meta_content_scope: meta.reader-form.edn
+    - match: 'Inf'
+      scope: meta.reader-form.edn constant.other.symbolic.edn
+      pop: true
+    - match: '-Inf'
+      scope: meta.reader-form.edn constant.other.symbolic.edn
+      pop: true
+    - match: 'NaN'
+      scope: meta.reader-form.edn constant.other.symbolic.edn
+      pop: true
+    - match: '\S'
+      scope: invalid.illegal.edn
+      pop: true
+  # Rule: vector
+  vector|0:
+    - meta_content_scope: meta.sexp.vector.edn
+    - match: 'nil'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.language.edn
+    - match: 'true'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.language.edn
+    - match: 'false'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.language.edn
+    - match: '"'
+      scope: meta.sexp.vector.edn meta.reader-form.edn string.quoted.double.edn punctuation.definition.string.begin.edn
+      push: [vector|meta, string|0]
+    - match: '([+-]?)0\d+N?'
+      scope: meta.sexp.vector.edn meta.reader-form.edn invalid.deprecated.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)((?:[2-9]|[1-9]\d+)[Rr])[0-9A-Za-z]+'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.numeric.integer.other.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+    - match: '([+-]?)(0[Xx])\h+'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.numeric.integer.hexadecimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: punctuation.definition.numeric.base.edn
+      push: [vector|meta, hex-integer|0]
+    - match: '([+-]?)\d+(N?)(?=[\s,\";\^\(\)\[\]{}\\])'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.numeric.integer.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: storage.type.numeric.edn
+    - match: '([+-]?)(?:0|[1-9][0-9]*)(?:(M)|(\.)[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|(\.)[0-9]*[eE][+-]?[0-9]+(M)?)(?=$|[\s,\";\^\(\)\[\]{}\\])'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.numeric.float.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn
+        2: storage.type.numeric.edn
+        3: punctuation.separator.decimal.edn
+        4: storage.type.numeric.edn
+        5: storage.type.numeric.edn
+        6: punctuation.separator.decimal.edn
+        7: storage.type.numeric.edn
+    - match: '([+-]?)\d+(/)\d+'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.numeric.rational.decimal.edn
+      captures:
+        1: punctuation.definition.numeric.sign.edn 2:.edn punctuation.separator.rational.edn
+    - match: ':(:)+'
+      scope: meta.sexp.vector.edn
+    - match: '(:)([^\s,\";\^\(\)\[\]{}\\]+)(/)[^\s,\";\^\(\)\[\]{}\\]*'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.other.keyword.qualified.edn
+      captures:
+        1: punctuation.definition.keyword.edn
+        2: meta.namespace.edn
+        3: punctuation.definition.constant.namespace.edn
+    - match: '(:)[^\s,\";\^\(\)\[\]{}\\]*'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.other.keyword.unqualified.edn
+      captures:
+        1: punctuation.definition.keyword.edn
+    - match: '##'
+      scope: meta.sexp.vector.edn meta.reader-form.edn keyword.operator.macro.edn
+      push: [vector|meta, symbolic|0]
+    - match: '\('
+      scope: meta.sexp.vector.edn meta.sexp.list.edn punctuation.section.parens.begin.edn
+      push: [vector|meta, list|0]
+    - match: '\['
+      scope: meta.sexp.vector.edn meta.sexp.vector.edn punctuation.section.brackets.begin.edn
+      push: [vector|meta, vector|0]
+    - match: '\{'
+      scope: meta.sexp.vector.edn meta.sexp.map.edn punctuation.section.braces.begin.edn
+      push: [vector|meta, map|0]
+    - match: '(#)({)'
+      scope: meta.sexp.vector.edn meta.sexp.set.edn
+      captures:
+        1: keyword.operator.macro.edn
+        2: punctuation.section.braces.begin.edn
+      push: [vector|meta, set|0]
+    - match: '(?<=^|[\s,()\[\]{}"]|#_)((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s])(?=$|[[\s,\";\^\(\)\[\]{}\\]])|((\\)[^[\s,\";\^\(\)\[\]{}\\]]*))'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.character.edn
+      captures:
+        2: punctuation.definition.character.begin.edn
+        4: invalid.illegal.character.edn
+        5: punctuation.definition.character.begin.edn
+    - match: '((#)_)'
+      scope: meta.sexp.vector.edn comment.block.edn comment.discard.edn
+      captures:
+        1: punctuation.definition.comment.edn
+        2: keyword.operator.macro.edn
+    - match: '((#)")'
+      scope: meta.sexp.vector.edn string.regexp.edn
+      captures:
+        1: punctuation.definition.string.begin.edn
+        2: keyword.operator.macro.edn
+      push: [vector|meta, regexp|0]
+    - match: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*"))'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.other.instant.edn
+      captures:
+        2: keyword.operator.macro.edn
+        3: string.quoted.double.edn
+        4: punctuation.definition.string.begin.edn
+        5: punctuation.definition.string.end.edn
+        6: invalid.illegal.instant.edn
+    - match: '((#\s*uuid)\s*((")\h{8}-\h{4}-\h{4}-\h{4}-\h{12}("))|(#uuid\s*"[^"]*"))'
+      scope: meta.sexp.vector.edn meta.reader-form.edn constant.other.uuid.edn
+      captures:
+        2: keyword.operator.macro.edn
+        3: string.quoted.double.edn
+        4: punctuation.definition.string.begin.edn
+        5: punctuation.definition.string.end.edn
+        6: invalid.illegal.uuid.edn
+    - match: '#'
+      scope: meta.sexp.vector.edn meta.reader-form.edn keyword.operator.macro.edn
+      push: [vector|meta, reader-tag|0]
+    - match: '([-+]?\d+)[^\s,\";\^\(\)\[\]{}\\e]|[''\/][^\s,\";\^\(\)\[\]{}\\]'
+      scope: meta.sexp.vector.edn
+    - match: '((?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*))(/)(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)*'
+      scope: meta.sexp.vector.edn meta.reader-form.edn meta.symbol.edn
+      captures:
+        1: meta.namespace.edn
+        2: punctuation.accessor.edn
+    - match: '/'
+      scope: meta.sexp.vector.edn meta.reader-form.edn meta.symbol.edn
+    - match: '\.'
+      scope: meta.sexp.vector.edn meta.reader-form.edn meta.symbol.edn
+    - match: '(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.\s,\";\^\(\)\[\]{}\\])[^\/\s,\";\^\(\)\[\]{}\\]*)'
+      scope: meta.sexp.vector.edn meta.reader-form.edn meta.symbol.edn
+    - match: ','
+      scope: meta.sexp.vector.edn punctuation.comma.edn comment.punctuation.comma.edn
+    - match: '\]'
+      scope: meta.sexp.vector.edn punctuation.section.brackets.end.edn
+      pop: true
+    - match: '\S'
+      scope: invalid.illegal.edn
+      pop: true
+  # Meta scope context for vector
+  vector|meta:
+    - meta_content_scope: meta.sexp.vector.edn
+    - match: ''
+      pop: true

@@ -1,0 +1,280 @@
+NAME = 'EDN (Tutkain)'
+EXTENSIONS = 'edn'
+SCOPE = 'source.edn'
+SCOPE_POSTFIX = 'edn'
+
+prototype : ( ~comment )* ;
+
+comment {comment.line}
+: ';+'{punctuation.definition.comment} ~ '$\n?'
+;
+
+main : ( form )* ;
+
+MACROS = '\";\^\(\)\[\]{}\\#'
+WHITESPACE = '\s,'
+TERMINAL = '#[WHITESPACE]#[MACROS]'
+SIMPLE_SYMBOL = '(?:(?:\+(?!\d)|-(?!\d)|[^\/:\d+-\.#[TERMINAL]])[^\/#[TERMINAL]]*)'
+QUALIFIED_SYMBOL = '(#[SIMPLE_SYMBOL])(/)#[SIMPLE_SYMBOL]*'
+KEYWORD = '[^#[TERMINAL]]'
+
+constant {meta.reader-form constant.language}
+: `nil` | `true` | `false`
+;
+
+escape-characters {constant.character.escape}
+: '(\\)(u\h{4}|b|t|n|f|r|"|\'\'|\\|[0-3]?[0-7]{1,2})|((\\).)' {
+    1: punctuation.definition.character.escape.begin,
+    3: invalid.illegal.escape.string,
+    4: punctuation.definition.character.escape.begin
+  }
+;
+
+string {meta.reader-form string.quoted.double, include-prototype: false}
+: `"`{punctuation.definition.string.begin}
+  (~escape-characters)* ~
+  `"`{punctuation.definition.string.end}
+;
+
+simple-symbol {meta.reader-form meta.symbol}
+: `/` | `.` | SIMPLE_SYMBOL
+;
+
+qualified-symbol {meta.reader-form meta.symbol}
+: QUALIFIED_SYMBOL {
+    1: meta.namespace,
+    2: punctuation.accessor
+  }
+;
+
+symbols : qualified-symbol | simple-symbol ;
+
+# Numbers
+
+deprecated {meta.reader-form invalid.deprecated}
+: '([+-]?)0\d+N?' {
+    1: punctuation.definition.numeric.sign
+  }
+;
+
+integer-with-radix {meta.reader-form constant.numeric.integer.other}
+: '([+-]?)((?:[2-9]|[1-9]\d+)[Rr])[0-9A-Za-z]+' {
+    1: punctuation.definition.numeric.sign
+  }
+;
+
+hex-integer {meta.reader-form constant.numeric.integer.hexadecimal}
+: '([+-]?)(0[Xx])\h+' {
+    1: punctuation.definition.numeric.sign,
+    2: punctuation.definition.numeric.base
+  }
+  `N` {storage.type.numeric} ?
+;
+
+decimal-integer {meta.reader-form constant.numeric.integer.decimal}
+: '([+-]?)\d+(N?)(?=[#[TERMINAL]])' {
+    1: punctuation.definition.numeric.sign,
+    2: storage.type.numeric
+  }
+;
+
+float {meta.reader-form constant.numeric.float.decimal}
+: '([+-]?)(?:0|[1-9][0-9]*)(?:(M)|(\.)[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|(\.)[0-9]*[eE][+-]?[0-9]+(M)?)(?=$|[#[TERMINAL]])' {
+    1: punctuation.definition.numeric.sign,
+    2: storage.type.numeric,
+    3: punctuation.separator.decimal,
+    4: storage.type.numeric,
+    5: storage.type.numeric,
+    6: punctuation.separator.decimal,
+    7: storage.type.numeric
+  }
+;
+
+ratio {meta.reader-form constant.numeric.rational.decimal}
+: '([+-]?)\d+(/)\d+' {
+    1: punctuation.definition.numeric.sign
+    2: punctuation.separator.rational
+  }
+;
+
+numbers :
+  deprecated
+| integer-with-radix
+| hex-integer
+| decimal-integer
+| float
+| ratio
+;
+
+symbolic {meta.reader-form} :
+    `##` {keyword.operator.macro} (
+        `Inf`  {constant.other.symbolic}
+      | `-Inf` {constant.other.symbolic}
+      | `NaN`  {constant.other.symbolic}
+    )
+;
+
+# Keywords
+
+qualified-keyword {meta.reader-form constant.other.keyword.qualified}
+: '(:)(#[KEYWORD]+)(/)#[KEYWORD]*' {
+    1: punctuation.definition.keyword,
+    2: meta.namespace,
+    3: punctuation.definition.constant.namespace
+  }
+;
+
+unqualified-keyword {meta.reader-form constant.other.keyword.unqualified}
+: '(:)#[KEYWORD]*' {1: punctuation.definition.keyword}
+;
+
+keywords : ':(:)+' | qualified-keyword | unqualified-keyword ;
+
+# Macro characters
+
+character {meta.reader-form constant.character}
+: '(?<=^|[\s,()\[\]{}"]|#_)((\\)(u\h{4}|o[0-3]?[0-7]{1,2}|newline|tab|space|backspace|formfeed|return|[^\s])(?=$|[[#[TERMINAL]]])|((\\)[^[#[TERMINAL]]]*))' {
+    2: punctuation.definition.character.begin,
+    4: invalid.illegal.character,
+    5: punctuation.definition.character.begin
+  }
+;
+
+discard {comment.block comment.discard}
+: '((#)_)' {
+    1: punctuation.definition.comment,
+    2: keyword.operator.macro
+  }
+;
+
+regexp-quote {constant.character.escape.regexp}
+: `\Q` {punctuation.section.quotation.begin}
+  ( ~`\"` )*
+  ~
+  ('(?=")' | `\E` {punctuation.section.quotation.end})
+;
+
+regexp-range {keyword.operator.range.regexp} : '[^\[]-(?!\])' ;
+
+regexp-intersection {keyword.operator.intersection.regexp} : `&&` ;
+
+regexp-set
+: `[` {punctuation.section.brackets.begin}
+  `^` {keyword.operator.negation.regexp} ?
+  ( ~( regexp-range | regexp-intersection | regexp-shared ) )*
+  ~
+  ('(?=")' | `]` {punctuation.section.brackets.end})
+;
+
+regexp-escape {constant.character.escape.regexp}
+: '(\\)(\\|0[0-3]?[0-7]{1,2}|x\h{2}|u\h{4}|x\{1?\h{1,5}\}|\N\{[a-zA-Z0-9\- ]+\}|[tnrfae]|c[A-Z]|[dDhHsSvVwW]|p\{[a-zA-Z]+\}|b\{g\}|[bBAGZz]|[RX]|[0-9]+|k<[a-zA-Z][a-zA-Z0-9]*>|[^a-zA-Z0-9])|((\\).)' {
+    1: punctuation.definition.character.escape.begin,
+    3: invalid.illegal.escape.regexp,
+    4: punctuation.definition.character.escape.begin
+  }
+;
+
+regexp-quantifier {keyword.operator.quantifier.regexp}
+: '(?:[?*+]|\{\d+(?:,(?:\d+)?)?\})[?+]?'
+;
+
+regexp-shared : regexp-escape | regexp-set | regexp-quantifier ;
+
+regexp-union {keyword.operator.union.regexp} : `|` ;
+
+regexp-special
+: '(\()(\?(<[a-zA-Z][a-zA-Z0-9]*>|:|=|!|<=|<!|>|[idmsux]*(-[idmsux]+)?:|[idmsuxU]*(-[idmsuxU]+)?(?!:)))?' {
+    1: punctuation.section.parens.begin,
+    2: keyword.operator.special.regexp
+  }
+  ( ~(regexp-group) )*
+  ~ ('(?=")' | `)` {punctuation.section.parens.end})
+;
+
+regexp-group :
+  regexp-quote
+| regexp-shared
+| regexp-union
+| regexp-special
+;
+
+regexp {string.regexp, include-prototype: false}
+: '((#)")' {
+    1: punctuation.definition.string.begin,
+    2: keyword.operator.macro
+} ( ~(regexp-group) )* ~ (`"` {punctuation.definition.string.end});
+
+inst {meta.reader-form constant.other.instant}
+: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*"))' {
+    2: keyword.operator.macro,
+    3: string.quoted.double,
+    4: punctuation.definition.string.begin,
+    5: punctuation.definition.string.end,
+    6: invalid.illegal.instant
+  }
+;
+
+uuid {meta.reader-form constant.other.uuid}
+: '((#\s*uuid)\s*((")\h{8}-\h{4}-\h{4}-\h{4}-\h{12}("))|(#uuid\s*"[^"]*"))' {
+    2: keyword.operator.macro,
+    3: string.quoted.double,
+    4: punctuation.definition.string.begin,
+    5: punctuation.definition.string.end,
+    6: invalid.illegal.uuid
+  }
+;
+
+reader-tag {meta.reader-form keyword.operator.macro}
+: `#` QUALIFIED_SYMBOL ;
+
+tagged-literal : inst | uuid | reader-tag;
+
+dispatch : discard | regexp | tagged-literal ;
+
+macro-characters : character | dispatch ;
+
+# S-expressions
+
+list {meta.sexp.list}
+: `(`{punctuation.section.parens.begin}
+  form*
+  `)`{punctuation.section.parens.end}
+;
+
+vector {meta.sexp.vector}
+: `[`{punctuation.section.brackets.begin}
+  form*
+  `]`{punctuation.section.brackets.end}
+;
+
+map {meta.sexp.map}
+: `{`{punctuation.section.braces.begin}
+  form*
+  `}`{punctuation.section.braces.end}
+;
+
+set {meta.sexp.set}
+: '(#)({)' {
+    1: keyword.operator.macro,
+    2: punctuation.section.braces.begin
+  } form* '\}'{punctuation.section.braces.end}
+;
+
+sexp : list | vector | map | set ;
+
+comma : `,` {punctuation.comma comment.punctuation.comma} ;
+
+non-symbols : '([-+]?\d+)[^#[TERMINAL]e]|[\'\/][^#[TERMINAL]]' ;
+
+form :
+  constant
+| string
+| numbers
+| keywords
+| symbolic
+| sexp
+| macro-characters
+| non-symbols
+| symbols
+| comma
+;
