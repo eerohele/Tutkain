@@ -1,9 +1,7 @@
 from ..log import log
 from .. import settings
 from .. import inline
-from ...api import edn
 from . import views
-from . import formatter
 import sublime
 
 
