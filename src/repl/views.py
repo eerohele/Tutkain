@@ -1,5 +1,10 @@
 from ...api import edn
 from .. import dialects
+from .. import namespace
+from .. import state
+from .. import status
+from .. import settings
+
 from sublime import View, Window, active_window
 from typing import Union
 
@@ -147,3 +152,18 @@ def get_or_create_view(window, output, view_id=None):
         return window.find_output_panel(name) or window.create_output_panel(name)
     else:
         return window.new_file()
+
+
+def on_activated(window, view):
+    if window and window.active_panel() != "input" and (
+        dialect := dialects.for_view(view)
+    ) and (
+        client := state.get_client(window, dialect)
+    ):
+        status.set_connection_status(view, client)
+
+        if settings.load().get("auto_switch_namespace", True) and client.has_backchannel() and client.ready:
+            ns = namespace.name(view) or namespace.default(dialect)
+            client.switch_namespace(ns)
+    else:
+        status.erase_connection_status(view)

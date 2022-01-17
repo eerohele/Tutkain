@@ -709,19 +709,8 @@ class TutkainEventListener(EventListener):
         if repl.views.get_dialect(view):
             client_id = view.settings().get("tutkain_repl_client_id")
             state.set_active_connection(client_id)
-        elif (window := sublime.active_window()) and window.active_panel() != "input":
-            if (
-                dialect := dialects.for_view(view)
-            ) and (
-                client := state.get_client(window, dialect)
-            ):
-                status.set_connection_status(view, client)
-
-                if settings.load().get("auto_switch_namespace", True) and client.has_backchannel() and client.ready:
-                    ns = namespace.name(view) or namespace.default(dialect)
-                    client.switch_namespace(ns)
-            else:
-                status.erase_connection_status(view)
+        else:
+            repl.views.on_activated(sublime.active_window(), view)
 
     def on_hover(self, view, point, hover_zone):
         if settings.load().get("lookup_on_hover") and view.match_selector(

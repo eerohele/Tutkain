@@ -460,12 +460,13 @@ def start(view, client):
         if client.dialect == edn.Keyword("bb") or (not client.has_backchannel() and len(state.get_connections()) == 1):
             view.assign_syntax("Plain Text.tmLanguage")
 
+        client.ready = True
+
         if view.element() is None:
             window.focus_view(view)
         else:
             views.show_output_panel(window)
-
-        client.ready = True
+            views.on_activated(window, active_view)
 
         status.set_connection_status(active_view, client)
 
