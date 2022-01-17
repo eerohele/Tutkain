@@ -2,6 +2,7 @@
   (:require
    [clojure.main :as main]
    [clojure.pprint :as pprint]
+   [clojure.repl :as repl]
    [tutkain.backchannel :as backchannel]
    [tutkain.format :as format]))
 
@@ -16,6 +17,43 @@
 (defmacro switch-ns
   [namespace]
   `(or (some->> '~namespace find-ns ns-name in-ns .name) (ns ~namespace)))
+
+(defn pst
+  "Like clojure.repl/pst, but doesn't print in a doseq so as to be faster and
+  to avoid interleaving.
+
+  Adapted from clojure.repl/pst:
+
+  https://github.com/clojure/clojure/blob/5451cee06b9e31513a19e596e4e155d1f08d2a8d/src/clj/clojure/repl.clj#L240-L268"
+  ([] (pst 12))
+  ([e-or-depth]
+   (if (instance? Throwable e-or-depth)
+     (pst e-or-depth 12)
+     (when-let [e *e]
+       (pst (repl/root-cause e) e-or-depth))))
+  ([^Throwable e depth]
+   (let [sb (StringBuffer.)]
+     (binding [*out* *err*]
+       (when (#{:read-source :macro-syntax-check :macroexpansion :compile-syntax-check :compilation}
+              (-> e ex-data :clojure.error/phase))
+         (.append sb "Note: The following stack trace applies to the reader or compiler, your code was not executed.\n"))
+       (.append sb (str (-> e class .getSimpleName) " "
+                     (.getMessage e)
+                     (when-let [info (ex-data e)] (str " " (pr-str info)))
+                     \newline))
+       (let [st (.getStackTrace e)
+             cause (.getCause e)]
+         (doseq [el (take depth
+                      (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName %))
+                        st))]
+           (.append sb (str \tab (repl/stack-element-str el) \newline)))
+         (print (str sb))
+         (flush)
+         (when cause
+           (println "Caused by:")
+           (pst cause (min depth
+                        (+ 2 (- (count (.getStackTrace cause))
+                               (count st)))))))))))
 
 (defn repl
   "Tutkain's main read-eval-print loop.
