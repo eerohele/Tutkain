@@ -375,7 +375,7 @@ class TutkainEvaluateCommand(TextCommand):
 
             if scope == "input":
                 view = self.view.window().show_input_panel(
-                    "Input: ",
+                    "Code: ",
                     history.get(self.view.window()),
                     lambda code: self.evaluate_input(client, code),
                     self.noop,
@@ -1292,7 +1292,7 @@ class TutkainPromptCommand(WindowCommand):
 
     def prompt(self, client):
         view = self.window.show_input_panel(
-            "Input: ",
+            "Code: ",
             history.get(self.window),
             lambda code: self.on_done(client, code),
             self.on_change,
