@@ -7,7 +7,12 @@
         "key": "setting.tutkain_repl_input_panel",
         "operator": "equal",
         "operand": true
-      }
+      },
+      {
+        "key": "auto_complete_visible",
+        "operator": "equal",
+        "operand": false
+      },
     ]
   },
 
@@ -20,7 +25,12 @@
         "key": "setting.tutkain_repl_input_panel",
         "operator": "equal",
         "operand": true
-      }
+      },
+      {
+        "key": "auto_complete_visible",
+        "operator": "equal",
+        "operand": false
+      },
     ]
   },
 ]
