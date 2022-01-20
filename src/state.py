@@ -45,6 +45,8 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
         del __state["connections"][connection.client.id]
         connections = __state["connections"]
 
+        window.destroy_output_panel("tutkain.history_preview_panel")
+
         if get_client(connection.window, connection.client.dialect) == connection.client:
             __state["active_connection"].pop(connection.client.dialect)
 

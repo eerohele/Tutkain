@@ -7,6 +7,7 @@
    (java.io BufferedReader BufferedWriter File InputStreamReader OutputStreamWriter)
    (java.lang.reflect Field)
    (java.net InetAddress ServerSocket)
+   (java.time Instant)
    (java.util.concurrent.atomic AtomicInteger)))
 
 (defn respond-to
@@ -133,3 +134,27 @@
     {:eval-context eval-context
      :socket socket
      :send-over-backchannel (fn [message] (@eventual-send-fn message))}))
+
+(defonce !history (atom []))
+
+(defn put-history-entry
+  [max-history entry]
+  (swap! !history
+    (fn [h v]
+      (if (>= (count h) max-history)
+        (conj (subvec h 1) v)
+        (conj h v)))
+    (assoc entry :timestamp (Instant/now))))
+
+(defn ^:private serialize
+  [entry]
+  (-> entry (update :ns str) (update :timestamp str)))
+
+(defmethod handle :history
+  [message]
+  (respond-to message {:history (map serialize (reverse @!history))}))
+
+(defmethod handle :clear-history
+  [message]
+  (reset! !history [])
+  (respond-to message {:clear-history :ok}))

@@ -1,6 +1,8 @@
 from functools import partial
+import datetime
 import json
 import os
+import re
 import sublime
 
 from sublime_plugin import (
@@ -1352,3 +1354,82 @@ class TutkainChooseActiveRuntimeCommand(WindowCommand):
 
     def run(self, client_id):
         state.set_active_connection(client_id)
+
+
+class TutkainEvaluationHistoryCommand(WindowCommand):
+    def commit(self, entry, index):
+        code = entry[edn.Keyword("form")]
+
+        if index == 0:
+            ns = entry[edn.Keyword("ns")]
+            self.window.run_command("tutkain_evaluate", {"dialect": "clj", "ns": ns, "code": code})
+        elif index == 1:
+            sublime.set_clipboard(code)
+
+    def select_action(self, entries, index):
+        self.window.destroy_output_panel("tutkain.history_preview_panel")
+
+        if index != -1:
+            entry = entries[index]
+
+            self.window.show_quick_panel(
+                ["Evaluate", "Copy to clipboard"],
+                lambda index: self.commit(entry, index)
+            )
+
+    def format_timestamp(self, timestamp):
+        timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+        timestamp = timestamp.replace(tzinfo=datetime.timezone.utc)
+        timestamp = timestamp.astimezone()
+        return timestamp.strftime("%c")
+
+    def show(self, entries, index):
+        if index != -1:
+            entry = entries[index]
+            code = entry[edn.Keyword("form")]
+            panel = self.window.find_output_panel("tutkain.history_preview_panel") or self.window.create_output_panel("tutkain.history_preview_panel")
+            panel.run_command("select_all")
+            panel.run_command("right_delete")
+            panel.run_command("append", {"characters": code})
+            panel.run_command("move_to", {"to": "bof"})
+            panel.assign_syntax("REPL (Tutkain).sublime-syntax")
+            self.window.run_command("show_panel", {"panel": "output.tutkain.history_preview_panel"})
+
+    def handler(self, client, response):
+        if entries := response.get(edn.Keyword("history")):
+            items = []
+
+            for entry in entries:
+                form = entry[edn.Keyword("form")]
+
+                form = re.sub(r"\s+", " ", form)
+
+                if len(form) > 50:
+                    form = form[:49] + "…"
+
+                timestamp = self.format_timestamp(entry[edn.Keyword("timestamp")])
+                ns = entry[edn.Keyword("ns")]
+                items.append(sublime.QuickPanelItem(form, annotation=timestamp, details=ns))
+
+            self.window.show_quick_panel(
+                items,
+                lambda index: self.select_action(entries, index),
+                on_highlight=lambda index: self.show(entries, index),
+                flags=sublime.MONOSPACE_FONT
+            )
+        else:
+            self.window.status_message("ERR: Evaluation history is empty.")
+
+    def run(self):
+        if client := state.get_client(self.window, edn.Keyword("clj")):
+            client.backchannel.send({"op": edn.Keyword("history")}, lambda response: self.handler(client, response))
+        else:
+            self.window.status_message("ERR: Not connected to a Clojure REPL.")
+
+
+class TutkainClearEvaluationHistoryCommand(WindowCommand):
+    def run(self):
+        if client := state.get_client(self.window, edn.Keyword("clj")):
+            client.backchannel.send({"op": edn.Keyword("clear-history")})
+        else:
+            self.window.status_message("ERR: Not connected to a Clojure REPL.")

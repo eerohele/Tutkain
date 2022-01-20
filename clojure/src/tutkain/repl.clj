@@ -65,7 +65,7 @@
     clojure.main/repl"
   ([]
    (repl {}))
-  ([opts]
+  ([{:keys [history-size] :or {history-size 100} :as opts}]
    (let [EOF (Object.)
          lock (Object.)
          out *out*
@@ -111,6 +111,7 @@
                                  (plain-print (format "%s=> %s" (ns-name *ns*) s)))
                                (let [ret (eval form)]
                                  (when-not (= :repl/quit ret)
+                                   (backchannel/put-history-entry history-size {:ns (ns-name *ns*) :form s})
                                    (set! *3 *2)
                                    (set! *2 *1)
                                    (set! *1 ret)
@@ -122,6 +123,7 @@
                                    (flush)
                                    true))))
                            (catch Throwable ex
+                             (backchannel/put-history-entry history-size {:ns (ns-name *ns*) :form s})
                              (set! *e ex)
                              (swap! eval-context assoc #'*e *e)
                              (send-over-backchannel

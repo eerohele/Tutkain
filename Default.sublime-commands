@@ -95,4 +95,12 @@
         "caption": "Tutkain: Choose Active Runtime",
         "command": "tutkain_choose_active_runtime"
     },
+    {
+        "caption": "Tutkain: Evaluation History",
+        "command": "tutkain_evaluation_history"
+    },
+    {
+        "caption": "Tutkain: Clear Evaluation History",
+        "command": "tutkain_clear_evaluation_history"
+    },
 ]
