@@ -48,15 +48,3 @@ def for_view(view):
         if syntax.scope == "source.clojure":
             return edn.Keyword("clj")
 
-
-def focus_view(view: View, dialect: edn.Keyword) -> None:
-    """Given an initial view and a dialect, if the currently active REPL view
-    has a different dialect than the given dialect, focus the active REPL view
-    for the given dialect, then refocus the initial view."""
-    if (window := view.window()) and (
-        active_output_view := views.active_output_view(window)
-    ) and views.get_dialect(active_output_view) != dialect:
-        # Focus the REPL view for the given dialect
-        window.focus_view(state.get_active_connection_view(dialect))
-        # Focus the view that was initially active
-        window.focus_view(view)

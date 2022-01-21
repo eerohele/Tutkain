@@ -1,11 +1,7 @@
 from ...api import edn
 from .. import dialects
-from .. import namespace
-from .. import state
-from .. import status
-from .. import settings
 
-from sublime import View, Window, active_window
+from sublime import View, active_window
 from typing import Union
 
 REPL_VIEW_DEFAULT_SETTINGS = {
@@ -54,19 +50,11 @@ def get_port(view: View) -> Union[int, None]:
     return view.settings().get("tutkain_repl_port")
 
 
-def get_dialect(view: View) -> Union[edn.Keyword, None]:
+def get_dialect(view: Union[View, None]) -> Union[edn.Keyword, None]:
     """Given a Tutkain REPL view, return the dialect associated with the REPL
     view."""
-    if dialect := view.settings().get("tutkain_repl_view_dialect"):
+    if view and (dialect := view.settings().get("tutkain_repl_view_dialect")):
         return edn.Keyword(dialect)
-
-
-def active_output_view(window: Window) -> Union[View, None]:
-    for group in range(window.num_groups() + 1):
-        if (view := window.active_view_in_group(group)) and get_dialect(view):
-            return view
-
-    return window.find_output_panel(output_panel_name())
 
 
 def configure(view, dialect, client_id, host, port, settings={}):
@@ -153,17 +141,3 @@ def get_or_create_view(window, output, view_id=None):
     else:
         return window.new_file()
 
-
-def on_activated(window, view):
-    if window and window.active_panel() != "input" and (
-        dialect := dialects.for_view(view)
-    ) and (
-        client := state.get_client(window, dialect)
-    ):
-        status.set_connection_status(view, client)
-
-        if settings.load().get("auto_switch_namespace", True) and client.has_backchannel() and client.ready:
-            ns = namespace.name(view) or namespace.default(dialect)
-            client.switch_namespace(ns)
-    else:
-        status.erase_connection_status(view)

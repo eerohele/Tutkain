@@ -466,7 +466,7 @@ def start(view, client):
             window.focus_view(view)
         else:
             views.show_output_panel(window)
-            views.on_activated(window, active_view)
+            state.on_activated(window, active_view)
 
         status.set_connection_status(active_view, client)
 

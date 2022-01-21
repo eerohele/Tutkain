@@ -238,7 +238,7 @@ class TestConnectDisconnect(TestCase):
             user=> (inc 1)
             2
             """,
-            self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         self.disconnect(window)
@@ -281,7 +281,7 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """Clojure 1.11.0-alpha1\nuser=> true\n""",
-            self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         yield lambda: self.equals(
@@ -503,10 +503,10 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             f"""Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nClojure 1.11.0-alpha1\nuser=> (inc 2)\n3\nuser=> (inc 3)\n⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1.server.host}:{jvm_1.server.port}.\n⁣⁣4\n""",
-            self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         ) or self.equals(
             f"""Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nClojure 1.11.0-alpha1\nuser=> (inc 2)\n3\n⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1.server.host}:{jvm_1.server.port}.\n⁣⁣user=> (inc 3)\n4\n""",
-            self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         self.disconnect(window)
@@ -538,7 +538,7 @@ class TestConnectDisconnect(TestCase):
             Clojure 1.11.0-alpha1
             user=> (inc 1)
             2
-            """, self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            """, self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
@@ -558,7 +558,7 @@ class TestConnectDisconnect(TestCase):
             ClojureScript 1.10.844
             cljs.user=> (js/parseInt "42")
             42
-            """, self.content(state.get_active_connection_view(edn.Keyword("cljs")))
+            """, self.content(state.get_active_connection(window, edn.Keyword("cljs")).view)
         )
 
         self.disconnect(window)
@@ -587,7 +587,7 @@ class TestConnectDisconnect(TestCase):
             2
             user=> (inc 2)
             3
-            """, self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            """, self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         self.disconnect(window)
@@ -633,7 +633,7 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """ClojureScript 1.10.844\ncljs.user=> (js/parseInt "42")\n42\n""",
-            self.content(state.get_active_connection_view(edn.Keyword("cljs")))
+            self.content(state.get_active_connection(window, edn.Keyword("cljs")).view)
         )
 
         self.disconnect(window)
@@ -657,7 +657,7 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nuser=> (inc 2)\n3\n""",
-            self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         self.disconnect(window)
@@ -678,7 +678,7 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """user=> """,
-            self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         self.set_view_content(view, "(inc 1)")
@@ -688,14 +688,14 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """user=> (inc 1)\n""",
-            self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         connection.server.send("2")
 
         yield lambda: self.equals(
             """user=> (inc 1)\n2\n""",
-            self.content(state.get_active_connection_view(edn.Keyword("clj")))
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
         )
 
         self.disconnect(window)

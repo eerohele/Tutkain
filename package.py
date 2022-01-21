@@ -152,11 +152,11 @@ class TutkainClearOutputViewCommand(WindowCommand):
 
         for view_name in views:
             if view_name == "repl":
-                if view := repl.views.active_output_view(self.window):
+                if view := state.get_active_output_view(self.window):
                     self.clear_view(view)
 
             elif view_name == "tap":
-                if view := repl.views.tap_panel(repl.views.active_output_view(self.window)):
+                if view := repl.views.tap_panel(state.get_active_output_view(self.window)):
                     self.clear_view(view)
 
 
@@ -185,10 +185,11 @@ class TutkainEvaluateViewCommand(TextCommand):
 class TutkainRunTests(TextCommand):
     def run(self, _, scope="ns"):
         dialect = edn.Keyword("clj")
+        window = self.view.window()
 
         if scope == "ns":
-            client = state.get_client(self.view.window(), dialect)
-            dialects.focus_view(self.view, dialect)
+            client = state.get_client(window, dialect)
+            state.focus_active_runtime_view(window, dialect)
             test.run(self.view, client)
         elif scope == "var":
             region = self.view.sel()[0]
@@ -196,8 +197,8 @@ class TutkainRunTests(TextCommand):
             test_var = test.current(self.view, point)
 
             if test_var:
-                client = state.get_client(self.view.window(), dialect)
-                dialects.focus_view(self.view, dialect)
+                client = state.get_client(window, dialect)
+                state.focus_active_runtime_view(window, dialect)
                 test.run(self.view, client, test_vars=[test_var])
 
     def input(self, args):
@@ -368,7 +369,7 @@ class TutkainEvaluateCommand(TextCommand):
         if client is None:
             self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
         else:
-            dialects.focus_view(self.view, dialect)
+            state.focus_active_runtime_view(self.view.window(), dialect)
 
             if ns is not None:
                 client.switch_namespace(ns)
@@ -706,11 +707,10 @@ class TutkainEventListener(EventListener):
         inline.clear(view)
 
     def on_activated(self, view):
-        if repl.views.get_dialect(view):
-            client_id = view.settings().get("tutkain_repl_client_id")
-            state.set_active_connection(client_id)
+        if client_id := repl.views.get_client_id(view):
+            state.set_active_connection(view.window(), state.get_connection_by_id(client_id))
         else:
-            repl.views.on_activated(sublime.active_window(), view)
+            state.on_activated(view.window(), view)
 
     def on_hover(self, view, point, hover_zone):
         if settings.load().get("lookup_on_hover") and view.match_selector(
@@ -776,7 +776,7 @@ class TutkainInterruptEvaluationCommand(WindowCommand):
         if client is None:
             self.window.status_message("ERR: Not connected to a REPL.")
         else:
-            dialects.focus_view(self.window.active_view(), dialect)
+            state.focus_active_runtime_view(self.window, dialect)
             client.backchannel.send({"op": edn.Keyword("interrupt")})
 
 
@@ -1351,4 +1351,4 @@ class TutkainChooseActiveRuntimeCommand(WindowCommand):
         return ClientIdInputHandler()
 
     def run(self, client_id):
-        state.set_active_connection(client_id)
+        state.set_active_connection(self.window, state.get_connection_by_id(client_id))
