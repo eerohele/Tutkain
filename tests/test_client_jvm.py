@@ -639,3 +639,35 @@ class TestJVMClient(PackageTestCase):
         }))
 
         self.assertEquals(formatter.inline(7, view_id, "2"), self.get_print())
+
+
+class TestNoBackchannelJVMClient(PackageTestCase):
+    @classmethod
+    def setUpClass(self):
+        super().setUpClass()
+
+        def write_greeting(buf):
+            buf.write("user=> ")
+            buf.flush()
+
+        self.window = sublime.active_window()
+        self.server = REPL(greeting=write_greeting).start()
+        self.client = repl.JVMClient(self.server.host, self.server.port, options={"backchannel": {"enabled": False}})
+        self.output_view = repl.views.get_or_create_view(self.window, "view")
+        repl.start(self.output_view, self.client)
+        self.client.printq.get(timeout=5) # Swallow the initial prompt
+
+        self.addClassCleanup(repl.stop, self.window)
+        self.addClassCleanup(self.server.stop)
+
+    def get_print(self):
+        return self.client.printq.get(timeout=5)
+
+    def test_outermost(self):
+        self.set_view_content("(map inc (range 10))")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
+        self.assertEquals("(map inc (range 10))\n", self.server.recv())
+        self.assertEquals(formatter.value("(map inc (range 10))\n"), self.get_print())
+        self.server.send("(1 2 3 4 5 6 7 8 9 10)")
+        self.assertEquals(formatter.value("(1 2 3 4 5 6 7 8 9 10)\n"), self.get_print())
