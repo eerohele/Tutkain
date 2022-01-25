@@ -7,6 +7,7 @@ from Tutkain.src import state
 from concurrent import futures
 
 import sublime
+import sys
 import textwrap
 import types
 import unittesting
@@ -376,296 +377,300 @@ class TestConnectDisconnect(TestCase):
 
     #@unittest.SkipTest
     def test_panel_multiple(self):
-        window = self.make_window()
-        jvm_view = self.make_scratch_view(window)
-        jvm = self.connect(window, {"dialect": "clj", "output": "panel"})
+        if "win" not in sys.platform:
+            window = self.make_window()
+            jvm_view = self.make_scratch_view(window)
+            jvm = self.connect(window, {"dialect": "clj", "output": "panel"})
 
-        self.set_view_content(jvm_view, "(inc 1)")
-        self.set_selections(jvm_view, (0, 0))
+            self.set_view_content(jvm_view, "(inc 1)")
+            self.set_selections(jvm_view, (0, 0))
 
-        jvm_view.run_command("tutkain_evaluate")
-        self.eval_context(jvm.backchannel)
-        self.assertEquals("(inc 1)\n", jvm.server.recv())
-        jvm.server.send("user=> (inc 1)")
-        jvm.server.send("2")
+            jvm_view.run_command("tutkain_evaluate")
+            self.eval_context(jvm.backchannel)
+            self.assertEquals("(inc 1)\n", jvm.server.recv())
+            jvm.server.send("user=> (inc 1)")
+            jvm.server.send("2")
 
-        yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            """, self.content(self.output_panel(window))
-        )
+            yield lambda: self.equals(
+                """
+                Clojure 1.11.0-alpha1
+                user=> (inc 1)
+                2
+                """, self.content(self.output_panel(window))
+            )
 
-        js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
-        js = self.connect(window, {"dialect": "cljs", "output": "panel", "build_id": "app"})
+            js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
+            js = self.connect(window, {"dialect": "cljs", "output": "panel", "build_id": "app"})
 
-        self.set_view_content(js_view, """(js/parseInt "42")""")
-        self.set_selections(js_view, (0, 0))
+            self.set_view_content(js_view, """(js/parseInt "42")""")
+            self.set_selections(js_view, (0, 0))
 
-        js_view.run_command("tutkain_evaluate")
-        self.eval_context(js.backchannel)
-        self.assertEquals("""(js/parseInt "42")\n""", js.server.recv())
-        js.server.send("""cljs.user=> (js/parseInt "42")""")
-        js.server.send("42")
+            js_view.run_command("tutkain_evaluate")
+            self.eval_context(js.backchannel)
+            self.assertEquals("""(js/parseInt "42")\n""", js.server.recv())
+            js.server.send("""cljs.user=> (js/parseInt "42")""")
+            js.server.send("42")
 
-        yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            ClojureScript 1.10.844
-            cljs.user=> (js/parseInt "42")
-            42
-            """, self.content(self.output_panel(window))
-        )
+            yield lambda: self.equals(
+                """
+                Clojure 1.11.0-alpha1
+                user=> (inc 1)
+                2
+                ClojureScript 1.10.844
+                cljs.user=> (js/parseInt "42")
+                42
+                """, self.content(self.output_panel(window))
+            )
 
-        self.disconnect(window)
-        yield unittesting.AWAIT_WORKER
-        jvm_view.window().run_command("select")
-        yield
-        self.assertEquals(":repl/quit", jvm.server.recv())
-        self.disconnect(window)
-        yield unittesting.AWAIT_WORKER
-        jvm_view.window().run_command("select")
-        yield
-        self.assertEquals(":repl/quit", js.server.recv())
-        self.close_window(window)
-        jvm.backchannel.stop()
-        jvm.server.stop()
-        js.backchannel.stop()
-        js.server.stop()
+            self.disconnect(window)
+            yield unittesting.AWAIT_WORKER
+            jvm_view.window().run_command("select")
+            yield
+            self.assertEquals(":repl/quit", jvm.server.recv())
+            self.disconnect(window)
+            yield unittesting.AWAIT_WORKER
+            jvm_view.window().run_command("select")
+            yield
+            self.assertEquals(":repl/quit", js.server.recv())
+            self.close_window(window)
+            jvm.backchannel.stop()
+            jvm.server.stop()
+            js.backchannel.stop()
+            js.server.stop()
 
     #@unittest.SkipTest
     def test_panel_multiple_same_runtime(self):
-        window = self.make_window()
-        jvm_view_1 = self.make_scratch_view(window)
-        jvm_1 = self.connect(window, {"dialect": "clj", "output": "panel"})
+        if "win" not in sys.platform:
+            window = self.make_window()
+            jvm_view_1 = self.make_scratch_view(window)
+            jvm_1 = self.connect(window, {"dialect": "clj", "output": "panel"})
 
-        self.set_view_content(jvm_view_1, "(inc 1)")
-        self.set_selections(jvm_view_1, (0, 0))
+            self.set_view_content(jvm_view_1, "(inc 1)")
+            self.set_selections(jvm_view_1, (0, 0))
 
-        jvm_view_1.run_command("tutkain_evaluate")
-        self.eval_context(jvm_1.backchannel)
-        self.assertEquals("(inc 1)\n", jvm_1.server.recv())
-        jvm_1.server.send("user=> (inc 1)")
-        jvm_1.server.send("2")
+            jvm_view_1.run_command("tutkain_evaluate")
+            self.eval_context(jvm_1.backchannel)
+            self.assertEquals("(inc 1)\n", jvm_1.server.recv())
+            jvm_1.server.send("user=> (inc 1)")
+            jvm_1.server.send("2")
 
-        yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            """, self.content(self.output_panel(window))
-        )
+            yield lambda: self.equals(
+                """
+                Clojure 1.11.0-alpha1
+                user=> (inc 1)
+                2
+                """, self.content(self.output_panel(window))
+            )
 
-        jvm_view_2 = self.make_scratch_view(window)
-        jvm_2 = self.connect(window, {"dialect": "clj", "output": "panel"})
+            jvm_view_2 = self.make_scratch_view(window)
+            jvm_2 = self.connect(window, {"dialect": "clj", "output": "panel"})
 
-        self.set_view_content(jvm_view_2, """(inc 2)""")
-        self.set_selections(jvm_view_2, (0, 0))
+            self.set_view_content(jvm_view_2, """(inc 2)""")
+            self.set_selections(jvm_view_2, (0, 0))
 
-        jvm_view_2.run_command("tutkain_evaluate")
-        self.eval_context(jvm_2.backchannel)
-        self.assertEquals("""(inc 2)\n""", jvm_2.server.recv())
-        jvm_2.server.send("""user=> (inc 2)""")
-        jvm_2.server.send("3")
+            jvm_view_2.run_command("tutkain_evaluate")
+            self.eval_context(jvm_2.backchannel)
+            self.assertEquals("""(inc 2)\n""", jvm_2.server.recv())
+            jvm_2.server.send("""user=> (inc 2)""")
+            jvm_2.server.send("3")
 
-        yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            Clojure 1.11.0-alpha1
-            user=> (inc 2)
-            3
-            """, self.content(self.output_panel(window))
-        )
+            yield lambda: self.equals(
+                """
+                Clojure 1.11.0-alpha1
+                user=> (inc 1)
+                2
+                Clojure 1.11.0-alpha1
+                user=> (inc 2)
+                3
+                """, self.content(self.output_panel(window))
+            )
 
-        self.disconnect(window)
+            self.disconnect(window)
 
-        yield unittesting.AWAIT_WORKER
-        jvm_view_1.window().run_command("select")
-        yield
+            yield unittesting.AWAIT_WORKER
+            jvm_view_1.window().run_command("select")
+            yield
 
-        self.assertEquals(":repl/quit", jvm_1.server.recv())
+            self.assertEquals(":repl/quit", jvm_1.server.recv())
 
-        self.set_view_content(jvm_view_2, "(inc 3)")
-        self.set_selections(jvm_view_2, (0, 0))
+            self.set_view_content(jvm_view_2, "(inc 3)")
+            self.set_selections(jvm_view_2, (0, 0))
 
-        jvm_view_2.run_command("tutkain_evaluate")
-        self.eval_context(jvm_2.backchannel)
-        self.assertEquals("(inc 3)\n", jvm_2.server.recv())
-        jvm_2.server.send("user=> (inc 3)")
-        jvm_2.server.send("4")
+            jvm_view_2.run_command("tutkain_evaluate")
+            self.eval_context(jvm_2.backchannel)
+            self.assertEquals("(inc 3)\n", jvm_2.server.recv())
+            jvm_2.server.send("user=> (inc 3)")
+            jvm_2.server.send("4")
 
-        yield lambda: self.equals(
-            f"""Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nClojure 1.11.0-alpha1\nuser=> (inc 2)\n3\nuser=> (inc 3)\n⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1.server.host}:{jvm_1.server.port}.\n⁣⁣4\n""",
-            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
-        ) or self.equals(
-            f"""Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nClojure 1.11.0-alpha1\nuser=> (inc 2)\n3\n⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1.server.host}:{jvm_1.server.port}.\n⁣⁣user=> (inc 3)\n4\n""",
-            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
-        )
+            yield lambda: self.equals(
+                f"""Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nClojure 1.11.0-alpha1\nuser=> (inc 2)\n3\nuser=> (inc 3)\n⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1.server.host}:{jvm_1.server.port}.\n⁣⁣4\n""",
+                self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            ) or self.equals(
+                f"""Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nClojure 1.11.0-alpha1\nuser=> (inc 2)\n3\n⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1.server.host}:{jvm_1.server.port}.\n⁣⁣user=> (inc 3)\n4\n""",
+                self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            )
 
-        self.disconnect(window)
-        jvm_view_2.window().run_command("select")
-        self.assertEquals(":repl/quit", jvm_2.server.recv())
-        self.close_window(window)
-        jvm_1.server.stop()
-        jvm_1.backchannel.stop()
-        jvm_2.server.stop()
-        jvm_2.backchannel.stop()
+            self.disconnect(window)
+            jvm_view_2.window().run_command("select")
+            self.assertEquals(":repl/quit", jvm_2.server.recv())
+            self.close_window(window)
+            jvm_1.server.stop()
+            jvm_1.backchannel.stop()
+            jvm_2.server.stop()
+            jvm_2.backchannel.stop()
 
     #@unittest.SkipTest
     def test_view_multiple(self):
-        window = self.make_window()
-        jvm_view = self.make_scratch_view(window)
-        jvm = self.connect(window, {"dialect": "clj", "output": "view"})
+        if "win" not in sys.platform:
+            window = self.make_window()
+            jvm_view = self.make_scratch_view(window)
+            jvm = self.connect(window, {"dialect": "clj", "output": "view"})
 
-        self.set_view_content(jvm_view, "(inc 1)")
-        self.set_selections(jvm_view, (0, 0))
+            self.set_view_content(jvm_view, "(inc 1)")
+            self.set_selections(jvm_view, (0, 0))
 
-        jvm_view.run_command("tutkain_evaluate")
-        self.eval_context(jvm.backchannel)
-        self.assertEquals("(inc 1)\n", jvm.server.recv())
-        jvm.server.send("user=> (inc 1)")
-        jvm.server.send("2")
+            jvm_view.run_command("tutkain_evaluate")
+            self.eval_context(jvm.backchannel)
+            self.assertEquals("(inc 1)\n", jvm.server.recv())
+            jvm.server.send("user=> (inc 1)")
+            jvm.server.send("2")
 
-        yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            """, self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
-        )
+            yield lambda: self.equals(
+                """
+                Clojure 1.11.0-alpha1
+                user=> (inc 1)
+                2
+                """, self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            )
 
-        js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
-        js = self.connect(window, {"dialect": "cljs", "output": "view", "build_id": "app"})
+            js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
+            js = self.connect(window, {"dialect": "cljs", "output": "view", "build_id": "app"})
 
-        self.set_view_content(js_view, """(js/parseInt "42")""")
-        self.set_selections(js_view, (0, 0))
+            self.set_view_content(js_view, """(js/parseInt "42")""")
+            self.set_selections(js_view, (0, 0))
 
-        js_view.run_command("tutkain_evaluate")
-        self.eval_context(js.backchannel)
-        self.assertEquals("""(js/parseInt "42")\n""", js.server.recv())
-        js.server.send("""cljs.user=> (js/parseInt "42")""")
-        js.server.send("42")
+            js_view.run_command("tutkain_evaluate")
+            self.eval_context(js.backchannel)
+            self.assertEquals("""(js/parseInt "42")\n""", js.server.recv())
+            js.server.send("""cljs.user=> (js/parseInt "42")""")
+            js.server.send("42")
 
-        yield lambda: self.equals(
-            """
-            ClojureScript 1.10.844
-            cljs.user=> (js/parseInt "42")
-            42
-            """, self.content(state.get_active_connection(window, edn.Keyword("cljs")).view)
-        )
+            yield lambda: self.equals(
+                """
+                ClojureScript 1.10.844
+                cljs.user=> (js/parseInt "42")
+                42
+                """, self.content(state.get_active_connection(window, edn.Keyword("cljs")).view)
+            )
 
-        self.disconnect(window)
-        # Move down to select ClojureScript runtime
+            self.disconnect(window)
+            # Move down to select ClojureScript runtime
 
-        yield unittesting.AWAIT_WORKER
-        js_view.window().run_command("move", {"by": "lines", "forward": True})
-        js_view.window().run_command("select")
-        yield
+            yield unittesting.AWAIT_WORKER
+            js_view.window().run_command("move", {"by": "lines", "forward": True})
+            js_view.window().run_command("select")
+            yield
 
-        self.assertEquals(":repl/quit", js.server.recv())
+            self.assertEquals(":repl/quit", js.server.recv())
 
-        self.set_view_content(jvm_view, "(inc 2)")
-        self.set_selections(jvm_view, (0, 0))
+            self.set_view_content(jvm_view, "(inc 2)")
+            self.set_selections(jvm_view, (0, 0))
 
-        jvm_view.run_command("tutkain_evaluate")
-        self.eval_context(jvm.backchannel)
-        self.assertEquals("(inc 2)\n", jvm.server.recv())
-        jvm.server.send("user=> (inc 2)")
-        jvm.server.send("3")
+            jvm_view.run_command("tutkain_evaluate")
+            self.eval_context(jvm.backchannel)
+            self.assertEquals("(inc 2)\n", jvm.server.recv())
+            jvm.server.send("user=> (inc 2)")
+            jvm.server.send("3")
 
-        yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            user=> (inc 2)
-            3
-            """, self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
-        )
+            yield lambda: self.equals(
+                """
+                Clojure 1.11.0-alpha1
+                user=> (inc 1)
+                2
+                user=> (inc 2)
+                3
+                """, self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            )
 
-        self.disconnect(window)
-        # Don't need to select because there's only one remaining runtime
-        self.assertEquals(":repl/quit", jvm.server.recv())
-        self.close_window(window)
-        jvm.backchannel.stop()
-        jvm.server.stop()
-        js.backchannel.stop()
-        js.server.stop()
+            self.disconnect(window)
+            # Don't need to select because there's only one remaining runtime
+            self.assertEquals(":repl/quit", jvm.server.recv())
+            self.close_window(window)
+            jvm.backchannel.stop()
+            jvm.server.stop()
+            js.backchannel.stop()
+            js.server.stop()
 
     #@unittest.SkipTest
     def test_panel_and_view(self):
-        window = self.make_window()
-        jvm_view = self.make_scratch_view(window)
-        jvm = self.connect(window, {"dialect": "clj", "output": "panel"})
+        if "win" not in sys.platform:
+            window = self.make_window()
+            jvm_view = self.make_scratch_view(window)
+            jvm = self.connect(window, {"dialect": "clj", "output": "panel"})
 
-        self.set_view_content(jvm_view, "(inc 1)")
-        self.set_selections(jvm_view, (0, 0))
+            self.set_view_content(jvm_view, "(inc 1)")
+            self.set_selections(jvm_view, (0, 0))
 
-        jvm_view.run_command("tutkain_evaluate")
-        self.eval_context(jvm.backchannel)
-        self.assertEquals("(inc 1)\n", jvm.server.recv())
-        jvm.server.send("user=> (inc 1)")
-        jvm.server.send("2")
+            jvm_view.run_command("tutkain_evaluate")
+            self.eval_context(jvm.backchannel)
+            self.assertEquals("(inc 1)\n", jvm.server.recv())
+            jvm.server.send("user=> (inc 1)")
+            jvm.server.send("2")
 
-        yield lambda: self.equals(
-            """Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\n""",
-            self.content(self.output_panel(window))
-        )
+            yield lambda: self.equals(
+                """Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\n""",
+                self.content(self.output_panel(window))
+            )
 
-        js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
-        js = self.connect(window, {"dialect": "cljs", "output": "view", "build_id": "app"})
+            js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
+            js = self.connect(window, {"dialect": "cljs", "output": "view", "build_id": "app"})
 
-        self.set_view_content(js_view, """(js/parseInt "42")""")
-        self.set_selections(js_view, (0, 0))
+            self.set_view_content(js_view, """(js/parseInt "42")""")
+            self.set_selections(js_view, (0, 0))
 
-        js_view.run_command("tutkain_evaluate")
-        self.eval_context(js.backchannel)
-        self.assertEquals("""(js/parseInt "42")\n""", js.server.recv())
-        js.server.send("""cljs.user=> (js/parseInt "42")""")
-        js.server.send("42")
+            js_view.run_command("tutkain_evaluate")
+            self.eval_context(js.backchannel)
+            self.assertEquals("""(js/parseInt "42")\n""", js.server.recv())
+            js.server.send("""cljs.user=> (js/parseInt "42")""")
+            js.server.send("42")
 
-        yield lambda: self.equals(
-            """ClojureScript 1.10.844\ncljs.user=> (js/parseInt "42")\n42\n""",
-            self.content(state.get_active_connection(window, edn.Keyword("cljs")).view)
-        )
+            yield lambda: self.equals(
+                """ClojureScript 1.10.844\ncljs.user=> (js/parseInt "42")\n42\n""",
+                self.content(state.get_active_connection(window, edn.Keyword("cljs")).view)
+            )
 
-        self.disconnect(window)
+            self.disconnect(window)
 
-        # Move down to select ClojureScript runtime
-        yield unittesting.AWAIT_WORKER
-        js_view.window().run_command("move", {"by": "lines", "forward": True})
-        js_view.window().run_command("select")
-        yield
+            # Move down to select ClojureScript runtime
+            yield unittesting.AWAIT_WORKER
+            js_view.window().run_command("move", {"by": "lines", "forward": True})
+            js_view.window().run_command("select")
+            yield
 
-        self.assertEquals(":repl/quit", js.server.recv())
+            self.assertEquals(":repl/quit", js.server.recv())
 
-        self.set_view_content(jvm_view, "(inc 2)")
-        self.set_selections(jvm_view, (0, 0))
+            self.set_view_content(jvm_view, "(inc 2)")
+            self.set_selections(jvm_view, (0, 0))
 
-        jvm_view.run_command("tutkain_evaluate")
-        self.eval_context(jvm.backchannel)
-        self.assertEquals("(inc 2)\n", jvm.server.recv())
-        jvm.server.send("user=> (inc 2)")
-        jvm.server.send("3")
+            jvm_view.run_command("tutkain_evaluate")
+            self.eval_context(jvm.backchannel)
+            self.assertEquals("(inc 2)\n", jvm.server.recv())
+            jvm.server.send("user=> (inc 2)")
+            jvm.server.send("3")
 
-        yield lambda: self.equals(
-            """Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nuser=> (inc 2)\n3\n""",
-            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
-        )
+            yield lambda: self.equals(
+                """Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nuser=> (inc 2)\n3\n""",
+                self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            )
 
-        self.disconnect(window)
-        # Don't need to select because there's only one remaining runtime
-        self.assertEquals(":repl/quit", jvm.server.recv())
-        self.close_window(window)
-        jvm.backchannel.stop()
-        jvm.server.stop()
-        js.backchannel.stop()
-        js.server.stop()
+            self.disconnect(window)
+            # Don't need to select because there's only one remaining runtime
+            self.assertEquals(":repl/quit", jvm.server.recv())
+            self.close_window(window)
+            jvm.backchannel.stop()
+            jvm.server.stop()
+            js.backchannel.stop()
+            js.server.stop()
 
     #@unittest.SkipTest
     def test_no_backchannel(self):
