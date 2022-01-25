@@ -22,6 +22,7 @@ def inline(point, view_id, val):
         "val": val
     }
 
+
 # Print invisible Unicode characters (U+2063) around stdout and
 # stderr to prevent them from getting syntax highlighting.
 #
@@ -37,10 +38,10 @@ def err_string(val):
 
 def format(item):
     if not isinstance(item, dict):
-        return value(item)
+        return value(item.replace("\r", ""))
     else:
         tag = item.get(edn.Keyword("tag"))
-        val = item.get(edn.Keyword("val"))
+        val = item.get(edn.Keyword("val"), "").replace("\r", "")
 
         if tag == edn.Keyword("tap"):
             return tap(val)
