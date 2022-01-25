@@ -95,8 +95,8 @@ jobs:
         shell: bash
         working-directory: ./clojure
 
-      # - name: Run Clojure tests
-      #   if: ${{ matrix.os == 'windows-latest' }}
-      #   run: clojure -X:dev:shadow-cljs user/-main
-      #   shell: powershell
-      #   working-directory: ./clojure
+      - name: Run Clojure tests
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: clojure -X:dev:shadow-cljs user/-main
+        shell: powershell
+        working-directory: ./clojure
