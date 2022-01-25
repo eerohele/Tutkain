@@ -26,4 +26,4 @@
                              :server-daemon false}
 
                  :extra-paths ["dev/src" "dev/test"]
-                 :jvm-opts ["-Djdk.attach.allowAttachSelf"]}}}
+                 :jvm-opts ["-Xmx1G" "-Djdk.attach.allowAttachSelf"]}}}
