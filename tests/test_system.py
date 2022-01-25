@@ -8,9 +8,7 @@ from concurrent import futures
 
 import sublime
 import textwrap
-import time
 import types
-import unittest
 import unittesting
 
 
