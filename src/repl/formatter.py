@@ -37,9 +37,9 @@ def err_string(val):
 
 
 def format(item):
-    if not isinstance(item, dict):
+    if isinstance(item, str):
         return value(item.replace("\r", ""))
-    else:
+    elif isinstance(item, dict):
         tag = item.get(edn.Keyword("tag"))
         val = item.get(edn.Keyword("val"), "").replace("\r", "")
 
