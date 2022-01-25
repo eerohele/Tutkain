@@ -211,11 +211,11 @@ class Client(ABC):
     def halt(self):
         """Halt this client."""
         log.debug({"event": "client/halt"})
+        self.backchannel.halt()
 
         # Feed poison pill to input queue.
         self.sendq.put(None)
         self.executor.shutdown(wait=False)
-        self.backchannel.halt()
 
 
 class JVMClient(Client):
