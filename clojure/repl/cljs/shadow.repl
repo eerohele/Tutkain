@@ -128,7 +128,7 @@
 (rsend '(DateTime.))
 (rrecv)
 (check-result! foo.bar.baz=> (DateTime.))
-(.poll rrecvq 1 TimeUnit/SECONDS)
+(.poll rrecvq 5 TimeUnit/SECONDS)
 (xr/check! string?)
 
 (rsend '(in-ns 'foo.bar.baz))
