@@ -3,7 +3,7 @@ import socket
 
 from queue import Queue
 from typing import IO
-from threading import Event, Thread, Lock
+from threading import Thread, Lock
 
 from ...api import edn
 from ..log import log
@@ -23,7 +23,6 @@ class Client:
         self.sendq = Queue()
         self.handlers = {}
         self.message_id = itertools.count(1)
-        self.stop_event = Event()
         self.lock = Lock()
 
     def send_loop(self, sock: socket.SocketType, buffer: IO):
@@ -47,7 +46,6 @@ class Client:
             except OSError as e:
                 log.debug({"event": "send_error", "exception": e})
 
-            self.stop_event.set()
             log.debug({"event": "thread/exit"})
 
     def recv_loop(self, buffer: IO):
@@ -55,7 +53,7 @@ class Client:
         file object and calls the handler function of this backchannel client
         on every message."""
         try:
-            while not self.stop_event.is_set() and (message := edn.read_line(buffer)):
+            while message := edn.read_line(buffer):
                 log.debug({"event": "backchannel/recv", "message": message})
                 self.handle(message)
         except OSError as error:
