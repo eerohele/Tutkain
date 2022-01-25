@@ -154,7 +154,8 @@
 (brecv)
 (rsend '(inc 1))
 (brecv)
-(xr/check! #{{:tag :ret :val "2\n" :output :clipboard}})
+(xr/check! #{{:tag :ret :val "2\n" :output :clipboard}
+             {:tag :ret :val "2\r\n" :output :clipboard}})
 
 (bsend {:op :set-eval-context
         :file "/my/path/app.clj"
