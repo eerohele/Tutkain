@@ -37,7 +37,7 @@ class Client:
                 log.debug({"event": "backchannel/send", "message": message})
                 edn.write(buffer, message)
         except OSError as error:
-            log.error({"event": "error", "error": error})
+            log.error({"event": "send_error", "error": error})
         finally:
             try:
                 sock.shutdown(socket.SHUT_RDWR)
@@ -45,7 +45,7 @@ class Client:
                 buffer.close()
                 log.debug({"event": "backchannel/disconnect"})
             except OSError as e:
-                log.debug({"event": "error", "exception": e})
+                log.debug({"event": "send_error", "exception": e})
 
             self.stop_event.set()
             log.debug({"event": "thread/exit"})
@@ -59,7 +59,7 @@ class Client:
                 log.debug({"event": "backchannel/recv", "message": message})
                 self.handle(message)
         except OSError as error:
-            log.error({"event": "error", "error": error})
+            log.error({"event": "recv_error", "error": error})
         finally:
             log.debug({"event": "thread/exit"})
 
