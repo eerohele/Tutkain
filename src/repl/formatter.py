@@ -1,7 +1,5 @@
 from ...api import edn
 from ..log import log
-from . import views
-import sublime
 
 
 def value(val):
