@@ -92,7 +92,7 @@ def configure(view, dialect, client_id, host, port, settings={}):
 
 
 def tap_panel_name(view):
-    if view.element() is None:
+    if view and view.element() is None:
         return "tutkain.tap_panel"
     else:
         return output_panel_name()
@@ -108,7 +108,7 @@ def show_tap_panel(view):
 
 
 def tap_panel(view):
-    window = view.window() or active_window()
+    window = (view and view.window()) or active_window()
     return window.find_output_panel(tap_panel_name(view))
 
 
