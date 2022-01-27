@@ -83,6 +83,16 @@
   [& forms]
   `(xr/check! (into #{} '(~forms))))
 
+;; Check that (read-line) works
+;;
+;; https://clojure.atlassian.net/browse/CLJ-2692
+(rsend '(read-line))
+(rrecv)
+(check-result! user=> (read-line))
+(rsend 1)
+(rrecv)
+(check-result! "1")
+
 (rsend '(inc 1))
 (rrecv)
 (check-result! user=> (inc 1))

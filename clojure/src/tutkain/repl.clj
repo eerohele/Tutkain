@@ -99,6 +99,10 @@
                (when
                  (try
                    (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
+                         ;; For (read-line) support. See also:
+                         ;;
+                         ;; https://clojure.atlassian.net/browse/CLJ-2692
+                         _ (main/skip-whitespace in)
                          {:keys [thread-bindings response]} @eval-context
                          backchannel-response? (#{:inline :clipboard} (:output response))]
                      (with-bindings thread-bindings
