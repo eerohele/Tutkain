@@ -241,7 +241,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit", connection.server.recv())
+        self.assertEquals(":repl/quit\n", connection.server.recv())
         self.close_window(window)
         connection.backchannel.stop()
         connection.server.stop()
@@ -260,7 +260,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit", connection.server.recv())
+        self.assertEquals(":repl/quit\n", connection.server.recv())
         self.close_window(window)
         connection.backchannel.stop()
         connection.server.stop()
@@ -289,7 +289,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit", connection.server.recv())
+        self.assertEquals(":repl/quit\n", connection.server.recv())
         self.close_window(window)
         connection.backchannel.stop()
         connection.server.stop()
@@ -320,7 +320,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit", connection.server.recv())
+        self.assertEquals(":repl/quit\n", connection.server.recv())
         self.close_window(window)
         connection.backchannel.stop()
         connection.server.stop()
@@ -343,7 +343,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit", connection.server.recv())
+        self.assertEquals(":repl/quit\n", connection.server.recv())
         self.close_window(window)
         connection.backchannel.stop()
         connection.server.stop()
@@ -370,7 +370,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit", connection.server.recv())
+        self.assertEquals(":repl/quit\n", connection.server.recv())
         self.close_window(window)
         connection.backchannel.stop()
         connection.server.stop()
@@ -426,12 +426,12 @@ class TestConnectDisconnect(TestCase):
             yield unittesting.AWAIT_WORKER
             jvm_view.window().run_command("select")
             yield
-            self.assertEquals(":repl/quit", jvm.server.recv())
+            self.assertEquals(":repl/quit\n", jvm.server.recv())
             self.disconnect(window)
             yield unittesting.AWAIT_WORKER
             jvm_view.window().run_command("select")
             yield
-            self.assertEquals(":repl/quit", js.server.recv())
+            self.assertEquals(":repl/quit\n", js.server.recv())
             self.close_window(window)
             jvm.backchannel.stop()
             jvm.server.stop()
@@ -491,7 +491,7 @@ class TestConnectDisconnect(TestCase):
             jvm_view_1.window().run_command("select")
             yield
 
-            self.assertEquals(":repl/quit", jvm_1.server.recv())
+            self.assertEquals(":repl/quit\n", jvm_1.server.recv())
 
             self.set_view_content(jvm_view_2, "(inc 3)")
             self.set_selections(jvm_view_2, (0, 0))
@@ -512,7 +512,7 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             jvm_view_2.window().run_command("select")
-            self.assertEquals(":repl/quit", jvm_2.server.recv())
+            self.assertEquals(":repl/quit\n", jvm_2.server.recv())
             self.close_window(window)
             jvm_1.server.stop()
             jvm_1.backchannel.stop()
@@ -571,7 +571,7 @@ class TestConnectDisconnect(TestCase):
             js_view.window().run_command("select")
             yield
 
-            self.assertEquals(":repl/quit", js.server.recv())
+            self.assertEquals(":repl/quit\n", js.server.recv())
 
             self.set_view_content(jvm_view, "(inc 2)")
             self.set_selections(jvm_view, (0, 0))
@@ -594,7 +594,7 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             # Don't need to select because there's only one remaining runtime
-            self.assertEquals(":repl/quit", jvm.server.recv())
+            self.assertEquals(":repl/quit\n", jvm.server.recv())
             self.close_window(window)
             jvm.backchannel.stop()
             jvm.server.stop()
@@ -647,7 +647,7 @@ class TestConnectDisconnect(TestCase):
             js_view.window().run_command("select")
             yield
 
-            self.assertEquals(":repl/quit", js.server.recv())
+            self.assertEquals(":repl/quit\n", js.server.recv())
 
             self.set_view_content(jvm_view, "(inc 2)")
             self.set_selections(jvm_view, (0, 0))
@@ -665,7 +665,7 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             # Don't need to select because there's only one remaining runtime
-            self.assertEquals(":repl/quit", jvm.server.recv())
+            self.assertEquals(":repl/quit\n", jvm.server.recv())
             self.close_window(window)
             jvm.backchannel.stop()
             jvm.server.stop()
@@ -702,6 +702,6 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit", connection.server.recv())
+        self.assertEquals(":repl/quit\n", connection.server.recv())
         self.close_window(window)
         connection.server.stop()

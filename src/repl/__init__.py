@@ -58,8 +58,7 @@ class Client(ABC):
     def write_line(self, line):
         """Given a string, write the string followed by a newline into the file object
         associated with the socket of this client."""
-        self.buffer.write(line)
-        self.buffer.write("\n")
+        self.buffer.write(line + "\n")
         self.buffer.flush()
 
     def module_loaded(self, response):
@@ -134,12 +133,9 @@ class Client(ABC):
         the Clojure runtime this client is connected to for evaluation."""
         while item := self.sendq.get():
             log.debug({"event": "client/send", "item": item})
-            self.buffer.write(item)
-            self.buffer.write("\n")
-            self.buffer.flush()
+            self.write_line(item)
 
-        self.buffer.write(":repl/quit")
-        self.buffer.flush()
+        self.write_line(":repl/quit")
         self.socket.shutdown(socket.SHUT_RDWR)
         log.debug({"event": "thread/exit"})
 
