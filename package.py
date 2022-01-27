@@ -346,10 +346,6 @@ class TutkainEvaluateCommand(TextCommand):
             "file": self.view.file_name(),
         }, handler)
 
-    def evaluate_input(self, client, code):
-        evaluate(self.view, client, code)
-        history.update(self.view.window(), code)
-
     def noop(*args):
         pass
 
@@ -375,12 +371,22 @@ class TutkainEvaluateCommand(TextCommand):
                 client.switch_namespace(ns)
 
             if scope == "input":
+                auto_switch = settings.load().get("auto_switch_namespace")
+                settings.load().set("auto_switch_namespace", False)
+
+                def evaluate_input(client, code):
+                    try:
+                        evaluate(self.view, client, code + "\n")
+                        history.update(self.view.window(), code)
+                    finally:
+                        settings.load().set("auto_switch_namespace", auto_switch)
+
                 view = self.view.window().show_input_panel(
                     "Input: ",
                     history.get(self.view.window()),
-                    lambda code: self.evaluate_input(client, code),
+                    lambda code: evaluate_input(client, code),
                     self.noop,
-                    self.noop,
+                    lambda: settings.load().set("auto_switch_namespace", auto_switch)
                 )
 
                 if snippet:
