@@ -1288,15 +1288,18 @@ class TutkainPromptCommand(WindowCommand):
             client.evaluate(code, {"file": "NO_SOURCE_FILE"})
             history.update(self.window, code)
 
+        settings.load().set("auto_switch_namespace", self.auto_switch)
         self.prompt(client)
 
     def on_change(self, _):
         None
 
     def on_cancel(self):
-        None
+        settings.load().set("auto_switch_namespace", self.auto_switch)
 
     def prompt(self, client):
+        settings.load().set("auto_switch_namespace", False)
+
         view = self.window.show_input_panel(
             "Input: ",
             history.get(self.window),
@@ -1309,6 +1312,7 @@ class TutkainPromptCommand(WindowCommand):
 
     def run(self):
         if client := state.get_client(self.window, edn.Keyword("clj")):
+            self.auto_switch = settings.load().get("auto_switch_namespace")
             self.prompt(client)
         else:
             self.window.status_message("ERR: Not connected to a REPL.")
