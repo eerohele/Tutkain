@@ -34,7 +34,7 @@ class Client:
         try:
             while message := self.sendq.get():
                 log.debug({"event": "backchannel/send", "message": message})
-                edn.write(buffer, message)
+                edn.write_line(buffer, message)
         except OSError as error:
             log.error({"event": "send_error", "error": error})
         finally:

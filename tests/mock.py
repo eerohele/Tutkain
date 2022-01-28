@@ -65,4 +65,4 @@ class REPL(Server):
 
 class Backchannel(Server):
     def send(self, message):
-        edn.write(self.buffer(), message)
+        edn.write_line(self.buffer(), message)

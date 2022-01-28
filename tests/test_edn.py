@@ -49,5 +49,5 @@ class TestEdn(TestCase):
             {edn.Keyword("a"): [{edn.Keyword("b"): edn.Keyword("c")}]},
             {},
         ]:
-            edn.write(self.buffer, val)
+            edn.write_line(self.buffer, val)
             self.assertEqual(val, edn.read_line(self.buffer))

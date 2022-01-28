@@ -393,7 +393,7 @@ def write1(b, x):
         raise ValueError(f"""Can't write {x} as EDN""")
 
 
-def write(b, x):
+def write_line(b, x):
     write1(b, x)
     b.write("\n")
     b.flush()
