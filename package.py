@@ -454,7 +454,7 @@ class TutkainEvaluateCommand(TextCommand):
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):
             return None
-        if "scope" in args:
+        elif "code" in args or "scope" in args:
             return None
         else:
             return EvaluationScopeInputHandler()
