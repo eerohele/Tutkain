@@ -367,6 +367,11 @@ class TutkainEvaluateCommand(TextCommand):
         else:
             state.focus_active_runtime_view(self.view.window(), dialect)
 
+            options = {}
+
+            if output == "clipboard":
+                options["response"] = {"output": edn.Keyword("clipboard")}
+
             if ns is not None:
                 client.switch_namespace(ns)
 
@@ -376,7 +381,7 @@ class TutkainEvaluateCommand(TextCommand):
 
                 def evaluate_input(client, code):
                     try:
-                        evaluate(self.view, client, code + "\n")
+                        evaluate(self.view, client, code + "\n", options=options)
                         history.update(self.view.window(), code)
                     finally:
                         settings.load().set("auto_switch_namespace", auto_switch)
@@ -408,7 +413,7 @@ class TutkainEvaluateCommand(TextCommand):
                         variables[str(index)] = self.view.substr(eval_region)
 
                 code = sublime.expand_variables(code, variables)
-                evaluate(self.view, client, code)
+                evaluate(self.view, client, code, options=options)
             elif scope == "view":
                 syntax = self.view.syntax()
 
@@ -426,30 +431,21 @@ class TutkainEvaluateCommand(TextCommand):
 
                 for form in ns_forms:
                     code = self.view.substr(form)
-                    evaluate(self.view, client, code, point=form.begin())
+                    evaluate(self.view, client, code, point=form.begin(), options=options)
             else:
                 for region in self.view.sel():
                     eval_region = self.get_eval_region(region, scope, ignore)
 
                     if not eval_region.empty():
-                        code = self.view.substr(eval_region)
-
                         if inline_result:
-                            evaluate(self.view, client, code, eval_region.begin(), {
-                                "response": {
-                                    "output": edn.Keyword("inline"),
-                                    "view-id": self.view.id(),
-                                    "point": eval_region.end()
-                                }
-                            })
-                        elif output == "clipboard":
-                            evaluate(self.view, client, code, eval_region.begin(), {
-                                "response": {
-                                    "output": edn.Keyword("clipboard")
-                                }
-                            })
-                        else:
-                            evaluate(self.view, client, code, eval_region.begin())
+                            options["response"] = {
+                                "output": edn.Keyword("inline"),
+                                "view-id": self.view.id(),
+                                "point": eval_region.end()
+                            }
+
+                        code = self.view.substr(eval_region)
+                        evaluate(self.view, client, code, eval_region.begin(), options=options)
 
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):
