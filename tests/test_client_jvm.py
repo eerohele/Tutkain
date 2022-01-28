@@ -8,7 +8,7 @@ from Tutkain.src.repl import formatter
 from Tutkain.src import base64
 from Tutkain.src import test
 
-from .mock import REPL, Backchannel
+from .mock import JvmBackchannelServer, JvmServer
 from .util import PackageTestCase
 
 
@@ -16,73 +16,26 @@ def select_keys(d, ks):
     return {k: d[k] for k in ks}
 
 
-def conduct_handshake(server, client):
-    # Client starts clojure.main/repl
-    server.recv()
-
-    # Client switches into the bootstrap namespace
-    server.recv()
-    server.send("nil")
-
-    # Client defines load-base64 function
-    server.recv()
-    server.send("#'tutkain.bootstrap/load-base64")
-
-    # Client loads modules
-    server.recv()
-    server.send("#'tutkain.format/pp-str")
-    server.recv()
-    server.send("#'tutkain.backchannel/open")
-    server.recv()
-    server.send("""#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]""")
-    server.recv()
-    server.send("#'tutkain.repl/repl")
-
-    # Client starts REPL
-    server.recv()
-
-    backchannel = Backchannel().start()
-
-    server.send(f"""{{:greeting "Clojure 1.11.0-alpha1\\n", :host "localhost", :port {backchannel.port}}}""")
-
-    # Client loads modules
-    for _ in range(8):
-        module = edn.read(backchannel.recv())
-
-        backchannel.send(edn.kwmap({
-            "id": module.get(edn.Keyword("id")),
-            "result": edn.Keyword("ok"),
-            "filename": module.get(edn.Keyword("filename"))
-        }))
-
-    client.printq.get(timeout=5)
-    return backchannel
-
-
 class TestJVMClient(PackageTestCase):
     @classmethod
     def setUpClass(self):
         super().setUpClass()
-
-        def write_greeting(buf):
-            buf.write("user=> ")
-            buf.flush()
-
         self.window = sublime.active_window()
-        self.server = REPL(greeting=write_greeting).start()
-        self.client = repl.JVMClient(self.server.host, self.server.port)
+        server = JvmBackchannelServer().start()
+        self.client = repl.JVMClient(server.host, server.port)
         self.output_view = repl.views.get_or_create_view(self.window, "view")
-        handshake = self.executor.submit(conduct_handshake, self.server, self.client)
         repl.start(self.output_view, self.client)
-        self.backchannel = handshake.result()
+        self.server = server.connection.result(timeout=5)
+        self.client.printq.get(timeout=5)
 
         self.addClassCleanup(repl.stop, self.window)
-        self.addClassCleanup(self.backchannel.stop)
+        self.addClassCleanup(self.server.backchannel.stop)
         self.addClassCleanup(self.server.stop)
 
     def get_print(self):
         return self.client.printq.get(timeout=5)
 
+    #@unittest.SkipTest
     def test_outermost(self):
         self.set_view_content("(comment (inc 1) (inc 2))")
         self.set_selections((9, 9), (17, 17))
@@ -100,12 +53,14 @@ class TestJVMClient(PackageTestCase):
         self.server.send("3")
         self.assertEquals(formatter.value("3\n"), self.get_print())
 
+    #@unittest.SkipTest
     def test_outermost_empty(self):
         self.set_view_content("")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
         self.assertRaises(queue.Empty, lambda: self.server.recvq.get_nowait())
 
+    #@unittest.SkipTest
     def test_innermost(self):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((9, 9))
@@ -117,6 +72,7 @@ class TestJVMClient(PackageTestCase):
         self.server.send("(0 1 2 3 4 5 6 7 8 9)")
         self.assertEquals(formatter.value("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
 
+    #@unittest.SkipTest
     def test_form(self):
         self.set_view_content("42 84")
         self.set_selections((0, 0), (3, 3))
@@ -134,6 +90,7 @@ class TestJVMClient(PackageTestCase):
         self.server.send("84")
         self.assertEquals(formatter.value("84\n"), self.get_print())
 
+    #@unittest.SkipTest
     def test_parameterized(self):
         self.set_view_content("{:a 1} {:b 2}")
         self.set_selections((0, 0), (7, 7))
@@ -145,6 +102,7 @@ class TestJVMClient(PackageTestCase):
         self.server.send("({:a 1} {:b 2} nil)")
         self.assertEquals(formatter.value("({:a 1} {:b 2} nil)\n"), self.get_print())
 
+    #@unittest.SkipTest
     def test_eval_in_ns(self):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "user"})
         self.eval_context()
@@ -158,6 +116,7 @@ class TestJVMClient(PackageTestCase):
         self.server.send("nil")
         self.assertEquals(formatter.value("nil\n"), self.get_print())
 
+    #@unittest.SkipTest
     def test_ns(self):
         self.set_view_content("(ns foo.bar) (ns baz.quux) (defn x [y] y)")
         self.set_selections((0, 0))
@@ -177,12 +136,13 @@ class TestJVMClient(PackageTestCase):
         self.server.send("nil")  # baz.quux
         self.assertEquals(formatter.value("nil\n"), self.get_print())
 
+    #@unittest.SkipTest
     def test_view(self):
         self.set_view_content("(ns foo.bar) (defn x [y] y)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
-        message = edn.read(self.backchannel.recv())
+        message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
         self.assertEquals({
@@ -193,17 +153,18 @@ class TestJVMClient(PackageTestCase):
         }, message)
 
         response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "nil"})
-        self.backchannel.send(response)
+        self.server.backchannel.send(response)
 
         self.assertEquals(formatter.value("nil"), self.get_print())
         self.assertEquals("(tutkain.repl/switch-ns foo.bar)\n", self.server.recv())
 
+    #@unittest.SkipTest
     def test_view_syntax_error(self):
         self.set_view_content("(ns foo.bar) (defn x [y] y")  # missing close paren
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
-        message = edn.read(self.backchannel.recv())
+        message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
         self.assertEquals({
@@ -224,16 +185,17 @@ class TestJVMClient(PackageTestCase):
             "exception": True
         })
 
-        self.backchannel.send(response)
+        self.server.backchannel.send(response)
         self.assertEquals(formatter.value(ex_message), self.get_print())
 
+    #@unittest.SkipTest
     def test_view_common(self):
         self.view.assign_syntax("Packages/Tutkain/Clojure Common (Tutkain).sublime-syntax")
         self.set_view_content("(ns baz.quux) (defn x [y] y)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
-        message = edn.read(self.backchannel.recv())
+        message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
         self.assertEquals({
@@ -244,11 +206,12 @@ class TestJVMClient(PackageTestCase):
         }, message)
 
         response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "#'baz.quux/x"})
-        self.backchannel.send(response)
+        self.server.backchannel.send(response)
 
         self.assertEquals("(tutkain.repl/switch-ns baz.quux)\n", self.server.recv())
         self.assertEquals(formatter.value("#'baz.quux/x"), self.get_print())
 
+    #@unittest.SkipTest
     def test_discard(self):
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
@@ -294,6 +257,7 @@ class TestJVMClient(PackageTestCase):
         self.server.send(":a")
         self.assertEquals(formatter.value(":a\n"), self.get_print())
 
+    #@unittest.SkipTest
     def test_lookup(self):
         self.set_view_content("(rand)")
 
@@ -304,7 +268,7 @@ class TestJVMClient(PackageTestCase):
                 "selector": "variable.function"
             })
 
-            response = edn.read(self.backchannel.recv())
+            response = edn.read(self.server.backchannel.recv())
 
             self.assertEquals({
                 edn.Keyword("op"): edn.Keyword("lookup"),
@@ -314,6 +278,7 @@ class TestJVMClient(PackageTestCase):
                 edn.Keyword("id"): response.get(edn.Keyword("id"))
             }, response)
 
+    #@unittest.SkipTest
     def test_lookup_var(self):
         self.set_view_content("#'foo/bar")
 
@@ -322,7 +287,7 @@ class TestJVMClient(PackageTestCase):
 
             self.view.run_command("tutkain_show_information")
 
-            response = edn.read(self.backchannel.recv())
+            response = edn.read(self.server.backchannel.recv())
 
             self.assertEquals({
                 edn.Keyword("op"): edn.Keyword("lookup"),
@@ -332,6 +297,7 @@ class TestJVMClient(PackageTestCase):
                 edn.Keyword("id"): response.get(edn.Keyword("id"))
             }, response)
 
+    #@unittest.SkipTest
     def test_lookup_head(self):
         self.set_view_content("(map inc )")
         self.set_selections((9, 9))
@@ -341,7 +307,7 @@ class TestJVMClient(PackageTestCase):
             "seek_backward": True
         })
 
-        response = edn.read(self.backchannel.recv())
+        response = edn.read(self.server.backchannel.recv())
 
         self.assertEquals({
             edn.Keyword("op"): edn.Keyword("lookup"),
@@ -351,6 +317,7 @@ class TestJVMClient(PackageTestCase):
             edn.Keyword("id"): response.get(edn.Keyword("id"))
         }, response)
 
+    # @unittest.SkipTest
     # def test_issue_46(self):
     #     n = io.DEFAULT_BUFFER_SIZE + 1024
     #     code = """(apply str (repeat {n} "x"))"""
@@ -374,6 +341,7 @@ class TestJVMClient(PackageTestCase):
 
     #     self.assertEquals(chunks[-1] + "\n", self.get_print())
 
+    #@unittest.SkipTest
     def test_evaluate_dialect(self):
         self.view.run_command("tutkain_evaluate", {"code": "(random-uuid)", "dialect": "cljs"})
         # The server and the client receive no messages because the evaluation
@@ -386,6 +354,7 @@ class TestJVMClient(PackageTestCase):
         self.server.send("""user=> (Integer/parseInt "42")""")
         self.assertEquals(formatter.value("""user=> (Integer/parseInt "42")\n"""), self.get_print())
 
+    #@unittest.SkipTest
     def test_async_run_tests_ns(self):
         code = """
         (ns my.app
@@ -397,7 +366,7 @@ class TestJVMClient(PackageTestCase):
 
         self.set_view_content(code)
         self.view.run_command("tutkain_run_tests", {"scope": "ns"})
-        message = edn.read(self.backchannel.recv())
+        message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
         self.assertEquals(edn.kwmap({
@@ -428,7 +397,7 @@ class TestJVMClient(PackageTestCase):
             "error": []
         })
 
-        self.backchannel.send(response)
+        self.server.backchannel.send(response)
         yield # Why?
 
         self.assertEquals(formatter.value("{:test 1, :pass 1, :fail 0, :error 0, :assert 1, :type :summary}"), self.get_print())
@@ -441,6 +410,7 @@ class TestJVMClient(PackageTestCase):
         self.assertFalse(test.regions(self.view, "fail"))
         self.assertFalse(test.regions(self.view, "error"))
 
+    #@unittest.SkipTest
     def test_async_unsuccessful_tests(self):
         code = """
         (ns my.app
@@ -452,7 +422,7 @@ class TestJVMClient(PackageTestCase):
 
         self.set_view_content(code)
         self.view.run_command("tutkain_run_tests", {"scope": "ns"})
-        response = edn.read(self.backchannel.recv())
+        response = edn.read(self.server.backchannel.recv())
         id = response.get(edn.Keyword("id"))
 
         self.assertEquals(edn.kwmap({
@@ -487,7 +457,7 @@ class TestJVMClient(PackageTestCase):
             "error": []
         })
 
-        self.backchannel.send(response)
+        self.server.backchannel.send(response)
         yield # Why?
 
         self.assertEquals(response, self.get_print())
@@ -504,10 +474,11 @@ class TestJVMClient(PackageTestCase):
         self.assertFalse(test.regions(self.view, "passes"))
         self.assertFalse(test.regions(self.view, "error"))
 
+    #@unittest.SkipTest
     def test_apropos(self):
         self.view.window().run_command("tutkain_apropos", {"pattern": "cat"})
 
-        op = edn.read(self.backchannel.recv())
+        op = edn.read(self.server.backchannel.recv())
         id = op.get(edn.Keyword("id"))
 
         self.assertEquals(edn.kwmap({
@@ -519,7 +490,7 @@ class TestJVMClient(PackageTestCase):
         # TODO: This is not useful at the moment. How do we test things like
         # this that go into a quick panel and not in the REPL view? Should
         # they also go through printq (or equivalent)?
-        self.backchannel.send(edn.kwmap({
+        self.server.backchannel.send(edn.kwmap({
             "vars": [edn.kwmap({
                 "name": edn.Symbol("cat"),
                 "file": "jar:file:/home/.m2/repository/org/clojure/clojure/1.11.0-alpha1/clojure-1.11.0-alpha1.jar!/clojure/core.clj",
@@ -534,13 +505,14 @@ class TestJVMClient(PackageTestCase):
 
         print(self.get_print())
 
+    #@unittest.SkipTest
     def test_evaluate_to_clipboard(self):
         self.set_view_content("(inc 1)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost", "output": "clipboard"})
 
         # Client sends eval context over backchannel
-        eval_context = edn.read(self.backchannel.recv())
+        eval_context = edn.read(self.server.backchannel.recv())
 
         self.assertEquals(
             edn.kwmap({
@@ -562,7 +534,7 @@ class TestJVMClient(PackageTestCase):
         )
 
         # Backchannel sends eval context response
-        self.backchannel.send(edn.kwmap({
+        self.server.backchannel.send(edn.kwmap({
             "id": eval_context.get(edn.Keyword("id")),
             "op": edn.Keyword("set-eval-context"),
             "thread-bindings": edn.kwmap({"file": "NO_SOURCE_FILE", "line": 1, "column": 1}),
@@ -575,7 +547,7 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals("(inc 1)\n", self.server.recv())
 
         # Server sends response over backchannel
-        self.backchannel.send(edn.kwmap({
+        self.server.backchannel.send(edn.kwmap({
             "tag": edn.Keyword("ret"),
             "val": "2",
             "output": edn.Keyword("clipboard")
@@ -583,13 +555,14 @@ class TestJVMClient(PackageTestCase):
 
         self.assertEquals(formatter.clipboard("2"), self.get_print())
 
+    #@unittest.SkipTest
     def test_evaluate_to_inline(self):
         self.set_view_content("(inc 1)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost", "inline_result": True})
 
         # Client sends eval context over backchannel
-        eval_context = edn.read(self.backchannel.recv())
+        eval_context = edn.read(self.server.backchannel.recv())
 
         self.assertEquals(
             edn.kwmap({
@@ -613,7 +586,7 @@ class TestJVMClient(PackageTestCase):
         )
 
         # Backchannel sends eval context response
-        self.backchannel.send(edn.kwmap({
+        self.server.backchannel.send(edn.kwmap({
             "id": eval_context.get(edn.Keyword("id")),
             "op": edn.Keyword("set-eval-context"),
             "thread-bindings": edn.kwmap({"file": "NO_SOURCE_FILE", "line": 1, "column": 1}),
@@ -630,7 +603,7 @@ class TestJVMClient(PackageTestCase):
         view_id = eval_context.get(edn.Keyword("response")).get(edn.Keyword("view-id"))
 
         # Server sends response over backchannel
-        self.backchannel.send(edn.kwmap({
+        self.server.backchannel.send(edn.kwmap({
             "tag": edn.Keyword("ret"),
             "val": "2",
             "output": eval_context.get(edn.Keyword("response")).get(edn.Keyword("output")),
@@ -646,15 +619,12 @@ class TestNoBackchannelJVMClient(PackageTestCase):
     def setUpClass(self):
         super().setUpClass()
 
-        def write_greeting(buf):
-            buf.write("user=> ")
-            buf.flush()
-
         self.window = sublime.active_window()
-        self.server = REPL(greeting=write_greeting).start()
-        self.client = repl.JVMClient(self.server.host, self.server.port, options={"backchannel": {"enabled": False}})
+        server = JvmServer().start()
+        self.client = repl.JVMClient(server.host, server.port, options={"backchannel": {"enabled": False}})
         self.output_view = repl.views.get_or_create_view(self.window, "view")
         repl.start(self.output_view, self.client)
+        self.server = server.connection.result(timeout=5)
         self.client.printq.get(timeout=5) # Swallow the initial prompt
 
         self.addClassCleanup(repl.stop, self.window)
@@ -663,6 +633,7 @@ class TestNoBackchannelJVMClient(PackageTestCase):
     def get_print(self):
         return self.client.printq.get(timeout=5)
 
+    #@unittest.SkipTest
     def test_outermost(self):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((0, 0))

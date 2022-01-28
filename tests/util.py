@@ -140,10 +140,11 @@ class PackageTestCase(TestCase):
             self.view.sel().add(sublime.Region(begin, end))
 
     def eval_context(self, file="NO_SOURCE_FILE", line=1, column=1):
-        actual = edn.read(self.backchannel.recv())
+        actual = edn.read(self.server.backchannel.recv())
+
         id = actual.get(edn.Keyword("id"))
 
-        response = edn.kwmap({
+        message = edn.kwmap({
              "id": id,
              "op": edn.Keyword("set-eval-context"),
              "file": file,
@@ -151,12 +152,15 @@ class PackageTestCase(TestCase):
              "column": column,
         })
 
-        self.assertEquals(response, actual)
+        self.assertEquals(message, actual)
 
-        self.backchannel.send(edn.kwmap({
+        response = edn.kwmap({
             "id": id,
             "file": file,
             "thread-bindings": edn.kwmap({
                 "file": file
             })
-        }))
+        })
+
+        self.server.backchannel.send(response)
+

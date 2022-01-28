@@ -3,7 +3,7 @@ import sublime
 from Tutkain.src import repl
 from Tutkain.src.repl import formatter
 
-from .mock import REPL
+from .mock import BabashkaServer
 from .util import PackageTestCase
 
 
@@ -15,23 +15,12 @@ class TestBabashkaClient(PackageTestCase):
     def setUpClass(self):
         super().setUpClass()
 
-        def write_greeting(buf):
-            buf.write("Babashka v0.3.6 REPL.\n")
-            buf.flush()
-            buf.write("Use :repl/quit or :repl/exit to quit the REPL.\n")
-            buf.flush()
-            buf.write("Clojure rocks, Bash reaches.\n")
-            buf.flush()
-            buf.write("\n")
-            buf.flush()
-            buf.write("user=> ")
-            buf.flush()
-
         self.window = sublime.active_window()
-        self.server = REPL(greeting=write_greeting).start()
-        self.client = repl.BabashkaClient(self.server.host, self.server.port)
+        server = BabashkaServer().start()
+        self.client = repl.BabashkaClient(server.host, server.port)
         self.output_view = repl.views.get_or_create_view(self.window, "view")
         repl.start(self.output_view, self.client)
+        self.server = server.connection.result(timeout=5)
         self.client.printq.get(timeout=1)
 
         self.addClassCleanup(repl.stop, self.window)
