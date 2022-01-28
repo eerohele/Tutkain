@@ -37,7 +37,7 @@ def get_connections():
 
 
 def get_connection_by_id(client_id: Union[str, None]) -> Union[Connection, None]:
-    get_connections().get(client_id)
+    return get_connections().get(client_id)
 
 
 def register_connection(view: View, window: Window, client: repl.Client) -> None:
