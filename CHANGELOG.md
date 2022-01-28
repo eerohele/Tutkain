@@ -10,8 +10,6 @@ All notable changes to this project will be documented in this file.
   See [this message](https://github.com/eerohele/Tutkain/blob/develop/messages/0.12.0.txt) for information on how to restore those key bindings so that
   Tutkain works the same way it did before.
 
-- A POSSIBLY BREAKING CHANGE: I no longer have access to a Windows machine to test Tutkain on, so Windows support may be broken. Sorry. If you'd like to help fix and test it, please open an issue.
-
 - Add support for using a panel instead of a view for REPL output #79
 
   To use a panel instead of a view, modify the key binding for your `tutkain_connect` command to pass the `"output"` argument:
@@ -79,6 +77,8 @@ All notable changes to this project will be documented in this file.
   automatically insert a double semicolon at the beginning of the new line.
 
 - Set horizontal window layout to half-and-half for code view and REPL view
+- Fix `(read-line)` support
+- Fix forward/backward delete for illegal `\characters`
 
 ## 0.11.0 (alpha) - 2021-11-23
 
