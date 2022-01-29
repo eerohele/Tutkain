@@ -21,11 +21,10 @@ For a full list of changes in this version, see the changelog for v0.12.0:
 IMPORTANT: In this version of Tutkain, these key bindings are no longer enabled
 by default:
 
-- Automatically indent code when on pressing the Enter key
-- ParEdit key bindings for preventing unbalanced S-expression delimiters
-  (parenthesis, brackets, braces) and double quotes
+- Automatically indent code when pressing the Enter key
+- ParEdit key bindings for preventing unbalanced parens and double quotes
 - ParEdit key binding for inserting a semicolon at the beginning of the line
-  when pressing Enter on a line with a semicolon
+  when pressing Enter on a line with a semicolon (a comment line)
 
 This change is to prevent Tutkain from forcing its own ParEdit and
 auto-indentation implementations on you.
@@ -178,3 +177,7 @@ before this update, do this:
         }
       ]
   },
+
+And you're done! If you have trouble, please file an issue on GitHub:
+
+  https://github.com/eerohele/Tutkain/issues
