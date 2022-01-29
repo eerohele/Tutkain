@@ -86,6 +86,8 @@
 ;; Check that (read-line) works
 ;;
 ;; https://clojure.atlassian.net/browse/CLJ-2692
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '(read-line))
 (rrecv)
 (check-result! user=> (read-line))
@@ -93,12 +95,16 @@
 (rrecv)
 (check-result! "1")
 
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '(inc 1))
 (rrecv)
 (check-result! user=> (inc 1))
 (rrecv)
 (check-result! 2)
 
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '(/ 4 0))
 (rrecv)
 (check-result! user=> (/ 4 0))
@@ -106,6 +112,8 @@
 (xr/check! ::ret) ;; err
 
 ;; flush after eval
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '(print "foo"))
 (rrecv)
 (check-result! user=> (print "foo"))
@@ -115,6 +123,8 @@
 (xr/check! #{{:tag :out :val "foo"}})
 
 ;; flush after eval that throws
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '(do (print "foo") (/ 4 0)))
 (rrecv)
 (check-result! user=> (do (print "foo") (/ 4 0)))
@@ -125,6 +135,8 @@
 (brecv)
 (xr/check! #{{:tag :out :val "foo"}})
 
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '(tap> {:foo :bar}))
 (rrecv)
 (check-result! user=> (tap> {:foo :bar}))
@@ -133,6 +145,8 @@
 (brecv)
 (xr/check! ::ret) ;; tap
 
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '(Thread/sleep Integer/MAX_VALUE))
 (rrecv)
 (check-result! user=> (Thread/sleep Integer/MAX_VALUE))
@@ -140,6 +154,8 @@
 (brecv)
 (xr/check! ::ret) ;; InterruptedException
 
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '(inc 1))
 (rrecv)
 (check-result! user=> (inc 1))
@@ -148,6 +164,8 @@
 (rsend '(tutkain.repl/switch-ns tutkain.repl))
 (rrecv)
 (xr/check! nil?) ;; Client doesn't send response
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend '*1)
 (rrecv)
 (check-result! tutkain.repl=> *1)
@@ -181,6 +199,8 @@
 (brecv)
 (xr/check! ::ret) ;; Error
 
+(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(brecv)
 (rsend :repl/quit)
 
 (Thread/sleep 3000)
