@@ -1,0 +1,30 @@
+(ns repl.completions
+  (:require
+   [clojure.edn :as edn]
+   [clojure.spec.alpha :as spec]
+   [cognitect.transcriptor :as xr]
+   [tutkain.backchannel.test :refer [send-op]]
+   [tutkain.clojuredocs :as clojuredocs])
+  (:import (java.io File)))
+
+(def source-path (File/createTempFile "clojuredocs" ".edn"))
+(xr/on-exit #(.delete source-path))
+(spit source-path {'clojure.core/mapcat ["example 1" "example 2"]})
+
+(send-op
+  {:id 1
+   :op :examples
+   :source-path source-path
+   :ns 'tutkain.clojuredocs
+   :sym 'mapcat})
+
+(xr/check! #{{:symbol 'clojure.core/mapcat :examples ["example 1" "example 2"] :id 1}})
+
+(send-op
+  {:id 1
+   :op :examples
+   :source-path source-path
+   :ns 'tutkain.clojuredocs
+   :sym 'nope})
+
+(xr/check! #{{:symbol 'nope :id 1}})

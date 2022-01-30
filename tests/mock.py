@@ -98,7 +98,7 @@ class JvmBackchannelServer(JvmServer):
         self.backchannel = backchannel.connection.result(timeout=5)
 
         # Client loads modules
-        for _ in range(8):
+        for _ in range(9):
             module = edn.read(backchannel.recv())
 
             backchannel.send(edn.kwmap({

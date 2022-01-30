@@ -679,4 +679,18 @@
         "args": {"panel": "output.tutkain.output_panel"},
         "context": [{"key": "panel", "operand": "output.tutkain.output_panel"}]
     },
+
+    // Open a split view with ClojureDocs examples for the symbol under the
+    // caret.
+    //
+    // If there's no symbol under the caret, prompt the user for the symbol
+    // instead.
+    //
+    // The first use requires an internet connection for downloading examples
+    // from https://clojuredocs.org.
+    {
+        "keys": ["ctrl+p", "ctrl+x"],
+        "command": "tutkain_show_clojuredocs_examples",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
 ]

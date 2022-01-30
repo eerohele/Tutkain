@@ -13,6 +13,7 @@ from sublime_plugin import (
 )
 
 from .src import base64
+from .src import clojuredocs
 from .src import dialects
 from .src import selectors
 from .src import sexp
@@ -118,12 +119,13 @@ def evaluate(view, client, code, point=None, options={}):
     options["column"] = column
     client.evaluate(code, options)
 
+
 class TemporaryFileEventListener(ViewEventListener):
     @classmethod
     def is_applicable(_, settings):
         return settings.has("tutkain_temp_file")
 
-    def on_load(self):
+    def on_load_async(self):
         try:
             if temp_file := self.view.settings().get("tutkain_temp_file"):
                 path = temp_file.get("path")
@@ -1358,3 +1360,13 @@ class TutkainChooseActiveRuntimeCommand(WindowCommand):
 
     def run(self, client_id):
         state.set_active_connection(self.window, state.get_connection_by_id(client_id))
+
+
+class TutkainRefreshClojuredocsExampleCacheCommand(WindowCommand):
+    def run(self):
+        sublime.set_timeout_async(lambda: clojuredocs.refresh_cache(self.window), 0)
+
+
+class TutkainShowClojuredocsExamplesCommand(TextCommand):
+    def run(self, _):
+        clojuredocs.show_examples(self.view)
