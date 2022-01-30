@@ -178,6 +178,8 @@ before this update, do this:
       ]
   },
 
-And you're done! If you have trouble, please file an issue on GitHub:
+And you're done! If you encounter any trouble with restoring the previous
+functionality (or anything else for that matter), please file an issue on
+GitHub:
 
   https://github.com/eerohele/Tutkain/issues
