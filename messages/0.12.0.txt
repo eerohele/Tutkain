@@ -16,7 +16,7 @@ working correctly.
 
 For a full list of changes in this version, see the changelog for v0.12.0:
 
-    https://github.com/eerohele/Tutkain/blob/master/CHANGELOG.md
+  https://github.com/eerohele/Tutkain/blob/master/CHANGELOG.md#0120-alpha---2022-01-30
 
 IMPORTANT: In this version of Tutkain, these key bindings are no longer enabled
 by default:
