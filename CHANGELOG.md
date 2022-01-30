@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
+## 0.12.0 (alpha) - 2022-01-30
 
 - BREAKING CHANGE: Remove all default key bindings (indent on Enter, ParEdit
   key bindings for preventing unbalanced S-expression delimiters) #78
