@@ -54,23 +54,29 @@
     (all-ns)))
 
 (def sym-candidates
-  (mapcat #(candidates (subs % 0 1) *ns*) sym-names))
+  (set (mapcat #(candidates (subs % 0 1) *ns*) sym-names)))
 
 (xr/check! (spec/coll-of ::specs/symbol-completion :min-count (count sym-names)) sym-candidates)
 
-(assert (set/subset? #{{:candidate "java.util.ArrayList" :type :class}
-                       {:candidate "java.util.Date" :type :class}}
-          (set (candidates "java.u" *ns*))))
+(set (candidates "java.u" *ns*))
+(xr/check!
+  (partial set/subset? #{{:candidate "java.util.ArrayList" :type :class}
+                         {:candidate "java.util.Date" :type :class}}))
 
-(assert (not-any? #(.contains (:candidate %) "$") (candidates "java." *ns*)))
+(candidates "java." *ns*)
+(xr/check! (spec/coll-of ::specs/top-level-class-completion :min-count 1))
 
-(assert (set/subset? #{{:class "java.time.LocalDate"
-                        :candidate "java.time.LocalDate/parse"
-                        :type :static-method
-                        :arglists ["CharSequence"]
-                        :return-type "java.time.LocalDate"}
-                       {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :field}}
-          (set (candidates "java.time.LocalDate/" *ns*))))
+(set (candidates "java.time.LocalDate/" *ns*))
+(xr/check!
+  (partial set/subset? #{{:class "java.time.LocalDate"
+                          :candidate "java.time.LocalDate/parse"
+                          :type :static-method
+                          :arglists ["CharSequence"]
+                          :return-type "java.time.LocalDate"}
+                         {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :field}}))
+
+(candidates "java." *ns*)
+(xr/check! (spec/coll-of ::specs/top-level-class-completion :min-count 1))
 
 (def imported-classes (set (map second (mapcat ns-imports (all-ns)))))
 (mapcat #(candidates (str (.getName %) "/") *ns*) imported-classes)
@@ -78,42 +84,46 @@
 (xr/check! (spec/coll-of ::specs/completion :min-count (count imported-classes)))
 
 (candidates ".g" *ns*)
-(xr/check! (prefixed-candidates ::specs/completions ".g"))
+(xr/check! (prefixed-candidates ::specs/method-completions ".g"))
 
 (import '(java.time LocalDate))
 (candidates ".atStartOf" *ns*)
 (xr/check! (prefixed-candidates ::specs/method-completions ".atStartOfDay"))
 
-(assert (set/subset? #{{:class "java.time.LocalDate"
-                        :candidate ".atTime"
-                        :arglists ["int" "int"]
-                        :type :method
-                        :return-type "java.time.LocalDateTime"}
-                       {:class "java.time.LocalDate"
-                        :candidate ".atTime"
-                        :arglists ["int" "int" "int"]
-                        :type :method
-                        :return-type "java.time.LocalDateTime"}
-                       {:class "java.time.LocalDate"
-                        :candidate ".atTime"
-                        :arglists ["LocalTime"]
-                        :type :method
-                        :return-type "java.time.chrono.ChronoLocalDateTime"}
-                       {:class "java.time.LocalDate"
-                        :candidate ".atTime"
-                        :arglists ["int" "int" "int" "int"]
-                        :type :method
-                        :return-type "java.time.LocalDateTime"}
-                       {:class "java.time.LocalDate"
-                        :candidate ".atTime"
-                        :arglists ["OffsetTime"]
-                        :type :method
-                        :return-type "java.time.OffsetDateTime"}}
-          (set (candidates ".atTime" *ns*))))
+(set (candidates ".atTime" *ns*))
+(xr/check!
+  (partial set/subset? #{{:class "java.time.LocalDate"
+                          :candidate ".atTime"
+                          :arglists ["int" "int"]
+                          :type :method
+                          :return-type "java.time.LocalDateTime"}
+                         {:class "java.time.LocalDate"
+                          :candidate ".atTime"
+                          :arglists ["int" "int" "int"]
+                          :type :method
+                          :return-type "java.time.LocalDateTime"}
+                         {:class "java.time.LocalDate"
+                          :candidate ".atTime"
+                          :arglists ["LocalTime"]
+                          :type :method
+                          :return-type "java.time.chrono.ChronoLocalDateTime"}
+                         {:class "java.time.LocalDate"
+                          :candidate ".atTime"
+                          :arglists ["int" "int" "int" "int"]
+                          :type :method
+                          :return-type "java.time.LocalDateTime"}
+                         {:class "java.time.LocalDate"
+                          :candidate ".atTime"
+                          :arglists ["OffsetTime"]
+                          :type :method
+                          :return-type "java.time.OffsetDateTime"}}))
 
 (candidates "java.util.Date/" *ns*)
+(xr/check! (prefixed-candidates ::specs/completions "java.util.Date/"))
+
 (xr/check! ::specs/completions (candidates "java.util.Spliterator$" *ns*))
-(assert (every? #(.contains (:candidate %) "$") (candidates "java.util.Spliterator$" *ns*)))
+(candidates "java.util.Spliterator$" *ns*)
+(xr/check! (spec/coll-of ::specs/nested-class-completion :kind sequential? :min-count 1))
 
 (xr/check! ::specs/function-completions (filter (comp #{:function} :type) sym-candidates))
 

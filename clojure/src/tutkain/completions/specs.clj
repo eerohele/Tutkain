@@ -52,6 +52,12 @@
 (spec/def ::ns
   (spec/with-gen (partial instance? clojure.lang.Namespace) #(gen/elements (all-ns))))
 
+(spec/def ::top-level-class-completion
+  (spec/and #(= (:type %) :class) #(not (.contains (:candidate %) "$"))))
+
+(spec/def ::nested-class-completion
+  (spec/and #(= (:type %) :class) #(.contains (:candidate %) "$")))
+
 (defn prefixed-candidates
   [spec prefix]
   (spec/and spec
