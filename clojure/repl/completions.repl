@@ -12,24 +12,33 @@
    [tutkain.completions :as completions :refer [candidates]]
    [tutkain.completions.specs :as specs :refer [prefixed-candidates]]))
 
-;; Tests
+;; # Auto-completion
 
+;; An empty string yields an empty result set.
 (candidates "" *ns*)
 (xr/check! empty?)
 
+;; A prefix that starts with a single colon yields simple keywords.
 (candidates ":a" 'clojure.core)
 (xr/check! (prefixed-candidates ::specs/completions ":a"))
 
+;; A prefix that starts with a double colon yields auto-qualified keywords.
 (candidates "::s" *ns*)
 (xr/check! (prefixed-candidates ::specs/completions "::s"))
 
+;; A prefix that starts with a single colon and contains a forward slash yields
+;; auto-qualified keywords where the namespace is a namespace alias of the
+;; given namespace.
 (candidates "::spec/" *ns*)
 (xr/check! (prefixed-candidates ::specs/completions "::spec/"))
 
+;; A prefix that starts with a single colon and contains a forward slash
+;; yields qualified keywords with synthetic namespaces.
 :foo/bar
 (candidates ":foo/" *ns*)
 (xr/check! (prefixed-candidates ::specs/completions ":foo/"))
 
+;; Yields every loaded keyword.
 (spec/def ::pass? #{true})
 
 (tc/quick-check 100
@@ -40,13 +49,18 @@
 
 (xr/check! (spec/keys :req-un [::pass?]))
 
+;; A prefix that starts with a valid symbol head yields symbols that start
+;; with that head.
 (candidates "a" 'clojure.core)
 (xr/check! (prefixed-candidates ::specs/symbol-completions "a"))
 
+;; A prefix that starts with an alias and contains a forward slash yields
+;; candidates in the aliased namespace.
 (candidates "spec/" 'clojure.main)
 (xr/check! (prefixed-candidates ::specs/symbol-completions "spec/"))
 
-(def sym-names
+;; Yields every public symbol.
+(def public-sym-names
   (sequence
     (comp
       (mapcat ns-publics)
@@ -54,10 +68,14 @@
     (all-ns)))
 
 (def sym-candidates
-  (set (mapcat #(candidates (subs % 0 1) *ns*) sym-names)))
+  (set (mapcat #(candidates (subs % 0 1) *ns*) public-sym-names)))
 
-(xr/check! (spec/coll-of ::specs/symbol-completion :min-count (count sym-names)) sym-candidates)
+(xr/check!
+  (spec/coll-of ::specs/symbol-completion :min-count (count public-sym-names))
+  sym-candidates)
 
+;; A prefix that starts with a Java package name yields fully-qualified class
+;; candidates from that package.
 (set (candidates "java.u" *ns*))
 (xr/check!
   (partial set/subset? #{{:candidate "java.util.ArrayList" :type :class}
@@ -66,6 +84,8 @@
 (candidates "java." *ns*)
 (xr/check! (spec/coll-of ::specs/top-level-class-completion :min-count 1))
 
+;; A prefix that starts with a Java class name and contains a forward slash
+;; yields static method candidates from that class.
 (set (candidates "java.time.LocalDate/" *ns*))
 (xr/check!
   (partial set/subset? #{{:class "java.time.LocalDate"
@@ -75,14 +95,13 @@
                           :return-type "java.time.LocalDate"}
                          {:candidate "java.time.LocalDate/DAYS_PER_CYCLE" :type :field}}))
 
-(candidates "java." *ns*)
-(xr/check! (spec/coll-of ::specs/top-level-class-completion :min-count 1))
-
+;; Yields candidates from every imported Java class.
 (def imported-classes (set (map second (mapcat ns-imports (all-ns)))))
 (mapcat #(candidates (str (.getName %) "/") *ns*) imported-classes)
-
 (xr/check! (spec/coll-of ::specs/completion :min-count (count imported-classes)))
 
+;; Yields instance method candidates of classes imported into the given
+;; namespace.
 (candidates ".g" *ns*)
 (xr/check! (prefixed-candidates ::specs/method-completions ".g"))
 
@@ -90,6 +109,7 @@
 (candidates ".atStartOf" *ns*)
 (xr/check! (prefixed-candidates ::specs/method-completions ".atStartOfDay"))
 
+;; Yields a candidate for every overload of an instance method.
 (set (candidates ".atTime" *ns*))
 (xr/check!
   (partial set/subset? #{{:class "java.time.LocalDate"
@@ -121,15 +141,20 @@
 (candidates "java.util.Date/" *ns*)
 (xr/check! (prefixed-candidates ::specs/completions "java.util.Date/"))
 
+;; A prefix that contains a dollar sign yields nested class candidates.
 (xr/check! ::specs/completions (candidates "java.util.Spliterator$" *ns*))
 (candidates "java.util.Spliterator$" *ns*)
 (xr/check! (spec/coll-of ::specs/nested-class-completion :kind sequential? :min-count 1))
 
-(xr/check! ::specs/function-completions (filter (comp #{:function} :type) sym-candidates))
+(filter (comp #{:function} :type) sym-candidates)
+(xr/check! ::specs/function-completions)
 
+;; A prefix that starts a non-base Java class name yields a candidate for every
+;; class that starts with that class name.
 (candidates "clojure.lang" *ns*)
 (xr/check! (prefixed-candidates ::specs/completions "clojure.lang"))
 
+;; Check that the `candidates` function yields a valid ret for a valid arg.
 (spec/fdef completions/candidates
   :args (spec/cat :prefix ::specs/prefix :ns ::specs/ns)
   :ret (spec/coll-of ::specs/completion :kind sequential? :distinct true))
@@ -142,6 +167,7 @@
 
 (xr/check! #{{:total 1 :check-passed 1}})
 
+;; Sending the backchannel op works.
 (->
   {:op :completions
    :dialect :clj
