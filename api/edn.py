@@ -312,11 +312,20 @@ def write_int(b, x):
 
 
 def write_str(b, x):
-    b.write("\"")
-    # FIXME: Quick 'n' dirty. What if there's more backslashes? Regular
-    # expressions or loop over string
-    b.write(x.replace('\\', '\\\\').replace('"', '\\"'))
-    b.write("\"")
+    b.write('"')
+
+    with io.StringIO(x) as s:
+        while ch := s.read(1):
+            if ch == '"':
+                b.write('\\"')
+            elif ch == '\\':
+                b.write('\\\\')
+            elif ch == '\n':
+                b.write('\\n')
+            else:
+                b.write(ch)
+
+    b.write('"')
 
 
 def write_keyword(b, x):

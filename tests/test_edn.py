@@ -33,6 +33,7 @@ class TestEdn(TestCase):
             0,
             # -42,
             "Hello, world!",
+            "foo \"bar\" quux\n",
             "foo \"bar\" quux\\n",
             "äö",
             [],
