@@ -48,6 +48,7 @@ class TestEdn(TestCase):
             {"a": [{"b": "c"}]},
             {edn.Keyword("a"): [{edn.Keyword("b"): edn.Keyword("c")}]},
             {},
+            edn.Symbol("bar", "foo"),
         ]:
             edn.write_line(self.buffer, val)
             self.assertEqual(val, edn.read_line(self.buffer))

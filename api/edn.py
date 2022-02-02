@@ -262,7 +262,12 @@ def interpret_token(token):
         else:
             return Keyword(xs[0][1:])
     else:
-        return Symbol(token)
+        xs = token.split("/")
+
+        if len(xs) == 2:
+            return Symbol(xs[1], xs[0])
+        else:
+            return Symbol(xs[0])
 
 
 def read1(b, ch):
