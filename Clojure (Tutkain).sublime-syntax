@@ -134,7 +134,16 @@ contexts:
     - include: metadata
     - include: comment
     - include: special-forms
-    - match: '(ns|in-ns){{end}}'
+    - match: '(in-ns){{end}}'
+      scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.namespace.clojure
+      push:
+        - include: list-end
+        - match: '('')({{symbol}})'
+          captures:
+            1: keyword.operator.macro.clojure
+            2: meta.reader-form.clojure meta.symbol.clojure entity.name.namespace.clojure
+          pop: true
+    - match: '(ns){{end}}'
       scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.namespace.clojure
       set:
         - match: '{{symbol}}'

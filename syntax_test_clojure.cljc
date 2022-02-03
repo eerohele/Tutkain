@@ -2562,6 +2562,20 @@
  ;                  ^^^^^^^^ constant.other.keyword.unqualified.edn
  ;   ^ punctuation.definition.keyword.clojure
 
+
+; # in-ns
+
+  (in-ns)
+;  ^^^^^ meta.reader-form.clojure meta.symbol.clojure keyword.declaration.namespace.clojure
+;       ^ punctuation.section.parens.end.edn
+  (in-ns 'foo.bar)
+;  ^^^^^ meta.reader-form.clojure meta.symbol.clojure keyword.declaration.namespace.clojure
+;       ^ - meta & -keyword
+;        ^ keyword.operator.macro.clojure
+;         ^^^^^^^ meta.reader-form.clojure meta.symbol.clojure entity.name.namespace.clojure
+;                ^ punctuation.section.parens.end.edn
+
+
 ; # deftest
 
   (deftest foo (is (= 3 (+ 1 2))))
