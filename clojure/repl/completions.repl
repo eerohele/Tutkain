@@ -61,14 +61,14 @@
 
 ;; Yields every public symbol.
 (def public-sym-names
-  (sequence
+  (into #{}
     (comp
       (mapcat ns-publics)
       (map (comp str first)))
     (all-ns)))
 
 (def sym-candidates
-  (set (mapcat #(candidates (subs % 0 1) *ns*) public-sym-names)))
+  (set (mapcat #(candidates % *ns*) public-sym-names)))
 
 (xr/check!
   (spec/coll-of ::specs/symbol-completion :min-count (count public-sym-names))
