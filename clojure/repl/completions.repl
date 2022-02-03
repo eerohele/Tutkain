@@ -59,21 +59,6 @@
 (candidates "spec/" 'clojure.main)
 (xr/check! (prefixed-candidates ::specs/symbol-completions "spec/"))
 
-;; Yields every public symbol.
-(def public-sym-names
-  (into #{}
-    (comp
-      (mapcat ns-publics)
-      (map (comp str first)))
-    (all-ns)))
-
-(def sym-candidates
-  (set (mapcat #(candidates % *ns*) public-sym-names)))
-
-(xr/check!
-  (spec/coll-of ::specs/symbol-completion :min-count (count public-sym-names))
-  sym-candidates)
-
 ;; A prefix that starts with a Java package name yields fully-qualified class
 ;; candidates from that package.
 (set (candidates "java.u" *ns*))
@@ -146,7 +131,7 @@
 (candidates "java.util.Spliterator$" *ns*)
 (xr/check! (spec/coll-of ::specs/nested-class-completion :kind sequential? :min-count 1))
 
-(filter (comp #{:function} :type) sym-candidates)
+(candidates "mapcat" 'clojure.core)
 (xr/check! ::specs/function-completions)
 
 ;; A prefix that starts a non-base Java class name yields a candidate for every
