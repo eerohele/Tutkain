@@ -384,10 +384,18 @@ contexts:
 
   named-fn-body:
     - include: list-end
+    # FIXME: This is stupid.
     - include: comment
+    - include: constant
     - include: string
     - include: reader-conditional
     - include: map
+    - include: symbol
+    - include: macro_characters
+    - include: numbers
+    - include: keywords
+    - include: symbolic
+    - include: comma
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       push: fn-arity

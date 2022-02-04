@@ -1935,6 +1935,25 @@
   (defn foo)
 ;          ^ punctuation.section.parens.end.edn
 
+  ; # Gotta take care of these to have slurping work
+  (defn f ([x]) 1)
+;               ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+  (defn f ([x]) "f")
+;               ^^^ meta.reader-form.edn string.quoted.double.edn
+  (defn f ([x]) x)
+;               ^ meta.reader-form.edn meta.symbol.edn
+  (defn f ([x]) :foo)
+;               ^ meta.reader-form.edn constant.other.keyword.unqualified.edn punctuation.definition.keyword.edn
+;                ^^^ meta.reader-form.edn constant.other.keyword.unqualified.edn
+  (defn f ([x]) @foo)
+;               ^ keyword.operator.macro.clojure
+;                ^^^ meta.reader-form.edn meta.symbol.edn
+  (defn f ([x]) #foo/bar)
+;               ^^^^^^^^ meta.reader-form.edn keyword.operator.macro.edn
+  (defn f ([x]) , true)
+;               ^ punctuation.comma.edn comment.punctuation.comma.edn
+;                 ^^^^ meta.reader-form.edn constant.language.edn
+
   (def !bang (atom 1))
 ;      ^^^^^ entity.name.constant.clojure
 
