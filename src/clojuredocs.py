@@ -61,10 +61,10 @@ def handler(window, client, response):
             path = pathlib.Path(temp_path)
 
             with open(path, "w") as file:
-                file.write(f";; ClojureDocs examples for {symbol}\n\n")
+                file.write(f";; ClojureDocs examples for {symbol}")
 
                 for example in examples:
-                    file.write(example)
+                    file.write("\n\n"+ example)
 
             view = window.open_file(f"{path}", flags=sublime.ADD_TO_SELECTION | sublime.SEMI_TRANSIENT)
 
