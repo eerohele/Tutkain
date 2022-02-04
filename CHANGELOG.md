@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Add **Tutkain: Show ClojureDocs Examples** and **Tutkain: Refresh ClojureDocs Example Cache** commands
+
+  If your caret is on a symbol and you run **Tutkain: Show ClojureDocs Examples**, Tutkain opens a split view with ClojureDocs examples for that symbol.
+
+  If your caret is not on a symbol, Tutkain prompts you for the name of a symbol instead.
+
+  The first use of **Tutkain: Show ClojureDocs Examples** requires an internet connection for downloading the example data. Subsequent uses will use the data cached on your hard drive. To refresh the example data, run **Tutkain: Refresh ClojureDocs Example Cache**.
+
+- Take `in-ns` into account when determining the current namespace
+
+- Fix slurping into multi-arity function body
+
 ## 0.12.0 (alpha) - 2022-01-30
 
 - BREAKING CHANGE: Remove all default key bindings (indent on Enter, ParEdit
