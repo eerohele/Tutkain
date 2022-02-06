@@ -156,7 +156,7 @@
                      ;; FIXME: this also conceals user-issued in-ns calls
                      (or (#{:inline :clipboard} (get-in @eval-context [:response :output]))
                        (and (list? (:form read-result)) (= 'in-ns (first (:form read-result)))))
-                   (println (format "%s=> %s" (ns-name (:ns repl-state)) (:source read-result))))
+                   (println (format "%s=> %s" (ns-name (or (find-ns (:ns repl-state)) (the-ns 'cljs.user))) (:source read-result))))
                  (let [{:keys [eof? error? ex source]} read-result]
                    (cond
                      eof?
