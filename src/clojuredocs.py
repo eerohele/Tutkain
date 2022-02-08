@@ -6,6 +6,7 @@ import urllib
 import tempfile
 
 from ..api import edn
+from . import dialects
 from . import namespace
 from . import selectors
 from . import settings
@@ -90,7 +91,9 @@ def handler(window, client, response):
 def show(view):
     window = view.window()
 
-    if client := state.get_client(window, edn.Keyword("clj")):
+    if dialects.for_view(view) != edn.Keyword("clj"):
+        view.window().status_message("ERR: ClojureDocs examples are only available for Clojure.")
+    elif client := state.get_client(window, edn.Keyword("clj")):
         point = view.sel()[0].begin()
         ns = edn.Symbol(namespace.name(view) or namespace.default(edn.Keyword("clj")))
 
