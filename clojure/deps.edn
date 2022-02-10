@@ -11,8 +11,6 @@
 
            :dev {:extra-deps {org.clojure/clojure {:mvn/version "1.11.0-beta1"}
                               org.clojure/test.check {:mvn/version "1.1.1"}
-                              org.clojure/tools.deps.alpha {:mvn/version "0.12.1135"}
-                              org.clojure/tools.trace {:mvn/version "0.7.11"}
                               org.clojure/tools.analyzer.jvm {:mvn/version "1.2.2"}
                               com.cognitect/transcriptor {:mvn/version "0.1.5"}
                               com.clojure-goes-fast/clj-async-profiler {:mvn/version "0.5.1"}
