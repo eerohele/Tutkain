@@ -25,10 +25,10 @@ def see_also_symbol(see_also):
 
 
 def refresh_cache(window, callback=lambda: None):
-    window.status_message("Downloading ClojureDocs examples...")
+    window.status_message(f"Downloading from {EXAMPLE_URI}...")
 
     try:
-        response = urllib.request.urlopen("https://clojuredocs.org/clojuredocs-export.json")
+        response = urllib.request.urlopen(EXAMPLE_URI)
         encoding = response.info().get_content_charset("utf-8")
         data = json.loads(response.read().decode(encoding))
 
@@ -47,7 +47,7 @@ def refresh_cache(window, callback=lambda: None):
 
             edn.write1(file, output)
 
-        window.status_message("ClojureDocs examples downloaded.")
+        window.status_message("Finished downloading ClojureDocs data.")
         callback()
     except urllib.error.URLError as error:
         sublime.error_message(f"[Tutkain] Error trying to fetch ClojureDocs examples from {EXAMPLE_URI}:\n\n {repr(error)}\n\nAre you connected to the internet?")
