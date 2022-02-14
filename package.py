@@ -1362,7 +1362,7 @@ class TutkainChooseActiveRuntimeCommand(WindowCommand):
         state.set_active_connection(self.window, state.get_connection_by_id(client_id))
 
 
-class TutkainRefreshClojuredocsExampleCacheCommand(WindowCommand):
+class TutkainRefreshClojuredocsCacheCommand(WindowCommand):
     def run(self):
         sublime.set_timeout_async(lambda: clojuredocs.refresh_cache(self.window), 0)
 

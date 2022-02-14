@@ -96,8 +96,8 @@
         "command": "tutkain_choose_active_runtime"
     },
     {
-        "caption": "Tutkain: Refresh ClojureDocs Example Cache",
-        "command": "tutkain_refresh_clojuredocs_example_cache"
+        "caption": "Tutkain: Refresh ClojureDocs Cache",
+        "command": "tutkain_refresh_clojuredocs_cache"
     },
     {
         "caption": "Tutkain: Show ClojureDocs Examples",
