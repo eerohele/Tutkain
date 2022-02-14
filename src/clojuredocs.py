@@ -17,6 +17,13 @@ EXAMPLE_SOURCE_PATH = os.path.join(sublime.cache_path(), "Tutkain", "clojuredocs
 EXAMPLE_URI = "https://clojuredocs.org/clojuredocs-export.json"
 
 
+def see_also_symbol(see_also):
+    to_var = see_also.get("to-var")
+    name = to_var.get("name")
+    ns = to_var.get("ns")
+    return edn.Symbol(name, ns)
+
+
 def refresh_cache(window, callback=lambda: None):
     window.status_message("Downloading ClojureDocs examples...")
 
@@ -36,7 +43,7 @@ def refresh_cache(window, callback=lambda: None):
                     output[symbol][edn.Keyword("examples")] = list(map(lambda example: example.get("body"), examples))
 
                 if see_alsos := var.get("see-alsos"):
-                    output[symbol][edn.Keyword("see-alsos")] = list(map(lambda see_also: edn.Symbol(see_also.get("to-var").get("name"), see_also.get("to-var").get("ns")), see_alsos))
+                    output[symbol][edn.Keyword("see-alsos")] = list(map(see_also_symbol, see_alsos))
 
             edn.write1(file, output)
 
