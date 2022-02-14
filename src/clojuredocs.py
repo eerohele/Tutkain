@@ -114,26 +114,28 @@ def handler(window, client, response):
 def show(view):
     window = view.window()
 
-    if dialects.for_view(view) != edn.Keyword("clj"):
-        view.window().status_message("ERR: ClojureDocs examples are only available for Clojure.")
-    elif client := state.get_client(window, edn.Keyword("clj")):
+    if client := state.get_client(window, edn.Keyword("clj")):
         point = view.sel()[0].begin()
-        ns = edn.Symbol(namespace.name(view) or namespace.default(edn.Keyword("clj")))
 
-        if region := selectors.expand_by_selector(view, point, "meta.symbol"):
-            sym = edn.Symbol(view.substr(region))
-            send_message(window, client, ns, sym)
+        if dialects.for_point(view, point) != edn.Keyword("clj"):
+            view.window().status_message("ERR: ClojureDocs examples are only available for Clojure.")
         else:
-            input_panel = view.window().show_input_panel(
-                "Symbol: ",
-                "",
-                lambda sym: send_message(window, client, ns, edn.Symbol(sym)),
-                lambda _: None,
-                lambda: None
-            )
+            ns = edn.Symbol(namespace.name(view) or namespace.default(edn.Keyword("clj")))
 
-            input_panel.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
-            input_panel.settings().set("auto_complete", True)
+            if region := selectors.expand_by_selector(view, point, "meta.symbol"):
+                sym = edn.Symbol(view.substr(region))
+                send_message(window, client, ns, sym)
+            else:
+                input_panel = view.window().show_input_panel(
+                    "Symbol: ",
+                    "",
+                    lambda sym: send_message(window, client, ns, edn.Symbol(sym)),
+                    lambda _: None,
+                    lambda: None
+                )
+
+                input_panel.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
+                input_panel.settings().set("auto_complete", True)
     else:
         view.window().status_message("ERR: Not connected to a Clojure REPL.")
 
