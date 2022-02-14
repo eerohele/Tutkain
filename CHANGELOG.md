@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.13.0 (alpha) - 2022-02-08
+## 0.13.0 (alpha) - UNRELEASED
 
 - Add **Tutkain: Show ClojureDocs Examples** and **Tutkain: Refresh ClojureDocs Example Cache** commands
 
