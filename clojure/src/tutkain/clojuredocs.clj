@@ -10,6 +10,5 @@
   (respond-to message
     (if-some [qualified-symbol (some-> (ns-resolve ns sym) symbol)]
       (with-open [reader (PushbackReader. (io/reader source-path))]
-        {:symbol qualified-symbol
-         :examples (-> reader edn/read qualified-symbol)})
+        (assoc (-> reader edn/read qualified-symbol) :symbol qualified-symbol))
       {:symbol sym})))

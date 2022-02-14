@@ -29,9 +29,14 @@ def refresh_cache(window, callback=lambda: None):
             output = {}
 
             for var in data.get("vars"):
+                symbol = edn.Symbol(var.get("name"), var.get("ns"))
+                output[symbol] = {}
+
                 if examples := var.get("examples"):
-                    symbol = edn.Symbol(var.get("name"), var.get("ns"))
-                    output[symbol] = list(map(lambda example: example.get("body"), examples))
+                    output[symbol][edn.Keyword("examples")] = list(map(lambda example: example.get("body"), examples))
+
+                if see_alsos := var.get("see-alsos"):
+                    output[symbol][edn.Keyword("see-alsos")] = list(map(lambda see_also: edn.Symbol(see_also.get("to-var").get("name"), see_also.get("to-var").get("ns")), see_alsos))
 
             edn.write1(file, output)
 
@@ -54,18 +59,29 @@ def send_message(window, client, ns, sym):
 
 def handler(window, client, response):
     symbol = response.get(edn.Keyword("symbol"))
+    examples = response.get(edn.Keyword("examples"))
+    see_alsos = response.get(edn.Keyword("see-alsos"))
 
-    if examples := response.get(edn.Keyword("examples")):
+    if examples or see_alsos:
         descriptor, temp_path = tempfile.mkstemp(".clj")
 
         try:
             path = pathlib.Path(temp_path)
 
             with open(path, "w") as file:
-                file.write(f";; ClojureDocs examples for {symbol}")
+                if examples:
+                    file.write(f";; ClojureDocs examples for {symbol}")
 
-                for example in examples:
-                    file.write("\n\n"+ example)
+                    for example in examples:
+                        file.write("\n\n"+ example)
+
+                if see_alsos:
+                    if examples:
+                        file.write("\n\n")
+
+                    file.write(":see-also [")
+                    file.write(", ".join(map(lambda see_also: str(see_also), see_alsos)))
+                    file.write("]")
 
             view = window.open_file(f"{path}", flags=sublime.ADD_TO_SELECTION | sublime.SEMI_TRANSIENT)
 

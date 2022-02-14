@@ -9,7 +9,7 @@
 
 (def source-path (File/createTempFile "clojuredocs" ".edn"))
 (xr/on-exit #(.delete source-path))
-(spit source-path {'clojure.core/mapcat ["example 1" "example 2"]})
+(spit source-path {'clojure.core/mapcat {:examples ["example 1" "example 2"] :see-alsos ['clojure.core/map 'clojure.core/concat]}})
 
 (send-op
   {:id 1
@@ -18,7 +18,10 @@
    :ns 'tutkain.clojuredocs
    :sym 'mapcat})
 
-(xr/check! #{{:symbol 'clojure.core/mapcat :examples ["example 1" "example 2"] :id 1}})
+(xr/check! #{{:symbol 'clojure.core/mapcat
+              :examples ["example 1" "example 2"]
+              :see-alsos ['clojure.core/map 'clojure.core/concat]
+              :id 1}})
 
 (send-op
   {:id 1
