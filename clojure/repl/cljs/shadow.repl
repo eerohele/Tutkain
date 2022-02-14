@@ -133,6 +133,12 @@
 (check-result! foo.bar=> (ns foo.bar.baz (:import (goog.date DateTime))))
 (rrecv)
 (check-result! nil)
+;; FIXME: There's some sort of race condition where the :ns key in shadow-cljs
+;;        REPL state doesn't exist or is nil immediately after sending the ns
+;;        form above.
+;;
+;;        This problem only occurs in CI, of course.
+(Thread/sleep 1000)
 (bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 2 :column 1 :id 1})
 (brecv)
 (rsend '(DateTime.))
