@@ -11,7 +11,7 @@ def print_characters(view, characters):
 
 
 def show_repl_panel(view):
-    if view and view.element() == "output:output":
+    if view and view.element() == "output:output" and settings.load().get("auto_show_output_panel", True):
         views.show_output_panel(sublime.active_window())
 
 

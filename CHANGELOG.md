@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 
 - Take `in-ns` into account when determining the current namespace
 
+- Add `auto_show_output_panel` setting
+
 - Fix slurping into multi-arity function body
 
 ## 0.12.0 (alpha) - 2022-01-30

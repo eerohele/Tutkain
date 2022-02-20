@@ -72,4 +72,11 @@
 
   // You can overwrite Tutkain's default settings for a REPL view.
   "repl_view_settings": {},
+
+  // When printing REPL output into a panel instead of a view, toggle whether
+  // to automatically show the output panel when evaluating.
+  //
+  // If you mainly use inline evaluation results, you might want to set this to
+  // "false".
+  "auto_show_output_panel": true,
 }
