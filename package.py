@@ -18,7 +18,6 @@ from .src import dialects
 from .src import selectors
 from .src import sexp
 from .src import state
-from .src import status
 from .src import forms
 from .src import indent
 from .src import inline
