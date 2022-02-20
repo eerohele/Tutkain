@@ -137,7 +137,11 @@
 (brecv)
 (rsend '(DateTime.))
 (rrecv)
-(check-result! foo.bar.baz=> (DateTime.))
+;; On Windows, shadow-cljs (or maybe Tutkain? not sure) sometimes doesn't keep
+;; up, and the ns here is cljs.user instead of foo.bar.baz. No idea why.
+(xr/check! #{'(foo.bar.baz=> (DateTime.))
+             '(cljs.user=> (DateTime.))})
+
 (.poll rrecvq 5 TimeUnit/SECONDS)
 (xr/check! string?)
 
