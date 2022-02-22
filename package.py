@@ -334,9 +334,9 @@ class TutkainEvaluateCommand(TextCommand):
         def handler(response):
             progress.stop()
             window.status_message("[Tutkain] Evaluating view... done.")
-            # Switch to current namespace after loading view
-            if not response.get(edn.Keyword("exception")) and ns:
-                client.switch_namespace(ns)
+            if edn.Keyword("exception") not in response:
+                client.evaluate(f"(in-ns '{ns or namespace.default(dialects.for_view(view))})")
+
             client.print(response)
 
         progress.start("[Tutkain] Evaluating view...")
@@ -373,26 +373,17 @@ class TutkainEvaluateCommand(TextCommand):
             if output == "clipboard":
                 options["response"] = {"output": edn.Keyword("clipboard")}
 
-            if ns is not None:
-                client.switch_namespace(ns)
-
             if scope == "input":
-                auto_switch = settings.load().get("auto_switch_namespace")
-                settings.load().set("auto_switch_namespace", False)
-
                 def evaluate_input(client, code):
-                    try:
-                        evaluate(self.view, client, code + "\n", options=options)
-                        history.update(self.view.window(), code)
-                    finally:
-                        settings.load().set("auto_switch_namespace", auto_switch)
+                    evaluate(self.view, client, code + "\n", options=options)
+                    history.update(self.view.window(), code)
 
                 view = self.view.window().show_input_panel(
                     "Input: ",
                     history.get(self.view.window()),
                     lambda code: evaluate_input(client, code),
                     self.noop,
-                    lambda: settings.load().set("auto_switch_namespace", auto_switch)
+                    self.noop
                 )
 
                 if snippet:
@@ -404,10 +395,11 @@ class TutkainEvaluateCommand(TextCommand):
                     view.run_command("insert_snippet", {"contents": snippet})
 
                 view.settings().set("tutkain_repl_input_panel", True)
+                # FIXME?
                 view.settings().set("auto_complete", True)
                 view.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
             elif code:
-                variables = {}
+                variables = {"ns": namespace.name(self.view) or namespace.default(dialect)}
 
                 for index, region in enumerate(self.view.sel()):
                     if eval_region := self.get_eval_region(region, scope, ignore):
@@ -1285,55 +1277,27 @@ class TutkainPromptCommand(WindowCommand):
             client.evaluate(code, {"file": "NO_SOURCE_FILE"})
             history.update(self.window, code)
 
-        settings.load().set("auto_switch_namespace", self.auto_switch)
         self.prompt(client)
 
     def on_change(self, _):
         None
 
-    def on_cancel(self):
-        settings.load().set("auto_switch_namespace", self.auto_switch)
-
     def prompt(self, client):
-        settings.load().set("auto_switch_namespace", False)
-
         view = self.window.show_input_panel(
             "Input: ",
             history.get(self.window),
             lambda code: self.on_done(client, code),
             self.on_change,
-            self.on_cancel
+            lambda: None
         )
 
         view.settings().set("tutkain_repl_input_panel", True)
 
     def run(self):
         if client := state.get_client(self.window, edn.Keyword("clj")):
-            self.auto_switch = settings.load().get("auto_switch_namespace")
             self.prompt(client)
         else:
             self.window.status_message("ERR: Not connected to a REPL.")
-
-
-class TutkainToggleAutoSwitchNamespaceCommand(TextCommand):
-    def run(self, _):
-        s = settings.load()
-        current = s.get("auto_switch_namespace")
-        s.set("auto_switch_namespace", not current)
-
-        if s.get("auto_switch_namespace"):
-            window = self.view.window()
-            window.status_message(f"[⏽] [Tutkain] Automatic namespace switching enabled.")
-
-            if (sel := self.view.sel()) and (
-                dialect := dialects.for_point(self.view, sel[0].begin())
-            ) and (
-                client := state.get_client(window, dialect)
-            ) and (ns := namespace.name(self.view) or namespace.default(dialect)):
-                client.switch_namespace(ns)
-        else:
-            self.view.window().status_message(f"[⭘] [Tutkain] Automatic namespace switching disabled.")
-
 
 class ClientIdInputHandler(ListInputHandler):
     def placeholder(self):

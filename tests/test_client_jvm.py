@@ -109,9 +109,6 @@ class TestJVMClient(PackageTestCase):
         self.server.send("user=> (reset)")
         self.assertEquals(formatter.value("user=> (reset)\n"), self.get_print())
 
-        # Clients sends ns first
-        ret = self.server.recv()
-        self.assertEquals(ret, "(tutkain.repl/switch-ns user)\n")
         self.assertEquals("(reset)\n", self.server.recv())
         self.server.send("nil")
         self.assertEquals(formatter.value("nil\n"), self.get_print())
@@ -156,7 +153,6 @@ class TestJVMClient(PackageTestCase):
         self.server.backchannel.send(response)
 
         self.assertEquals(formatter.value("nil"), self.get_print())
-        self.assertEquals("(tutkain.repl/switch-ns foo.bar)\n", self.server.recv())
 
     #@unittest.SkipTest
     def test_view_syntax_error(self):
@@ -208,7 +204,7 @@ class TestJVMClient(PackageTestCase):
         response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "#'baz.quux/x"})
         self.server.backchannel.send(response)
 
-        self.assertEquals("(tutkain.repl/switch-ns baz.quux)\n", self.server.recv())
+        self.assertEquals("(in-ns 'baz.quux)\n", self.server.recv())
         self.assertEquals(formatter.value("#'baz.quux/x"), self.get_print())
 
     #@unittest.SkipTest

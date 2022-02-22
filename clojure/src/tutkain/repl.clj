@@ -14,10 +14,6 @@
   "A function you can use as the :caught arg of clojure.main/repl."
   main/repl-caught)
 
-(defmacro switch-ns
-  [namespace]
-  `(or (some->> '~namespace find-ns ns-name in-ns .name) (ns ~namespace)))
-
 (defn pst
   "Like clojure.repl/pst, but doesn't print in a doseq so as to be faster and
   to avoid interleaving.
@@ -70,7 +66,6 @@
          lock (Object.)
          out *out*
          in *in*
-         plain-print #(binding [*out* out] (println %))
          pretty-print (fn [message]
                         (binding [*print-readably* true
                                   pprint/*print-right-margin* 100]
@@ -96,6 +91,9 @@
                             :host (-> backchannel .getInetAddress .getHostName)
                             :port (-> backchannel .getLocalPort)})
              (loop []
+               (binding [*out* out]
+                 (printf "%s=> " (ns-name *ns*))
+                 (flush))
                (when
                  (try
                    (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
@@ -108,23 +106,19 @@
                      (with-bindings thread-bindings
                        (when-not (identical? form EOF)
                          (try
-                           (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
-                             (do (eval form) true)
-                             (do
-                               (when-not backchannel-response?
-                                 (plain-print (format "%s=> %s" (ns-name *ns*) s)))
-                               (let [ret (eval form)]
-                                 (when-not (= :repl/quit ret)
-                                   (set! *3 *2)
-                                   (set! *2 *1)
-                                   (set! *1 ret)
-                                   (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
-                                   (if backchannel-response?
-                                     (send-over-backchannel
-                                       (assoc response :tag :ret :val (format/pp-str ret)))
-                                     (pretty-print ret))
-                                   (flush)
-                                   true))))
+                           (do
+                             (let [ret (eval form)]
+                               (when-not (= :repl/quit ret)
+                                 (set! *3 *2)
+                                 (set! *2 *1)
+                                 (set! *1 ret)
+                                 (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
+                                 (if backchannel-response?
+                                   (send-over-backchannel
+                                     (assoc response :tag :ret :val (format/pp-str ret)))
+                                   (pretty-print ret))
+                                 (flush)
+                                 true)))
                            (catch Throwable ex
                              (set! *e ex)
                              (swap! eval-context assoc #'*e *e)

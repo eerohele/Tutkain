@@ -139,7 +139,6 @@ class Client(ABC):
         self.socket.shutdown(socket.SHUT_RDWR)
         log.debug({"event": "thread/exit"})
 
-    @abstractmethod
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
         """Given a string of Clojure code, send it for evaluation to the
         Clojure runtime this client is connected to.
@@ -149,13 +148,13 @@ class Client(ABC):
                   associated with (default `"NO_SOURCE_FILE"`)
         - `line`: the line number the code is positioned at (default `0`)
         - `column`: the column number the code is positioned at (default `0`)"""
-        pass
+        if self.has_backchannel():
+            self.backchannel.send(
+                self.eval_context_message(options),
+                lambda _: self.sendq.put(code)
+            )
 
-    @abstractmethod
-    def switch_namespace(self, ns):
-        """Given the name of a Clojure namespace as a string, ask the Clojure
-        runtime this client is connected to to switch to that namespace."""
-        pass
+        self.print(code + "\n")
 
     def print(self, item):
         self.printq.put(formatter.format(item))
@@ -292,19 +291,6 @@ class JVMClient(Client):
         self.start_workers()
         return self
 
-    def switch_namespace(self, ns):
-        self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
-
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        if self.has_backchannel():
-            self.backchannel.send(
-                self.eval_context_message(options),
-                lambda _: self.sendq.put(code)
-            )
-        else:
-            self.print(code + "\n")
-            self.sendq.put(code)
-
 
 class JSClient(Client):
     def __init__(self, host, port, options={}):
@@ -375,23 +361,11 @@ class JSClient(Client):
 
         self.start_workers()
 
-    def switch_namespace(self, ns):
-        self.sendq.put(f"(in-ns '{ns})")
-
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        if self.has_backchannel():
-            self.backchannel.send(
-                self.eval_context_message(options),
-                lambda _: self.sendq.put(code)
-            )
-        else:
-            self.print(code + "\n")
-            self.sendq.put(code)
-
 
 class BabashkaClient(Client):
-    def __init__(self, host, port):
+    def __init__(self, host, port, options={}):
         super().__init__(host, port, "tutkain.bb.client", edn.Keyword("bb"))
+        self.options = {}
 
     def handshake(self):
         pass
@@ -403,13 +377,6 @@ class BabashkaClient(Client):
 
     def has_backchannel(self):
         return False
-
-    def switch_namespace(self, ns):
-        self.sendq.put(f"(in-ns '{ns})")
-
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.print(code + "\n")
-        self.sendq.put(code)
 
 
 def set_layout(window):

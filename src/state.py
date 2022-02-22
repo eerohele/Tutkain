@@ -111,15 +111,5 @@ def focus_active_runtime_view(window: Window, dialect: Dialect) -> None:
 
 
 def on_activated(window, view):
-    if window and window.active_panel() != "input" and (
-        dialect := dialects.for_view(view)
-    ) and (
-        client := get_client(window, dialect)
-    ):
-        status.set_connection_status(view, client)
-
-        if settings.load().get("auto_switch_namespace", True) and client.has_backchannel() and client.ready:
-            ns = namespace.name(view) or namespace.default(dialect)
-            client.switch_namespace(ns)
-    else:
+    if not (dialect := dialects.for_view(view)) or not get_client(window, dialect):
         status.erase_connection_status(view)

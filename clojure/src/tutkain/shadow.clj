@@ -6,6 +6,7 @@
    [clojure.tools.reader :as reader]
    [cljs.analyzer :as analyzer]
    [cljs.util :refer [*clojurescript-version*]]
+   [shadow.build.log :as build-log]
    [shadow.cljs.devtools.api :as api]
    [shadow.cljs.devtools.server.supervisor :as supervisor]
    [shadow.cljs.devtools.server.worker :as worker]
@@ -152,15 +153,6 @@
               ([read-result]
                ;; (tap> [:repl-from-stdin read-result repl-state])
                (when (some? read-result)
-                 (when-not
-                     ;; FIXME: this also conceals user-issued in-ns calls
-                     (or (#{:inline :clipboard} (get-in @eval-context [:response :output]))
-                       (and (list? (:form read-result)) (= 'in-ns (first (:form read-result)))))
-                   (let [current-ns (or
-                                      (some-> (:ns repl-state) find-ns)
-                                      (some-> (get-in repl-state [:eval-result :eval-ns]) find-ns)
-                                      (the-ns 'cljs.user))]
-                     (println (format "%s=> %s" (ns-name current-ns) (:source read-result)))))
                  (let [{:keys [eof? error? ex source]} read-result]
                    (cond
                      eof?
@@ -391,7 +383,11 @@
          (do-repl worker relay *in* close-signal
            {:init-state {:runtime-id (:client-id clj-runtime)}
 
-            :repl-prompt (constantly "")
+            :repl-prompt
+            (fn repl-prompt [{:keys [ns] :as repl-state}]
+              (locking build-log/stdout-lock
+                (printf "%s=> " ns)
+                (flush)))
 
             :repl-read-ex
             (fn [{:keys [read-result]} ex]
@@ -402,11 +398,10 @@
 
             :repl-result
             (fn [{:keys [read-result]} ret]
-              (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
-                (let [response (:response @eval-context)]
-                  (if (#{:inline :clipboard} (:output response))
-                    (send-over-backchannel (assoc response :tag :ret :val ret))
-                    (out-fn ret)))))
+              (let [response (:response @eval-context)]
+                (if (#{:inline :clipboard} (:output response))
+                  (send-over-backchannel (assoc response :tag :ret :val ret))
+                  (out-fn ret))))
 
             :repl-val
             (fn [_ ret]

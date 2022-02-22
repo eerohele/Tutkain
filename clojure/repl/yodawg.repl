@@ -89,19 +89,15 @@
 (bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
 (brecv)
 (rsend '(read-line))
-(rrecv)
-(check-result! user=> (read-line))
 (rsend 1)
 (rrecv)
-(check-result! "1")
+(check-result! user=> "1")
 
 (bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
 (brecv)
 (rsend '(inc 1))
 (rrecv)
-(check-result! user=> (inc 1))
-(rrecv)
-(check-result! 2)
+(check-result! user=> 2)
 
 (bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
 (brecv)
@@ -153,24 +149,6 @@
 (bsend {:op :interrupt})
 (brecv)
 (xr/check! ::ret) ;; InterruptedException
-
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(inc 1))
-(rrecv)
-(check-result! user=> (inc 1))
-(def ret (rrecv))
-;; Evaluating lists whose head is tutkain.repl/switch-ns don't affect *1 etc.
-(rsend '(tutkain.repl/switch-ns tutkain.repl))
-(rrecv)
-(xr/check! nil?) ;; Client doesn't send response
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '*1)
-(rrecv)
-(check-result! tutkain.repl=> *1)
-(rrecv)
-(xr/check! (partial = ret))
 
 (bsend {:op :set-eval-context
         :file "/my/path/app.clj"

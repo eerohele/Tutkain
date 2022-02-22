@@ -46,6 +46,7 @@ def print_loop(view, q):
                 sublime.set_clipboard(item["val"])
                 sublime.active_window().status_message("[Tutkain] Evaluation result copied to clipboard.")
             elif item["target"] == "inline":
+                append_to_view(view, item["val"])
                 window = view.window() or sublime.active_window()
 
                 if target_view := views.find_by_id(window, item["view-id"]):
