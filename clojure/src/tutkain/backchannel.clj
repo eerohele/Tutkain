@@ -35,16 +35,23 @@
     (-> ^Field field (doto (.setAccessible true)) (.set reader column))))
 
 (defmethod handle :set-eval-context
-  [{:keys [^LineNumberingPushbackReader eval-context in file line column response]
+  [{:keys [^LineNumberingPushbackReader eval-context in ns file line column response]
     :or {line 0 column 0 response {}} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
   (let [file (or file "NO_SOURCE_PATH")
         source-path (or (some-> file File. .getName) "NO_SOURCE_FILE")]
-    (reset! eval-context
-      {:thread-bindings {#'*file* file #'*source-path* source-path} :response response})
+    (reset! eval-context {:thread-bindings {#'*ns* (or (some-> ns find-ns) (the-ns 'user))
+                                            #'*file* file
+                                            #'*source-path* source-path}
+                          :response response})
     (respond-to message
-      {:thread-bindings {:file file :source-path source-path} :response response})))
+      {:thread-bindings {:ns ns :file file :source-path source-path} :response response})))
+
+(defmethod handle :set-namespace
+  [{:keys [eval-context ns] :as message}]
+  (swap! eval-context update :thread-bindings assoc #'*ns* (or (find-ns (symbol ns)) (the-ns 'user)))
+  (respond-to message {:ns ns}))
 
 (defmethod handle :interrupt
   [{:keys [^Thread repl-thread]}]

@@ -1,6 +1,6 @@
 from collections import defaultdict
-from sublime import View, Window
-from typing import Union, TypedDict
+from sublime import View, Window, PhantomSet
+from typing import Union, TypedDict, List
 from dataclasses import dataclass
 from . import repl
 from . import dialects
@@ -24,6 +24,8 @@ class Connection:
     client: repl.Client
     window: Window
     view: View
+    phantom_set: PhantomSet
+    phantoms: List
 
 
 __state = State(
@@ -41,7 +43,7 @@ def get_connection_by_id(client_id: Union[str, None]) -> Union[Connection, None]
 
 
 def register_connection(view: View, window: Window, client: repl.Client) -> None:
-    connection = Connection(client, window, view)
+    connection = Connection(client, window, view, PhantomSet(view, "tutkain_namespace_markers"), [])
 
     def forget_connection():
         del __state["connections"][connection.client.id]
@@ -118,8 +120,6 @@ def on_activated(window, view):
     ):
         status.set_connection_status(view, client)
 
-        if settings.load().get("auto_switch_namespace", True) and client.has_backchannel() and client.ready:
-            ns = namespace.name(view) or namespace.default(dialect)
-            client.switch_namespace(ns)
+        view.set_status("0tutkain_current_namespace", namespace.name(view) or namespace.default(dialect))
     else:
         status.erase_connection_status(view)

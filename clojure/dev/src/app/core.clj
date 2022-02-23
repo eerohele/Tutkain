@@ -23,6 +23,7 @@
   (divide 4 0)
 
   (+ 1 2)
+  (clojure.main/repl :print tutkain.repl/*print* :read clojure.core.server/repl-read)
   (throw (ex-info "Boom!" {:a :1}))
   (range 512)
   (square 4)

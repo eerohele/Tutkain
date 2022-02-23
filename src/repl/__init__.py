@@ -197,6 +197,7 @@ class Client(ABC):
             "file": options.get("file", "NO_SOURCE_FILE"),
             "line": options.get("line", 0) + 1,
             "column": options.get("column", 0) + 1,
+            "ns": options.get("ns", edn.Symbol("user"))
         }
 
         if response := options.get("response"):
@@ -258,7 +259,7 @@ class JVMClient(Client):
 
             if (host := ret.get(edn.Keyword("host"))) and (port := ret.get(edn.Keyword("port"))):
                 self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
-                self.print(ret.get(edn.Keyword("greeting")))
+                self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": ret.get(edn.Keyword("greeting"))}))
             else:
                 self.print(ret)
 
@@ -293,16 +294,20 @@ class JVMClient(Client):
         return self
 
     def switch_namespace(self, ns):
-        self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
+        self.backchannel.send({
+            "op": edn.Keyword("set-namespace"),
+            "ns": ns
+        }, lambda _: None)
 
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
+        self.print(edn.kwmap({"tag": edn.Keyword("ret"), "val": code + "\n"}))
+
         if self.has_backchannel():
             self.backchannel.send(
                 self.eval_context_message(options),
                 lambda _: self.sendq.put(code)
             )
         else:
-            self.print(code + "\n")
             self.sendq.put(code)
 
 
@@ -351,7 +356,7 @@ class JSClient(Client):
         port = ret.get(edn.Keyword("port"))
         self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
         greeting = ret.get(edn.Keyword("greeting"))
-        self.print(greeting)
+        self.print(edn.kwmap({"tag": edn.Keyword("out"), edn.Keyword("val"): greeting}))
 
         # NOTE: If you make changes to module loading, make sure you manually
         # test connecting to a ClojureScript runtime *without* connecting to

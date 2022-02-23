@@ -98,33 +98,32 @@
              (loop []
                (when
                  (try
-                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
+                   (let [n (.read in)
+                         {:keys [thread-bindings response]} @eval-context
+                         _ (set! *ns* (get thread-bindings #'*ns* (the-ns 'user)))
+                         _ (.unread in n)
+                         [form s] (read+string {:eof EOF :read-cond :allow} in)
                          ;; For (read-line) support. See also:
                          ;;
                          ;; https://clojure.atlassian.net/browse/CLJ-2692
                          _ (main/skip-whitespace in)
-                         {:keys [thread-bindings response]} @eval-context
                          backchannel-response? (#{:inline :clipboard} (:output response))]
                      (with-bindings thread-bindings
                        (when-not (identical? form EOF)
                          (try
-                           (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
-                             (do (eval form) true)
-                             (do
-                               (when-not backchannel-response?
-                                 (plain-print (format "%s=> %s" (ns-name *ns*) s)))
-                               (let [ret (eval form)]
-                                 (when-not (= :repl/quit ret)
-                                   (set! *3 *2)
-                                   (set! *2 *1)
-                                   (set! *1 ret)
-                                   (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
-                                   (if backchannel-response?
-                                     (send-over-backchannel
-                                       (assoc response :tag :ret :val (format/pp-str ret)))
-                                     (pretty-print ret))
-                                   (flush)
-                                   true))))
+                           (do
+                             (let [ret (eval form)]
+                               (when-not (= :repl/quit ret)
+                                 (set! *3 *2)
+                                 (set! *2 *1)
+                                 (set! *1 ret)
+                                 (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
+                                 (if backchannel-response?
+                                   (send-over-backchannel
+                                     (assoc response :tag :ret :val (format/pp-str ret)))
+                                   (pretty-print ret))
+                                 (flush)
+                                 true)))
                            (catch Throwable ex
                              (set! *e ex)
                              (swap! eval-context assoc #'*e *e)
