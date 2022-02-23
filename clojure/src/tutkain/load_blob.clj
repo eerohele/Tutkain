@@ -8,13 +8,14 @@
    (java.io File)))
 
 (defmethod handle :load
-  [{:keys [eval-context code file] :as message}]
+  [{:keys [eval-context eval-lock code file] :as message}]
   (try
     (with-open [reader (base64-reader code)]
-      (let [file-name (some-> file File. .getName)
-            val (Compiler/load reader (or file "NO_SOURCE_FILE") file-name)]
-        (respond-to message {:tag :ret
-                             :val (pp-str val)})))
+      (let [file-name (some-> file File. .getName)]
+        (respond-to message
+          {:tag :ret
+           :val (pp-str (locking eval-lock
+                          (Compiler/load reader (or file "NO_SOURCE_FILE") file-name)))})))
     (catch Throwable ex
       (swap! eval-context assoc #'*e ex)
       (respond-to message {:tag :ret

@@ -74,7 +74,7 @@
     :socket                The ServerSocket instance this backchannel listens on.
     :send-over-backchannel A function you can call to send messages to the
                            client connected to this backchannel."
-  [{:keys [port bind-address xform-in xform-out]
+  [{:keys [port bind-address xform-in xform-out eval-lock]
     :or {port 0 bind-address "localhost" xform-in identity xform-out identity}}]
   (let [address (InetAddress/getByName ^String bind-address)
         socket (ServerSocket. port 0 address)
@@ -110,6 +110,7 @@
                                    (let [recur? (case (:op message)
                                                   :quit false
                                                   (let [message (assoc (xform-in message)
+                                                                  :eval-lock eval-lock
                                                                   :eval-context eval-context
                                                                   :out-fn out-fn)]
                                                     (try

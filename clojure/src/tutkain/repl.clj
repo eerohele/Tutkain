@@ -64,6 +64,7 @@
   ([opts]
    (let [EOF (Object.)
          lock (Object.)
+         eval-lock (Object.)
          out *out*
          in *in*
          pretty-print (fn [message]
@@ -81,6 +82,7 @@
               send-over-backchannel :send-over-backchannel}
              (backchannel/open
                (assoc opts
+                 :eval-lock eval-lock
                  :xform-in #(assoc % :in in :repl-thread repl-thread)
                  :xform-out #(dissoc % :in)))]
          (binding [*out* (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
@@ -107,18 +109,19 @@
                        (when-not (identical? form EOF)
                          (try
                            (do
-                             (let [ret (eval form)]
-                               (when-not (= :repl/quit ret)
-                                 (set! *3 *2)
-                                 (set! *2 *1)
-                                 (set! *1 ret)
-                                 (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
-                                 (if backchannel-response?
-                                   (send-over-backchannel
-                                     (assoc response :tag :ret :val (format/pp-str ret)))
-                                   (pretty-print ret))
-                                 (flush)
-                                 true)))
+                             (locking eval-lock
+                               (let [ret (eval form)]
+                                 (when-not (= :repl/quit ret)
+                                   (set! *3 *2)
+                                   (set! *2 *1)
+                                   (set! *1 ret)
+                                   (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
+                                   (if backchannel-response?
+                                     (send-over-backchannel
+                                       (assoc response :tag :ret :val (format/pp-str ret)))
+                                     (pretty-print ret))
+                                   (flush)
+                                   true))))
                            (catch Throwable ex
                              (set! *e ex)
                              (swap! eval-context assoc #'*e *e)
