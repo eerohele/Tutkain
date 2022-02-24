@@ -18,9 +18,11 @@ REPL_VIEW_DEFAULT_SETTINGS = {
     "highlight_line": False,
     "line_numbers": False,
     "draw_indent_guides": False,
+    "gutter": True,
 }
 
 INTERNAL_SETTINGS = {
+    "gutter",
     "tutkain_repl_client_id",
     "tutkain_repl_view_dialect",
     "tutkain_repl_host",
@@ -121,7 +123,7 @@ def create_tap_panel(view):
         panel = window.create_output_panel(name)
 
     panel.settings().set("line_numbers", False)
-    panel.settings().set("gutter", False)
+    panel.settings().set("gutter", True)
     panel.settings().set("is_widget", True)
     panel.settings().set("scroll_past_end", False)
     panel.assign_syntax("REPL (Tutkain).sublime-syntax")
