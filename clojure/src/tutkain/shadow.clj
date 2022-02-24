@@ -419,7 +419,7 @@
               (send-over-backchannel
                 {:tag :err
                  :ns (str ns)
-                 :val (str text "\n")
+                 :val (str (.trim text) "\n")
                  :form (:source read-result)}))
 
             :repl-stdout
