@@ -119,7 +119,5 @@ def on_activated(window, view):
         client := get_client(window, dialect)
     ):
         status.set_connection_status(view, client)
-
-        view.set_status("0tutkain_current_namespace", namespace.name(view) or namespace.default(dialect))
     else:
         status.erase_connection_status(view)

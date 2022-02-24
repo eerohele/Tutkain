@@ -161,6 +161,14 @@ class TutkainClearOutputViewCommand(WindowCommand):
             inline.clear(self.window.active_view())
             view.settings().set("tutkain_repl_indicators", [])
             view.erase_regions("tutkain_repl_indicators")
+            view.settings().set("tutkain_tap_indicators", [])
+            view.erase_regions("tutkain_tap_indicators")
+            view.settings().set("tutkain_repl_indicators_ret", [])
+            view.erase_regions("tutkain_repl_indicators_ret")
+            view.settings().set("tutkain_repl_indicators_out", [])
+            view.erase_regions("tutkain_repl_indicators_out")
+            view.settings().set("tutkain_repl_indicators_err", [])
+            view.erase_regions("tutkain_repl_indicators_err")
 
 
     def run(self, views=["tap", "repl"]):
@@ -348,9 +356,6 @@ class TutkainEvaluateCommand(TextCommand):
         def handler(response):
             progress.stop()
             window.status_message("[Tutkain] Evaluating view... done.")
-            # Switch to current namespace after loading view
-            if not response.get(edn.Keyword("exception")) and ns:
-                client.evaluate(f"(in-ns '{ns})")
 
         progress.start("[Tutkain] Evaluating view...")
 

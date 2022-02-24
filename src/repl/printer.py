@@ -40,20 +40,73 @@ def print_loop(view, q):
         while item := q.get():
             if item["target"] == "input":
                 append_to_view(view, item["val"])
+                l = len(item["val"])
                 indicators = view.settings().get("tutkain_repl_indicators", [])
-                indicators.append(sublime.Region(view.size() - 1, view.size() - 1).to_tuple())
+                indicators.append(sublime.Region(view.size() - l, view.size() - l).to_tuple())
                 view.settings().set("tutkain_repl_indicators", indicators)
 
                 view.add_regions(
                     "tutkain_repl_indicators",
                     list(map(lambda x: sublime.Region(x[0], x[1]), view.settings().get("tutkain_repl_indicators"))),
-                    scope="string",
-                    icon="Packages/Tutkain/chevron.png", flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
+                    scope="source",
+                    icon="Packages/Tutkain/chevron-right.png", flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
                 )
             elif item["target"] == "tap":
                 append_to_tap_panel(view, item["val"])
+                l = len(item["val"])
+                indicators = view.settings().get("tutkain_tap_indicators", [])
+                indicators.append(sublime.Region(view.size() - l, view.size() - l).to_tuple())
+                view.settings().set("tutkain_tap_indicators", indicators)
+
+                view.add_regions(
+                    "tutkain_tap_indicators",
+                    list(map(lambda x: sublime.Region(x[0], x[1]), view.settings().get("tutkain_tap_indicators"))),
+                    scope="source",
+                    icon="Packages/Tutkain/tap.png", flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
+                )
             elif item["target"] == "view":
                 append_to_view(view, item["val"])
+                l = len(item["val"])
+
+                if item.get("tag") == "err":
+                    indicators = view.settings().get("tutkain_repl_indicators_err", []) or []
+                    indicators.append(sublime.Region(view.size() - l, view.size() - l).to_tuple())
+                    view.settings().set("tutkain_repl_indicators_err", indicators)
+                    scope = "region.redish"
+
+                    icon = "Packages/Tutkain/chevron-left.png"
+                    view.add_regions(
+                        "tutkain_repl_indicators_err",
+                        list(map(lambda x: sublime.Region(x[0], x[1]), view.settings().get("tutkain_repl_indicators_err"))),
+                        scope=scope,
+                        icon=icon, flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
+                    )
+                elif item.get("tag") == "out":
+                    pass
+                    # indicators = view.settings().get("tutkain_repl_indicators_out", [])
+                    # indicators.append(sublime.Region(view.size() - l, view.size() - l).to_tuple())
+                    # view.settings().set("tutkain_repl_indicators_out", indicators)
+                    # scope = "source"
+                    # icon = "Packages/Tutkain/circle.png"
+                    # view.add_regions(
+                    #     "tutkain_repl_indicators_out",
+                    #     list(map(lambda x: sublime.Region(x[0], x[1]), view.settings().get("tutkain_repl_indicators_out"))),
+                    #     scope=scope,
+                    #     icon=icon, flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
+                    # )
+                else:
+                    indicators = view.settings().get("tutkain_repl_indicators_ret", [])
+                    indicators.append(sublime.Region(view.size() - l, view.size() - l).to_tuple())
+                    view.settings().set("tutkain_repl_indicators_ret", indicators)
+                    scope = "source"
+                    icon = "Packages/Tutkain/chevron-left.png"
+                    view.add_regions(
+                        "tutkain_repl_indicators_ret",
+                        list(map(lambda x: sublime.Region(x[0], x[1]), view.settings().get("tutkain_repl_indicators_ret"))),
+                        scope=scope,
+                        icon=icon, flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
+                    )
+
             elif item["target"] == "clipboard":
                 sublime.set_clipboard(item["val"])
                 sublime.active_window().status_message("[Tutkain] Evaluation result copied to clipboard.")

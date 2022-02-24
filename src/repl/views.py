@@ -17,6 +17,7 @@ REPL_VIEW_DEFAULT_SETTINGS = {
     "scroll_past_end": 0.5,
     "highlight_line": False,
     "line_numbers": False,
+    "draw_indent_guides": False,
     "gutter": True,
 }
 

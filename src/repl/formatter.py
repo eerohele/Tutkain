@@ -33,11 +33,11 @@ def inline(point, view_id, val):
 # This is probably somewhat evil, but the performance is *so*
 # much better than with view.add_regions.
 def out_string(val):
-    return {"target": "view", "val": '⁣' + val + '⁣'}
+    return {"target": "view", "tag": "out", "val": '⁣' + val + '⁣'}
 
 
 def err_string(val):
-    return {"target": "view", "val": '⁣⁣' + val + '⁣⁣'}
+    return {"target": "view", "tag": "err", "val": '⁣⁣' + val + '⁣⁣'}
 
 
 def format(item):
