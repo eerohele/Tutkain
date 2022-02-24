@@ -300,7 +300,7 @@ class JVMClient(Client):
         }, lambda _: None)
 
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.print(edn.kwmap({"tag": edn.Keyword("ret"), "val": code + "\n"}))
+        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
 
         if self.has_backchannel():
             self.backchannel.send(

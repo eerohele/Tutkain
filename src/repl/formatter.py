@@ -14,6 +14,10 @@ def clipboard(val):
     return {"target": "clipboard", "val": val}
 
 
+def input(val):
+    return {"target": "input", "val": val}
+
+
 def inline(point, view_id, val):
     return {
         "target": "inline",
@@ -45,6 +49,8 @@ def format(item):
 
         if tag == edn.Keyword("tap"):
             return tap(val)
+        elif tag == edn.Keyword("in"):
+            return input(val)
         else:
             output = item.get(edn.Keyword("output"), edn.Keyword("view"))
 

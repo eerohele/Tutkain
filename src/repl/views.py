@@ -17,7 +17,7 @@ REPL_VIEW_DEFAULT_SETTINGS = {
     "scroll_past_end": 0.5,
     "highlight_line": False,
     "line_numbers": False,
-    "gutter": False,
+    "gutter": True,
 }
 
 INTERNAL_SETTINGS = {
@@ -121,7 +121,7 @@ def create_tap_panel(view):
         panel = window.create_output_panel(name)
 
     panel.settings().set("line_numbers", False)
-    panel.settings().set("gutter", False)
+    panel.settings().set("gutter", True)
     panel.settings().set("is_widget", True)
     panel.settings().set("scroll_past_end", False)
     panel.assign_syntax("REPL (Tutkain).sublime-syntax")

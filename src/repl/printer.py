@@ -38,7 +38,19 @@ def print_loop(view, q):
         log.debug({"event": "thread/start"})
 
         while item := q.get():
-            if item["target"] == "tap":
+            if item["target"] == "input":
+                append_to_view(view, item["val"])
+                indicators = view.settings().get("tutkain_repl_indicators", [])
+                indicators.append(sublime.Region(view.size() - 1, view.size() - 1).to_tuple())
+                view.settings().set("tutkain_repl_indicators", indicators)
+
+                view.add_regions(
+                    "tutkain_repl_indicators",
+                    list(map(lambda x: sublime.Region(x[0], x[1]), view.settings().get("tutkain_repl_indicators"))),
+                    scope="string",
+                    icon="Packages/Tutkain/chevron.png", flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
+                )
+            elif item["target"] == "tap":
                 append_to_tap_panel(view, item["val"])
             elif item["target"] == "view":
                 append_to_view(view, item["val"])

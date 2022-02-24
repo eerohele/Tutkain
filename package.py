@@ -159,6 +159,8 @@ class TutkainClearOutputViewCommand(WindowCommand):
             view.run_command("right_delete")
             view.set_read_only(True)
             inline.clear(self.window.active_view())
+            view.settings().set("tutkain_repl_indicators", [])
+            view.erase_regions("tutkain_repl_indicators")
 
 
     def run(self, views=["tap", "repl"]):
