@@ -5,7 +5,7 @@ def set_connection_status(view, client):
     if view and dialects.for_view(view):
         view.set_status(
             "tutkain_connection_status",
-            f"{client.host}:{client.port} ({dialects.name(client.dialect)})"
+            f"🟢 {client.host}:{client.port} ({dialects.name(client.dialect)})"
         )
 
 
