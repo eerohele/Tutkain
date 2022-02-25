@@ -194,7 +194,7 @@ class Client(ABC):
     def eval_context_message(self, options):
         message = {
             "op": edn.Keyword("set-eval-context"),
-            "file": options.get("file", "NO_SOURCE_FILE"),
+            "file": options.get("file", "NO_SOURCE_FILE") or "NO_SOURCE_FILE",
             "line": options.get("line", 0) + 1,
             "column": options.get("column", 0) + 1,
         }

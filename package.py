@@ -368,7 +368,7 @@ class TutkainEvaluateCommand(TextCommand):
         else:
             state.focus_active_runtime_view(self.view.window(), dialect)
 
-            options = {}
+            options = {"file": self.view.file_name()}
 
             if output == "clipboard":
                 options["response"] = {"output": edn.Keyword("clipboard")}

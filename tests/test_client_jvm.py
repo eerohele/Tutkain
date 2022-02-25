@@ -1,6 +1,7 @@
 import sublime
 import queue
 import unittest
+import tempfile
 
 from Tutkain.api import edn
 from Tutkain.src import repl
@@ -34,6 +35,20 @@ class TestJVMClient(PackageTestCase):
 
     def get_print(self):
         return self.client.printq.get(timeout=5)
+
+    #@unittest.SkipTest
+    def test_eval_context_file(self):
+        file = f"{tempfile.gettempdir()}/my.clj"
+        self.view.retarget(file)
+        self.set_view_content("(inc 1)")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
+        self.eval_context(file=file)
+        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.server.send("user=> (inc 1)")
+        self.assertEquals(formatter.value("user=> (inc 1)\n"), self.get_print())
+        self.server.send("2")
+        self.assertEquals(formatter.value("2\n"), self.get_print())
 
     #@unittest.SkipTest
     def test_outermost(self):
