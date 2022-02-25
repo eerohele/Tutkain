@@ -106,6 +106,18 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals(formatter.value("84\n"), self.get_print())
 
     #@unittest.SkipTest
+    def test_ns_variable(self):
+        self.set_view_content("(ns foo.bar)")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"code": "(in-ns '${ns})"})
+        self.eval_context()
+        self.assertEquals("(in-ns 'foo.bar)\n", self.server.recv())
+        self.server.send("user=> (in-ns 'foo.bar)")
+        self.assertEquals(formatter.value("user=> (in-ns 'foo.bar)\n"), self.get_print())
+        self.server.send("""#object[clojure.lang.Namespace 0x4a1c0752 "foo.bar"]""")
+        self.assertEquals(formatter.value("""#object[clojure.lang.Namespace 0x4a1c0752 "foo.bar"]\n"""), self.get_print())
+
+    #@unittest.SkipTest
     def test_parameterized(self):
         self.set_view_content("{:a 1} {:b 2}")
         self.set_selections((0, 0), (7, 7))
