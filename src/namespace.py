@@ -21,3 +21,7 @@ def forms(view):
 
 def default(dialect):
     return "cljs.user" if dialect == edn.Keyword("cljs") else "user"
+
+
+def name_or_default(view, dialect):
+    return name(view) or default(dialect)
