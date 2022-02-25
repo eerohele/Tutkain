@@ -105,7 +105,9 @@ def focus_active_runtime_view(window: Window, dialect: Dialect) -> None:
 
     if window and repl.views.get_dialect(get_active_output_view(window)) != dialect:
         # Focus the REPL view for the given dialect
-        window.focus_view(get_active_connection(window, dialect).view)
+        if connection := get_active_connection(window, dialect):
+            window.focus_view(connection.view)
+
         # Focus the view that was initially active
         window.focus_view(active_view)
 
