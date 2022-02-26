@@ -98,7 +98,7 @@
 (recv :backchannel)
 (xr/check! ::ret) ;; err
 (recv :backchannel)
-(xr/check! #{{:tag :out :val "foo"}})
+(xr/check! (spec/or :out #{{:tag :out :val "foo"}} :err ::ret))
 
 ;; set ns before eval
 (send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})

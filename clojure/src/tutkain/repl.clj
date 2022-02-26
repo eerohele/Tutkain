@@ -2,7 +2,6 @@
   (:require
    [clojure.main :as main]
    [clojure.pprint :as pprint]
-   [clojure.repl :as repl]
    [tutkain.backchannel :as backchannel]
    [tutkain.format :as format]))
 
@@ -17,43 +16,6 @@
 (defmacro switch-ns
   [namespace]
   `(or (some->> '~namespace find-ns ns-name in-ns .name) (ns ~namespace)))
-
-(defn pst
-  "Like clojure.repl/pst, but doesn't print in a doseq so as to be faster and
-  to avoid interleaving.
-
-  Adapted from clojure.repl/pst:
-
-  https://github.com/clojure/clojure/blob/5451cee06b9e31513a19e596e4e155d1f08d2a8d/src/clj/clojure/repl.clj#L240-L268"
-  ([] (pst 12))
-  ([e-or-depth]
-   (if (instance? Throwable e-or-depth)
-     (pst e-or-depth 12)
-     (when-let [e *e]
-       (pst (repl/root-cause e) e-or-depth))))
-  ([^Throwable e depth]
-   (let [sb (StringBuffer.)]
-     (binding [*out* *err*]
-       (when (#{:read-source :macro-syntax-check :macroexpansion :compile-syntax-check :compilation}
-              (-> e ex-data :clojure.error/phase))
-         (.append sb "Note: The following stack trace applies to the reader or compiler, your code was not executed.\n"))
-       (.append sb (str (-> e class .getSimpleName) " "
-                     (.getMessage e)
-                     (when-let [info (ex-data e)] (str " " (pr-str info)))
-                     \newline))
-       (let [st (.getStackTrace e)
-             cause (.getCause e)]
-         (doseq [el (take depth
-                      (remove #(#{"clojure.lang.RestFn" "clojure.lang.AFn"} (.getClassName %))
-                        st))]
-           (.append sb (str \tab (repl/stack-element-str el) \newline)))
-         (print (str sb))
-         (flush)
-         (when cause
-           (println "Caused by:")
-           (pst cause (min depth
-                        (+ 2 (- (count (.getStackTrace cause))
-                               (count st)))))))))))
 
 (defn ^:private read-in-context
   "Given an eval context and a LineNumberingPushbackReader, read a form from
@@ -98,9 +60,16 @@
              (backchannel/open
                (assoc opts
                  :xform-in #(assoc % :in in :repl-thread repl-thread)
-                 :xform-out #(dissoc % :in)))]
-         (binding [*out* (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
-                   *err* (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
+                 :xform-out #(dissoc % :in)))
+             ;; Prevent stdout/stderr from interleaving with eval results by
+             ;; binding *out* and *err* such that they write into auxiliary
+             ;; PrintWriters that send strings to client via backchannel, then
+             ;; flush said auxiliary PrintWriters before returning eval result
+             ;; to client.
+             out-writer (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
+             err-writer (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)]
+         (binding [*out* (PrintWriter-on #(.write out-writer %) nil)
+                   *err* (PrintWriter-on #(.write err-writer %) nil)
                    *print* pretty-print]
            (try
              (pretty-print {:greeting (str "Clojure " (clojure-version) "\n")
@@ -119,6 +88,9 @@
                        (when-not (identical? form ::EOF)
                          (try
                            (let [ret (eval form)]
+                             (flush)
+                             (.flush out-writer)
+                             (.flush err-writer)
                              (when-not (= :repl/quit ret)
                                (set! *3 *2)
                                (set! *2 *1)
@@ -128,9 +100,11 @@
                                    (assoc response :tag :ret :val (format/pp-str ret)))
                                  (pretty-print ret))
                                (swap! eval-context assoc :thread-bindings (get-thread-bindings))
-                               (flush)
                                true))
                            (catch Throwable ex
+                             (flush)
+                             (.flush out-writer)
+                             (.flush err-writer)
                              (set! *e ex)
                              (send-over-backchannel
                                (merge response {:tag :err
@@ -138,9 +112,10 @@
                                                 :ns (str (.name *ns*))
                                                 :form string}))
                              (swap! eval-context assoc :thread-bindings (get-thread-bindings))
-                             (flush)
                              true)))))
                    (catch Throwable ex
+                     (.flush out-writer)
+                     (.flush err-writer)
                      (set! *e ex)
                      (send-over-backchannel
                        {:tag :ret
@@ -151,4 +126,6 @@
                      true))
                  (recur)))
              (finally
+               (.close out-writer)
+               (.close err-writer)
                (.close backchannel)))))))))
