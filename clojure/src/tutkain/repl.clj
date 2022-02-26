@@ -13,10 +13,6 @@
   "A function you can use as the :caught arg of clojure.main/repl."
   main/repl-caught)
 
-(defmacro switch-ns
-  [namespace]
-  `(or (some->> '~namespace find-ns ns-name in-ns .name) (ns ~namespace)))
-
 (defn ^:private read-in-context
   "Given an eval context and a LineNumberingPushbackReader, read a form from
   the reader in the context of the eval context thread bindings and return
