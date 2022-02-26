@@ -16,6 +16,8 @@ REPL_VIEW_DEFAULT_SETTINGS = {
     "auto_complete": False,
     "scroll_past_end": 0.5,
     "highlight_line": False,
+    "highlight_line_number": False,
+    "highlight_gutter": False,
     "line_numbers": False,
     "draw_indent_guides": False,
     "gutter": True,
