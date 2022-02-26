@@ -174,8 +174,6 @@ class TestJVMClient(PackageTestCase):
         response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "nil"})
         self.server.backchannel.send(response)
 
-        self.assertEquals(response, self.get_print())
-
     #@unittest.SkipTest
     def test_view_syntax_error(self):
         self.set_view_content("(ns foo.bar) (defn x [y] y")  # missing close paren
@@ -204,7 +202,6 @@ class TestJVMClient(PackageTestCase):
         })
 
         self.server.backchannel.send(response)
-        self.assertEquals(response, self.get_print())
 
     #@unittest.SkipTest
     def test_view_common(self):
@@ -225,8 +222,6 @@ class TestJVMClient(PackageTestCase):
 
         response = edn.kwmap({"id": id, "tag": edn.Keyword("ret"), "val": "#'baz.quux/x"})
         self.server.backchannel.send(response)
-
-        self.assertEquals(response, self.get_print())
 
     #@unittest.SkipTest
     def test_discard(self):
@@ -414,8 +409,6 @@ class TestJVMClient(PackageTestCase):
         self.server.backchannel.send(response)
         yield # Why?
 
-        self.assertEquals(ret("{:test 1, :pass 1, :fail 0, :error 0, :assert 1, :type :summary}"), self.get_print())
-
         self.assertEquals(
             [sublime.Region(78, 78)],
             test.regions(self.view, "passes")
@@ -474,7 +467,6 @@ class TestJVMClient(PackageTestCase):
         self.server.backchannel.send(response)
         yield # Why?
 
-        self.assertEquals(response, self.get_print())
         self.assertEquals(
             [sublime.Region(78, 78)],
             test.regions(self.view, "failures")
