@@ -1,9 +1,10 @@
 {
   // Toggle automatic namespace switching.
   //
-  // If true, Tutkain automatically switches your current Clojure(Script)
-  // namespace to the namespace defined by the last ns form in the current
-  // view, or "user" if none.
+  // If true, before evaluating a form, Tutkain automatically switches your
+  // current Clojure(Script) namespace to the namespace defined by the last ns
+  // form in the current view, or the default namespace for the current dialect
+  // (user for Clojure, cljs.user for ClojureScript) if none.
   "auto_switch_namespace": true,
 
   // Enable debug logging in Sublime Text console.

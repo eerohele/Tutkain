@@ -94,3 +94,14 @@ java.
     (> n 20) (- (first n) 20)
     :else 0))
 
+;; nested clojure.main/repl
+
+(require '[clojure.core.server :as server])
+(require '[tutkain.repl :refer [*print*]])
+
+(main/repl
+  :print *print*
+  :read server/repl-read)
+
+(inc 1)
+:repl/quit

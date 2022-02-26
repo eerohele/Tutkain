@@ -1,17 +1,13 @@
 (ns repl.cljs.shadow
+  (:refer-clojure :exclude [send])
   (:require
-   [clojure.edn :as edn]
    [clojure.core.server :as server]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as shadow.server]
    [shadow.cljs.devtools.api :as shadow.api]
    [tutkain.socket :as socket]
-   [tutkain.shadow :as shadow])
-  (:import
-   (clojure.lang LineNumberingPushbackReader)
-   (java.io StringReader)
-   (java.util.concurrent LinkedBlockingQueue TimeUnit)))
+   [tutkain.shadow :as shadow]))
 
 (spec/def ::tag #{:ret :err :out :tap})
 (spec/def ::val string?)
@@ -53,133 +49,94 @@
 
 (Thread/sleep 3000)
 
-(def rrecvq (LinkedBlockingQueue.))
-(def brecvq (LinkedBlockingQueue.))
+(def repl (socket/client :host "localhost" :port (.getLocalPort server)))
+(xr/on-exit #((:stop repl)))
 
-(def rsendq
-  (socket/client
-    :host "localhost"
-    :port (.getLocalPort server)
-    :recvq rrecvq))
+(def backchannel-addr ((:recv repl)))
 
-(defn rsend
-  [code]
-  (.put rsendq code))
+(def backchannel (socket/client :host (:host backchannel-addr) :port (:port backchannel-addr)))
+(xr/on-exit #((:stop backchannel)))
 
-(xr/on-exit #(rsend ::socket/quit))
+(defn recv
+  [channel]
+  (case channel
+    :repl ((:recv repl))
+    :backchannel ((:recv backchannel))))
 
-(defn read-forms
-  [code]
-  (let [EOF (Object.)]
-    (when-some [reader (some->> code StringReader. LineNumberingPushbackReader.)]
-      (->>
-        #(read {:eof EOF :read-cond :allow} reader)
-        (repeatedly)
-        (take-while #(not (identical? % EOF)))))))
+(defn send
+  [channel message]
+  (case channel
+    :repl ((:send repl) message)
+    :backchannel ((:send backchannel) message)))
 
-(defn rrecv
-  []
-  (-> rrecvq (.poll 1 TimeUnit/SECONDS) read-forms))
+(def timeout? (partial = ::socket/timeout))
 
-(defn brecv
-  []
-  (-> brecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+;; Smoke
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(inc 1))
+(recv :repl)
+(xr/check! #{2})
 
-(def backchannel-addr (first (rrecv)))
+;; Reading auto-resolved keywords
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'foo.bar :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(ns foo.bar))
+(recv :repl)
+(xr/check! nil?)
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'foo.bar :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl (binding [*ns* (create-ns 'foo.bar)] (read-string "::qux")))
+(recv :repl)
+(xr/check! #{:foo.bar/qux})
 
-(def bsendq
-  (socket/client
-    :host (:host backchannel-addr)
-    :port (:port backchannel-addr)
-    :recvq brecvq))
+;; Falling back to printing a string if eval result is not readable
+(send :backchannel {:op :set-eval-context :ns 'foo.bar.baz :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(ns foo.bar.baz (:import (goog.date DateTime))))
+(recv :repl)
+(xr/check! nil?)
+(send :backchannel {:op :set-eval-context :ns 'foo.bar.baz :file "NO_SOURCE_FILE" :line 2 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(DateTime.))
+(.readLine (:reader repl))
+(.readLine (:reader repl))
+(xr/check! (every-pred string? (complement empty?)))
 
-(defn bsend
-  [message]
-  (.put bsendq message))
-
-(xr/on-exit #(bsend ::socket/quit))
-
-(defmacro check-result!
-  [& forms]
-  `(xr/check! (into #{} '(~forms))))
-
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(inc 1))
-(rrecv)
-(check-result! cljs.user=> (inc 1))
-(rrecv)
-(check-result! 2)
-
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(ns foo.bar))
-(rrecv)
-(check-result! cljs.user=> (ns foo.bar))
-(rrecv)
-(check-result! nil)
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend (binding [*ns* (create-ns 'foo.bar)] (read-string "::qux")))
-(rrecv)
-(check-result! foo.bar=> :foo.bar/qux)
-(rrecv)
-(check-result! :foo.bar/qux)
-
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(ns foo.bar.baz (:import (goog.date DateTime))))
-(rrecv)
-(check-result! foo.bar=> (ns foo.bar.baz (:import (goog.date DateTime))))
-(rrecv)
-(check-result! nil)
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 2 :column 1 :id 1})
-(brecv)
-(rsend '(DateTime.))
-(rrecv)
-;; On Windows, shadow-cljs (or maybe Tutkain? not sure) sometimes doesn't keep
-;; up, and the ns here is cljs.user instead of foo.bar.baz. No idea why.
-(xr/check! #{'(foo.bar.baz=> (DateTime.))
-             '(cljs.user=> (DateTime.))})
-
-(.poll rrecvq 5 TimeUnit/SECONDS)
-(xr/check! string?)
-
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 3 :column 1 :id 1})
-(brecv)
-(rsend '(in-ns 'foo.bar.baz))
-(rrecv)
+;; in-ns (inadequate)
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 3 :column 1 :id 1})
+(recv :backchannel)
+(send :repl (read-string "(in-ns 'foo.bar.baz)"))
+(recv :repl)
 (xr/check! nil?)
 
-(bsend {:op :set-eval-context
-        :file "/my/path/app.cljs"
-        :line 1
-        :column 2
-        :response {:output :clipboard}
-        :id 1})
-(brecv)
-(rsend '(js/parseInt "42"))
-(rrecv)
-(xr/check! nil?)
-(brecv)
+(send :backchannel {:op :set-eval-context
+                    :file "/my/path/app.cljs"
+                    :line 1
+                    :column 2
+                    :response {:output :clipboard}
+                    :id 1})
+
+(recv :backchannel)
+(send :repl '(js/parseInt "42"))
+(recv :repl)
+(xr/check! timeout?)
+(recv :backchannel)
 (xr/check! #{{:output :clipboard :tag :ret :val "42"}})
 
-(bsend {:op :set-eval-context
-        :file "/my/path/app.cljs"
-        :line 3
-        :column 4
-        :id 2})
-(brecv)
-(rsend '(js/parseInt "84"))
-(rrecv)
-(check-result! foo.bar.baz=> (js/parseInt "84"))
-(rrecv)
-(check-result! 84)
+(send :backchannel {:op :set-eval-context
+                    :file "/my/path/app.cljs"
+                    :line 3
+                    :column 4
+                    :id 2})
 
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend :repl/quit)
-(rrecv)
-(check-result! foo.bar.baz=> :repl/quit)
-(rrecv)
-(xr/check! nil?)
+(recv :backchannel)
+(send :repl '(js/parseInt "84"))
+(recv :repl)
+(xr/check! #{84})
+
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl :repl/quit)
+(recv :repl)
+(xr/check! #{::socket/EOF})

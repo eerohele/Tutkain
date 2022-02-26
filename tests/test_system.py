@@ -11,6 +11,7 @@ import sys
 import textwrap
 import types
 import unittesting
+import unittest
 
 
 class TestCase(unittesting.DeferrableTestCase):
@@ -84,7 +85,7 @@ class TestConnectDisconnect(TestCase):
     def disconnect(self, window):
         window.run_command("tutkain_disconnect")
 
-    def eval_context(self, backchannel, file="NO_SOURCE_FILE", line=1, column=1):
+    def eval_context(self, backchannel, ns=edn.Symbol("user"), file="NO_SOURCE_FILE", line=1, column=1):
         actual = edn.read(backchannel.recv())
         id = actual.get(edn.Keyword("id"))
 
@@ -92,28 +93,36 @@ class TestConnectDisconnect(TestCase):
              "id": id,
              "op": edn.Keyword("set-eval-context"),
              "file": file,
+             "ns": ns,
              "line": line,
              "column": column,
         })
 
         self.assertEquals(response, actual)
 
-        backchannel.send(edn.kwmap({
+        response = edn.kwmap({
             "id": id,
-            "file": file
-        }))
+            "file": file,
+            "thread-bindings": edn.kwmap({
+                "ns": ns,
+                "file": file
+            })
+        })
+
+        backchannel.send(response)
 
     def output_panel(self, window):
         return window.find_output_panel(repl.views.output_panel_name())
 
-    def dedent(self, string):
-        if string and string[0] == "\n":
-            string = string[1:]
-
-        return textwrap.dedent(string)
-
+    # FIXME: Remove, quite unnecessary
     def equals(self, expected, actual):
-        return self.dedent(expected) == actual
+        return expected == actual
+
+    def gutter_marks(self, view, tag):
+        if view is None:
+            []
+        else:
+            return view.get_regions(f"tutkain_gutter_marks/{tag}")
 
     #@unittest.SkipTest
     def test_smoke_view(self):
@@ -125,17 +134,16 @@ class TestConnectDisconnect(TestCase):
         view.run_command("tutkain_evaluate")
         self.eval_context(server.backchannel)
         self.assertEquals("(inc 1)\n", server.recv())
-        server.send("user=> (inc 1)")
         server.send("2")
+        output_view = state.get_active_connection(window, edn.Keyword("clj")).view
 
         yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            """,
-            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
+            self.content(output_view)
         )
+
+        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(output_view, "in")
+        yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(output_view, "ret")
 
         self.disconnect(window)
         self.assertEquals(":repl/quit\n", server.recv())
@@ -171,14 +179,16 @@ class TestConnectDisconnect(TestCase):
         self.set_view_content(view, "(tap> 42)")
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
-        server.send("user=> true")
         # FIXME: Newline after val
         server.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42"}))
+        output_view = state.get_active_connection(window, edn.Keyword("clj")).view
 
         yield lambda: self.equals(
-            """Clojure 1.11.0-alpha1\nuser=> true\n""",
-            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\n""",
+            self.content(output_view)
         )
+
+        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(output_view, "in")
 
         yield lambda: self.equals(
             """""",
@@ -200,21 +210,21 @@ class TestConnectDisconnect(TestCase):
         self.set_view_content(view, "(tap> 42)")
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
-        server.send("user=> true")
         # FIXME: Newline after val
-        server.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42"}))
+        server.send("true")
+        server.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42\n"}))
 
         yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> true
-            42""", self.content(self.output_panel(window))
+            """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\ntrue\n42\n""",
+            self.content(self.output_panel(window))
         ) or self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            42user=> true
-            """, self.content(self.output_panel(window))
+            """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\42\ntrue\n""",
+            self.content(self.output_panel(window))
         )
+
+        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
+        yield lambda: [sublime.Region(34, 34)] == self.gutter_marks(self.output_panel(window), "ret")
+        yield lambda: [sublime.Region(39, 39)] == self.gutter_marks(self.output_panel(window), "tap")
 
         self.disconnect(window)
         self.assertEquals(":repl/quit\n", server.recv())
@@ -231,13 +241,16 @@ class TestConnectDisconnect(TestCase):
         self.set_view_content(view, "(tap> 42)")
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
-        server.send("user=> true")
-        server.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42"}))
+        server.send("true")
+        server.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42\n"}))
 
         yield lambda: self.equals(
-            """Clojure 1.11.0-alpha1\nuser=> true\n""",
+            """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\ntrue\n""",
             self.content(self.output_panel(window))
         )
+
+        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
+        yield lambda: [sublime.Region(34, 34)] == self.gutter_marks(self.output_panel(window), "ret")
 
         self.disconnect(window)
         self.assertEquals(":repl/quit\n", server.recv())
@@ -255,16 +268,15 @@ class TestConnectDisconnect(TestCase):
         view.run_command("tutkain_evaluate")
         self.eval_context(server.backchannel)
         self.assertEquals("(inc 1)\n", server.recv())
-        server.send("user=> (inc 1)")
         server.send("2")
 
         yield lambda: self.equals(
-            """
-            Clojure 1.11.0-alpha1
-            user=> (inc 1)
-            2
-            """, self.content(self.output_panel(window))
+            """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
+            self.content(self.output_panel(window))
         )
+
+        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
+        yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(self.output_panel(window), "ret")
 
         self.disconnect(window)
         self.assertEquals(":repl/quit\n", server.recv())
@@ -274,7 +286,7 @@ class TestConnectDisconnect(TestCase):
 
     #@unittest.SkipTest
     def test_panel_multiple(self):
-        if "win" not in sys.platform:
+        if not sys.platform.startswith("win"):
             window = self.make_window()
             jvm_view = self.make_scratch_view(window)
             jvm_server = self.connect(window, {"dialect": "clj", "output": "panel"})
@@ -285,16 +297,15 @@ class TestConnectDisconnect(TestCase):
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
             self.assertEquals("(inc 1)\n", jvm_server.recv())
-            jvm_server.send("user=> (inc 1)")
             jvm_server.send("2")
 
             yield lambda: self.equals(
-                """
-                Clojure 1.11.0-alpha1
-                user=> (inc 1)
-                2
-                """, self.content(self.output_panel(window))
+                """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
+                self.content(self.output_panel(window))
             )
+
+            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
+            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(self.output_panel(window), "ret")
 
             js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
             js_server = self.connect(window, {"dialect": "cljs", "output": "panel", "build_id": "app"})
@@ -303,21 +314,24 @@ class TestConnectDisconnect(TestCase):
             self.set_selections(js_view, (0, 0))
 
             js_view.run_command("tutkain_evaluate")
-            self.eval_context(js_server.backchannel)
+            self.eval_context(js_server.backchannel, ns=edn.Symbol("cljs.user"))
             self.assertEquals("""(js/parseInt "42")\n""", js_server.recv())
-            js_server.send("""cljs.user=> (js/parseInt "42")""")
             js_server.send("42")
 
             yield lambda: self.equals(
-                """
-                Clojure 1.11.0-alpha1
-                user=> (inc 1)
-                2
-                ClojureScript 1.10.844
-                cljs.user=> (js/parseInt "42")
-                42
-                """, self.content(self.output_panel(window))
+                """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063ClojureScript 1.10.844\n\u2063(js/parseInt "42")\n42\n""",
+                self.content(self.output_panel(window))
             )
+
+            yield lambda: [
+                sublime.Region(24, 24),
+                sublime.Region(59, 59)
+            ] == self.gutter_marks(self.output_panel(window), "in")
+
+            yield lambda: [
+                sublime.Region(32, 32),
+                sublime.Region(78, 78)
+            ] == self.gutter_marks(self.output_panel(window), "ret")
 
             self.disconnect(window)
             yield unittesting.AWAIT_WORKER
@@ -337,7 +351,7 @@ class TestConnectDisconnect(TestCase):
 
     #@unittest.SkipTest
     def test_panel_multiple_same_runtime(self):
-        if "win" not in sys.platform:
+        if not sys.platform.startswith("win"):
             window = self.make_window()
             jvm_view_1 = self.make_scratch_view(window)
             jvm_1_server = self.connect(window, {"dialect": "clj", "output": "panel"})
@@ -348,16 +362,15 @@ class TestConnectDisconnect(TestCase):
             jvm_view_1.run_command("tutkain_evaluate")
             self.eval_context(jvm_1_server.backchannel)
             self.assertEquals("(inc 1)\n", jvm_1_server.recv())
-            jvm_1_server.send("user=> (inc 1)")
             jvm_1_server.send("2")
 
             yield lambda: self.equals(
-                """
-                Clojure 1.11.0-alpha1
-                user=> (inc 1)
-                2
-                """, self.content(self.output_panel(window))
+                """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
+                self.content(self.output_panel(window))
             )
+
+            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
+            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(self.output_panel(window), "ret")
 
             jvm_view_2 = self.make_scratch_view(window)
             jvm_2_server = self.connect(window, {"dialect": "clj", "output": "panel"})
@@ -368,19 +381,22 @@ class TestConnectDisconnect(TestCase):
             jvm_view_2.run_command("tutkain_evaluate")
             self.eval_context(jvm_2_server.backchannel)
             self.assertEquals("""(inc 2)\n""", jvm_2_server.recv())
-            jvm_2_server.send("""user=> (inc 2)""")
             jvm_2_server.send("3")
 
             yield lambda: self.equals(
-                """
-                Clojure 1.11.0-alpha1
-                user=> (inc 1)
-                2
-                Clojure 1.11.0-alpha1
-                user=> (inc 2)
-                3
-                """, self.content(self.output_panel(window))
+                """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063Clojure 1.11.0-alpha1\n\u2063(inc 2)\n3\n""",
+                self.content(self.output_panel(window))
             )
+
+            yield lambda: [
+                sublime.Region(24, 24),
+                sublime.Region(58, 58)
+            ] == self.gutter_marks(self.output_panel(window), "in")
+
+            yield lambda: [
+                sublime.Region(32, 32),
+                sublime.Region(66, 66)
+            ] == self.gutter_marks(self.output_panel(window), "ret")
 
             self.disconnect(window)
 
@@ -396,16 +412,27 @@ class TestConnectDisconnect(TestCase):
             jvm_view_2.run_command("tutkain_evaluate")
             self.eval_context(jvm_2_server.backchannel)
             self.assertEquals("(inc 3)\n", jvm_2_server.recv())
-            jvm_2_server.send("user=> (inc 3)")
             jvm_2_server.send("4")
 
             yield lambda: self.equals(
-                f"""Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nClojure 1.11.0-alpha1\nuser=> (inc 2)\n3\nuser=> (inc 3)\n⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1_server.host}:{jvm_1_server.port}.\n⁣⁣4\n""",
+                f"""\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063Clojure 1.11.0-alpha1\n\u2063(inc 2)\n3\n\u2063\u2063[Tutkain] Disconnected from Clojure runtime at {jvm_1_server.host}:{jvm_1_server.port}.\n\u2063\u2063(inc 3)\n4\n""",
                 self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
             ) or self.equals(
-                f"""Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nClojure 1.11.0-alpha1\nuser=> (inc 2)\n3\n⁣⁣[Tutkain] Disconnected from Clojure runtime at {jvm_1_server.host}:{jvm_1_server.port}.\n⁣⁣user=> (inc 3)\n4\n""",
+                f"""\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063Clojure 1.11.0-alpha1\n\u2063(inc 2)\n3\n(inc 3)\n\u2063\u2063[Tutkain] Disconnected from Clojure runtime at {jvm_1_server.host}:{jvm_1_server.port}.\n\u2063\u20634\n""",
                 self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
             )
+
+            yield lambda: [
+                sublime.Region(24, 24),
+                sublime.Region(58, 58),
+                sublime.Region(136, 136),
+            ] == self.gutter_marks(self.output_panel(window), "in")
+
+            yield lambda: [
+                sublime.Region(32, 32),
+                sublime.Region(66, 66),
+                sublime.Region(144, 144)
+            ] == self.gutter_marks(self.output_panel(window), "ret")
 
             self.disconnect(window)
             jvm_view_2.window().run_command("select")
@@ -418,7 +445,7 @@ class TestConnectDisconnect(TestCase):
 
     #@unittest.SkipTest
     def test_view_multiple(self):
-        if "win" not in sys.platform:
+        if not sys.platform.startswith("win"):
             window = self.make_window()
             jvm_view = self.make_scratch_view(window)
             jvm_server = self.connect(window, {"dialect": "clj", "output": "view"})
@@ -429,16 +456,16 @@ class TestConnectDisconnect(TestCase):
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
             self.assertEquals("(inc 1)\n", jvm_server.recv())
-            jvm_server.send("user=> (inc 1)")
             jvm_server.send("2")
+            output_view = state.get_active_connection(window, edn.Keyword("clj")).view
 
             yield lambda: self.equals(
-                """
-                Clojure 1.11.0-alpha1
-                user=> (inc 1)
-                2
-                """, self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+                """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
+                self.content(output_view)
             )
+
+            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(output_view, "in")
+            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(output_view, "ret")
 
             js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
             js_server = self.connect(window, {"dialect": "cljs", "output": "view", "build_id": "app"})
@@ -447,18 +474,18 @@ class TestConnectDisconnect(TestCase):
             self.set_selections(js_view, (0, 0))
 
             js_view.run_command("tutkain_evaluate")
-            self.eval_context(js_server.backchannel)
+            self.eval_context(js_server.backchannel, ns=edn.Symbol("cljs.user"))
             self.assertEquals("""(js/parseInt "42")\n""", js_server.recv())
-            js_server.send("""cljs.user=> (js/parseInt "42")""")
             js_server.send("42")
+            output_view = state.get_active_connection(window, edn.Keyword("cljs")).view
 
             yield lambda: self.equals(
-                """
-                ClojureScript 1.10.844
-                cljs.user=> (js/parseInt "42")
-                42
-                """, self.content(state.get_active_connection(window, edn.Keyword("cljs")).view)
+                """\u2063ClojureScript 1.10.844\n\u2063(js/parseInt "42")\n42\n""",
+                self.content(output_view)
             )
+
+            yield lambda: [sublime.Region(25, 25)] == self.gutter_marks(output_view, "in")
+            yield lambda: [sublime.Region(44, 44)] == self.gutter_marks(output_view, "ret")
 
             self.disconnect(window)
             # Move down to select ClojureScript runtime
@@ -476,18 +503,23 @@ class TestConnectDisconnect(TestCase):
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
             self.assertEquals("(inc 2)\n", jvm_server.recv())
-            jvm_server.send("user=> (inc 2)")
             jvm_server.send("3")
+            output_view = state.get_active_connection(window, edn.Keyword("clj")).view
 
             yield lambda: self.equals(
-                """
-                Clojure 1.11.0-alpha1
-                user=> (inc 1)
-                2
-                user=> (inc 2)
-                3
-                """, self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+                """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n(inc 2)\n3\n""",
+                self.content(output_view)
             )
+
+            yield lambda: [
+                sublime.Region(24, 24),
+                sublime.Region(34, 34)
+            ] == self.gutter_marks(output_view, "in")
+
+            yield lambda: [
+                sublime.Region(32, 32),
+                sublime.Region(42, 42)
+            ] == self.gutter_marks(output_view, "ret")
 
             self.disconnect(window)
             # Don't need to select because there's only one remaining runtime
@@ -500,7 +532,7 @@ class TestConnectDisconnect(TestCase):
 
     #@unittest.SkipTest
     def test_panel_and_view(self):
-        if "win" not in sys.platform:
+        if not sys.platform.startswith("win"):
             window = self.make_window()
             jvm_view = self.make_scratch_view(window)
             jvm_server = self.connect(window, {"dialect": "clj", "output": "panel"})
@@ -511,11 +543,10 @@ class TestConnectDisconnect(TestCase):
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
             self.assertEquals("(inc 1)\n", jvm_server.recv())
-            jvm_server.send("user=> (inc 1)")
             jvm_server.send("2")
 
             yield lambda: self.equals(
-                """Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\n""",
+                """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
                 self.content(self.output_panel(window))
             )
 
@@ -526,15 +557,18 @@ class TestConnectDisconnect(TestCase):
             self.set_selections(js_view, (0, 0))
 
             js_view.run_command("tutkain_evaluate")
-            self.eval_context(js_server.backchannel)
+            self.eval_context(js_server.backchannel, ns=edn.Symbol("cljs.user"))
             self.assertEquals("""(js/parseInt "42")\n""", js_server.recv())
-            js_server.send("""cljs.user=> (js/parseInt "42")""")
             js_server.send("42")
+            output_view = state.get_active_connection(window, edn.Keyword("cljs")).view
 
             yield lambda: self.equals(
-                """ClojureScript 1.10.844\ncljs.user=> (js/parseInt "42")\n42\n""",
-                self.content(state.get_active_connection(window, edn.Keyword("cljs")).view)
+                """\u2063ClojureScript 1.10.844\n\u2063(js/parseInt "42")\n42\n""",
+                self.content(output_view)
             )
+
+            yield lambda: [sublime.Region(25, 25)] == self.gutter_marks(output_view, "in")
+            yield lambda: [sublime.Region(44, 44)] == self.gutter_marks(output_view, "ret")
 
             self.disconnect(window)
 
@@ -552,11 +586,10 @@ class TestConnectDisconnect(TestCase):
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
             self.assertEquals("(inc 2)\n", jvm_server.recv())
-            jvm_server.send("user=> (inc 2)")
             jvm_server.send("3")
 
             yield lambda: self.equals(
-                """Clojure 1.11.0-alpha1\nuser=> (inc 1)\n2\nuser=> (inc 2)\n3\n""",
+                """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n(inc 2)\n3\n""",
                 self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
             )
 

@@ -139,7 +139,7 @@ class PackageTestCase(TestCase):
         for begin, end in pairs:
             self.view.sel().add(sublime.Region(begin, end))
 
-    def eval_context(self, file="NO_SOURCE_FILE", line=1, column=1):
+    def eval_context(self, file="NO_SOURCE_FILE", ns=edn.Symbol("user"), line=1, column=1):
         actual = edn.read(self.server.backchannel.recv())
 
         id = actual.get(edn.Keyword("id"))
@@ -148,6 +148,7 @@ class PackageTestCase(TestCase):
              "id": id,
              "op": edn.Keyword("set-eval-context"),
              "file": file,
+             "ns": ns,
              "line": line,
              "column": column,
         })
@@ -158,6 +159,7 @@ class PackageTestCase(TestCase):
             "id": id,
             "file": file,
             "thread-bindings": edn.kwmap({
+                "ns": ns,
                 "file": file
             })
         })

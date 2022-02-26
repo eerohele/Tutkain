@@ -34,17 +34,34 @@
   (when-let [field (.getDeclaredField LineNumberingPushbackReader "_columnNumber")]
     (-> ^Field field (doto (.setAccessible true)) (.set reader column))))
 
+(defn ^:private find-or-create-ns
+  "Given a namespace symbol, if the namespace named by the symbol already
+  exists, return it.
+
+  Otherwise, create a new namespace named by the symbol and refer all public
+  vars clojure.core into it."
+  [ns]
+  (or (some-> ns find-ns) (binding [*ns* (create-ns (or ns 'user))] (refer-clojure) *ns*)))
+
 (defmethod handle :set-eval-context
-  [{:keys [^LineNumberingPushbackReader eval-context in file line column response]
+  [{:keys [^LineNumberingPushbackReader eval-context in ns file line column response]
     :or {line 0 column 0 response {}} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
   (let [file (or file "NO_SOURCE_PATH")
         source-path (or (some-> file File. .getName) "NO_SOURCE_FILE")]
-    (reset! eval-context
-      {:thread-bindings {#'*file* file #'*source-path* source-path} :response response})
+    (swap! eval-context
+      (fn [ctx]
+        (-> ctx
+          (assoc :response response)
+          (assoc-in [:thread-bindings #'*file*] file)
+          (assoc-in [:thread-bindings #'*source-path*] source-path)
+          (update-in [:thread-bindings #'*ns*] #(or (find-or-create-ns ns) % (the-ns 'user))))))
     (respond-to message
-      {:thread-bindings {:file file :source-path source-path} :response response})))
+      {:thread-bindings {:ns (some-> (get-in @eval-context [:thread-bindings #'*ns*]) ns-name)
+                         :file file
+                         :source-path source-path}
+       :response response})))
 
 (defmethod handle :interrupt
   [{:keys [^Thread repl-thread]}]
@@ -79,7 +96,7 @@
   (let [address (InetAddress/getByName ^String bind-address)
         socket (ServerSocket. port 0 address)
         lock (Object.)
-        eval-context (atom {:thread-bindings {}})
+        eval-context (atom {:thread-bindings {#'*ns* (the-ns 'user)}})
         eventual-send-fn (promise)
         msg-loop (bound-fn []
                    (try

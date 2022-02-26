@@ -1,17 +1,12 @@
 (ns repl.backchannel
   (:refer-clojure :exclude [send])
   (:require
-   [clojure.edn :as edn]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.backchannel :as backchannel]
    [tutkain.backchannel.test :refer [string->base64]]
    [tutkain.socket :as socket]
-   [tutkain.test])
-  (:import
-   (java.util.concurrent LinkedBlockingQueue TimeUnit)))
-
-(def recvq (LinkedBlockingQueue.))
+   [tutkain.test]))
 
 (let [{:keys [socket send-over-backchannel]} (backchannel/open {:port 1337})]
   (def backchannel socket)
@@ -19,16 +14,16 @@
 
 (xr/on-exit #(.close backchannel))
 (def port (.getLocalPort backchannel))
-(def sendq (socket/client :host "localhost" :port port :recvq recvq))
-(xr/on-exit #(.put sendq ::socket/quit))
+(def client (socket/client :host "localhost" :port port))
+(xr/on-exit #((:stop client)))
 
 (defn send
   [message]
-  (.put sendq message))
+  ((:send client) message))
 
 (defn recv
   []
-  (-> recvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
+  ((:recv client)))
 
 (send {:op :echo})
 

@@ -25,7 +25,7 @@
 (java/resolve-stacktrace (Throwable.))
 (xr/check! ::stacktrace)
 
-(def eval-context (atom {#'*e (Throwable.)}))
+(def eval-context (atom {:thread-bindings {#'*e (Throwable.)}}))
 
 (->
   {:op :resolve-stacktrace

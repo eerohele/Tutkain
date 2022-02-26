@@ -17,6 +17,9 @@
   (def remove-comments (remove #(string/starts-with? % "#")))
   (def split-by-whitespace (map #(string/split % #"\s+")))
 
+  (throw (ex-info "Boom!" {:a 1}))
+  (println "Hello, world!")
+
   (->>
     (read-file "/etc/hosts")
     (string/split-lines)

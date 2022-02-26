@@ -16,13 +16,16 @@
    (clojure.lang ExceptionInfo)))
 
 (defn ^:private read-one
-  [build-state reader]
+  [eval-context build-state reader]
   (try
     ;; FIXME: NO_SOURCE_FILE, use *source-path* from backchannel eval context?
     (let [in (readers/source-logging-push-back-reader reader 1 "NO_SOURCE_FILE")
+          _ (readers/unread in (readers/read-char in))
           eof (Object.)
           reader-opts {:eof eof :read-cond :allow :features #{:cljs}}
-          current-ns (get-in build-state [:repl-state :current-ns] 'user)
+          current-ns (or
+                       (some-> @eval-context :thread-bindings (get #'clojure.core/*ns*) ns-name)
+                       (get-in build-state [:repl-state :current-ns] 'user))
           build-id (:shadow.build/build-id build-state)
           compiler-env (api/compiler-env build-id)
           [form s] (binding [*ns* (create-ns current-ns)
@@ -34,7 +37,7 @@
                              reader/resolve-symbol identity]
                      (reader/read+string reader-opts in))
           eof? (identical? form eof)]
-      (-> {:eof? eof?} (cond-> (not eof?) (assoc :form form :source s))))
+      (-> {:eof? eof?} (cond-> (not eof?) (assoc :form form :source s :ns (ns-name current-ns)))))
     (catch Exception ex
       {:error? true
        :ex ex})))
@@ -124,7 +127,7 @@
         (loop []
           ;; wait until told to read
           (when (some? (async/<!! read-lock))
-            (let [{:keys [eof?] :as next} (read-one (some-> worker :state-ref deref :build-state) reader)]
+            (let [{:keys [eof?] :as next} (read-one eval-context (some-> worker :state-ref deref :build-state) reader)]
               (if eof?
                 (async/close! stdin)
                 ;; don't recur in case stdin was closed while in blocking read
@@ -152,15 +155,6 @@
               ([read-result]
                ;; (tap> [:repl-from-stdin read-result repl-state])
                (when (some? read-result)
-                 (when-not
-                     ;; FIXME: this also conceals user-issued in-ns calls
-                     (or (#{:inline :clipboard} (get-in @eval-context [:response :output]))
-                       (and (list? (:form read-result)) (= 'in-ns (first (:form read-result)))))
-                   (let [current-ns (or
-                                      (some-> (:ns repl-state) find-ns)
-                                      (some-> (get-in repl-state [:eval-result :eval-ns]) find-ns)
-                                      (the-ns 'cljs.user))]
-                     (println (format "%s=> %s" (ns-name current-ns) (:source read-result)))))
                  (let [{:keys [eof? error? ex source]} read-result]
                    (cond
                      eof?
@@ -202,7 +196,7 @@
                          (let [msg {:op :cljs-eval
                                     :to runtime-id
                                     :input {:code source
-                                            :ns (:ns repl-state)
+                                            :ns (:ns read-result (:ns repl-state))
                                             :repl true}}]
 
                            (async/>!! to-relay msg)
@@ -402,11 +396,10 @@
 
             :repl-result
             (fn [{:keys [read-result]} ret]
-              (when-not (and (list? (:form read-result)) (= 'in-ns (first (:form read-result))))
-                (let [response (:response @eval-context)]
-                  (if (#{:inline :clipboard} (:output response))
-                    (send-over-backchannel (assoc response :tag :ret :val ret))
-                    (out-fn ret)))))
+              (let [response (:response @eval-context)]
+                (if (#{:inline :clipboard} (:output response))
+                  (send-over-backchannel (assoc response :tag :ret :val ret))
+                  (out-fn ret))))
 
             :repl-val
             (fn [_ ret]

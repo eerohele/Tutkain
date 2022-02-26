@@ -151,12 +151,6 @@ class Client(ABC):
         - `column`: the column number the code is positioned at (default `0`)"""
         pass
 
-    @abstractmethod
-    def switch_namespace(self, ns):
-        """Given the name of a Clojure namespace as a string, ask the Clojure
-        runtime this client is connected to to switch to that namespace."""
-        pass
-
     def print(self, item):
         self.printq.put(formatter.format(item))
 
@@ -196,8 +190,11 @@ class Client(ABC):
             "op": edn.Keyword("set-eval-context"),
             "file": options.get("file", "NO_SOURCE_FILE") or "NO_SOURCE_FILE",
             "line": options.get("line", 0) + 1,
-            "column": options.get("column", 0) + 1,
+            "column": options.get("column", 0) + 1
         }
+
+        if ns := options.get("ns"):
+            message["ns"] = edn.Symbol(ns)
 
         if response := options.get("response"):
             message["response"] = edn.kwmap(response)
@@ -258,7 +255,7 @@ class JVMClient(Client):
 
             if (host := ret.get(edn.Keyword("host"))) and (port := ret.get(edn.Keyword("port"))):
                 self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
-                self.print(ret.get(edn.Keyword("greeting")))
+                self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": ret.get(edn.Keyword("greeting"))}))
             else:
                 self.print(ret)
 
@@ -292,17 +289,15 @@ class JVMClient(Client):
         self.start_workers()
         return self
 
-    def switch_namespace(self, ns):
-        self.sendq.put(f"(tutkain.repl/switch-ns {ns})")
-
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
+        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
+
         if self.has_backchannel():
             self.backchannel.send(
                 self.eval_context_message(options),
                 lambda _: self.sendq.put(code)
             )
         else:
-            self.print(code + "\n")
             self.sendq.put(code)
 
 
@@ -351,7 +346,7 @@ class JSClient(Client):
         port = ret.get(edn.Keyword("port"))
         self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
         greeting = ret.get(edn.Keyword("greeting"))
-        self.print(greeting)
+        self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": greeting}))
 
         # NOTE: If you make changes to module loading, make sure you manually
         # test connecting to a ClojureScript runtime *without* connecting to
@@ -375,17 +370,15 @@ class JSClient(Client):
 
         self.start_workers()
 
-    def switch_namespace(self, ns):
-        self.sendq.put(f"(in-ns '{ns})")
-
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
+        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
+
         if self.has_backchannel():
             self.backchannel.send(
                 self.eval_context_message(options),
                 lambda _: self.sendq.put(code)
             )
         else:
-            self.print(code + "\n")
             self.sendq.put(code)
 
 
@@ -404,11 +397,8 @@ class BabashkaClient(Client):
     def has_backchannel(self):
         return False
 
-    def switch_namespace(self, ns):
-        self.sendq.put(f"(in-ns '{ns})")
-
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.print(code + "\n")
+        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
         self.sendq.put(code)
 
 
@@ -479,8 +469,8 @@ def start(view, client):
             """))
 
 
-def start_printer(client, view):
-    print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client.printq))
+def start_printer(client, view, options={}):
+    print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client, options))
     print_loop.name = f"tutkain.{client.id}.print_loop"
     print_loop.start()
     return print_loop

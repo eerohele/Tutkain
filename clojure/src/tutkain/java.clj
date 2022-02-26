@@ -99,4 +99,5 @@
 
 (defmethod handle :resolve-stacktrace
   [{:keys [eval-context] :as message}]
-  (respond-to message {:stacktrace (resolve-stacktrace (get @eval-context #'clojure.core/*e))}))
+  (let [ex (get-in @eval-context [:thread-bindings #'clojure.core/*e])]
+    (respond-to message {:stacktrace (resolve-stacktrace ex)})))

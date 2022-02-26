@@ -55,6 +55,20 @@
                         (+ 2 (- (count (.getStackTrace cause))
                                (count st)))))))))))
 
+(defn ^:private read-in-context
+  "Given an eval context and a LineNumberingPushbackReader, read a form from
+  the reader in the context of the eval context thread bindings and return
+  the eval context with these keys added:
+
+  - :form - The object read
+  - :string - The string read"
+  [eval-context ^clojure.lang.LineNumberingPushbackReader reader]
+  (.unread reader (.read reader))
+  (let [eval-context @eval-context
+        [form string] (with-bindings (:thread-bindings eval-context {})
+                        (read+string {:eof ::EOF :read-cond :allow} reader))]
+    (assoc eval-context :form form :string string)))
+
 (defn repl
   "Tutkain's main read-eval-print loop.
 
@@ -66,11 +80,9 @@
   ([]
    (repl {}))
   ([opts]
-   (let [EOF (Object.)
-         lock (Object.)
+   (let [lock (Object.)
          out *out*
          in *in*
-         plain-print #(binding [*out* out] (println %))
          pretty-print (fn [message]
                         (binding [*print-readably* true
                                   pprint/*print-right-margin* 100]
@@ -98,51 +110,45 @@
              (loop []
                (when
                  (try
-                   (let [[form s] (read+string {:eof EOF :read-cond :allow} in)
+                   (let [{:keys [thread-bindings response form string]} (read-in-context eval-context in)
                          ;; For (read-line) support. See also:
                          ;;
                          ;; https://clojure.atlassian.net/browse/CLJ-2692
                          _ (main/skip-whitespace in)
-                         {:keys [thread-bindings response]} @eval-context
                          backchannel-response? (#{:inline :clipboard} (:output response))]
                      (with-bindings thread-bindings
-                       (when-not (identical? form EOF)
+                       (when-not (identical? form ::EOF)
                          (try
-                           (if (and (list? form) (= 'tutkain.repl/switch-ns (first form)))
-                             (do (eval form) true)
-                             (do
-                               (when-not backchannel-response?
-                                 (plain-print (format "%s=> %s" (ns-name *ns*) s)))
-                               (let [ret (eval form)]
-                                 (when-not (= :repl/quit ret)
-                                   (set! *3 *2)
-                                   (set! *2 *1)
-                                   (set! *1 ret)
-                                   (swap! eval-context assoc #'*3 *3 #'*2 *2 #'*1 *1)
-                                   (if backchannel-response?
-                                     (send-over-backchannel
-                                       (assoc response :tag :ret :val (format/pp-str ret)))
-                                     (pretty-print ret))
-                                   (flush)
-                                   true))))
+                           (let [ret (eval form)]
+                             (when-not (= :repl/quit ret)
+                               (set! *3 *2)
+                               (set! *2 *1)
+                               (set! *1 ret)
+                               (if backchannel-response?
+                                 (send-over-backchannel
+                                   (assoc response :tag :ret :val (format/pp-str ret)))
+                                 (pretty-print ret))
+                               (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+                               (flush)
+                               true))
                            (catch Throwable ex
                              (set! *e ex)
-                             (swap! eval-context assoc #'*e *e)
                              (send-over-backchannel
-                               {:tag :err
-                                :val (format/Throwable->str ex)
-                                :ns (str (.name *ns*))
-                                :form s})
+                               (merge response {:tag :err
+                                                :val (format/Throwable->str ex)
+                                                :ns (str (.name *ns*))
+                                                :form string}))
+                             (swap! eval-context assoc :thread-bindings (get-thread-bindings))
                              (flush)
                              true)))))
                    (catch Throwable ex
                      (set! *e ex)
-                     (swap! eval-context assoc #'*e *e)
                      (send-over-backchannel
                        {:tag :ret
                         :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
                         :ns (str (.name *ns*))
                         :exception true})
+                     (swap! eval-context assoc :thread-bindings (get-thread-bindings))
                      true))
                  (recur)))
              (finally

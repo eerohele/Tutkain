@@ -99,10 +99,6 @@ def handler(window, client, response):
             })
 
             view.set_scratch(True)
-
-            # Switch to the symbol's namespace
-            if (ns := symbol.namespace) and settings.load().get("auto_switch_namespace"):
-                client.switch_namespace(ns)
         except:
             if os.path.exists(temp_path):
                 os.close(descriptor)

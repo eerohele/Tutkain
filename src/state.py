@@ -1,11 +1,9 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 from sublime import View, Window
-from typing import Union, TypedDict
+from typing import Union, TypedDict, Dict
 from dataclasses import dataclass
 from . import repl
 from . import dialects
-from . import namespace
-from . import settings
 from . import status
 from ..api import edn
 
@@ -28,7 +26,8 @@ class Connection:
 
 __state = State(
     connections=defaultdict(dict),
-    active_connection=defaultdict(dict)
+    active_connection=defaultdict(dict),
+    gutter_markers=defaultdict(dict)
 )
 
 
@@ -40,8 +39,34 @@ def get_connection_by_id(client_id: Union[str, None]) -> Union[Connection, None]
     return get_connections().get(client_id)
 
 
+MARKER_TAGS = {
+    edn.Keyword("ret"),
+    edn.Keyword("in"),
+    edn.Keyword("err"),
+    edn.Keyword("tap")
+}
+
+
+def reset_gutter_markers(view: View) -> None:
+    if view:
+        for tag in MARKER_TAGS:
+            view.erase_regions(f"tutkain_gutter_marks/{tag.name}")
+            __state["gutter_markers"].get(view.id(), {}).get(tag, []).clear()
+
+
+def get_gutter_markers(view: View):
+    if not view:
+        return {}
+    else:
+        return __state["gutter_markers"].get(view.id())
+
+
 def register_connection(view: View, window: Window, client: repl.Client) -> None:
     connection = Connection(client, window, view)
+
+    for tag in MARKER_TAGS:
+        if not __state["gutter_markers"].get(view.id(), {}).get(tag):
+            __state["gutter_markers"][view.id()][tag] = deque([], 1000)
 
     def forget_connection():
         del __state["connections"][connection.client.id]
@@ -119,9 +144,5 @@ def on_activated(window, view):
         client := get_client(window, dialect)
     ):
         status.set_connection_status(view, client)
-
-        if settings.load().get("auto_switch_namespace", True) and client.has_backchannel() and client.ready:
-            ns = namespace.name(view) or namespace.default(dialect)
-            client.switch_namespace(ns)
     else:
         status.erase_connection_status(view)

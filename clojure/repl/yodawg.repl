@@ -1,16 +1,13 @@
 (ns repl.yodawg
+  (:refer-clojure :exclude [send])
   (:require
-   [clojure.edn :as edn]
    [clojure.core.server :as server]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.socket :as socket]
    [tutkain.repl :as repl])
   (:import
-   (clojure.lang LineNumberingPushbackReader)
-   (java.io StringReader)
-   (java.net ConnectException)
-   (java.util.concurrent LinkedBlockingQueue TimeUnit)))
+   (java.net ConnectException)))
 
 (spec/def ::tag #{:ret :err :out :tap})
 (spec/def ::val string?)
@@ -33,183 +30,176 @@
        :port 0
        :accept `repl/repl})))
 
-(def rrecvq (LinkedBlockingQueue.))
-(def brecvq (LinkedBlockingQueue.))
+(def repl (socket/client :host "localhost" :port (.getLocalPort server)))
+(xr/on-exit #((:stop repl)))
 
-(def rsendq
-  (socket/client
-    :host "localhost"
-    :port (.getLocalPort server)
-    :recvq rrecvq))
+(def backchannel-addr ((:recv repl)))
 
-(defn rsend
-  [code]
-  (.put rsendq code))
+(def backchannel (socket/client :host (:host backchannel-addr) :port (:port backchannel-addr)))
+(xr/on-exit #((:stop backchannel)))
 
-(xr/on-exit #(rsend ::socket/quit))
+(defn recv
+  [channel]
+  (case channel
+    :repl ((:recv repl))
+    :backchannel ((:recv backchannel))))
 
-(defn read-forms
-  [code]
-  (let [EOF (Object.)]
-    (when-some [reader (some->> code StringReader. LineNumberingPushbackReader.)]
-      (->>
-        #(read {:eof EOF :read-cond :allow} reader)
-        (repeatedly)
-        (take-while #(not (identical? % EOF)))))))
+(defn send
+  [channel message]
+  (case channel
+    :repl ((:send repl) message)
+    :backchannel ((:send backchannel) message)))
 
-(defn rrecv
-  []
-  (-> rrecvq (.poll 1 TimeUnit/SECONDS) read-forms))
+(def timeout? (partial = ::socket/timeout))
 
-(defn brecv
-  []
-  (-> brecvq (.poll 1 TimeUnit/SECONDS) edn/read-string))
-
-(def backchannel-addr (first (rrecv)))
-
-(def bsendq
-  (socket/client
-    :host (:host backchannel-addr)
-    :port (:port backchannel-addr)
-    :recvq brecvq))
-
-(defn bsend
-  [message]
-  (.put bsendq message))
-
-(xr/on-exit #(bsend ::socket/quit))
-
-(defmacro check-result!
-  [& forms]
-  `(xr/check! (into #{} '(~forms))))
+;; Smoke test
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(inc 1))
+(recv :repl)
+(xr/check! #{2})
 
 ;; Check that (read-line) works
 ;;
 ;; https://clojure.atlassian.net/browse/CLJ-2692
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(read-line))
-(rrecv)
-(check-result! user=> (read-line))
-(rsend 1)
-(rrecv)
-(check-result! "1")
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(read-line))
+(recv :repl)
+(xr/check! timeout?)
+(send :repl 1)
+(recv :repl)
+(xr/check! #{"1"})
 
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(inc 1))
-(rrecv)
-(check-result! user=> (inc 1))
-(rrecv)
-(check-result! 2)
-
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(/ 4 0))
-(rrecv)
-(check-result! user=> (/ 4 0))
-(brecv)
+;; Exceptions
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(/ 4 0))
+(recv :repl)
+(xr/check! timeout?)
+(recv :backchannel)
 (xr/check! ::ret) ;; err
 
 ;; flush after eval
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(print "foo"))
-(rrecv)
-(check-result! user=> (print "foo"))
-(rrecv)
-(check-result! nil)
-(brecv)
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(print "foo"))
+(recv :repl)
+(xr/check! nil?)
+(recv :backchannel)
 (xr/check! #{{:tag :out :val "foo"}})
 
 ;; flush after eval that throws
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(do (print "foo") (/ 4 0)))
-(rrecv)
-(check-result! user=> (do (print "foo") (/ 4 0)))
-(rrecv)
-(xr/check! nil?)
-(brecv)
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(do (print "foo") (/ 4 0)))
+(recv :repl)
+(xr/check! timeout?)
+(recv :backchannel)
 (xr/check! ::ret) ;; err
-(brecv)
+(recv :backchannel)
 (xr/check! #{{:tag :out :val "foo"}})
 
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(tap> {:foo :bar}))
-(rrecv)
-(check-result! user=> (tap> {:foo :bar}))
-(rrecv)
-(check-result! true)
-(brecv)
+;; set ns before eval
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(xr/check! ::ret)
+(send :repl `(require '[clojure.set]))
+(recv :repl)
+(xr/check! nil?)
+(send :repl `(in-ns 'clojure.set))
+(recv :repl)
+(xr/check! tagged-literal?)
+(send :repl '(union #{1 2} #{2 3}))
+(recv :repl)
+(xr/check! set?)
+
+;; create ns if it doesn't already exist
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'foo.bar :line 1 :column 1 :id 1})
+(recv :backchannel)
+(xr/check! ::ret)
+(send :repl '(defn baz [x] (inc x)))
+(.readLine (:reader repl))
+(xr/check! empty?)
+(.readLine (:reader repl))
+(xr/check! #{"#'foo.bar/baz"})
+
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(tap> {:foo :bar}))
+(recv :repl)
+(xr/check! true?)
+(recv :backchannel)
 (xr/check! ::ret) ;; tap
 
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(Thread/sleep Integer/MAX_VALUE))
-(rrecv)
-(check-result! user=> (Thread/sleep Integer/MAX_VALUE))
-(bsend {:op :interrupt})
-(brecv)
+;; source file path in exception stack trace
+(send :backchannel {:op :set-eval-context :file "/my/path/app.clj" :ns 'my.app :line 1 :column 1 :id 1})
+(recv :backchannel)
+(xr/check! ::ret)
+(send :repl '(/ 4 0))
+(recv :backchannel)
+(send :backchannel {:op :set-eval-context :file "/my/path/app.clj" :ns 'my.app :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '*e)
+(nth (->> (recv :repl) :trace (drop 2) first) 2)
+(xr/check! #{"app.clj"})
+
+;; interrupts
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(Thread/sleep Integer/MAX_VALUE))
+(send :backchannel {:op :interrupt})
+(recv :backchannel)
 (xr/check! ::ret) ;; InterruptedException
 
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '(inc 1))
-(rrecv)
-(check-result! user=> (inc 1))
-(def ret (rrecv))
-;; Evaluating lists whose head is tutkain.repl/switch-ns don't affect *1 etc.
-(rsend '(tutkain.repl/switch-ns tutkain.repl))
-(rrecv)
-(xr/check! nil?) ;; Client doesn't send response
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend '*1)
-(rrecv)
-(check-result! tutkain.repl=> *1)
-(rrecv)
+;; *1 works
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(inc 1))
+(def ret (recv :repl))
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '*1)
+(recv :repl)
 (xr/check! (partial = ret))
 
-(bsend {:op :set-eval-context
-        :file "/my/path/app.clj"
-        :line 1
-        :column 2
-        :response {:output :clipboard}
-        :id 1})
+(send :backchannel {:op :set-eval-context
+                    :file "/my/path/app.clj"
+                    :line 1
+                    :column 2
+                    :response {:output :clipboard}
+                    :id 1})
 
-(brecv)
-(rsend '(inc 1))
-(brecv)
+(recv :backchannel)
+(send :repl '(inc 1))
+(recv :backchannel)
 (xr/check! #{{:tag :ret :val "2\n" :output :clipboard}
              {:tag :ret :val "2\r\n" :output :clipboard}})
 
-(bsend {:op :set-eval-context
-        :file "/my/path/app.clj"
-        :line 3
-        :column 4
-        :response {:output :clipboard}
-        :id 2})
+(send :backchannel {:op :set-eval-context
+                    :file "/my/path/app.clj"
+                    :line 3
+                    :column 4
+                    :response {:output :clipboard}
+                    :id 2})
 
-(brecv)
-(rsend '(/ 4 0))
-(rrecv)
-(xr/check! nil?)
-(brecv)
+(recv :backchannel)
+(send :repl '(/ 4 0))
+(recv :repl)
+(xr/check! timeout?)
+(recv :backchannel)
 (xr/check! ::ret) ;; Error
 
-(bsend {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
-(brecv)
-(rsend :repl/quit)
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl :repl/quit)
 
 (Thread/sleep 3000)
 
 (try
   (socket/client
     :host (:host backchannel-addr)
-    :port (:port backchannel-addr)
-    :recvq brecvq)
+    :port (:port backchannel-addr))
   false
   (catch ConnectException _
     ;; Can't connect to backchannel anymore after quitting the REPL
