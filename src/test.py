@@ -196,16 +196,45 @@ def add_markers(view, results):
         )
 
 
+def maybe_pluralize(number, word):
+    ret = f"{number} {word}"
+
+    if number > 1:
+        ret = ret + "s"
+
+    return ret
+
+
+def print_summary(window, response):
+    try:
+        if val := edn.read(response.get(edn.Keyword("val"))):
+            tests = val.get(edn.Keyword("test"))
+            assertions = val.get(edn.Keyword("assert"))
+            failures = val.get(edn.Keyword("fail"))
+            errors = val.get(edn.Keyword("error"))
+
+            if errors > 0:
+                window.status_message(f"""⚠ {maybe_pluralize(errors, "error")}, {maybe_pluralize(failures, "failure")} ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")}).""")
+            elif failures > 0:
+                window.status_message(f"""✗ {maybe_pluralize(failures, "failure")} ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")}).""")
+            else:
+                window.status_message(f"""✓ All tests passed ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")}).""")
+    except:
+        pass
+
+
 def handle_test_response(view, client, response):
-    view.run_command("tutkain_clear_test_markers")
-    results = response_results(view, response)
+    try:
+        view.run_command("tutkain_clear_test_markers")
+        results = response_results(view, response)
 
-    # Persist results so it's possible to create UIs to present it later.
-    view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
+        # Persist results so it's possible to create UIs to present it later.
+        view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
 
-    add_markers(view, results)
-    client.print(response)
-    progress.stop()
+        add_markers(view, results)
+    finally:
+        progress.stop()
+        print_summary(view.window(), response)
 
 
 def run_tests(view, client, test_vars):
