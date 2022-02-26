@@ -87,8 +87,7 @@
                         (binding [*print-readably* true
                                   pprint/*print-right-margin* 100]
                           (locking lock
-                            (pprint/pprint message out)
-                            (.flush out))))
+                            (pprint/pprint message out))))
          repl-thread (Thread/currentThread)]
      (main/with-bindings
        (in-ns 'user)
