@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - master
+      - develop
 
 env:
   UNITTESTING_TAG: master
