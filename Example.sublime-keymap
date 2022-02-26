@@ -239,6 +239,13 @@
         "args": {"code": "*e"}
     },
 
+    // Print the name of the namespace you're currently in.
+    {
+        "keys": ["ctrl+c", "ctrl++"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "(ns-name *ns*)"}
+    },
+
     // Pretty-print the value of the form under the caret.
     {
         "keys": ["ctrl+p", "ctrl+p"],
