@@ -353,21 +353,25 @@
 
       result)))
 
+(defn print-result
+  [lock result]
+  (binding [*flush-on-newline* true
+            *default-data-reader-fn* tagged-literal
+            *read-eval* false]
+     (locking lock
+       (try
+         (pprint/pprint
+           (some-> result read-string))
+         (catch Throwable _
+           (println result))))))
+
 (defn repl
   ([]
    (repl {}))
   ([{:keys [build-id] :as opts}]
    (let [lock (Object.)
          close-signal (async/promise-chan)
-         out-fn #(binding [*flush-on-newline* true
-                           *default-data-reader-fn* tagged-literal
-                           *read-eval* false]
-                   (locking lock
-                     (try
-                       (pprint/pprint
-                         (some-> % read-string))
-                       (catch Throwable _
-                         (println %)))))
+         out-fn (partial print-result lock)
          {backchannel :socket
           eval-context :eval-context
           send-over-backchannel :send-over-backchannel}
