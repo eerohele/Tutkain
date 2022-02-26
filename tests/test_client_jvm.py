@@ -1,4 +1,5 @@
 import sublime
+import os
 import queue
 import unittest
 import tempfile
@@ -46,7 +47,7 @@ class TestJVMClient(PackageTestCase):
 
     #@unittest.SkipTest
     def test_eval_context_file(self):
-        file = f"{tempfile.gettempdir()}/my.clj"
+        file = os.path.join(tempfile.gettempdir(), "my.clj")
         self.view.retarget(file)
         self.set_view_content("(inc 1)")
         self.set_selections((0, 0))
