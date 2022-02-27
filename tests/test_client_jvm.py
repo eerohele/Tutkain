@@ -203,6 +203,7 @@ class TestJVMClient(PackageTestCase):
         })
 
         self.server.backchannel.send(response)
+        self.assertEquals(response, self.get_print())
 
     #@unittest.SkipTest
     def test_view_common(self):
