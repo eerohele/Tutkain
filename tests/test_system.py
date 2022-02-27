@@ -223,8 +223,14 @@ class TestConnectDisconnect(TestCase):
         )
 
         yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
-        yield lambda: [sublime.Region(34, 34)] == self.gutter_marks(self.output_panel(window), "ret")
-        yield lambda: [sublime.Region(39, 39)] == self.gutter_marks(self.output_panel(window), "tap")
+
+        yield lambda: [sublime.Region(34, 34)] == self.gutter_marks(self.output_panel(window), "ret") or [
+            sublime.Region(37, 37)
+        ] == self.gutter_marks(self.output_panel(window), "ret")
+
+        yield lambda: [sublime.Region(39, 39)] == self.gutter_marks(self.output_panel(window), "tap") or [
+            sublime.Region(34, 34)
+        ] == self.gutter_marks(self.output_panel(window), "tap")
 
         self.disconnect(window)
         self.assertEquals(":repl/quit\n", server.recv())
