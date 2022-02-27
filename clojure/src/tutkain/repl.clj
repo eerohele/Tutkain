@@ -3,7 +3,9 @@
    [clojure.main :as main]
    [clojure.pprint :as pprint]
    [tutkain.backchannel :as backchannel]
-   [tutkain.format :as format]))
+   [tutkain.format :as format])
+  (:import
+   (java.util.concurrent Executors TimeUnit)))
 
 (def ^:dynamic ^:experimental *print*
   "A function you can use as the :print arg of clojure.main/repl."
@@ -27,6 +29,20 @@
                         (read+string {:eof ::EOF :read-cond :allow} reader))]
     (assoc eval-context :form form :string string)))
 
+(defn ^:private make-debouncer
+  [service]
+  (fn [f delay]
+    (let [task (atom nil)]
+      (fn [& args]
+        (some-> @task (.cancel false))
+        (reset! task
+          (.schedule service
+            (fn []
+              (apply f args)
+              (reset! task nil))
+            delay
+            TimeUnit/MILLISECONDS))))))
+
 (defn repl
   "Tutkain's main read-eval-print loop.
 
@@ -46,7 +62,9 @@
                                   pprint/*print-right-margin* 100]
                           (locking lock
                             (pprint/pprint message out))))
-         repl-thread (Thread/currentThread)]
+         repl-thread (Thread/currentThread)
+         debounce-service (Executors/newScheduledThreadPool 1)
+         debounce (make-debouncer debounce-service)]
      (main/with-bindings
        (in-ns 'user)
        (apply require main/repl-requires)
@@ -60,12 +78,15 @@
              ;; Prevent stdout/stderr from interleaving with eval results by
              ;; binding *out* and *err* such that they write into auxiliary
              ;; PrintWriters that send strings to client via backchannel, then
-             ;; flush said auxiliary PrintWriters before returning eval result
-             ;; to client.
+             ;; debounce flush said auxiliary PrintWriters.
              out-writer (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
-             err-writer (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)]
-         (binding [*out* (PrintWriter-on #(.write out-writer %) nil)
-                   *err* (PrintWriter-on #(.write err-writer %) nil)
+             err-writer (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
+             flush-out (debounce #(.flush out-writer) 10)
+             flush-err (debounce #(.flush err-writer) 10)
+             write-out (fn [string] (.write out-writer string) (flush-out))
+             write-err (fn [string] (.write err-writer string) (flush-err))]
+         (binding [*out* (PrintWriter-on write-out #(.close out-writer))
+                   *err* (PrintWriter-on write-err #(.close err-writer))
                    *print* pretty-print]
            (try
              (pretty-print {:greeting (str "Clojure " (clojure-version) "\n")
@@ -85,8 +106,6 @@
                          (try
                            (let [ret (eval form)]
                              (flush)
-                             (.flush out-writer)
-                             (.flush err-writer)
                              (when-not (= :repl/quit ret)
                                (set! *3 *2)
                                (set! *2 *1)
@@ -99,8 +118,6 @@
                                true))
                            (catch Throwable ex
                              (flush)
-                             (.flush out-writer)
-                             (.flush err-writer)
                              (set! *e ex)
                              (send-over-backchannel
                                (merge response {:tag :err
@@ -110,8 +127,6 @@
                              (swap! eval-context assoc :thread-bindings (get-thread-bindings))
                              true)))))
                    (catch Throwable ex
-                     (.flush out-writer)
-                     (.flush err-writer)
                      (set! *e ex)
                      (send-over-backchannel
                        {:tag :ret
@@ -122,6 +137,5 @@
                      true))
                  (recur)))
              (finally
-               (.close out-writer)
-               (.close err-writer)
+               (.shutdown debounce-service)
                (.close backchannel)))))))))
