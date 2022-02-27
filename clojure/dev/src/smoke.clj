@@ -105,3 +105,9 @@ java.
 
 (inc 1)
 :repl/quit
+
+(require '[clojure.pprint :as pprint])
+(require '[clojure.reflect :as reflect])
+
+(pprint/print-table [:name :type :flags]
+  (sort-by :name (:members (reflect/reflect clojure.lang.BigInt))))
