@@ -93,6 +93,15 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
 
     #@unittest.SkipTest
+    def test_empty_string(self):
+        self.set_view_content(" ")
+        self.set_selections((0, 1))
+        self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.assertRaises(queue.Empty, lambda: self.client.printq.get_nowait())
+        self.assertRaises(queue.Empty, lambda: self.server.recvq.get_nowait())
+        self.assertRaises(queue.Empty, lambda: self.server.backchannel.recvq.get_nowait())
+
+    #@unittest.SkipTest
     def test_form(self):
         self.set_view_content("42 84")
         self.set_selections((0, 0), (3, 3))
