@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+
+- Redesign namespace auto-switching
+
+  Previously, when you activated a Clojure view, Tutkain switched to the namespace declared in that view (or `user`/`cljs.user` if none).
+
+  Now, Tutkain switches to the namespace declared in the current view right before evaluation.
+
+- Print input on the client rather than the server
+
+  This way the user gets instant feedback on what they sent for evaluation and further improves Tutkain's compatibility with nested REPLs.
+
+- Add gutter marks to output view
+
+  - `>` indicates input (for example, forms you send for evaluation)
+  - `<` indicates an evaluation result
+  - `<<` indicates a `tap>` result (if you have `tap_panel` enabled)
+  - red `<` indicates an error`
+
+- Add support for `${ns}` evaluation variable
+
+  For example, here's a key binding that switches into the namespace in the current view:
+
+  ```json
+  {
+      "keys": ["alt+a"],
+      "command": "tutkain_evaluate",
+      "args": {"code": "(in-ns '${ns})"},
+      "context": [{
+        "key": "selector",
+        "operator": "equal",
+        "operand": "source.clojure"
+      }]
+  },
+  ```
+
+- Avoid interleaving evaluation results with stderr/stdout (experimental) #86
+- Fix source file name in Clojure stack traces
+- Add green dot to status bar connection status indicator
+- Trim extra whitespace from ClojureScript error strings
+- Print test summary in status bar instead of output view
+- Don't print view evaluation result in output view #85
+- Disable indent guides in output view
+- Add connection uptime into disconnect quick panel list
+- Set output view `scroll_past_end` to 0.1
+
 ## 0.13.0 (alpha) - 2022-02-20
 
 - Add **Tutkain: Show ClojureDocs Examples** and **Tutkain: Refresh ClojureDocs Example Cache** commands
