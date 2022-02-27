@@ -14,7 +14,7 @@ REPL_VIEW_DEFAULT_SETTINGS = {
     "indent_subsequent_lines": False,
     "detect_indentation": False,
     "auto_complete": False,
-    "scroll_past_end": 0.5,
+    "scroll_past_end": 0.1,
     "highlight_line": False,
     "highlight_line_number": False,
     "highlight_gutter": False,
