@@ -218,7 +218,7 @@ class TestConnectDisconnect(TestCase):
             """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\ntrue\n42\n""",
             self.content(self.output_panel(window))
         ) or self.equals(
-            """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\42\ntrue\n""",
+            """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\n42\ntrue\n""",
             self.content(self.output_panel(window))
         )
 
