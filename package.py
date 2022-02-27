@@ -129,7 +129,10 @@ def evaluate(view, client, code, point=0, options={}):
     line, column = view.rowcol(point)
     options["line"] = line
     options["column"] = column
-    client.evaluate(reindent(code, column), options)
+
+    # Don't try evaluating empty string
+    if code := reindent(code, column):
+        client.evaluate(code, options)
 
 
 class TemporaryFileEventListener(ViewEventListener):
