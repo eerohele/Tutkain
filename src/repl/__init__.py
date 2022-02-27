@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from inspect import cleandoc
+import datetime
 import io
 import queue
 import os
@@ -113,6 +114,7 @@ class Client(ABC):
         return self.options.get("backchannel", {}).get("enabled", True)
 
     def __init__(self, host, port, name, dialect, options={}):
+        self.since = datetime.datetime.now()
         self.id = str(uuid.uuid4())
         self.host = host
         self.port = port
@@ -494,7 +496,10 @@ def make_quick_panel_item(connection):
     else:
         output = "panel"
 
-    annotation = f"{dialects.name(connection.client.dialect)} ({output})"
+    now = datetime.datetime.now()
+    delta = (now - connection.client.since)
+    delta = delta - datetime.timedelta(microseconds=delta.microseconds)
+    annotation = f"{dialects.name(connection.client.dialect)} · {output.capitalize()} · Uptime {delta}"
     trigger = f"{connection.client.host}:{connection.client.port}"
     return sublime.QuickPanelItem(trigger, annotation=annotation)
 
