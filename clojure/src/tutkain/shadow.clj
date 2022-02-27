@@ -13,7 +13,8 @@
    [tutkain.format :as format]
    [tutkain.backchannel :as backchannel])
   (:import
-   (clojure.lang ExceptionInfo)))
+   (clojure.lang ExceptionInfo)
+   (java.util.concurrent Executors TimeUnit)))
 
 (defn ^:private read-one
   [eval-context build-state reader]
@@ -365,6 +366,20 @@
          (catch Throwable _
            (println result))))))
 
+(defn ^:private make-debouncer
+  [service]
+  (fn [f delay]
+    (let [task (atom nil)]
+      (fn [& args]
+        (some-> @task (.cancel false))
+        (reset! task
+          (.schedule service
+            (fn []
+              (apply f args)
+              (reset! task nil))
+            delay
+            TimeUnit/MILLISECONDS))))))
+
 (defn repl
   ([]
    (repl {}))
@@ -372,13 +387,24 @@
    (let [lock (Object.)
          close-signal (async/promise-chan)
          out-fn (partial print-result lock)
+         debounce-service (Executors/newScheduledThreadPool 1)
+         debounce (make-debouncer debounce-service)
          {backchannel :socket
           eval-context :eval-context
           send-over-backchannel :send-over-backchannel}
          (backchannel/open
            (assoc opts
              :xform-in #(assoc % :build-id build-id :in *in*)
-             :xform-out #(dissoc % :in)))]
+             :xform-out #(dissoc % :in)))
+         out-writer (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
+         err-writer (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
+         flush-out (debounce #(.flush out-writer) 10)
+         flush-err (debounce #(.flush err-writer) 10)
+         write-out (fn [string] (.write out-writer string) (flush-out))
+         write-err (fn [string] (.write err-writer string) (flush-err))
+         out (PrintWriter-on write-out #(.close out-writer))
+         err (PrintWriter-on write-err #(.close err-writer))]
+     (binding [*out* (java.io.PrintWriter. System/out)] (prn out))
      (try
        (let [_ (prn {:greeting (let [{:keys [major minor qualifier]} *clojurescript-version*]
                                  (format "ClojureScript %s.%s.%s\n" major minor qualifier))
@@ -412,17 +438,14 @@
                  :val ret}))
 
             :repl-stderr
-            (fn [{:keys [ns read-result]} text]
-              (send-over-backchannel
-                {:tag :err
-                 :ns (str ns)
-                 :val (str (.trim text) "\n")
-                 :form (:source read-result)}))
+            (fn [_ text]
+              (.write err (str (.trim text) "\n"))
+              (.flush err))
 
             :repl-stdout
             (fn [_ text]
-              (send-over-backchannel
-                {:tag :out :val text}))}
+              (.write out text)
+              (.flush out))}
            eval-context))
        (catch ExceptionInfo ex
          (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
@@ -431,3 +454,4 @@
        (finally
          (async/>!! close-signal true)
          (.close backchannel))))))
+

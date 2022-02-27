@@ -1,7 +1,9 @@
 (ns my.node.app
   (:require
    [cljs.nodejs :as node]
-   [clojure.string :as string]))
+   [clojure.string :as string])
+  (:import
+   (goog.date DateTime)))
 
 (def fs (node/require "fs"))
 
@@ -19,6 +21,7 @@
 
   (throw (ex-info "Boom!" {:a 1}))
   (println "Hello, world!")
+  (DateTime.)
 
   (->>
     (read-file "/etc/hosts")
