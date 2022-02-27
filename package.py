@@ -410,6 +410,7 @@ class TutkainEvaluateCommand(TextCommand):
                 view.settings().set("auto_complete", True)
                 view.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
             elif code:
+                ns = ns or namespace.name_or_default(self.view, dialect)
                 variables = {"ns": ns}
 
                 for index, region in enumerate(self.view.sel()):
