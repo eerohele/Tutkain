@@ -348,12 +348,13 @@ class TutkainEvaluateCommand(TextCommand):
 
         def handler(response):
             progress.stop()
-            window.status_message("[Tutkain] Evaluating view... done.")
+            window.status_message("✓ Evaluating view... done.")
 
             if edn.Keyword("exception") in response:
                 client.print(response)
+                window.status_message("⚠ Could not evaluate view; see output view for more information.")
 
-        progress.start("[Tutkain] Evaluating view...")
+        progress.start("Evaluating view...")
 
         client.backchannel.send({
             "op": edn.Keyword("load"),
