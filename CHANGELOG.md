@@ -20,7 +20,7 @@ All notable changes to this project will be documented in this file.
   - `>` indicates input (for example, forms you send for evaluation)
   - `<` indicates an evaluation result
   - `<<` indicates a `tap>` result (if you have `tap_panel` enabled)
-  - red `<` indicates an error`
+  - red `<` indicates an error
 
 - Add support for `${ns}` evaluation variable
 
