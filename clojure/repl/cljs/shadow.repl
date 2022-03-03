@@ -129,7 +129,7 @@
 (recv :repl)
 (xr/check! timeout?)
 (recv :backchannel)
-(xr/check! #{{:output :clipboard :tag :ret :val "42\n"}})
+(xr/check! #{{:output :clipboard :tag :ret :val "42"}})
 
 (send :backchannel {:op :set-eval-context
                     :file "/my/path/app.cljs"
