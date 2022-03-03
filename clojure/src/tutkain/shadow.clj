@@ -427,7 +427,7 @@
             (fn [{:keys [read-result]} ret]
               (let [response (:response @eval-context)]
                 (if (#{:inline :clipboard} (:output response))
-                  (send-over-backchannel (assoc response :tag :ret :val ret))
+                  (send-over-backchannel (assoc response :tag :ret :val (with-out-str (print-result lock ret))))
                   (out-fn ret))))
 
             :repl-val
