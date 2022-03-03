@@ -404,7 +404,6 @@
          write-err (fn [string] (.write err-writer string) (flush-err))
          out (PrintWriter-on write-out #(.close out-writer))
          err (PrintWriter-on write-err #(.close err-writer))]
-     (binding [*out* (java.io.PrintWriter. System/out)] (prn out))
      (try
        (let [_ (prn {:greeting (let [{:keys [major minor qualifier]} *clojurescript-version*]
                                  (format "ClojureScript %s.%s.%s\n" major minor qualifier))
