@@ -14,7 +14,9 @@ Hey there! Tutkain has been updated.
 You might want to restart both your REPL server and Sublime Text to make sure
 Tutkain keeps working correctly.
 
-For a full list of changes in this version, see the changelog:
+The biggest changes in this version is are to the output view UI and to
+namespace auto-switching. For more information on those changes and to see the
+full list of changes in this version, see the changelog at:
 
   https://github.com/eerohele/Tutkain/blob/master/CHANGELOG.md
 
