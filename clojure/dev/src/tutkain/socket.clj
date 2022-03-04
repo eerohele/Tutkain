@@ -1,7 +1,7 @@
 (ns tutkain.socket
   (:require [clojure.edn :as edn])
   (:import
-   (clojure.lang LineNumberingPushbackReader EdnReader$ReaderException)
+   (clojure.lang LineNumberingPushbackReader LispReader$ReaderException)
    (java.io BufferedReader BufferedWriter InputStreamReader OutputStreamWriter)
    (java.net Socket SocketTimeoutException)))
 
@@ -17,10 +17,9 @@
              (.flush writer))
      :recv (fn []
              (try
-               (edn/read {:eof ::EOF
-                          :default tagged-literal
-                          :readers {'error identity}} reader)
-               (catch EdnReader$ReaderException ex
+               (binding [*default-data-reader-fn* tagged-literal]
+                 (read {:eof ::EOF} reader))
+               (catch LispReader$ReaderException ex
                  (if (= (type (ex-cause ex)) SocketTimeoutException)
                    ::timeout
                    (throw ex)))))

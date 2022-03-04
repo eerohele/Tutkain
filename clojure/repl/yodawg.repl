@@ -141,7 +141,7 @@
 (send :backchannel {:op :set-eval-context :file "/my/path/app.clj" :ns 'my.app :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '*e)
-(nth (->> (recv :repl) :trace (drop 2) first) 2)
+(nth (->> (recv :repl) .form :trace (drop 2) first) 2)
 (xr/check! #{"app.clj"})
 
 ;; interrupts

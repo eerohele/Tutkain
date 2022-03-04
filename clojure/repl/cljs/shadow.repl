@@ -111,12 +111,25 @@
              "#object[Object 20220226T233600]\r\n"})
 
 ;; in-ns (inadequate)
-(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 3 :column 1 :id 1})
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'my.app :line 1 :column 1 :id 1})
 (recv :backchannel)
-(send :repl (read-string "(in-ns 'foo.bar.baz)"))
+(xr/check! ::ret)
+(send :repl '(ns my.app (:require [clojure.set])))
 (recv :repl)
 (xr/check! nil?)
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'my.app :line 2 :column 1 :id 1})
+(recv :backchannel)
+(xr/check! ::ret)
+(send :repl '(defn f [x] x))
+(recv :repl)
+(xr/check! #{'#'my.app/f})
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'my.app :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(f 1))
+(recv :repl)
+(xr/check! #{1})
 
+;; evaluating to clipboard
 (send :backchannel {:op :set-eval-context
                     :file "/my/path/app.cljs"
                     :line 1
