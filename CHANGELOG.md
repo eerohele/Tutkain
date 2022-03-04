@@ -10,6 +10,20 @@ All notable changes to this project will be documented in this file.
 
   Now, Tutkain switches to the namespace declared in the current view right before evaluation.
 
+  As consequence of this and other changes in this version, Tutkain no longer
+  prints the current namespace (that is, the `my.ns=> ` prompt) in the output view when you evaluate something.
+
+  If you want to see the current namespace, you can add a key binding or [a
+  custom command](https://docs.sublimetext.io/guide/extensibility/command_palette.html) that evaluates `(ns-name *ns*)`. For example:
+
+  ```json
+  {
+      "keys": ["ctrl+p", "ctrl+n"],
+      "command": "tutkain_evaluate",
+      "args": {"code": "(ns-name *ns*)"}
+  },
+  ```
+
 - Print input on the client rather than the server
 
   This way the user gets instant feedback on what they sent for evaluation and further improves Tutkain's compatibility with nested REPLs.
