@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
   Now, Tutkain switches to the namespace declared in the current view right before evaluation.
 
+  As before, to disable namespace auto-switching, set `auto_switch_namespace` to `false` in Tutkain's settings.
+
   As consequence of this and other changes in this version, Tutkain no longer
   prints the current namespace (that is, the `my.ns=> ` prompt) in the output view when you evaluate something.
 
