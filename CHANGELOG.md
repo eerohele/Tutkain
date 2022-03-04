@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
-
+## 0.14.0 (alpha) - 2022-03-04
 
 - Redesign namespace auto-switching
 
