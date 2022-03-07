@@ -5,6 +5,7 @@
    [tutkain.backchannel :as backchannel]
    [tutkain.format :as format])
   (:import
+   (java.io Writer)
    (java.util.concurrent Executors TimeUnit)))
 
 (def ^:dynamic ^:experimental *print*
@@ -105,7 +106,8 @@
                        (when-not (identical? form ::EOF)
                          (try
                            (let [ret (eval form)]
-                             (flush)
+                             (.flush ^Writer *out*)
+                             (.flush ^Writer *err*)
                              (when-not (= :repl/quit ret)
                                (set! *3 *2)
                                (set! *2 *1)
@@ -117,7 +119,8 @@
                                (swap! eval-context assoc :thread-bindings (get-thread-bindings))
                                true))
                            (catch Throwable ex
-                             (flush)
+                             (.flush ^Writer *out*)
+                             (.flush ^Writer *err*)
                              (set! *e ex)
                              (send-over-backchannel
                                (merge response {:tag :err
