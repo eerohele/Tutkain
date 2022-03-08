@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Reload all Python modules on package upgrade
+
+  After this, it should no longer be necessary to restart ST after updating
+  Tutkain via Package Control. In most cases, at least. Hopefully.
+
+- If running tests via **Tutkain: Run Tests**, if the view with the tests has
+  a syntax error, print the exception in the output view.
+
+- Ensure `*err*` is flushed after eval (for `*warn-on-reflection*`) #91
+
+
 ## 0.14.0 (alpha) - 2022-03-04
 
 - Redesign namespace auto-switching
