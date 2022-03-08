@@ -430,6 +430,45 @@ class TestJVMClient(PackageTestCase):
         self.assertFalse(test.regions(self.view, "error"))
 
     #@unittest.SkipTest
+    def test_run_tests_view_error(self):
+        code = """
+        (ns my.app
+          (:require [clojure.test :refer [deftest is]]))
+
+        (deftest my-test
+          (is (= foo (+ 1 1))))
+        """
+
+        self.set_view_content(code)
+        self.view.run_command("tutkain_run_tests", {"scope": "ns"})
+        message = edn.read(self.server.backchannel.recv())
+        id = message.get(edn.Keyword("id"))
+
+        self.assertEquals(edn.kwmap({
+            "op": edn.Keyword("test"),
+            "file": None,
+            "ns": "my.app",
+            "vars": [],
+            "code": base64.encode(code.encode("utf-8")),
+            "id": id
+        }), message)
+
+        response = edn.kwmap({
+            "id": id,
+            "tag": edn.Keyword("ret"),
+            "val": """{:via [{:type clojure.lang.Compiler$CompilerException, :message "Syntax error compiling at (NO_SOURCE_FILE:5:3).", :data #:clojure.error{:phase :compile-syntax-check, :line 5, :column 3, :source "NO_SOURCE_FILE"}, :at [clojure.lang.Compiler analyze "Compiler.java" 6812]} {:type java.lang.RuntimeException, :message "Unable to resolve symbol: foo in this context", :at [clojure.lang.Util runtimeException "Util.java" 221]}], :trace [[clojure.lang.Util runtimeException "Util.java" 221] [clojure.lang.Compiler resolveIn "Compiler.java" 7418] [clojure.lang.Compiler resolve "Compiler.java" 7362]], :cause "Unable to resolve symbol: foo in this context", :phase :execution}""",
+            "exception": True
+        })
+
+        self.server.backchannel.send(response)
+        yield unittesting.AWAIT_WORKER # Why?
+
+        self.assertFalse(test.regions(self.view, "passes"))
+        self.assertFalse(test.regions(self.view, "fail"))
+        self.assertFalse(test.regions(self.view, "error"))
+        self.assertEquals(response, self.get_print())
+
+    #@unittest.SkipTest
     def test_async_unsuccessful_tests(self):
         code = """
         (ns my.app

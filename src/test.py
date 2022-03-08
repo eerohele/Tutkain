@@ -232,6 +232,9 @@ def handle_test_response(view, client, response):
         view.settings().set(RESULTS_SETTINGS_KEY, serializable_results(results))
 
         add_markers(view, results)
+
+        if response.get(edn.Keyword("exception"), False):
+            client.print(response)
     finally:
         progress.stop()
         print_summary(view.window(), response)
