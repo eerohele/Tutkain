@@ -7,6 +7,7 @@
    (java.io BufferedReader BufferedWriter File InputStreamReader OutputStreamWriter)
    (java.lang.reflect Field)
    (java.net InetAddress ServerSocket)
+   (java.util.concurrent LinkedBlockingQueue)
    (java.util.concurrent.atomic AtomicInteger)))
 
 (defn respond-to
@@ -44,24 +45,15 @@
   (or (some-> ns find-ns) (binding [*ns* (create-ns (or ns 'user))] (refer-clojure) *ns*)))
 
 (defmethod handle :set-eval-context
-  [{:keys [^LineNumberingPushbackReader eval-context in ns file line column response]
+  [{:keys [^LineNumberingPushbackReader ctxq in ns file line column response]
     :or {line 0 column 0 response {}} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (let [file (or file "NO_SOURCE_PATH")
-        source-path (or (some-> file File. .getName) "NO_SOURCE_FILE")]
-    (swap! eval-context
-      (fn [ctx]
-        (-> ctx
-          (assoc :response response)
-          (assoc-in [:thread-bindings #'*file*] file)
-          (assoc-in [:thread-bindings #'*source-path*] source-path)
-          (update-in [:thread-bindings #'*ns*] #(or (find-or-create-ns ns) % (the-ns 'user))))))
-    (respond-to message
-      {:thread-bindings {:ns (some-> (get-in @eval-context [:thread-bindings #'*ns*]) ns-name)
-                         :file file
-                         :source-path source-path}
-       :response response})))
+  (let [thread-bindings {#'*file* (or file "NO_SOURCE_PATH")
+                         #'*source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")
+                         #'*ns* (find-or-create-ns ns)}]
+    (.put ctxq {:response response :thread-bindings thread-bindings})
+    (respond-to message {:result :ok})))
 
 (defmethod handle :interrupt
   [{:keys [^Thread repl-thread]}]
@@ -97,6 +89,7 @@
         socket (ServerSocket. port 0 address)
         lock (Object.)
         eval-context (atom {:thread-bindings {#'*ns* (the-ns 'user)}})
+        ctxq (LinkedBlockingQueue. 128)
         eventual-send-fn (promise)
         msg-loop (bound-fn []
                    (try
@@ -128,6 +121,7 @@
                                                   :quit false
                                                   (let [message (assoc (xform-in message)
                                                                   :eval-context eval-context
+                                                                  :ctxq ctxq
                                                                   :out-fn out-fn)]
                                                     (try
                                                       (handle message)
@@ -148,5 +142,6 @@
       (.setDaemon true)
       (.start))
     {:eval-context eval-context
+     :ctxq ctxq
      :socket socket
      :send-over-backchannel (fn [message] (@eventual-send-fn message))}))

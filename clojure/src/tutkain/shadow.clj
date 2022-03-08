@@ -17,15 +17,16 @@
    (java.util.concurrent Executors TimeUnit)))
 
 (defn ^:private read-one
-  [eval-context build-state reader]
+  [ctxq build-state reader]
   (try
     ;; FIXME: NO_SOURCE_FILE, use *source-path* from backchannel eval context?
     (let [in (readers/source-logging-push-back-reader reader 1 "NO_SOURCE_FILE")
           _ (readers/unread in (readers/read-char in))
           eof (Object.)
           reader-opts {:eof eof :read-cond :allow :features #{:cljs}}
+          eval-context (.poll ctxq)
           current-ns (or
-                       (some-> @eval-context :thread-bindings (get #'clojure.core/*ns*) ns-name)
+                       (some-> eval-context :thread-bindings (get #'clojure.core/*ns*) ns-name)
                        (get-in build-state [:repl-state :current-ns] 'user))
           build-id (:shadow.build/build-id build-state)
           compiler-env (api/compiler-env build-id)
@@ -37,8 +38,13 @@
                              reader/*default-data-reader-fn* (fn [_ val] val)
                              reader/resolve-symbol identity]
                      (reader/read+string reader-opts in))
+          ;; Without this, the next thing we read is a sole \newline for some
+          ;; reason.
+          _ (readers/read-char in)
           eof? (identical? form eof)]
-      (-> {:eof? eof?} (cond-> (not eof?) (assoc :form form :source s :ns (ns-name current-ns)))))
+      (-> {:eof? eof?} (cond->
+                         (not eof?) (assoc :form form :source s :ns (ns-name current-ns))
+                         (and (not eof?) eval-context) (assoc :eval-context eval-context))))
     (catch Exception ex
       {:error? true
        :ex ex})))
@@ -65,7 +71,7 @@
            repl-result
            repl-stdout
            repl-stderr]}
-   eval-context]
+   ctxq]
   {:pre [(some? worker)
          (some? proc-stop)
          (some? close-signal)]}
@@ -128,7 +134,7 @@
         (loop []
           ;; wait until told to read
           (when (some? (async/<!! read-lock))
-            (let [{:keys [eof?] :as next} (read-one eval-context (some-> worker :state-ref deref :build-state) reader)]
+            (let [{:keys [eof?] :as next} (read-one ctxq (some-> worker :state-ref deref :build-state) reader)]
               (if eof?
                 (async/close! stdin)
                 ;; don't recur in case stdin was closed while in blocking read
@@ -390,7 +396,7 @@
          debounce-service (Executors/newScheduledThreadPool 1)
          debounce (make-debouncer debounce-service)
          {backchannel :socket
-          eval-context :eval-context
+          ctxq :ctxq
           send-over-backchannel :send-over-backchannel}
          (backchannel/open
            (assoc opts
@@ -425,7 +431,7 @@
 
             :repl-result
             (fn [{:keys [read-result]} ret]
-              (let [response (:response @eval-context)]
+              (let [response (:response (:eval-context read-result))]
                 (if (#{:inline :clipboard} (:output response))
                   (send-over-backchannel (assoc response :tag :ret :val (with-out-str (print-result lock ret))))
                   (out-fn ret))))
@@ -445,7 +451,7 @@
             (fn [_ text]
               (.write out text)
               (.flush out))}
-           eval-context))
+           ctxq))
        (catch ExceptionInfo ex
          (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
        (catch AssertionError ex

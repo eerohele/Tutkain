@@ -23,9 +23,15 @@
 
   - :form - The object read
   - :string - The string read"
-  [eval-context ^clojure.lang.LineNumberingPushbackReader reader]
+  [ctxq eval-context ^clojure.lang.LineNumberingPushbackReader reader]
   (.unread reader (.read reader))
-  (let [eval-context @eval-context
+  ;; If there's no new eval context immediately available, use the previous set
+  ;; of thread bindings.
+  ;;
+  ;; This way, if the user sends more than one form at once, we use the same
+  ;; eval context for each form instead of waiting for a new one after every
+  ;; form.
+  (let [eval-context (or (.poll ctxq) @eval-context)
         [form string] (with-bindings (:thread-bindings eval-context {})
                         (read+string {:eof ::EOF :read-cond :allow} reader))]
     (assoc eval-context :form form :string string)))
@@ -71,6 +77,7 @@
        (apply require main/repl-requires)
        (let [{backchannel :socket
               eval-context :eval-context
+              ctxq :ctxq
               send-over-backchannel :send-over-backchannel}
              (backchannel/open
                (assoc opts
@@ -96,7 +103,7 @@
              (loop []
                (when
                  (try
-                   (let [{:keys [thread-bindings response form string]} (read-in-context eval-context in)
+                   (let [{:keys [thread-bindings response form string]} (read-in-context ctxq eval-context in)
                          ;; For (read-line) support. See also:
                          ;;
                          ;; https://clojure.atlassian.net/browse/CLJ-2692

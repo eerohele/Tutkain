@@ -129,6 +129,16 @@
 (recv :repl)
 (xr/check! #{1})
 
+;; multiple forms
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'my.app :line 1 :column 1 :id 1})
+(recv :backchannel)
+(xr/check! ::ret)
+(doto (:writer repl) (.write "(inc 1) (inc 2)\n") (.flush))
+(recv :repl)
+(xr/check! #{2})
+(recv :repl)
+(xr/check! #{3})
+
 ;; evaluating to clipboard
 (send :backchannel {:op :set-eval-context
                     :file "/my/path/app.cljs"

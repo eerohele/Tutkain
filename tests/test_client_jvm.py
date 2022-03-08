@@ -593,11 +593,7 @@ class TestJVMClient(PackageTestCase):
         # Backchannel sends eval context response
         self.server.backchannel.send(edn.kwmap({
             "id": eval_context.get(edn.Keyword("id")),
-            "op": edn.Keyword("set-eval-context"),
-            "thread-bindings": edn.kwmap({"file": "NO_SOURCE_FILE", "line": 1, "column": 1}),
-            "response": edn.kwmap({
-                "output": edn.Keyword("clipboard")
-            }),
+            "result": edn.Keyword("ok")
         }))
 
         # Client sends code string over eval channel
@@ -649,13 +645,7 @@ class TestJVMClient(PackageTestCase):
         # Backchannel sends eval context response
         self.server.backchannel.send(edn.kwmap({
             "id": eval_context.get(edn.Keyword("id")),
-            "op": edn.Keyword("set-eval-context"),
-            "thread-bindings": edn.kwmap({"file": "NO_SOURCE_FILE", "line": 1, "column": 1}),
-            "response": edn.kwmap({
-                "point": 7,
-                "output": edn.Keyword("inline"),
-                "view-id": self.view.id()
-            })
+            "result": edn.Keyword("ok")
         }))
 
         # Client sends code string over eval channel

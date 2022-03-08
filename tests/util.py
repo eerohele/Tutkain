@@ -156,11 +156,7 @@ class PackageTestCase(DeferrableTestCase):
 
         response = edn.kwmap({
             "id": id,
-            "file": file,
-            "thread-bindings": edn.kwmap({
-                "ns": ns,
-                "file": file
-            })
+            "result": edn.Keyword("ok")
         })
 
         self.server.backchannel.send(response)

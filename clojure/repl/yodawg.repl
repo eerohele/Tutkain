@@ -59,6 +59,16 @@
 (recv :repl)
 (xr/check! #{2})
 
+;; Sending more than one form at once
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(recv :backchannel)
+(xr/check! ::ret)
+(doto (:writer repl) (.write "(inc 1) (inc 2)\n") (.flush))
+(recv :repl)
+(xr/check! #{2})
+(recv :repl)
+(xr/check! #{3})
+
 ;; Check that (read-line) works
 ;;
 ;; https://clojure.atlassian.net/browse/CLJ-2692
@@ -162,6 +172,37 @@
 (send :repl '*1)
 (recv :repl)
 (xr/check! (partial = ret))
+
+;; Switching namespace while previous eval is in progress
+
+;; Create var in foo.bar
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'foo.bar :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(def f1 1))
+(recv :repl)
+
+;; Create var in bar.baz
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'baz.quux :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(def f2 2))
+(recv :repl)
+
+;; Eval promise in foo.bar
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'foo.bar :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl '(def p (promise)))
+(recv :repl)
+(send :repl '(deref p))
+
+;; While previous eval is in progress, eval f2 in bar.baz
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'baz.quux :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send :repl 'f2)
+(deliver foo.bar/p :done)
+(recv :repl)
+(xr/check! #{:done})
+(recv :repl)
+(xr/check! #{2})
 
 (send :backchannel {:op :set-eval-context
                     :file "/my/path/app.clj"

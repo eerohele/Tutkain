@@ -102,11 +102,7 @@ class TestConnectDisconnect(TestCase):
 
         response = edn.kwmap({
             "id": id,
-            "file": file,
-            "thread-bindings": edn.kwmap({
-                "ns": ns,
-                "file": file
-            })
+            "result": edn.Keyword("ok")
         })
 
         backchannel.send(response)
