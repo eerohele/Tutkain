@@ -2,6 +2,7 @@ import sublime
 import os
 import queue
 import unittest
+import unittesting
 import tempfile
 
 from Tutkain.api import edn
@@ -418,7 +419,7 @@ class TestJVMClient(PackageTestCase):
         })
 
         self.server.backchannel.send(response)
-        yield # Why?
+        yield unittesting.AWAIT_WORKER # Why?
 
         self.assertEquals(
             [sublime.Region(78, 78)],
@@ -476,7 +477,7 @@ class TestJVMClient(PackageTestCase):
         })
 
         self.server.backchannel.send(response)
-        yield # Why?
+        yield unittesting.AWAIT_WORKER # Why?
 
         self.assertEquals(
             [sublime.Region(78, 78)],

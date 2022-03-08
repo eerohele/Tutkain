@@ -99,8 +99,7 @@ def stop_client(client):
         client.close()
 
 
-# class PackageTestCase(DeferrableTestCase):
-class PackageTestCase(TestCase):
+class PackageTestCase(DeferrableTestCase):
     @classmethod
     def setUpClass(self):
         self.executor = futures.ThreadPoolExecutor()
