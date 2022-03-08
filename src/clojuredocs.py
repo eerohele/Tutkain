@@ -114,7 +114,7 @@ def show(view):
         point = view.sel()[0].begin()
 
         if dialects.for_point(view, point) != edn.Keyword("clj"):
-            view.window().status_message("ERR: ClojureDocs examples are only available for Clojure.")
+            view.window().status_message("⚠ ClojureDocs examples are only available for Clojure.")
         else:
             ns = edn.Symbol(namespace.name(view) or namespace.default(edn.Keyword("clj")))
 
@@ -133,7 +133,7 @@ def show(view):
                 input_panel.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
                 input_panel.settings().set("auto_complete", True)
     else:
-        view.window().status_message("ERR: Not connected to a Clojure REPL.")
+        view.window().status_message("⚠ Not connected to a Clojure REPL.")
 
 
 def show_examples(view):

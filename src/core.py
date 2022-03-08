@@ -379,7 +379,7 @@ class TutkainEvaluateCommand(TextCommand):
         client = state.get_client(self.view.window(), dialect)
 
         if client is None:
-            self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
+            self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
         else:
             state.focus_active_runtime_view(self.view.window(), dialect)
 
@@ -543,7 +543,7 @@ class TutkainConnectCommand(WindowCommand):
             )
         except ConnectionRefusedError:
             output_view.close()
-            self.window.status_message(f"ERR: connection to {host}:{port} refused.")
+            self.window.status_message(f"⚠ connection to {host}:{port} refused.")
         finally:
             self.window.focus_view(active_view)
 
@@ -793,7 +793,7 @@ class TutkainInterruptEvaluationCommand(WindowCommand):
         client = state.get_client(self.window, dialect)
 
         if client is None:
-            self.window.status_message("ERR: Not connected to a REPL.")
+            self.window.status_message("⚠ Not connected to a REPL.")
         else:
             state.focus_active_runtime_view(self.window, dialect)
             client.backchannel.send({"op": edn.Keyword("interrupt")})
@@ -1222,7 +1222,7 @@ class TutkainAproposCommand(WindowCommand):
             else:
                 self.send_request(client, pattern)
         else:
-            self.window.status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
+            self.window.status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
 
 
 class TutkainDirCommand(TextCommand):
@@ -1241,7 +1241,7 @@ class TutkainDirCommand(TextCommand):
                         "sym": self.view.substr(symbol)
                     }, lambda response: query.handle_response(window, completions.KINDS, response))
         else:
-            self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
+            self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
 
 
 class TutkainLoadedLibsCommand(TextCommand):
@@ -1255,7 +1255,7 @@ class TutkainLoadedLibsCommand(TextCommand):
                 "dialect": dialect
             }, lambda response: query.handle_response(window, completions.KINDS, response))
         else:
-            self.view.window().status_message(f"ERR: Not connected to a {dialects.name(dialect)} REPL.")
+            self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
 
 
 class TutkainExploreStackTraceCommand(TextCommand):
@@ -1321,7 +1321,7 @@ class TutkainPromptCommand(WindowCommand):
         if client := state.get_client(self.window, edn.Keyword("clj")):
             self.prompt(client)
         else:
-            self.window.status_message("ERR: Not connected to a REPL.")
+            self.window.status_message("⚠ Not connected to a REPL.")
 
 
 class TutkainToggleAutoSwitchNamespaceCommand(TextCommand):

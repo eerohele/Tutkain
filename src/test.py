@@ -251,7 +251,7 @@ def run_tests(view, client, test_vars):
 
 def run(view, client, test_vars=[]):
     if client is None:
-        view.window().status_message("ERR: Not connected to a REPL.")
+        view.window().status_message("⚠ Not connected to a REPL.")
     else:
         progress.start("[Tutkain] Running tests...")
         run_tests(view, client, test_vars)
