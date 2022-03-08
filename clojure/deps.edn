@@ -3,7 +3,7 @@
  :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.11.4"}}
                   :extra-paths ["dev/cljs"]}
 
-           :shadow-cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.17.5"}}
+           :shadow-cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.17.8"}}
                          :extra-paths ["dev/shadow"]}
 
            :figwheel {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.16"}}
