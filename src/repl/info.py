@@ -73,6 +73,8 @@ def htmlify(text):
 
 
 def show_popup(view, point, response):
+    window = view.window() or sublime.active_window()
+
     if edn.Keyword("info") in response:
         info = response[edn.Keyword("info")]
 
@@ -168,5 +170,5 @@ def show_popup(view, point, response):
                 content,
                 location=point,
                 max_width=1024,
-                on_navigate=lambda href: goto(view.window(), location), flags=sublime.COOPERATE_WITH_AUTO_COMPLETE
+                on_navigate=lambda href: goto(window, location), flags=sublime.COOPERATE_WITH_AUTO_COMPLETE
             )
