@@ -458,5 +458,6 @@
          (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
        (finally
          (async/>!! close-signal true)
+         (.shutdown debounce-service)
          (.close backchannel))))))
 
