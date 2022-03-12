@@ -1,5 +1,4 @@
 (ns tutkain.socket
-  (:require [clojure.edn :as edn])
   (:import
    (clojure.lang LineNumberingPushbackReader LispReader$ReaderException)
    (java.io BufferedReader BufferedWriter InputStreamReader OutputStreamWriter)
