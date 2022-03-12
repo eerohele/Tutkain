@@ -1,7 +1,6 @@
 (ns user
   (:require
-   [cognitect.transcriptor :as xr]
-   [criterium.core :refer [quick-bench]]))
+   [cognitect.transcriptor :as xr]))
 
 (defn run-tests
   []
@@ -14,13 +13,14 @@
 
 (comment
   (run-tests)
-  )
+  ,,,)
 
 (comment
   (require
     '[clojure.repl :as repl]
     '[tutkain.analyzer :refer [local-positions]]
-    '[tutkain.completions :refer [candidates]])
+    '[tutkain.completions :refer [candidates]]
+    '[criterium.core :refer [quick-bench]])
 
   (quick-bench (candidates "java." 'clojure.core))
 
