@@ -80,9 +80,21 @@
   Other options are subject to change.
 
   Returns a map with these keys:
-    :socket                The ServerSocket instance this backchannel listens on.
-    :send-over-backchannel A function you can call to send messages to the
-                           client connected to this backchannel."
+    - :ctxq
+        A LinkedBlockingQueue that receives evaluation contexts the client
+        sends.
+
+    - :eval-context
+        An atom that contains an evaluation context. An evaluation context
+        comprises the thread bindings and other data in whose context the
+        clients wants the REPL to use to evaluate the next form(s) it sends.
+
+    - :socket
+        The ServerSocket instance this backchannel listens on.
+
+    - :send-over-backchannel
+        A function you can call to send messages to the client connected to
+        this backchannel."
   [{:keys [port bind-address xform-in xform-out]
     :or {port 0 bind-address "localhost" xform-in identity xform-out identity}}]
   (let [address (InetAddress/getByName ^String bind-address)
