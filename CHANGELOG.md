@@ -14,6 +14,9 @@ All notable changes to this project will be documented in this file.
 
 - Ensure `*err*` is flushed after eval (for `*warn-on-reflection*`) #91
 
+- Use error symbol instead of "ERR" in status bar throughout
+
+- Fix namespace auto-switch during long-running evaluation #92
 
 ## 0.14.0 (alpha) - 2022-03-04
 
