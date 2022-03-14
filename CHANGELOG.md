@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
+## 0.14.1 (alpha) - 2022-03-14
 
 - Reload all Python modules on package upgrade
 
