@@ -61,13 +61,14 @@
   ([]
    (repl {}))
   ([opts]
-   (let [lock (Object.)
+   (let [print-lock (Object.)
+         eval-lock (Object.)
          out *out*
          in *in*
          pretty-print (fn [message]
                         (binding [*print-readably* true
                                   pprint/*print-right-margin* 100]
-                          (locking lock
+                          (locking print-lock
                             (pprint/pprint message out))))
          repl-thread (Thread/currentThread)
          debounce-service (Executors/newScheduledThreadPool 1)
@@ -81,7 +82,7 @@
               send-over-backchannel :send-over-backchannel}
              (backchannel/open
                (assoc opts
-                 :xform-in #(assoc % :in in :repl-thread repl-thread)
+                 :xform-in #(assoc % :eval-lock eval-lock :in in :repl-thread repl-thread)
                  :xform-out #(dissoc % :in)))
              ;; Prevent stdout/stderr from interleaving with eval results by
              ;; binding *out* and *err* such that they write into auxiliary
@@ -112,7 +113,7 @@
                      (with-bindings thread-bindings
                        (when-not (identical? form ::EOF)
                          (try
-                           (let [ret (eval form)]
+                           (let [ret (locking eval-lock (eval form))]
                              (.flush ^Writer *out*)
                              (.flush ^Writer *err*)
                              (when-not (= :repl/quit ret)
