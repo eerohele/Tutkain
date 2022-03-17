@@ -16,7 +16,7 @@
         (respond-to message {:tag :ret
                              :val (pp-str val)})))
     (catch Throwable ex
-      (swap! eval-context assoc #'*e ex)
+      (swap! eval-context assoc-in [:thread-bindings #'*e] ex)
       (respond-to message {:tag :ret
                            :val (pp-str (assoc (Throwable->map ex) :phase :execution))
                            :exception true}))))
