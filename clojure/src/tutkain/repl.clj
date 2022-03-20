@@ -90,8 +90,8 @@
              ;; debounce flush said auxiliary PrintWriters.
              out-writer (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
              err-writer (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
-             flush-out (debounce #(.flush out-writer) 10)
-             flush-err (debounce #(.flush err-writer) 10)
+             flush-out (debounce #(.flush out-writer) 50)
+             flush-err (debounce #(.flush err-writer) 50)
              write-out (fn [string] (.write out-writer string) (flush-out))
              write-err (fn [string] (.write err-writer string) (flush-err))]
          (binding [*out* (PrintWriter-on write-out #(.close out-writer))
