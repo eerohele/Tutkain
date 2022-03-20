@@ -383,7 +383,8 @@ class TutkainEvaluateCommand(TextCommand):
         else:
             state.focus_active_runtime_view(self.view.window(), dialect)
 
-            options = {"file": self.view.file_name()}
+            file_name = self.view.file_name()
+            options = {"file": file_name}
 
             if settings.load().get("auto_switch_namespace", True):
                 ns = ns or namespace.name_or_default(self.view, dialect)
@@ -419,6 +420,9 @@ class TutkainEvaluateCommand(TextCommand):
             elif code:
                 ns = ns or namespace.name_or_default(self.view, dialect)
                 variables = {"ns": ns}
+
+                if file_name:
+                    variables["file"] = file_name
 
                 for index, region in enumerate(self.view.sel()):
                     if eval_region := self.get_eval_region(region, scope, ignore):

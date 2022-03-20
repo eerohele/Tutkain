@@ -130,6 +130,19 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals(ret("""#object[clojure.lang.Namespace 0x4a1c0752 "foo.bar"]\n"""), self.get_print())
 
     #@unittest.SkipTest
+    def test_file_variable(self):
+        file = os.path.join(tempfile.gettempdir(), "my.clj")
+        self.view.retarget(file)
+        self.set_view_content("(inc 1)")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_evaluate", {"code": """((requiring-resolve 'cognitect.transcriptor/run) "${file}")"""})
+        self.assertEquals(input(f"""((requiring-resolve 'cognitect.transcriptor/run) "{file}")\n"""), self.get_print())
+        self.eval_context(file=file)
+        self.assertEquals(f"""((requiring-resolve 'cognitect.transcriptor/run) "{file}")\n""", self.server.recv())
+        self.server.send("nil")
+        self.assertEquals(ret("nil\n"), self.get_print())
+
+    #@unittest.SkipTest
     def test_parameterized(self):
         self.set_view_content("{:a 1} {:b 2}")
         self.set_selections((0, 0), (7, 7))
