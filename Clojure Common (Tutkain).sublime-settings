@@ -1,4 +1,5 @@
 {
   "word_separators": "\\()\",;[]{}/",
   "auto_complete_selector": "(meta.symbol - meta.function.parameters) | (constant.other.keyword - punctuation.definition.keyword) | (constant.character - punctuation.definition.character.begin)",
+  "sub_word_separators": "-"
 }
