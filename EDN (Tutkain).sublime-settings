@@ -1,0 +1,4 @@
+{
+  "word_separators": "\\()\",;[]{}/",
+  "sub_word_separators": "-"
+}
