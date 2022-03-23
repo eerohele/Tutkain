@@ -20,8 +20,13 @@
 
 (spec/def ::info
   (spec/keys
-    :req-un [::name]
-    :opt-un [::ns ::file ::column ::line ::arglists ::doc ::fnspec ::spec ::type]))
+    :req-un [::name ::ns]
+    :opt-un [::file ::column ::line ::arglists ::doc ::fnspec ::spec ::type]))
+
+(spec/def ::ns-info
+  (spec/keys
+    :req-un [::name ::column ::line]
+    :opt-un [::file ::doc ::type]))
 
 (spec/def ::infos
-  (spec/coll-of ::info :min-count 1 :distinct true))
+  (spec/coll-of (spec/or :info ::info :ns-info ::ns-info) :min-count 1 :distinct true))

@@ -232,8 +232,9 @@
   "Given a compiler environment, a symbol that names an ident, and an ns
   symbol, return selected metadata for the named var."
   [env ident ns]
-  (let [{:keys [arglists file] :as ret} (sym-meta env ns ident)]
+  (let [{:keys [arglists file name] :as ret} (sym-meta env ns ident)]
     (cond-> (select-keys ret [:arglists :doc :file :line :column :name])
+      (qualified-symbol? name) (assoc :ns (namespace name))
       arglists (assoc :arglists (format-arglists arglists))
       file (assoc :file (lookup/resolve-file file)))))
 

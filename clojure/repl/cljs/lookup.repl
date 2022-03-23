@@ -33,7 +33,7 @@
 (xr/check! ::specs/info)
 
 (cljs/info (env) 'cljs.pprint 'my.browser.app)
-(xr/check! ::specs/info)
+(xr/check! ::specs/ns-info)
 
 (->
   {:op :lookup

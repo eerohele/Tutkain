@@ -24,15 +24,15 @@
 (xr/check! ::specs/info)
 
 (lookup "clojure.core" ":clojure.core.specs.alpha/binding-form")
-(xr/check! ::specs/info)
+(xr/check! ::specs/spec-info)
 
 (require '[clojure.core.specs.alpha :as core.specs])
 (lookup "repl.lookup" "::core.specs/local-name")
-(xr/check! ::specs/info)
+(xr/check! ::specs/spec-info)
 
 (require '[clojure.spec.alpha :as spec])
 (lookup "repl.lookup" "clojure.spec.alpha")
-(xr/check! (spec/keys :req-un [::specs/name ::specs/doc ::specs/file ::specs/column ::specs/line]))
+(xr/check! ::specs/ns-info)
 
 (lookup "user" "def")
 (xr/check! ::specs/info)
