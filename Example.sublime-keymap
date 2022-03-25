@@ -7,6 +7,8 @@
     // NOTE: This set of example key bindings is NOT guaranteed to be stable. They may change
     // without notice.
 
+    // BEGIN RECOMMENDED DEFAULTS
+
     // Automatically indent your code when you press Enter.
     {
       "keys": ["enter"],
@@ -208,15 +210,6 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
-    // Evaluate the outermost form and show the result both in the REPL view
-    // and inline, right after the evaluated form.
-    {
-        "keys": ["ctrl+c", "ctrl+a"],
-        "command": "tutkain_evaluate",
-        "args": {"scope": "outermost", "inline_result": true},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
-    },
-
     // Evaluate current selections or the innermost form.
     {
         "keys": ["ctrl+c", "ctrl+e"],
@@ -225,88 +218,11 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
-    // Prompt for input and evaluate it in the "user" namespace.
-    {
-        "keys": ["ctrl+c", "ctrl+i"],
-        "command": "tutkain_evaluate",
-        "args": {"scope": "input"}
-    },
-
     // Print the stack trace of the last exception.
     {
         "keys": ["ctrl+c", "ctrl++"],
         "command": "tutkain_evaluate",
         "args": {"code": "((requiring-resolve 'clojure.repl/pst) *e)"}
-    },
-
-    // Print the name of the namespace you're currently in.
-    {
-        "keys": ["ctrl+c", "ctrl++"],
-        "command": "tutkain_evaluate",
-        "args": {"code": "(ns-name *ns*)"}
-    },
-
-    // Pretty-print the value of the form under the caret.
-    {
-        "keys": ["ctrl+p", "ctrl+p"],
-        "command": "tutkain_evaluate",
-        "args": {"code": "((requiring-resolve 'clojure.pprint/pprint) $0)", "scope": "form"},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
-    },
-
-    // Inspect the return value of the outermost S-expression under the caret.
-    {
-        "keys": ["ctrl+p", "ctrl+i"],
-        "command": "tutkain_evaluate",
-        "args": {"code": "((requiring-resolve 'clojure.inspector/inspect) $0)", "scope": "outermost"},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
-    },
-
-    // Macroexpand the innermost S-expression under the caret.
-    {
-        "keys": ["ctrl+p", "ctrl+m"],
-        "command": "tutkain_evaluate",
-        "args": {"code": "(macroexpand-1 '$0)", "scope": "innermost"},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
-    },
-
-    // Switch to the cljs.user namespace (ClojureScript).
-    {
-        "keys": ["ctrl+p", "ctrl+u"],
-        "command": "tutkain_evaluate",
-        "args": {"code": "(in-ns 'cljs.user)"},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure.clojurescript"}]
-    },
-
-    // Switch to the user namespace (Clojure).
-    {
-        "keys": ["ctrl+p", "ctrl+u"],
-        "command": "tutkain_evaluate",
-        "args": {"code": "(in-ns 'user)"},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure - source.clojure.clojurescript"}]
-    },
-
-    // Prompt for a value for the symbol under the first caret and def it.
-    {
-        "keys": ["ctrl+p", "ctrl+e"],
-        "command": "tutkain_evaluate",
-        "args": {"scope": "input", "snippet": "(def $FORMS[0] $1)$0"},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}],
-    },
-
-    // Prompt for a namespace to switch to.
-    {
-        "keys": ["ctrl+p", "ctrl+n"],
-        "command": "tutkain_evaluate",
-        "args": {"scope": "input", "snippet": "(in-ns '$1)$0"},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}],
-    },
-
-    // Evaluate the form given as an argument.
-    {
-        "keys": ["f19"],
-        "command": "tutkain_evaluate",
-        "args": {"ns": "user", "code": "(reset)"},
     },
 
     // Clear the currently active REPL view.
@@ -384,16 +300,6 @@
             {"key": "has_next_field", "operand": false}
         ]
     },
-    {
-        "keys": ["alt+tab"],
-        "command": "tutkain_indent_sexp",
-        "args": {"scope": "outermost"},
-        "context": [
-            {"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
-            {"key": "auto_complete_visible", "operand": false},
-            {"key": "has_next_field", "operand": false}
-        ]
-    },
 
     // Cycle collection type.
     //
@@ -432,6 +338,141 @@
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
+    // Goto definition.
+    {
+        "keys": ["ctrl+c", "ctrl+g"],
+        "command": "tutkain_goto_definition",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Show output panel
+    {
+        "keys": ["ctrl+p", "ctrl+r"],
+        "command": "show_panel",
+        "args": {"panel": "output.tutkain.output_panel"}
+    },
+
+    // Hide output panel
+    {
+        "keys": ["ctrl+p", "ctrl+r"],
+        "command": "hide_panel",
+        "args": {"panel": "output.tutkain.output_panel"},
+        "context": [{"key": "panel", "operand": "output.tutkain.output_panel"}]
+    },
+
+    // Open a split view with ClojureDocs examples for the symbol under the
+    // caret.
+    //
+    // If there's no symbol under the caret, prompt the user for the symbol
+    // instead.
+    //
+    // The first use requires an internet connection for downloading examples
+    // from https://clojuredocs.org.
+    {
+        "keys": ["ctrl+p", "ctrl+x"],
+        "command": "tutkain_show_clojuredocs_examples",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // END RECOMMENDED DEFAULTS
+
+    // Evaluate the outermost form and show the result both in the REPL view
+    // and inline, right after the evaluated form.
+    {
+        "keys": ["ctrl+c", "ctrl+a"],
+        "command": "tutkain_evaluate",
+        "args": {"scope": "outermost", "inline_result": true},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Prompt for input and evaluate it in the "user" namespace.
+    {
+        "keys": ["ctrl+c", "ctrl+i"],
+        "command": "tutkain_evaluate",
+        "args": {"scope": "input"}
+    },
+
+    // Print the name of the namespace you're currently in.
+    {
+        "keys": ["ctrl+c", "ctrl++"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "(ns-name *ns*)"}
+    },
+
+    // Pretty-print the value of the form under the caret.
+    {
+        "keys": ["ctrl+p", "ctrl+p"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "((requiring-resolve 'clojure.pprint/pprint) $0)", "scope": "form"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Inspect the return value of the outermost S-expression under the caret.
+    {
+        "keys": ["ctrl+p", "ctrl+i"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "((requiring-resolve 'clojure.inspector/inspect) $0)", "scope": "outermost"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Macroexpand the innermost S-expression under the caret.
+    {
+        "keys": ["ctrl+p", "ctrl+m"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "(macroexpand-1 '$0)", "scope": "innermost"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
+    // Switch to the cljs.user namespace (ClojureScript).
+    {
+        "keys": ["ctrl+p", "ctrl+u"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "(in-ns 'cljs.user)"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure.clojurescript"}]
+    },
+
+    // Switch to the user namespace (Clojure).
+    {
+        "keys": ["ctrl+p", "ctrl+u"],
+        "command": "tutkain_evaluate",
+        "args": {"code": "(in-ns 'user)"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure - source.clojure.clojurescript"}]
+    },
+
+    // Prompt for a value for the symbol under the first caret and def it.
+    {
+        "keys": ["ctrl+p", "ctrl+e"],
+        "command": "tutkain_evaluate",
+        "args": {"scope": "input", "snippet": "(def $FORMS[0] $1)$0"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}],
+    },
+
+    // Prompt for a namespace to switch to.
+    {
+        "keys": ["ctrl+p", "ctrl+n"],
+        "command": "tutkain_evaluate",
+        "args": {"scope": "input", "snippet": "(in-ns '$1)$0"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}],
+    },
+
+    // Evaluate the form given as an argument.
+    {
+        "keys": ["f19"],
+        "command": "tutkain_evaluate",
+        "args": {"ns": "user", "code": "(reset)"},
+    },
+
+    {
+        "keys": ["alt+tab"],
+        "command": "tutkain_indent_sexp",
+        "args": {"scope": "outermost"},
+        "context": [
+            {"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
+            {"key": "auto_complete_visible", "operand": false},
+            {"key": "has_next_field", "operand": false}
+        ]
+    },
+
     // Show information for the head element of the current S-expression (a
     // function).
     //
@@ -442,13 +483,6 @@
         "keys": ["ctrl+c", "ctrl+h"],
         "command": "tutkain_show_information",
         "args": {"selector": "variable.function", "seek_backward": true},
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
-    },
-
-    // Goto definition.
-    {
-        "keys": ["ctrl+c", "ctrl+g"],
-        "command": "tutkain_goto_definition",
         "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
@@ -670,34 +704,5 @@
         "command": "hide_panel",
         "args": {"panel": "output.tutkain.tap_panel"},
         "context": [{"key": "panel", "operand": "output.tutkain.tap_panel"}]
-    },
-
-    // Show output panel
-    {
-        "keys": ["ctrl+p", "ctrl+r"],
-        "command": "show_panel",
-        "args": {"panel": "output.tutkain.output_panel"}
-    },
-
-    // Hide output panel
-    {
-        "keys": ["ctrl+p", "ctrl+r"],
-        "command": "hide_panel",
-        "args": {"panel": "output.tutkain.output_panel"},
-        "context": [{"key": "panel", "operand": "output.tutkain.output_panel"}]
-    },
-
-    // Open a split view with ClojureDocs examples for the symbol under the
-    // caret.
-    //
-    // If there's no symbol under the caret, prompt the user for the symbol
-    // instead.
-    //
-    // The first use requires an internet connection for downloading examples
-    // from https://clojuredocs.org.
-    {
-        "keys": ["ctrl+p", "ctrl+x"],
-        "command": "tutkain_show_clojuredocs_examples",
-        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 ]
