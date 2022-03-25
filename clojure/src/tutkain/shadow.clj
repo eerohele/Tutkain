@@ -393,7 +393,8 @@
    (let [lock (Object.)
          close-signal (async/promise-chan)
          out-fn (partial print-result lock)
-         debounce-service (Executors/newScheduledThreadPool 1)
+         debounce-service (doto (Executors/newScheduledThreadPool 1)
+                            (.setRejectedExecutionHandler (ThreadPoolExecutor$CallerRunsPolicy.)))
          debounce (make-debouncer debounce-service)
          {backchannel :socket
           ctxq :ctxq

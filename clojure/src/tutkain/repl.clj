@@ -6,7 +6,7 @@
    [tutkain.format :as format])
   (:import
    (java.io Writer)
-   (java.util.concurrent Executors TimeUnit)))
+   (java.util.concurrent Executors TimeUnit ThreadPoolExecutor$CallerRunsPolicy)))
 
 (def ^:dynamic ^:experimental *print*
   "A function you can use as the :print arg of clojure.main/repl."
@@ -71,7 +71,8 @@
                           (locking print-lock
                             (pprint/pprint message out))))
          repl-thread (Thread/currentThread)
-         debounce-service (Executors/newScheduledThreadPool 1)
+         debounce-service (doto (Executors/newScheduledThreadPool 1)
+                            (.setRejectedExecutionHandler (ThreadPoolExecutor$CallerRunsPolicy.)))
          debounce (make-debouncer debounce-service)]
      (main/with-bindings
        (in-ns 'user)
