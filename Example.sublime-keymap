@@ -236,7 +236,7 @@
     {
         "keys": ["ctrl+c", "ctrl++"],
         "command": "tutkain_evaluate",
-        "args": {"code": "*e"}
+        "args": {"code": "((requiring-resolve 'clojure.repl/pst) *e)"}
     },
 
     // Print the name of the namespace you're currently in.
