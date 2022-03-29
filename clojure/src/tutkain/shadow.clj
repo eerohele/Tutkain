@@ -14,7 +14,7 @@
    [tutkain.backchannel :as backchannel])
   (:import
    (clojure.lang ExceptionInfo)
-   (java.util.concurrent Executors TimeUnit)))
+   (java.util.concurrent Executors TimeUnit ThreadPoolExecutor$CallerRunsPolicy)))
 
 (defn ^:private read-one
   [ctxq build-state reader]
