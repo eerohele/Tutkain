@@ -1,5 +1,8 @@
 import os
+from sublime import Window
 from ...api import edn
+from .. import dialects
+from typing import Callable
 
 
 def read_port(path):
@@ -21,3 +24,16 @@ def discover(window, dialect):
         for port_file in possibilities(folder, dialect)
         if os.path.isfile(port_file)
     ]
+
+
+def parse(window: Window, port: str, dialect: edn.Keyword, port_gen: Callable):
+    if port == "auto":
+        if (alts := port_gen(window, dialect)):
+            if alts[0] and (port := alts[0][1]):
+                return int(port)
+            else:
+                window.status_message(f"⚠ File containing port number for a {dialects.name(dialect)} REPL not found.")
+        else:
+            return None
+    else:
+        return int(port)

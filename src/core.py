@@ -534,22 +534,26 @@ class TutkainConnectCommand(WindowCommand):
     def run(self, dialect, host, port, view_id=None, output="view", backchannel=True, build_id=None):
         active_view = self.window.active_view()
         output_view = repl.views.get_or_create_view(self.window, output, view_id)
+        dialect = edn.Keyword(dialect)
 
-        try:
-            self.connect(
-                edn.Keyword(dialect),
-                host,
-                int(port),
-                output_view,
-                output,
-                backchannel,
-                edn.Keyword(build_id) if build_id else None
-            )
-        except ConnectionRefusedError:
-            output_view.close()
-            self.window.status_message(f"⚠ connection to {host}:{port} refused.")
-        finally:
-            self.window.focus_view(active_view)
+        if port := ports.parse(self.window, port, dialect, ports.discover):
+            try:
+                self.connect(
+                    dialect,
+                    host,
+                    port,
+                    output_view,
+                    output,
+                    backchannel,
+                    edn.Keyword(build_id) if build_id else None
+                )
+            except ConnectionRefusedError:
+                output_view.close()
+                self.window.status_message(f"⚠ connection to {host}:{port} refused.")
+            finally:
+                self.window.focus_view(active_view)
+        else:
+            self.window.status_message(f"⚠ No REPL port file found.")
 
     def input(self, args):
         if "dialect" in args and "host" in args and "port" in args:
