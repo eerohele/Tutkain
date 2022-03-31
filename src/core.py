@@ -506,6 +506,8 @@ class TutkainConnectCommand(WindowCommand):
             )
 
     def connect(self, dialect, host, port, view, output, backchannel, build_id):
+        backchannel_options = repl.backchannel_options(self.window.project_data(), dialect, backchannel)
+
         if dialect == edn.Keyword("cljs"):
             if not backchannel:
                 sublime.error_message("[Tutkain]: The backchannel: false argument to tutkain_connect is currently not supported for ClojureScript.")
@@ -516,7 +518,7 @@ class TutkainConnectCommand(WindowCommand):
                     options={
                         "build_id": build_id,
                         "prompt_for_build_id": lambda ids, on_done: self.choose_build_id(view, ids, on_done),
-                        "backchannel": settings.backchannel_options(dialect, backchannel)
+                        "backchannel": backchannel_options
                     }
                 )
 
@@ -530,7 +532,7 @@ class TutkainConnectCommand(WindowCommand):
             client = repl.JVMClient(
                 host,
                 port,
-                options={"backchannel": settings.backchannel_options(dialect, backchannel)}
+                options={"backchannel": backchannel_options}
             )
 
             repl.start(view, client)

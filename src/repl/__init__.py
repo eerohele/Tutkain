@@ -520,3 +520,12 @@ def stop(window):
     elif vs := filter(lambda view: views.get_client_id(view), window.views()):
         for view in vs:
             view.close()
+
+
+def backchannel_options(project_data, dialect, backchannel=True):
+    dialect_name_lower = dialects.name(dialect).lower()
+
+    return {
+        **(settings.backchannel_options(dialect, backchannel) or {}),
+        **(project_data or {}).get("tutkain", {}).get(dialect_name_lower, {}).get("backchannel", {})
+    }
