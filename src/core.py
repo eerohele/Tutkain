@@ -24,6 +24,7 @@ from . import inline
 from . import paredit
 from . import progress
 from . import namespace
+from . import temp
 from . import test
 from . import repl
 from . import completions
@@ -148,6 +149,10 @@ class TemporaryFileEventListener(ViewEventListener):
 
                 if name := temp_file.get("name"):
                     self.view.set_name(name)
+
+                if temp_file.get("selection") == "end":
+                    self.view.sel().clear()
+                    self.view.sel().add(sublime.Region(self.view.size(), self.view.size()))
 
                 if path and descriptor and os.path.exists(path):
                     os.close(descriptor)
@@ -1264,6 +1269,24 @@ class TutkainLoadedLibsCommand(TextCommand):
             }, lambda response: query.handle_response(window, completions.KINDS, response))
         else:
             self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
+
+
+class TutkainNewScratchViewInNamespaceCommand(TextCommand):
+    def run(self, _):
+        view = self.view
+        window = view.window()
+        dialect = dialects.for_view(view)
+        extension = dialects.extension(dialect)
+
+        if file_name := view.file_name():
+            name = os.path.splitext(file_name)[0] + ".repl"
+        else:
+            name = "untitled.repl"
+
+        ns = namespace.name_or_default(view, dialect)
+        writef = lambda file: file.write(f"(in-ns '{ns})\n\n")
+
+        temp.open_file(window, file_name, extension, writef)
 
 
 class TutkainExploreStackTraceCommand(TextCommand):

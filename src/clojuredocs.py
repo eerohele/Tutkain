@@ -1,16 +1,14 @@
 import json
 import os
-import pathlib
 import sublime
 import urllib
-import tempfile
 
 from ..api import edn
 from . import dialects
 from . import namespace
 from . import selectors
-from . import settings
 from . import state
+from . import temp
 
 
 EXAMPLE_SOURCE_PATH = os.path.join(sublime.cache_path(), "Tutkain", "clojuredocs.edn")
@@ -70,39 +68,24 @@ def handler(window, client, response):
     see_alsos = response.get(edn.Keyword("see-alsos"))
 
     if examples or see_alsos:
-        descriptor, temp_path = tempfile.mkstemp(".clj")
+        file_name = f"{symbol.name}.clj"
 
-        try:
-            path = pathlib.Path(temp_path)
+        def writef(file):
+            if examples:
+                file.write(f";; ClojureDocs examples for {symbol}")
 
-            with open(path, "w") as file:
+                for example in examples:
+                    file.write("\n\n"+ example)
+
+            if see_alsos:
                 if examples:
-                    file.write(f";; ClojureDocs examples for {symbol}")
+                    file.write("\n\n")
 
-                    for example in examples:
-                        file.write("\n\n"+ example)
+                file.write(":see-also [")
+                file.write(", ".join(map(lambda see_also: str(see_also), see_alsos)))
+                file.write("]")
 
-                if see_alsos:
-                    if examples:
-                        file.write("\n\n")
-
-                    file.write(":see-also [")
-                    file.write(", ".join(map(lambda see_also: str(see_also), see_alsos)))
-                    file.write("]")
-
-            view = window.open_file(f"{path}", flags=sublime.ADD_TO_SELECTION | sublime.SEMI_TRANSIENT)
-
-            view.settings().set("tutkain_temp_file", {
-                "path": temp_path,
-                "descriptor": descriptor,
-                "name": f"{symbol.name}.clj"
-            })
-
-            view.set_scratch(True)
-        except:
-            if os.path.exists(temp_path):
-                os.close(descriptor)
-                os.remove(temp_path)
+        temp.open_file(window, file_name, writef=writef)
     else:
         window.status_message(f"No examples found for {symbol}.")
 

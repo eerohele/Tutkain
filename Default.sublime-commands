@@ -24,6 +24,10 @@
         "command": "tutkain_evaluate"
     },
     {
+        "caption": "Tutkain: New Scratch View in Namespace",
+        "command": "tutkain_new_scratch_view_in_namespace"
+    },
+    {
         "caption": "Tutkain: Clear Output View",
         "command": "tutkain_clear_output_view"
     },
