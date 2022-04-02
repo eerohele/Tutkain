@@ -679,6 +679,61 @@ class TestJVMClient(PackageTestCase):
 
         self.assertEquals(response, self.get_print())
 
+    #@unittest.SkipTest
+    def test_evaluate_code_to_inline(self):
+        self.set_view_content("(inc 1)")
+        self.set_selections((7, 7))
+        self.view.run_command("tutkain_evaluate", {"code": "(inc 1)", "inline_result": True})
+        self.assertEquals(input("(inc 1)\n"), self.get_print())
+
+        # Client sends eval context over backchannel
+        eval_context = edn.read(self.server.backchannel.recv())
+
+        self.assertEquals(
+            edn.kwmap({
+                "op": edn.Keyword("set-eval-context"),
+                "file": "NO_SOURCE_FILE",
+                "line": 1,
+                "column": 1,
+                "response": edn.kwmap({
+                    "point": 7,
+                    "output": edn.Keyword("inline"),
+                    "view-id": self.view.id()
+                }),
+            }),
+            select_keys(eval_context, [
+                edn.Keyword("op"),
+                edn.Keyword("file"),
+                edn.Keyword("line"),
+                edn.Keyword("column"),
+                edn.Keyword("response")
+            ])
+        )
+
+        # Backchannel sends eval context response
+        self.server.backchannel.send(edn.kwmap({
+            "id": eval_context.get(edn.Keyword("id")),
+            "result": edn.Keyword("ok")
+        }))
+
+        # Client sends code string over eval channel
+        self.assertEquals("(inc 1)\n", self.server.recv())
+
+        view_id = eval_context.get(edn.Keyword("response")).get(edn.Keyword("view-id"))
+
+        # Server sends response over backchannel
+        response = edn.kwmap({
+            "tag": edn.Keyword("ret"),
+            "val": "2",
+            "output": eval_context.get(edn.Keyword("response")).get(edn.Keyword("output")),
+            "view-id": view_id,
+            "point": 7
+        })
+
+        self.server.backchannel.send(response)
+
+        self.assertEquals(response, self.get_print())
+
 
 class TestNoBackchannelJVMClient(PackageTestCase):
     @classmethod

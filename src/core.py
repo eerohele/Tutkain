@@ -434,6 +434,14 @@ class TutkainEvaluateCommand(TextCommand):
                         variables[str(index)] = self.view.substr(eval_region)
 
                 code = sublime.expand_variables(code, variables)
+
+                if inline_result and (sel := self.view.sel()):
+                    options["response"] = {
+                        "output": edn.Keyword("inline"),
+                        "view-id": self.view.id(),
+                        "point": sel[0].end()
+                    }
+
                 evaluate(self.view, client, code, options=options)
             elif scope == "view":
                 syntax = self.view.syntax()
