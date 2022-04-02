@@ -28,5 +28,8 @@
     :req-un [::name ::column ::line]
     :opt-un [::file ::doc ::type]))
 
+(spec/def ::spec-info
+  (spec/keys :req-un [::name ::spec]))
+
 (spec/def ::infos
   (spec/coll-of (spec/or :info ::info :ns-info ::ns-info) :min-count 1 :distinct true))
