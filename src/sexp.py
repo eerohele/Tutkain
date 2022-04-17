@@ -97,6 +97,9 @@ def find_open(view, start_point):
     point = start_point - 1
     stack = 0
 
+    if view.match_selector(start_point, "-meta.sexp"):
+        return None
+
     while point >= 0:
         if stack == 0 and view.match_selector(point, BEGIN_SELECTORS):
             char = view.substr(point)
