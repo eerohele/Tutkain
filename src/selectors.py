@@ -1,3 +1,4 @@
+import sublime
 from sublime import Region, View
 from typing import Union
 
@@ -48,33 +49,37 @@ def expand_by_selector(view, start_point, selector):
     selector.
 
     If the start point does not match the selector, return None."""
-    if not view.match_selector(start_point, selector):
-        return None
 
-    point = start_point
-    max_point = view.size()
-    begin = 0
-    end = max_point
+    if int(sublime.version()) >= 4131:
+        return view.expand_to_scope(start_point, selector)
+    else:
+        if not view.match_selector(start_point, selector):
+            return None
 
-    while point > 0:
-        if view.match_selector(point, selector) and not view.match_selector(
-            point - 1, selector
-        ):
-            begin = point
-            break
-        else:
-            point -= 1
+        point = start_point
+        max_point = view.size()
+        begin = 0
+        end = max_point
 
-    while point < max_point:
-        if view.match_selector(point - 1, selector) and not view.match_selector(
-            point, selector
-        ):
-            end = point
-            break
-        else:
-            point += 1
+        while point > 0:
+            if view.match_selector(point, selector) and not view.match_selector(
+                point - 1, selector
+            ):
+                begin = point
+                break
+            else:
+                point -= 1
 
-    return Region(begin, end)
+        while point < max_point:
+            if view.match_selector(point - 1, selector) and not view.match_selector(
+                point, selector
+            ):
+                end = point
+                break
+            else:
+                point += 1
+
+        return Region(begin, end)
 
 
 def match_many(view: View, point: int, *selectors: str):
