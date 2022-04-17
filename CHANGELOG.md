@@ -2,6 +2,89 @@
 
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Fix performance issues with `tutkain_insert_newline` and various ParEdit commands, especially when the caret was positioned toward the end of a long file
+
+- Add `meta.sexp` scopes to S-expressions
+
+  This allows you to highlight S-expression delimiters differently based on their nesting level. For example, in your color scheme you could add something like this:
+
+
+  ```json
+  {
+    "scope": "meta.sexp punctuation.section",
+    "foreground": "color(var(grey) alpha(0.5))"
+  },
+  {
+    "scope": "meta.sexp meta.sexp punctuation.section",
+    "foreground": "color(var(grey) alpha(0.6))"
+  },
+  {
+    "scope": "meta.sexp meta.sexp meta.sexp punctuation.section",
+    "foreground": "color(var(grey) alpha(0.7))"
+  },
+  {
+    "scope": "meta.sexp meta.sexp meta.sexp meta.sexp punctuation.section",
+    "foreground": "color(var(grey) alpha(0.8))"
+  },
+  {
+    "scope": "meta.sexp meta.sexp meta.sexp meta.sexp meta.sexp punctuation.section",
+    "foreground": "color(var(grey) alpha(0.9))"
+  },
+  ```
+
+  S-expression delimiters would then use different shades of grey based on their nesting level.
+
+- Add **Tutkain: New Scratch View in Namespace** command
+
+- Fix **Tutkain: Explorer Stack Trace** after error caused by loading a view
+
+- Synchronize view loads and other evaluations #93
+
+- Add support for `${file}` evaluation variable
+
+  You can now define a key binding like this, for example:
+
+  ```json
+  {
+      "keys": ["ctrl+p", "ctrl+r"],
+      "command": "tutkain_evaluate",
+      "args": {"code": "((requiring-resolve 'cognitect.transcriptor/run) \"${file}\")"},
+      "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+  },
+  ```
+
+  Tutkain will replace `${file}` with the path to your current file.
+
+- Add hyphen into `sub_word_separators`
+
+  Moving by subwords will now stop at hyphens.
+
+- Add namespace to ClojureScript lookup results
+
+- Add `port: "auto"` support to `tutkain_connect`
+
+  Setting the value of the `port` argument to `"auto"` causes Tutkain to attempt to read the port number from a file called `.repl-port` in the project root directory.
+
+- Add support for project-specific backchannel options
+
+  You can now add an entry like this in your Sublime Text project settings:
+
+  ```json
+  "tutkain": {
+    "clojure": {
+      "backchannel": {
+        "port": 4321
+      }
+    },
+  },
+  ```
+
+  Tutkain will then use port number 4321 for the backchannel in that project only.
+
+- Add `inline_result` suport for `code` evaluations
+
 ## 0.14.1 (alpha) - 2022-03-14
 
 - Reload all Python modules on package upgrade
