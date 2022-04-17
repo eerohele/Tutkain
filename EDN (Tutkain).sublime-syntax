@@ -320,7 +320,7 @@ contexts:
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       push:
-      - meta_scope: meta.sexp.parens.edn
+      - meta_scope: meta.sexp.list.edn
       - match: '\)'
         scope: punctuation.section.parens.end.edn
         pop: true
@@ -332,7 +332,7 @@ contexts:
     - match: '\['
       scope: punctuation.section.brackets.begin.edn
       push:
-      - meta_scope: meta.sexp.brackets.edn
+      - meta_scope: meta.sexp.vector.edn
       - match: '\]'
         scope: punctuation.section.brackets.end.edn
         pop: true
@@ -344,7 +344,7 @@ contexts:
     - match: '\{'
       scope: punctuation.section.braces.begin.edn
       push:
-      - meta_scope: meta.sexp.braces.edn
+      - meta_scope: meta.sexp.map.edn
       - match: \}
         scope: punctuation.section.braces.end.edn
         pop: true
@@ -358,7 +358,7 @@ contexts:
         1: keyword.operator.macro.edn
         2: punctuation.section.braces.begin.edn
       push:
-      - meta_scope: meta.sexp.braces.edn
+      - meta_scope: meta.sexp.set.edn
       - match: \}
         scope: punctuation.section.braces.end.edn
         pop: true

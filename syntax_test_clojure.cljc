@@ -66,9 +66,9 @@
 ;      ^ punctuation.section.parens.begin.edn
 ;       ^^^^ constant.language.edn
 ;           ^ punctuation.section.parens.end.edn
-;      ^^^^^^ meta.sexp.parens.edn
+;      ^^^^^^ meta.sexp.list.edn
 ;            ^ -meta.sexp
-;             ^^^^^ meta.sexp.parens.edn
+;             ^^^^^ meta.sexp.list.edn
 ;                  ^ -meta.sexp
 
 ; ## No highlighting
@@ -1037,7 +1037,7 @@
 ; ^ keyword.operator.macro.clojure
 ;  ^- keyword.operator.macro.clojure
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
-;  ^^^^^^^^^^^ meta.sexp.parens.edn
+;  ^^^^^^^^^^^ meta.sexp.list.edn
 ;             ^ -meta.sexp
 
   #[]
@@ -1618,7 +1618,7 @@
 ; # fn
 
   (fn)
-; ^^^^ meta.sexp.parens.edn
+; ^^^^ meta.sexp.list.edn
 ;     ^ -meta.sexp
 
   (fn [])
@@ -1626,43 +1626,43 @@
 ;     ^ punctuation.section.brackets.begin.edn
 ;      ^ punctuation.section.brackets.end.edn
 ;       ^ punctuation.section.parens.end.edn
-;     ^^ meta.sexp.brackets.edn meta.function.parameters.clojure
-;       ^ -meta.sexp.brackets.edn & -meta.function.parameters.clojure
-; ^^^^^^^ meta.sexp.parens.edn
+;     ^^ meta.sexp.vector.edn meta.function.parameters.clojure
+;       ^ -meta.sexp.vector.edn & -meta.function.parameters.clojure
+; ^^^^^^^ meta.sexp.list.edn
 ;        ^ -meta.sexp
 
   (fn [x y] (* x y 1))
-;     ^^^^^ meta.sexp.parens.edn meta.sexp.brackets.edn meta.function.parameters.clojure
-;          ^ -meta.sexp.brackets.edn & -meta.function.parameters.clojure
-; ^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;     ^^^^^ meta.sexp.list.edn meta.sexp.vector.edn meta.function.parameters.clojure
+;          ^ -meta.sexp.vector.edn & -meta.function.parameters.clojure
+; ^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                     ^ -meta.sexp
 
 
   (fn ())
-;     ^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^ meta.sexp.parens.edn
+;     ^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^ meta.sexp.list.edn
 ;        ^ -meta.sexp
 
   (fn ([{:keys [foo]}]))
 ;        ^^^^^ constant.other.keyword.unqualified.edn
 ;      ^^^^^^^^^^^^^^^ meta.function.parameters.clojure
-;      ^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;     ^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;      ^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;     ^^^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                       ^ -meta.sexp
 
 
   (fn
     ([x] (recur x 2))
-;    ^^^ meta.sexp.parens.edn meta.sexp.brackets.edn meta.function.parameters.clojure
-;       ^ -meta.sexp.brackets.edn & -meta.function.parameters.clojure
-;   ^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;    ^^^ meta.sexp.list.edn meta.sexp.vector.edn meta.function.parameters.clojure
+;       ^ -meta.sexp.vector.edn & -meta.function.parameters.clojure
+;   ^^^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
     ([x y] (* x y 1)))
-;    ^^^^^ meta.sexp.parens.edn meta.sexp.brackets.edn meta.function.parameters.clojure
-;         ^ -meta.sexp.brackets -meta.function.parameters
-;   ^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;    ^^^^^ meta.sexp.list.edn meta.sexp.vector.edn meta.function.parameters.clojure
+;         ^ -meta.sexp.vector -meta.function.parameters
+;   ^^^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
 ;                     ^ -meta.sexp
-; ^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 
 
   (fn declare-noindex [] blah)
@@ -1670,15 +1670,15 @@
 ;     ^^^^^^^^^^^^^^^ entity.name.function.clojure
 ;                       ^^^^^^^- storage
 ;                       ^^^^^^^- entity
-;                     ^^ meta.sexp.brackets.edn meta.function.parameters.clojure
-;                       ^ -meta.sexp.brackets.edn & -meta.function.parameters.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                     ^^ meta.sexp.vector.edn meta.function.parameters.clojure
+;                       ^ -meta.sexp.vector.edn & -meta.function.parameters.clojure
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                             ^ -meta.sexp
 
   (fn foo ())
-;         ^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.function-body.clojure
+;         ^^ meta.sexp.list.edn meta.sexp.list.edn meta.function-body.clojure
 ;           ^ -meta.function-body
-; ^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^ meta.sexp.list.edn
 ;            ^ -meta.sexp
 
   (fn declare-noindex
@@ -1687,14 +1687,14 @@
 ;                    ^- entity
     ([] blah)
 ;    ^^ meta.function.parameters.clojure
-;    ^^ meta.sexp.parens.edn meta.sexp.brackets.edn
-;      ^ -meta.sexp.brackets.edn
-;   ^^^^^^^^^ meta.sexp.parens meta.sexp.parens.edn
+;    ^^ meta.sexp.list.edn meta.sexp.vector.edn
+;      ^ -meta.sexp.vector.edn
+;   ^^^^^^^^^ meta.sexp.list meta.sexp.list.edn
     ([_] blah))
 ;    ^^^ meta.function.parameters.clojure
-;    ^^^ meta.sexp.parens.edn meta.sexp.brackets.edn
-;       ^ -meta.sexp.brackets.edn
-;   ^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;    ^^^ meta.sexp.list.edn meta.sexp.vector.edn
+;       ^ -meta.sexp.vector.edn
+;   ^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
 ;             ^ - invalid.illegal.stray-bracket-end.edn
 
   ; Invalid but take care anyway
@@ -1703,7 +1703,7 @@
 ;     ^^^^^^^^^^^^^^^ entity.name.function.clojure
 ;                    ^^^^- storage
 ;                    ^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                     ^ -meta.sexp
 
 (defmacro bound-fn
@@ -1718,13 +1718,13 @@
 ; ## Normal def
 
   (def)
-; ^^^^^ meta.sexp.parens.edn
+; ^^^^^ meta.sexp.list.edn
 ;      ^ -meta.sexp
 
   (def declare-def)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^^^^^^^^^^^ entity.name.constant.clojure
-; ^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                  ^ -meta.sexp
 
   (def declare-def dont-declare)
@@ -1733,28 +1733,28 @@
 ;      ^^^^^^^^^^^ entity.name.constant.clojure
 ;                 ^^^^^^^^^^^^- storage
 ;                 ^^^^^^^^^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                               ^ -meta.sexp
 
   (def λ nil)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ entity.name.constant.clojure
 ;        ^^^ constant.language.edn
-; ^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^ meta.sexp.list.edn
 ;            ^ -meta.sexp
 
   (def 👽 nil)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^ entity.name.constant.clojure
 ;        ^^^ constant.language.edn
-; ^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^ meta.sexp.list.edn
 ;            ^ -meta.sexp
 
   (def def nil)
 ;  ^^^ keyword.declaration.variable.clojure
 ;      ^^^ entity.name.constant.clojure
 ;          ^^^ constant.language.edn
-; ^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^ meta.sexp.list.edn
 ;              ^ -meta.sexp
 
   (
@@ -1775,7 +1775,7 @@
   (defonce declare-defonce)
 ;  ^^^^^^^ keyword.declaration.variable.clojure
 ;          ^^^^^^^^^^^^^^^ entity.name.constant.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                          ^ -meta.sexp
 
 ; ## Declare with metadata
@@ -1786,7 +1786,7 @@
 ;       ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                ^^^^^^^^^^^ entity.name.constant.clojure
 ;                            ^^^ constant.language.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                ^ -meta.sexp
 
   (def ^:private declare-def dont-declare)
@@ -1796,7 +1796,7 @@
 ;                ^^^^^^^^^^^ entity.name.constant.clojure
 ;                           ^^^^^^^^^^^^^- storage
 ;                           ^^^^^^^^^^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                         ^ -meta.sexp
 
   ; Consequent metadata is merged
@@ -1809,7 +1809,7 @@
 ;                 ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                          ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                      ^^^ constant.language.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                          ^ -meta.sexp
 
   (def ^:private ^:dynamic declare-def dont-declare)
@@ -1821,7 +1821,7 @@
 ;                          ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                     ^^^^^^^^^^^^^- storage
 ;                                     ^^^^^^^^^^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                                   ^ -meta.sexp
 
   (
@@ -1854,7 +1854,7 @@
 ;           ^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                    ^^^^^^^^^^^^^^^ entity.name.constant.clojure
 ;                                    ^^^ constant.language.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                        ^ -meta.sexp
 
   ; Useless but accepted by Clojure reader
@@ -1870,7 +1870,7 @@
 ;                         ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                    ^^^^^^^^^^^^^- storage
 ;                                    ^^^^^^^^^^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                                  ^ -meta.sexp
 
   ; Useless but accepted by Clojure reader
@@ -1892,7 +1892,7 @@
 ;                                       ^^^^^^^^^^^ entity.name.constant.clojure
 ;                                                  ^^^^^^^^^^^^^- storage
 ;                                                  ^^^^^^^^^^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                                                ^ -meta.sexp
 
 
@@ -1900,14 +1900,14 @@
 ; ## declare
 
   (declare)
-; ^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^ meta.sexp.list.edn
 ;          ^ -meta.sexp
 
   (declare declare-noindex)
 ;  ^^^^^^^ keyword.declaration.variable.clojure
 ;          ^^^^^^^^^^^^^^^ entity.name.function.forward-decl.clojure
 ;         ^^^^^^^^^^^^^^^^^- storage
-; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                          ^ -meta.sexp
 
 
@@ -1919,7 +1919,7 @@
 ;      ^^^ constant.language.edn
 ;         ^^^^^^^^^^^^^- storage
 ;         ^^^^^^^^^^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                       ^ -meta.sexp
 
   (-def dont-declare)
@@ -1939,7 +1939,7 @@
 ;      ^ keyword.operator.macro.clojure
 ;          ^ invalid.illegal.stray-bracket-end.edn
 ;        ^ punctuation.section.parens.end.edn
-; ^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^ meta.sexp.list.edn
 ;         ^ -meta.sexp
 
 
@@ -1947,19 +1947,19 @@
 ; # Function defs
 
   (defn)
-; ^^^^^^ meta.sexp.parens.edn
+; ^^^^^^ meta.sexp.list.edn
 ;       ^ -meta.sexp
 
   (defn f [])
-;         ^^ meta.sexp.parens.edn meta.sexp.brackets.edn meta.function.parameters.clojure
-; ^^^^^^^^^^^ meta.sexp.parens.edn
+;         ^^ meta.sexp.list.edn meta.sexp.vector.edn meta.function.parameters.clojure
+; ^^^^^^^^^^^ meta.sexp.list.edn
 ;            ^ -meta.sexp
 
   (defn f ([a]) [a])
-;          ^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;               ^^^ meta.sexp.parens.edn meta.sexp.brackets.edn
-;         ^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;          ^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;               ^^^ meta.sexp.list.edn meta.sexp.vector.edn
+;         ^^^^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                   ^ -meta.sexp
 
 
@@ -1969,9 +1969,9 @@
 ;                    ^^^^^^^^^^^^^^^- storage
 ;                    ^^^^^^^^^^^^^^^- entity
 ;                    ^^ meta.function.parameters.clojure
-;                    ^^ meta.sexp.brackets.edn
-;                      ^ -meta.sexp.brackets.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                    ^^ meta.sexp.vector.edn
+;                      ^ -meta.sexp.vector.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                    ^ -meta.sexp
 
   (defn declare-defn [arg & args] dont-declare)
@@ -1980,9 +1980,9 @@
 ;                    ^^^^^^^^^^^^ meta.function.parameters.clojure
 ;                    ^^^^^^^^^^^^^^^^^^^^^^^^^- storage
 ;                    ^^^^^^^^^^^^^^^^^^^^^^^^^- entity
-;                    ^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.brackets.edn
-;                                ^ meta.sexp.parens.edn - meta.sexp.brackets.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                    ^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.vector.edn
+;                                ^ meta.sexp.list.edn - meta.sexp.vector.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                              ^ -meta.sexp
 
   (defn ^:private declare-defn [arg & args] dont-declare)
@@ -1992,9 +1992,9 @@
 ;                 ^^^^^^^^^^^^ entity.name.function.clojure
 ;                              ^^^^^^^^^^^^^^^^^^^^^^^^^- storage
 ;                              ^^^^^^^^^^^^^^^^^^^^^^^^^- entity
-;                              ^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.brackets.edn
-;                                          ^ -meta.sexp.brackets
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                              ^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.vector.edn
+;                                          ^ -meta.sexp.vector
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                                        ^ -meta.sexp
 
   (defn declare-defn
@@ -2058,8 +2058,8 @@
 ;                     ^^^^^- entity
 ;                             ^^^^ constant.other.keyword.unqualified.edn
 ;                                    ^^^^ meta.function-call.clojure variable.function.clojure
-;                            ^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.braces.edn
-;                                  ^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.braces.edn meta.sexp.brackets.edn
+;                            ^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.map.edn
+;                                  ^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.map.edn meta.sexp.vector.edn
     value)
 ;   ^^^^^- storage
 ;   ^^^^^- entity
@@ -2083,7 +2083,7 @@
 
   (defn foo)
 ;          ^ punctuation.section.parens.end.edn
-; ^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^ meta.sexp.list.edn
 ;           ^ -meta.sexp
 
   ; # Gotta take care of these to have slurping work
@@ -2129,8 +2129,8 @@
   (defmulti declare-multi-fn)
 ;  ^^^^^^^^ keyword.declaration.function.clojure
 ;           ^^^^^^^^^^^^^^^^ entity.name.function.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                            ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                            ^ -meta.sexp.list.edn
 
   (defmulti ^:private declare-multi-fn dont-declare-dispatch-fn)
 ;  ^^^^^^^^ keyword.declaration.function.clojure
@@ -2139,8 +2139,8 @@
 ;                     ^^^^^^^^^^^^^^^^ entity.name.function.clojure
 ;                                     ^^^^^^^^^^^^^^^^^^^^^^^^^- storage
 ;                                     ^^^^^^^^^^^^^^^^^^^^^^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                                                               ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                                                               ^ -meta.sexp.list.edn
 
   (
    defmulti
@@ -2159,26 +2159,26 @@
 ;  ^^^^^^^^ keyword.declaration.function.clojure
 ;           ^^^^^^^^^^^^^^^^ entity.name.function.clojure
 ;                            ^^^ constant.language.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                                ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                                ^ -meta.sexp.list.edn
 
   (defmethod dont-declare-multi-fn :dispatch-value [arg & args] [arg] ...)
 ;                                  ^^^^^^^^^^^^^^^ constant.other.keyword.unqualified.edn
 ;                                                  ^^^^^^^^^^^^ meta.function.parameters.clojure
 ;                                                               ^^^^^ - meta.function.parameters.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                                                                         ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                                                                         ^ -meta.sexp.list.edn
 
   (defmethod dont-declare-multi-fn DispatchType [arg] ...)
 ;                                  ^^^^^^^^^^^^^- storage
 ;                                  ^^^^^^^^^^^^^- entity
-;  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                                                         ^ -meta.sexp.parens.edn
+;  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                                                         ^ -meta.sexp.list.edn
 
   (defmethod bat [String String] [x y & xs] ,,,)
 ;                ^^^^^^^^^^^^^^^ - meta.function.parameters.clojure
 ;                                ^^^^^^^^^^ meta.function.parameters.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                               ^ -meta.sexp
 
 
@@ -2198,8 +2198,8 @@
 ;      ^^^^ constant.other.keyword.unqualified.edn
       (print-method (.toString bar) out)))
 ;                                       ^^ punctuation.section.parens.end.edn - invalid
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                                         ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                                         ^ -meta.sexp.list.edn
 
   (defmethod event-handler :default
     #?@(:clj  [[{:keys [event uid]}]
@@ -2210,8 +2210,8 @@
         :cljs [[{:keys [event]}]
                (debugf "Unhandled event %s" event)]))
 ;                                                   ^ punctuation.section.parens.end.edn - invalid
-;  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                                                    ^ -meta.sexp.parens.edn
+;  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                                                    ^ -meta.sexp.list.edn
 
   (defmethod event-handler)
 ;                         ^ punctuation.section.parens.end.edn - invalid
@@ -2231,24 +2231,24 @@
 
   (defmethod)
 ;           ^ punctuation.section.parens.end.edn - invalid
-; ^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^ meta.sexp.list.edn
 ;            ^ -meta.sexp
 
 ; # defprotocol
 
   (defprotocol)
 ; ^ punctuation.section.parens.begin.edn
-; ^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^ meta.sexp.list.edn
 ;             ^ punctuation.section.parens.end.edn
-;              ^ -meta.sexp.parens.edn
+;              ^ -meta.sexp.list.edn
 
   (defprotocol DeclareProtocol)
 ;  ^^^^^^^^^^^ storage.type.interface.clojure
 ;              ^^^^^^^^^^^^^^^ entity.name.type.clojure
 ; ^ punctuation.section.parens.begin.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                             ^ punctuation.section.parens.end.edn - invalid
-;                              ^ -meta.sexp.parens.edn
+;                              ^ -meta.sexp.list.edn
 
 
   (defprotocol ^:private DeclareProtocol)
@@ -2292,7 +2292,7 @@
 ;              ^^^^^^^^^^^^^^^ entity.name.type.clojure
 ;                             ^^^^^^^^^^^^^- storage
 ;                             ^^^^^^^^^^^^^- entity
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                           ^ -meta.sexp
 
   ; Protocol methods are added to the namespace as functions
@@ -2303,9 +2303,9 @@
 ;                               ^^^^^^^^^^^^^^^^^^^^^ - storage
 ;                               ^^^^^^^^^^^^^^^^^^^^^ - entity
 ;                                                    ^ punctuation.section.parens.end.edn
-;   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                            ^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;                                ^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
+;   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                            ^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;                                ^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
     ; ---
     (^File declare-protocol-method [_] dont-declare))
 ;    ^ keyword.operator.macro.clojure
@@ -2329,8 +2329,8 @@
 ; ^ punctuation.section.parens.begin.edn
 ;                       ^ punctuation.section.parens.begin.edn
 ;                        ^ punctuation.section.parens.end.edn
-;                       ^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                       ^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                          ^ -meta.sexp
 
 
@@ -2382,7 +2382,7 @@
 ;          ^^^^^^^^^^^ entity.name.type.clojure
 ;                      ^ punctuation.section.brackets.begin.edn
 ;                       ^ punctuation.section.brackets.end.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                         ^ -meta.sexp
 
   (deftype-custom DeclareWithCustomDeftype)
@@ -2521,10 +2521,10 @@
 ;                                     ^ meta.function.parameters.clojure
 ;                                      ^ punctuation.section.brackets.end.edn
 ;                                       ^ punctuation.section.parens.end.edn
-;                                    ^^^ meta.sexp.brackets.edn
-;                                       ^ -meta.sexp.brackets.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                                        ^ -meta.sexp.parens.edn
+;                                    ^^^ meta.sexp.vector.edn
+;                                       ^ -meta.sexp.vector.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                                        ^ -meta.sexp.list.edn
 
   (
    ; ---
@@ -2541,7 +2541,7 @@
 ;  ^^^^^^^^^^^^^ entity.name.type.clojure
    ; ---
    [])
-;  ^^ meta.sexp.parens.edn meta.sexp.brackets.edn meta.function.parameters.clojure
+;  ^^ meta.sexp.list.edn meta.sexp.vector.edn meta.function.parameters.clojure
 ;     ^ -meta.sexp
 
   ; Same reasoning as for definterface and deftype
@@ -2552,14 +2552,14 @@
 ;    ^^^ entity.name.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^^ constant.other.keyword.unqualified.edn
-;              ^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;   ^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;              ^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;   ^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
     Quux
     (zot [_]))
 ;    ^^^ entity.name.function.clojure
-;        ^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;   ^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^^^^^^ meta.sexp.parens.edn
+;        ^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;   ^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^^^^^^ meta.sexp.list.edn
 
   ; Scope the implemented protocols/interfaces
   (defrecord DeclareRecord [fields]
@@ -2569,14 +2569,14 @@
 ;   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
     (declare-noindex [_])
 ;    ^^^^^^^^^^^^^^^ entity.name.function.clojure
-;                    ^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;   ^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;                    ^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;   ^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
     namespace/ImplementedProtocol
 ;   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
     (declare-noindex [_]))
 ;    ^^^^^^^^^^^^^^^ entity.name.function.clojure
-;                    ^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;   ^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;                    ^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;   ^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
 ;                         ^ -meta.sexp
 
 
@@ -2618,15 +2618,15 @@
 ; # reify
 
   (reify clojure.lang.IDeref (deref))
-;                            ^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                            ^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                    ^ -meta.sexp
 
 
   (reify clojure.lang.IDeref (deref [_] nil))
-;                                   ^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;                            ^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                                   ^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;                            ^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                            ^ -meta.sexp
 
   (reify
@@ -2636,14 +2636,14 @@
     (deref [_] nil)
 ;    ^^^^^ entity.name.function.clojure
 ;              ^^^ constant.language.edn
-;   ^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;   ^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
     clojure.lang.Seqable
 ;   ^^^^^^^^^^^^^^^^^^^^ entity.other.inherited-class.clojure
     (seq [_] nil))
 ;    ^^^ entity.name.function.clojure
 ;            ^^^ constant.language.edn
-;   ^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;   ^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                 ^ -meta.sexp
 
   (do
@@ -2662,48 +2662,48 @@
 ; # proxy
 
   (proxy)
-; ^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^ meta.sexp.list.edn
 ;        ^ -meta.sexp
 
   (proxy [])
 ; ^ punctuation.section.parens.begin.edn
-;        ^^ meta.sexp.parens.edn meta.sexp.brackets.edn
-; ^^^^^^^^^^ meta.sexp.parens.edn
+;        ^^ meta.sexp.list.edn meta.sexp.vector.edn
+; ^^^^^^^^^^ meta.sexp.list.edn
 ;          ^ punctuation.section.parens.end.edn
 ;           ^ -meta.sexp
 
   (proxy [] [])
 ; ^ punctuation.section.parens.begin.edn
-;        ^^ meta.sexp.parens.edn meta.sexp.brackets.edn
-;           ^^ meta.sexp.parens.edn meta.sexp.brackets.edn
-; ^^^^^^^^^^^^^ meta.sexp.parens.edn
+;        ^^ meta.sexp.list.edn meta.sexp.vector.edn
+;           ^^ meta.sexp.list.edn meta.sexp.vector.edn
+; ^^^^^^^^^^^^^ meta.sexp.list.edn
 ;             ^ punctuation.section.parens.end.edn
 ;              ^ -meta.sexp
 
 ; invalid, but ought to be pareditable
   (proxy [foo bar] (baz [quux] quux))
 ; ^ punctuation.section.parens.begin.edn
-;        ^ meta.sexp.parens.edn meta.sexp.brackets.edn punctuation.section.brackets.begin.edn
-;                ^ meta.sexp.parens.edn meta.sexp.brackets.edn punctuation.section.brackets.end.edn
-;                       ^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-;                  ^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;        ^ meta.sexp.list.edn meta.sexp.vector.edn punctuation.section.brackets.begin.edn
+;                ^ meta.sexp.list.edn meta.sexp.vector.edn punctuation.section.brackets.end.edn
+;                       ^^^^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+;                  ^^^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                    ^ -meta.sexp
 
   (proxy [foo bar] [] (baz [quux] quux))
 ; ^ punctuation.section.parens.begin.edn
 ;        ^ punctuation.section.brackets.begin.edn
 ;                ^ punctuation.section.brackets.end.edn
-;        ^^^^^^^^^ meta.sexp.brackets.edn
-;                  ^^ meta.sexp.parens.edn meta.sexp.brackets.edn meta.function.parameters.clojure
-;                    ^ -meta.sexp.brackets & -meta.function.parameters
+;        ^^^^^^^^^ meta.sexp.vector.edn
+;                  ^^ meta.sexp.list.edn meta.sexp.vector.edn meta.function.parameters.clojure
+;                    ^ -meta.sexp.vector & -meta.function.parameters
 ;                     ^ punctuation.section.parens.begin.edn
 ;                                     ^ punctuation.section.parens.end.edn
-;                     ^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;                     ^^^^^^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
 ;                          ^ punctuation.section.brackets.begin.edn
 ;                               ^ punctuation.section.brackets.end.edn
-;                          ^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                          ^^^^^^ meta.sexp.list.edn meta.sexp.list.edn meta.sexp.vector.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                       ^ -meta.sexp
 
   (proxy ^:foo
@@ -2783,8 +2783,8 @@
 ;  ^^ keyword.declaration.namespace.clojure
 ;     ^^^^^^^ entity.name.namespace.clojure
 ;            ^ punctuation.section.parens.end.edn
-; ^^^^^^^^^^^^ meta.sexp.parens.edn
-;             ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^ meta.sexp.list.edn
+;             ^ -meta.sexp.list.edn
 
   (ns ^:baz foo.bar)
 ; ^ punctuation.section.parens.begin.edn
@@ -2793,8 +2793,8 @@
 ;      ^^^^ constant.other.keyword.unqualified.edn
 ;           ^^^^^^^ entity.name.namespace.clojure
 ;                  ^ punctuation.section.parens.end.edn
-; ^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                   ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                   ^ -meta.sexp.list.edn
 
   (ns ^{:baz true} foo.bar)
 ; ^ punctuation.section.parens.begin.edn
@@ -2803,9 +2803,9 @@
 ;            ^^^^ constant.language.edn
 ;                  ^^^^^^^ entity.name.namespace.clojure
 ;                         ^ punctuation.section.parens.end.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;      ^^^^^^^^^^^ meta.sexp.braces.edn
-;                          ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;      ^^^^^^^^^^^ meta.sexp.map.edn
+;                          ^ -meta.sexp.list.edn
 
   (ns ^{:config '{:some-keyword some-symbol}} foo.bar)
 ; ^ punctuation.section.parens.begin.edn
@@ -2815,10 +2815,10 @@
 ;                               ^^^^^^^^^^^ meta.symbol.edn
 ;                                             ^^^^^^^ entity.name.namespace.clojure
 ;                                                    ^ punctuation.section.parens.end.edn
-;                                                     ^ -meta.sexp.parens.edn
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.braces.edn
-;                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.braces.edn meta.sexp.braces.edn
+;                                                     ^ -meta.sexp.list.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.map.edn
+;                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.map.edn meta.sexp.map.edn
 
   (ns foo.bar "baz")
 ;             ^^^^^ string.quoted.double.edn
@@ -2881,7 +2881,7 @@
   (in-ns)
 ;  ^^^^^ meta.reader-form.clojure meta.symbol.clojure keyword.declaration.namespace.clojure
 ;       ^ punctuation.section.parens.end.edn
-; ^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^ meta.sexp.list.edn
 ;        ^ -meta.sexp
 
   (in-ns 'foo.bar)
@@ -2890,27 +2890,27 @@
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^^^^^ meta.reader-form.clojure meta.symbol.clojure entity.name.namespace.clojure
 ;                ^ punctuation.section.parens.end.edn
-; ^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                 ^ -meta.sexp
 
 
 ; # deftest
 
   (deftest)
-; ^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^ meta.sexp.list.edn
 ;          ^ -meta.sexp
 
   (deftest foo (is (= 3 (+ 1 2))))
 ;  ^^^^^^^ keyword.declaration.function.clojure
 ;          ^^^ meta.test-var.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                                 ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                                 ^ -meta.sexp.list.edn
 
   (test/deftest ^:slow foo)
 ;  ^^^^^^^^^^^^ keyword.declaration.function.clojure
 ;                      ^^^ meta.test-var.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
-;                          ^ -meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                          ^ -meta.sexp.list.edn
 
 
 
@@ -3001,8 +3001,8 @@
 ; ^^ keyword.operator.macro
 ;   ^ punctuation.section.parens.begin.edn
 ;    ^^^^ constant.other.keyword.unqualified.edn
-;         ^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
-;   ^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;         ^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
+;   ^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                   ^ -meta.sexp
 
 (defn excluded?
@@ -3171,87 +3171,87 @@
 
   (. System (getProperties))
 ;  ^ meta.special-form.clojure keyword.other.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                           ^ -meta.sexp
 
   (new java.util.HashMap)
 ;  ^^^ meta.special-form.clojure keyword.other.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                        ^ -meta.sexp
 
   (set! *warn-on-reflection* true)
 ;  ^^^^ meta.special-form.clojure keyword.other.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                 ^ -meta.sexp
 
   (def x 1)
 ;  ^^^ meta.special-form.clojure keyword.declaration.variable.clojure
-; ^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^ meta.sexp.list.edn
 ;          ^ -meta.sexp
 
   (if test then else)
 ;  ^^ meta.special-form.clojure keyword.control.conditional.if.clojure
-; ^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                    ^ -meta.sexp
 
   (do expr*)
 ;  ^^ meta.special-form.clojure keyword.other.clojure
-; ^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^ meta.sexp.list.edn
 ;           ^ -meta.sexp
 
   (let [x 1] [x x])
 ;  ^^^ meta.special-form.clojure keyword.declaration.variable.clojure
 ;      ^^^^^ meta.binding-vector.clojure
 ;            ^^^^^ - meta.binding-vector.clojure
-;  ^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;  ^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                  ^ -meta.sexp
 
   [(let)]
 ;       ^ punctuation.section.brackets.end.edn - invalid
-;  ^^^^^ meta.sexp.brackets.edn meta.sexp.parens.edn
-; ^^^^^^^ meta.sexp.brackets.edn
+;  ^^^^^ meta.sexp.vector.edn meta.sexp.list.edn
+; ^^^^^^^ meta.sexp.vector.edn
 ;        ^ -meta.sexp
 
   (quote form)
 ;  ^^^^^ meta.special-form.clojure keyword.other.clojure
-;  ^^^^^^^^^^^ meta.sexp.parens.edn
+;  ^^^^^^^^^^^ meta.sexp.list.edn
 ;             ^ -meta.sexp
 
   (var symbol)
 ;  ^^^ meta.special-form.clojure keyword.other.clojure
-; ^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^ meta.sexp.list.edn
 ;             ^ -meta.sexp
 
   (fn name? [x 1] expr*)
 ;  ^^ meta.special-form.clojure keyword.declaration.function.inline.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                       ^ -meta.sexp
 
   (loop [x 1]
 ;  ^^^^ meta.special-form.clojure keyword.control.loop.clojure
     (recur (inc x)))
 ;    ^^^^^ meta.special-form.clojure keyword.control.flow.recur.clojure
-; ^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                   ^ -meta.sexp
 
   (throw (ex-info "Boom!" {:foo :bar}))
 ;  ^^^^^ meta.special-form.clojure keyword.control.flow.throw.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                      ^ -meta.sexp
 
   (try ,,, (catch Exception _ ,,,) (finally ,,,))
 ;  ^^^ meta.special-form.clojure keyword.control.exception.try.clojure
 ;           ^^^^^ keyword.control.exception.catch.clojure
 ;                                   ^^^^^^^ keyword.control.exception.finally.clojure
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                                ^ -meta.sexp
 
   (monitor-enter expr) (monitor-exit expr)
 ;  ^^^^^^^^^^^^^ meta.special-form.clojure keyword.other.clojure
 ;                       ^^^^^^^^^^^^ meta.special-form.clojure keyword.other.clojure
-; ^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                     ^ -meta.sexp
-;                      ^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                      ^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                                         ^ -meta.sexp
 
 

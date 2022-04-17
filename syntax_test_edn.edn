@@ -347,61 +347,61 @@ string"
 
 ;; SEXP
    ( )
-; ^ -meta.sexp.parens.edn
+; ^ -meta.sexp.list.edn
 ;  ^ punctuation.section.parens.begin.edn
-;   ^ meta.sexp.parens.edn
+;   ^ meta.sexp.list.edn
 ;    ^ punctuation.section.parens.end.edn
-;     ^ -meta.sexp.parens.edn
+;     ^ -meta.sexp.list.edn
   (foo/bar (baz/quux 1))
 ; ^ punctuation.section.parens.begin.edn
-; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;          ^ punctuation.section.parens.begin.edn
-;          ^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+;          ^^^^^^^^^^^^ meta.sexp.list.edn meta.sexp.list.edn
 ;                     ^ punctuation.section.parens.end.edn
 ;                      ^ punctuation.section.parens.end.edn
-;                       ^ -meta.sexp.parens.edn
+;                       ^ -meta.sexp.list.edn
    [ ]
-; ^ -meta.sexp.brackets.edn
+; ^ -meta.sexp.vector.edn
 ;  ^ punctuation.section.brackets.begin.edn
-;  ^^^ meta.sexp.brackets.edn
+;  ^^^ meta.sexp.vector.edn
 ;    ^ punctuation.section.brackets.end.edn
-;     ^ -meta.sexp.brackets.edn
+;     ^ -meta.sexp.vector.edn
   [1 [2] 3]
 ; ^ punctuation.section.brackets.begin.edn
-; ^^^^^^^^^ meta.sexp.brackets.edn
+; ^^^^^^^^^ meta.sexp.vector.edn
 ;    ^ punctuation.section.brackets.begin.edn
-;    ^^^ meta.sexp.brackets.edn meta.sexp.brackets.edn
+;    ^^^ meta.sexp.vector.edn meta.sexp.vector.edn
 ;      ^ punctuation.section.brackets.end.edn
 ;         ^ punctuation.section.brackets.end.edn
-;          ^ -meta.sexp.brackets.edn
+;          ^ -meta.sexp.vector.edn
    { }
-; ^ -meta.sexp.braces.edn
+; ^ -meta.sexp.map.edn
 ;  ^ punctuation.section.braces.begin.edn
-;  ^^^ meta.sexp.braces.edn
+;  ^^^ meta.sexp.map.edn
 ;    ^ punctuation.section.braces.end.edn
-;     ^ -meta.sexp.braces.edn
+;     ^ -meta.sexp.map.edn
   {:a {:b 2} :c 3}
 ; ^ punctuation.section.braces.begin.edn
-; ^^^^^^^^^^^^^^^^ meta.sexp.braces.edn
+; ^^^^^^^^^^^^^^^^ meta.sexp.map.edn
 ;     ^ punctuation.section.braces.begin.edn
-;     ^^^^^^ meta.sexp.braces.edn meta.sexp.braces.edn
+;     ^^^^^^ meta.sexp.map.edn meta.sexp.map.edn
 ;          ^ punctuation.section.braces.end.edn
 ;                ^ punctuation.section.braces.end.edn
-;                 ^ -meta.sexp.braces.edn
+;                 ^ -meta.sexp.map.edn
    #{ }
-; ^ -meta.sexp.braces.edn
+; ^ -meta.sexp.set.edn
 ;  ^ keyword.operator.macro.edn
 ;   ^ punctuation.section.braces.begin.edn
-;  ^^^^ meta.sexp.braces.edn
+;  ^^^^ meta.sexp.set.edn
 ;     ^ punctuation.section.braces.end.edn
-;      ^ -meta.sexp.braces.edn
+;      ^ -meta.sexp.set.edn
   #{1 #{2} 3}
 ; ^ keyword.operator.macro.edn
 ;  ^ punctuation.section.braces.begin.edn
-; ^^^^^^^^^^^ meta.sexp.braces.edn
+; ^^^^^^^^^^^ meta.sexp.set.edn
 ;     ^ keyword.operator.macro.edn
 ;      ^ punctuation.section.braces.begin.edn
-;     ^^^^ meta.sexp.braces.edn meta.sexp.braces.edn
+;     ^^^^ meta.sexp.set.edn meta.sexp.set.edn
 ;        ^ punctuation.section.braces.end.edn
 ;           ^ punctuation.section.braces.end.edn
-;            ^ -meta.sexp.braces.edn
+;            ^ -meta.sexp.set.edn
