@@ -66,6 +66,10 @@
 ;      ^ punctuation.section.parens.begin.edn
 ;       ^^^^ constant.language.edn
 ;           ^ punctuation.section.parens.end.edn
+;      ^^^^^^ meta.sexp.parens.edn
+;            ^ -meta.sexp
+;             ^^^^^ meta.sexp.parens.edn
+;                  ^ -meta.sexp
 
 ; ## No highlighting
 
@@ -1033,6 +1037,8 @@
 ; ^ keyword.operator.macro.clojure
 ;  ^- keyword.operator.macro.clojure
 ;   ^^^^ meta.function-call.clojure variable.function.clojure
+;  ^^^^^^^^^^^ meta.sexp.parens.edn
+;             ^ -meta.sexp
 
   #[]
 ; ^ -keyword.operator.macro.clojure
@@ -1611,6 +1617,10 @@
 
 ; # fn
 
+  (fn)
+; ^^^^ meta.sexp.parens.edn
+;     ^ -meta.sexp
+
   (fn [])
 ;  ^^ keyword.declaration.function.inline.clojure
 ;     ^ punctuation.section.brackets.begin.edn
@@ -1626,6 +1636,20 @@
 ;          ^ -meta.sexp.brackets.edn & -meta.function.parameters.clojure
 ; ^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
 ;                     ^ -meta.sexp
+
+
+  (fn ())
+;     ^^ meta.sexp.parens.edn meta.sexp.parens.edn
+; ^^^^^^^ meta.sexp.parens.edn
+;        ^ -meta.sexp
+
+  (fn ([{:keys [foo]}]))
+;        ^^^^^ constant.other.keyword.unqualified.edn
+;      ^^^^^^^^^^^^^^^ meta.function.parameters.clojure
+;      ^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
+;     ^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                       ^ -meta.sexp
 
 
   (fn
@@ -1692,6 +1716,10 @@
 ; # defs
 
 ; ## Normal def
+
+  (def)
+; ^^^^^ meta.sexp.parens.edn
+;      ^ -meta.sexp
 
   (def declare-def)
 ;  ^^^ keyword.declaration.variable.clojure
@@ -1918,6 +1946,23 @@
 
 ; # Function defs
 
+  (defn)
+; ^^^^^^ meta.sexp.parens.edn
+;       ^ -meta.sexp
+
+  (defn f [])
+;         ^^ meta.sexp.parens.edn meta.sexp.brackets.edn meta.function.parameters.clojure
+; ^^^^^^^^^^^ meta.sexp.parens.edn
+;            ^ -meta.sexp
+
+  (defn f ([a]) [a])
+;          ^^^ meta.sexp.parens.edn meta.sexp.parens.edn meta.sexp.brackets.edn
+;               ^^^ meta.sexp.parens.edn meta.sexp.brackets.edn
+;         ^^^^^ meta.sexp.parens.edn meta.sexp.parens.edn
+; ^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn
+;                   ^ -meta.sexp
+
+
   (defn declare-defn [] dont-declare)
 ;  ^^^^ keyword.declaration.function.clojure
 ;       ^^^^^^^^^^^^ entity.name.function.clojure
@@ -2013,6 +2058,8 @@
 ;                     ^^^^^- entity
 ;                             ^^^^ constant.other.keyword.unqualified.edn
 ;                                    ^^^^ meta.function-call.clojure variable.function.clojure
+;                            ^^^^^^^^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.braces.edn
+;                                  ^^^^^^^^^^^^^^ meta.sexp.parens.edn meta.sexp.braces.edn meta.sexp.brackets.edn
     value)
 ;   ^^^^^- storage
 ;   ^^^^^- entity
