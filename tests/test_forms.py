@@ -61,6 +61,8 @@ class TestForms(ViewTestCase):
         self.assertEquals(forms.find_next(self.view, 6), Region(7, 10))
         self.set_view_content("""(foo)(bar)""")
         self.assertEquals(forms.find_next(self.view, 5), Region(5, 10))
+        self.set_view_content("""{:a 1, :b 2}""")
+        self.assertEquals(forms.find_next(self.view, 5), Region(7, 9))
 
     def test_find_previous(self):
         self.set_view_content("a")
@@ -118,6 +120,8 @@ class TestForms(ViewTestCase):
         self.assertEquals(forms.find_previous(self.view, 7), Region(3, 6))
         self.set_view_content("""(foo)(bar)""")
         self.assertEquals(forms.find_previous(self.view, 5), Region(0, 5))
+        self.set_view_content("""{:a 1, :b 2}""")
+        self.assertEquals(forms.find_previous(self.view, 7), Region(4, 5))
 
     def test_seek_backward(self):
         is_function = lambda form: self.view.match_selector(form.begin(), "variable.function")

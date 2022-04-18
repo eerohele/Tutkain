@@ -71,8 +71,6 @@ def find_next(view, point):
                     return form.cover(dispatch)
             elif view.match_selector(point, "meta.reader-form"):
                 return selectors.expand_by_selector(view, point, "meta.reader-form | keyword.operator.macro")
-            elif view.match_selector(point, "comment.punctuation.comma"):
-                return selectors.expand_by_selector(view, point, "comment.punctuation.comma")
             else:
                 point += 1
 
@@ -107,8 +105,6 @@ def find_previous(view, point):
             elif view.match_selector(point - 1, "meta.reader-form"):
                 form = selectors.expand_by_selector(view, point - 1, "meta.reader-form")
                 return absorb_macro_characters(view, form)
-            elif view.match_selector(point - 1, "comment.punctuation.comma"):
-                return selectors.expand_by_selector(view, point - 1, "comment.punctuation.comma")
             else:
                 point -= 1
 

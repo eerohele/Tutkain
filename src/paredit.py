@@ -428,7 +428,24 @@ def backward_move_form(view, edit):
         if region.empty():
             form = forms.find_adjacent(view, region.begin())
 
+        if not form:
+            return
+
         previous_form = forms.find_previous(view, form.begin())
+
+        if region.empty():
+            if view.match_selector(form.begin(), "meta.mapping.key"):
+                if val_form := forms.find_next(view, form.end()):
+                    form = form.cover(val_form)
+                    if previous_form := forms.find_previous(view, form.begin()):
+                        if p := forms.find_previous(view, previous_form.begin()):
+                            previous_form = previous_form.cover(p)
+            elif view.match_selector(form.begin(), "meta.mapping.value"):
+                if key_form := forms.find_previous(view, form.begin()):
+                    form = form.cover(key_form)
+                    if previous_form := forms.find_previous(view, form.begin()):
+                        if p := forms.find_previous(view, previous_form.begin()):
+                            previous_form = previous_form.cover(p)
 
         if previous_form:
             form_str = view.substr(form)
@@ -452,7 +469,26 @@ def forward_move_form(view, edit):
         if region.empty():
             form = forms.find_adjacent(view, region.begin())
 
+        if not form:
+            return
+
         next_form = forms.find_next(view, form.end())
+
+        if region.empty():
+            if form and view.match_selector(form.begin(), "meta.mapping.key"):
+                if val_form := next_form:
+                    form = form.cover(val_form)
+
+                    if next_form := forms.find_next(view, form.end()):
+                        if n := forms.find_next(view, next_form.end()):
+                            next_form = next_form.cover(n)
+            elif form and view.match_selector(form.begin(), "meta.mapping.value"):
+                if key_form := forms.find_previous(view, form.begin()):
+                    form = form.cover(key_form)
+
+                    if next_form := forms.find_next(view, form.end()):
+                        if n := forms.find_next(view, next_form.end()):
+                            next_form = next_form.cover(n)
 
         if next_form:
             form_str = view.substr(form)
