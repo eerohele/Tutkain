@@ -344,11 +344,29 @@ contexts:
     - match: '\{'
       scope: punctuation.section.braces.begin.edn
       push:
-      - meta_scope: meta.sexp.map.edn
-      - match: \}
-        scope: punctuation.section.braces.end.edn
-        pop: true
-      - include: main
+        - meta_scope: meta.sexp.map.edn
+        - match: '[\]\)]'
+          scope: invalid.illegal.stray-bracket-end.edn
+        - match: \}
+          scope: punctuation.section.braces.end.edn
+          pop: true
+        - include: comma
+        - match: '(?=[^\s,])'
+          push:
+            - meta_content_scope: meta.mapping.key.edn
+            - include: forms
+            - match: ''
+              set:
+                - include: comma
+                - match: '(?=[^\s,])'
+                  set:
+                    - meta_content_scope: meta.mapping.value.edn
+                    - match: ','
+                      scope: punctuation.comma.edn comment.punctuation.comma.edn
+                      pop: 1
+                    - include: forms
+                    - match: ''
+                      pop: 1
 
   # Set
 

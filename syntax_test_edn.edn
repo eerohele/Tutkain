@@ -405,3 +405,40 @@ string"
 ;        ^ punctuation.section.braces.end.edn
 ;           ^ punctuation.section.braces.end.edn
 ;            ^ -meta.sexp.set.edn
+
+  {,}
+;  ^ comment.punctuation.comma.edn
+
+  {:a}
+;  ^^ meta.mapping.key.edn
+;    ^^ -meta.mapping
+
+  {:a 1}
+;  ^^ meta.mapping.key.edn
+;    ^ -meta.mapping
+;     ^ meta.sexp.map.edn meta.mapping.value.edn
+
+  {:a ,}
+;  ^^ meta.mapping.key.edn
+;    ^^ -meta.mapping
+;     ^ comment.punctuation.comma.edn
+
+  {:a 1,}
+;  ^^ meta.mapping.key.edn
+;    ^ -meta.mapping
+;     ^ meta.sexp.map.edn meta.mapping.value.edn
+;      ^ -meta.mapping
+
+  {:a {:b 2} :c 3}
+;  ^^ meta.mapping.key.edn
+;    ^ -meta.mapping
+;     ^^^^^^ meta.mapping.value.edn
+;      ^^ meta.mapping.value.edn meta.mapping.key.edn
+;        ^ -meta.mapping.key
+;         ^ meta.mapping.value.edn meta.mapping.value.edn
+;          ^ -(meta.mapping.value.edn meta.mapping.value.edn)
+;           ^ -meta.mapping
+;            ^^ meta.mapping.key.edn
+;              ^ -meta.mapping.key
+;               ^ meta.mapping.value.edn
+;                ^^ -meta.mapping
