@@ -38,7 +38,7 @@ def move(view, forward, extend):
 
         if form:
             new_point = form.end() if forward else form.begin()
-        else:
+        elif not extend:
             innermost = sexp.innermost(view, point, edge=False)
 
             if innermost:

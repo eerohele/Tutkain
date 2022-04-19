@@ -62,7 +62,7 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_forward", {"extend": True})
         self.assertEquals([(1, 36)], self.selections())
         self.view.run_command("tutkain_paredit_forward", {"extend": True})
-        self.assertEquals([(1, 37)], self.selections())
+        self.assertEquals([(1, 36)], self.selections())
 
         # Back
         self.set_selections((36, 36))
@@ -79,7 +79,7 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_backward", {"extend": True})
         self.assertEquals([(1, 36)], self.selections())
         self.view.run_command("tutkain_paredit_backward", {"extend": True})
-        self.assertEquals([(0, 36)], self.selections())
+        self.assertEquals([(1, 36)], self.selections())
 
     def test_open_round(self):
         self.set_view_content("(a b c d)")
