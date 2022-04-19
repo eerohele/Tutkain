@@ -51,6 +51,15 @@ class TestParedit(ViewTestCase):
         self.set_selections((1, 1))
         self.view.run_command("tutkain_paredit_forward", {"extend": True})
         self.assertEquals([(1, 4)], self.selections())
+
+        # Select the entire current form
+        self.set_selections((2, 2))
+        self.view.run_command("tutkain_paredit_forward", {"extend": True})
+        self.assertEquals([(1, 4)], self.selections())
+        self.set_selections((3, 3))
+
+        self.view.run_command("tutkain_paredit_forward", {"extend": True})
+        self.assertEquals([(1, 4)], self.selections())
         self.view.run_command("tutkain_paredit_forward", {"extend": True})
         self.assertEquals([(1, 10)], self.selections())
         self.view.run_command("tutkain_paredit_forward", {"extend": True})
@@ -68,6 +77,18 @@ class TestParedit(ViewTestCase):
         self.set_selections((36, 36))
         self.view.run_command("tutkain_paredit_backward", {"extend": True})
         self.assertEquals([(25, 36)], self.selections())
+
+        # Select the entire current form
+        self.set_selections((35, 35))
+        self.view.run_command("tutkain_paredit_backward", {"extend": True})
+        self.assertEquals([(25, 36)], self.selections())
+        self.set_selections((34, 34))
+        self.view.run_command("tutkain_paredit_backward", {"extend": True})
+        self.assertEquals([(25, 36)], self.selections())
+        self.set_selections((26, 26))
+        self.view.run_command("tutkain_paredit_backward", {"extend": True})
+        self.assertEquals([(25, 36)], self.selections())
+
         self.view.run_command("tutkain_paredit_backward", {"extend": True})
         self.assertEquals([(21, 36)], self.selections())
         self.view.run_command("tutkain_paredit_backward", {"extend": True})

@@ -27,17 +27,22 @@ def iterate(view):
 
 def move(view, forward, extend):
     for region, sel in iterate(view):
+        cover_region = region
+
+        if form := forms.find_adjacent(view, region.begin()):
+            cover_region = region.cover(form)
+
         if forward:
             point = region.end()
-            form = forms.find_next(view, point)
+            form_to = forms.find_next(view, point)
         else:
             point = region.begin()
-            form = forms.find_previous(view, point)
+            form_to = forms.find_previous(view, point)
 
         new_point = None
 
-        if form:
-            new_point = form.end() if forward else form.begin()
+        if form_to:
+            new_point = form_to.end() if forward else form_to.begin()
         elif not extend:
             innermost = sexp.innermost(view, point, edge=False)
 
@@ -46,9 +51,9 @@ def move(view, forward, extend):
 
         if new_point is not None:
             if extend and forward:
-                sel.append(Region(point, new_point).cover(region))
+                sel.append(Region(point, new_point).cover(cover_region))
             elif extend and not forward:
-                sel.append(region.cover(Region(new_point, point)))
+                sel.append(cover_region.cover(Region(new_point, point)))
             else:
                 sel.append(new_point)
 
