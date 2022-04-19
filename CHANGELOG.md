@@ -38,6 +38,24 @@ All notable changes to this project will be documented in this file.
 
 - Add **Tutkain: New Scratch View in Namespace** command
 
+- Add pairwise support to ParEdit Forward/Backward Move Form
+
+  For example, given:
+
+  ```clojure
+  {:a 1 :b 2}
+  ```
+
+  And your caret is on top of `:a` or `1` and you run `tutkain_paredit_forward_move`, Tutkain will now move both the key (`:a`) and the value `1`, such that the result is:
+
+  ```clojure
+  {:b 2 :a 1}
+  ```
+
+- Improve the behavior of `tutkain_paredit_forward` and `tutkain_paredit_backward` when passed `{"extend": true}`
+
+  Tutkain now selects the entire form your caret is on.
+
 - Fix **Tutkain: Explorer Stack Trace** after error caused by loading a view
 
 - Synchronize view loads and other evaluations #93
