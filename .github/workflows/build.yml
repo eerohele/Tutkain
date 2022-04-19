@@ -5,47 +5,26 @@ on:
       - develop
 
 env:
-  UNITTESTING_TAG: master
   SUBLIME_TEXT_VERSION: 4
   SUBLIME_TEXT_ARCH: x64
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-    container: sublimetext/unittesting
+  sublime-text:
+    strategy:
+      fail-fast: false
+      matrix:
+        st-version: [4]
+        os: ["ubuntu-latest", "macOS-latest"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - run: sh -e /etc/init.d/xvfb start
-      - run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
-      - run: |
-          PATH="$HOME/.local/bin:$PATH"
-          sh github.sh bootstrap
-          sh github.sh install_package_control
-          sh github.sh run_tests
-          sh github.sh run_syntax_tests
-
-  macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: curl -OL https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.sh
-      - run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          sh github.sh bootstrap
-          sh github.sh install_package_control
-          sh github.sh run_tests
-          sh github.sh run_syntax_tests
-
-  # windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - run: (new-object net.webclient).DownloadFile("https://raw.githubusercontent.com/SublimeText/UnitTesting/master/sbin/github.ps1","github.ps1")
-  #     - run: |
-  #         ./github.ps1 "bootstrap" -verbose
-  #         ./github.ps1 "install_package_control" -verbose
-  #         ./github.ps1 "run_tests" -verbose
-  #         ./github.ps1 "run_syntax_tests" -verbose
+      - uses: SublimeText/UnitTesting/actions/setup@v1
+        with:
+          sublime-text-version: ${{ matrix.st-version }}
+      - uses: SublimeText/UnitTesting/actions/run-tests@v1
+        with:
+          coverage: false
+          codecov-upload: false
 
   clojure:
     strategy:
