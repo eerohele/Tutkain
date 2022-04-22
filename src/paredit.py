@@ -426,6 +426,14 @@ def kill_form(view, edit, forward):
                 view.erase(edit, region.cover(form))
 
 
+def on_pairwise_form(view, point, selector):
+    scope_name = view.scope_name(point)
+
+    return view.match_selector(point, selector) and (
+        view.match_selector(point, "punctuation.section") or scope_name.index(selector) > scope_name.rindex("meta.sexp")
+    )
+
+
 def backward_move_form(view, edit):
     for region, sel in iterate(view):
         form = region
@@ -439,14 +447,14 @@ def backward_move_form(view, edit):
         previous_form = forms.find_previous(view, form.begin())
 
         if region.empty():
-            if view.match_selector(form.begin(), "meta.mapping.key"):
+            if on_pairwise_form(view, form.begin(), "meta.mapping.key"):
                 if val_form := forms.find_next(view, form.end()):
                     form = form.cover(val_form)
 
                     if prev_val := forms.find_previous(view, form.begin()):
                         if prev_key := forms.find_previous(view, prev_val.begin()):
                             previous_form = prev_val.cover(prev_key)
-            elif view.match_selector(form.begin(), "meta.mapping.value"):
+            elif on_pairwise_form(view, form.begin(), "meta.mapping.value"):
                 if key_form := previous_form:
                     form = form.cover(key_form)
 
@@ -482,14 +490,14 @@ def forward_move_form(view, edit):
         next_form = forms.find_next(view, form.end())
 
         if region.empty():
-            if form and view.match_selector(form.begin(), "meta.mapping.key"):
+            if form and on_pairwise_form(view, form.begin(), "meta.mapping.key"):
                 if val_form := next_form:
                     form = form.cover(val_form)
 
                     if next_form := forms.find_next(view, val_form.end()):
                         if next_val := forms.find_next(view, next_form.end()):
                             next_form = next_form.cover(next_val)
-            elif form and view.match_selector(form.begin(), "meta.mapping.value"):
+            elif form and on_pairwise_form(view, form.begin(), "meta.mapping.value"):
                 if key_form := forms.find_previous(view, form.begin()):
                     form = form.cover(key_form)
 
