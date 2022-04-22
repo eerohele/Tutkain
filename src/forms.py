@@ -25,7 +25,7 @@ def find_adjacent(view, point):
     If there is a Clojure form both to the left and to the right of the point,
     return the one to the left. If there is no form adjacent to the point,
     return None."""
-    if selectors.ignore(view, point):
+    if view.match_selector(point, "comment.line"):
         return None
 
     direction = adjacent_direction(view, point)
@@ -43,11 +43,11 @@ def find_next(view, point):
     the point."""
     max_point = view.size()
 
-    if view.match_selector(point, "string - punctuation.definition.string.begin | comment.line"):
+    if view.match_selector(point, "comment.line"):
         return view.word(view.find_by_class(point, True, CLASS_WORD_END))
     else:
         while point < max_point:
-            if view.match_selector(point, selectors.SEXP_END):
+            if view.match_selector(point, "punctuation.section.parens.end | punctuation.section.brackets.end | punctuation.section.braces.end"):
                 return None
             elif view.match_selector(point, selectors.SEXP_BEGIN):
                 return sexp.innermost(view, point, edge="forward").extent()
@@ -93,11 +93,11 @@ def absorb_macro_characters(view, region):
 def find_previous(view, point):
     """Given a View and a point, return the previous Clojure form to the right
     of the point."""
-    if view.match_selector(point, "string - punctuation.definition.string.begin | comment.line"):
+    if view.match_selector(point, "comment.line"):
         return view.word(view.find_by_class(point, False, CLASS_WORD_START))
     else:
         while point > 0:
-            if view.match_selector(point - 1, selectors.SEXP_BEGIN):
+            if view.match_selector(point - 1, "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin"):
                 return None
             elif view.match_selector(point - 1, selectors.SEXP_END):
                 innermost = sexp.innermost(view, point, edge="backward").extent()

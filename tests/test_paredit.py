@@ -1210,6 +1210,18 @@ class TestParedit(ViewTestCase):
         self.assertEquals("{:foo :bar :baz :quux}", self.view_content())
         self.assertEquals([(11, 21)], self.selections())
 
+        # String
+        for sel in [(5, 5), (6, 6)]:
+            self.set_view_content("""[:a "b" :c]""")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_forward_move_form")
+            self.assertEquals("""[:a :c "b"]""", self.view_content())
+
+            self.set_view_content("""[:a "b" :c]""")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_backward_move_form")
+            self.assertEquals("""["b" :a :c]""", self.view_content())
+
         # Pairwise (map)
 
         ## Backward

@@ -1,5 +1,5 @@
 import re
-from sublime import Region
+from sublime import Region, CLASS_WORD_START, CLASS_WORD_END
 
 from . import forms
 from . import indent
@@ -188,19 +188,34 @@ def backward_slurp(view, edit):
                 sel.append(region)
 
 
+def find_next_slurp_barf_form(view, point):
+    if view.match_selector(point, "string - punctuation.definition.string.begin"):
+        return view.word(view.find_by_class(point, True, CLASS_WORD_END))
+    else:
+        return forms.find_next(view, point)
+
+
+def find_previous_slurp_barf_form(view, point):
+    if view.match_selector(point, "string - punctuation.definition.string.begin"):
+        return view.word(view.find_by_class(point, False, CLASS_WORD_START))
+    else:
+        return forms.find_previous(view, point)
+
+
+
 def forward_barf(view, edit):
     for region, sel in iterate(view):
         sel.append(region)
 
         form, innermost = find_slurp_barf_targets(
-            view, region.begin(), lambda s: forms.find_previous(view, s.close.region.begin())
+            view, region.begin(), lambda s: find_previous_slurp_barf_form(view, s.close.region.begin())
         )
 
         if innermost and form:
             point = innermost.close.region.begin()
             char = view.substr(point)
 
-            if previous_form := forms.find_previous(view, form.begin()):
+            if previous_form := find_previous_slurp_barf_form(view, form.begin()):
                 new_close_pos = previous_form.end()
             else:
                 new_close_pos = form.begin() - 1
@@ -236,7 +251,7 @@ def backward_barf(view, edit):
         sel.append(region)
 
         form, innermost = find_slurp_barf_targets(
-            view, region.begin(), lambda s: forms.find_next(view, s.open.region.end())
+            view, region.begin(), lambda s: find_next_slurp_barf_form(view, s.open.region.end())
         )
 
         if innermost and form:
