@@ -56,8 +56,6 @@
 (recv)
 (xr/check! ::ret)
 
-(def eval-context (atom {}))
-
 (backchannel/handle
   {:op :load
    :eval-lock (Object.)
@@ -70,8 +68,10 @@
 
 (def ex (recv))
 (xr/check! ::ex ex)
+
+(get-in @eval-context [:thread-bindings #'*e])
+(ex-data *1)
+
 (xr/check!
-  #{#:clojure.error{:phase :read-source
-                    :source "/my/path/math.clj"}}
-  (-> ex :val edn/read-string :via first :data
-    (select-keys [:clojure.error/phase :clojure.error/source])))
+  #{#:clojure.error{:phase :read-source :line 2 :column 1 :source "/my/path/math.clj"}})
+
