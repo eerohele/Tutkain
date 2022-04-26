@@ -73,5 +73,7 @@
 (ex-data *1)
 
 (xr/check!
-  #{#:clojure.error{:phase :read-source :line 2 :column 1 :source "/my/path/math.clj"}})
+  ;; So Java 11 and Java 17 return different values for the line number! Fun.
+  #{#:clojure.error{:phase :read-source :line 1 :column 1 :source "/my/path/math.clj"}
+    #:clojure.error{:phase :read-source :line 2 :column 1 :source "/my/path/math.clj"}})
 
