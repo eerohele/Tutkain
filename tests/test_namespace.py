@@ -32,3 +32,13 @@ class TestFindDeclaration(ViewTestCase):
             """(ns foo.bar) (ns baz.quux)"""
         )
         self.assertEquals("foo.bar", namespace.name(self.view))
+
+        self.set_view_content(
+            """(do (in-ns 'foo.bar))"""
+        )
+        self.assertEquals(None, namespace.name(self.view))
+
+        self.set_view_content(
+            """(do (ns foo.bar))"""
+        )
+        self.assertEquals(None, namespace.name(self.view))
