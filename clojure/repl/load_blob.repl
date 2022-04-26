@@ -73,5 +73,4 @@
 (ex-data *1)
 
 (xr/check!
-  #{#:clojure.error{:phase :read-source :line 2 :column 1 :source "/my/path/math.clj"}})
-
+  #{#:clojure.error{:phase :read-source :line 1 :column 1 :source "/my/path/math.clj"}})
