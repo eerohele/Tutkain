@@ -52,11 +52,29 @@ All notable changes to this project will be documented in this file.
   {:b 2 :a 1}
   ```
 
+- Fix ParEdit Forward/Backward Move Form when caret is on string
+
 - Improve the behavior of `tutkain_paredit_forward` and `tutkain_paredit_backward` when passed `{"extend": true}`
 
   Tutkain now selects the entire form your caret is on.
 
 - Fix **Tutkain: Explorer Stack Trace** after error caused by loading a view
+
+- Improve logic for determining current namespace
+
+  Tutkain now only considers top-level `ns` or `in-ns` forms when determining the current namespace. For example, given:
+
+  ```clojure
+  (ns foo.bar)
+  ```
+
+  Tutkain will use `foo.bar` as the current namespace. Given:
+
+  ```clojure
+  (do (in-ns 'baz.quux))
+  ```
+
+  Tutkain will no longer use `baz.quux` as the current namespace.
 
 - Synchronize view loads and other evaluations #93
 
