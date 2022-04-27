@@ -344,33 +344,37 @@ class JSClient(Client):
         self.write_line(f"""(tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}})""")
 
         ret = edn.read_line(self.buffer)
-        host = ret.get(edn.Keyword("host"))
-        port = ret.get(edn.Keyword("port"))
-        self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
-        greeting = ret.get(edn.Keyword("greeting"))
-        self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": greeting}))
 
-        # NOTE: If you make changes to module loading, make sure you manually
-        # test connecting to a ClojureScript runtime *without* connecting to
-        # a Clojure runtime first to make sure we're loading everything we
-        # need.
-        self.load_modules({
-            "lookup.clj": [],
-            "java.clj": [],
-            "completions.clj": [],
-            "query.clj": [],
-            "cljs.clj": [],
-            "shadow.clj": [],
-            "analyzer.clj": [
-                edn.Symbol("clojure.tools.reader"),
-                edn.Symbol("clojure.tools.analyzer.ast")
-            ],
-            "analyzer/js.clj": [
-                edn.Symbol("tutkain.analyzer")
-            ]
-        })
+        if not isinstance(ret, dict):
+            log.fatal({"event": "client/handshake-error", "ret": ret})
+        else:
+            host = ret.get(edn.Keyword("host"))
+            port = ret.get(edn.Keyword("port"))
+            self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
+            greeting = ret.get(edn.Keyword("greeting"))
+            self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": greeting}))
 
-        self.start_workers()
+            # NOTE: If you make changes to module loading, make sure you manually
+            # test connecting to a ClojureScript runtime *without* connecting to
+            # a Clojure runtime first to make sure we're loading everything we
+            # need.
+            self.load_modules({
+                "lookup.clj": [],
+                "java.clj": [],
+                "completions.clj": [],
+                "query.clj": [],
+                "cljs.clj": [],
+                "shadow.clj": [],
+                "analyzer.clj": [
+                    edn.Symbol("clojure.tools.reader"),
+                    edn.Symbol("clojure.tools.analyzer.ast")
+                ],
+                "analyzer/js.clj": [
+                    edn.Symbol("tutkain.analyzer")
+                ]
+            })
+
+            self.start_workers()
 
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
         self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
