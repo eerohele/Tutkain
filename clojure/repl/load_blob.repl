@@ -56,6 +56,8 @@
 (recv)
 (xr/check! ::ret)
 
+(def eval-context (atom {}))
+
 (backchannel/handle
   {:op :load
    :eval-lock (Object.)
@@ -68,14 +70,8 @@
 
 (def ex (recv))
 (xr/check! ::ex ex)
-
-(get-in @eval-context [:thread-bindings #'*e])
-(ex-data *1)
-
 (xr/check!
-  ;; So Java 11 and Java 17 return different values for the line number! Fun.
-  ;;
-  ;; https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8241020
-  #{#:clojure.error{:phase :read-source :line 1 :column 1 :source "/my/path/math.clj"}
-    #:clojure.error{:phase :read-source :line 2 :column 1 :source "/my/path/math.clj"}})
-
+  #{#:clojure.error{:phase :read-source
+                    :source "/my/path/math.clj"}}
+  (-> ex :val edn/read-string :via first :data
+    (select-keys [:clojure.error/phase :clojure.error/source])))

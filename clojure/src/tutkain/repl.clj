@@ -31,7 +31,7 @@
   ;; This way, if the user sends more than one form at once, we use the same
   ;; eval context for each form instead of waiting for a new one after every
   ;; form.
-  (let [eval-context (merge-with merge @eval-context (.poll ctxq))
+  (let [eval-context (or (.poll ctxq) @eval-context)
         [form string] (with-bindings (:thread-bindings eval-context {})
                         (read+string {:eof ::EOF :read-cond :allow} reader))]
     (assoc eval-context :form form :string string)))
