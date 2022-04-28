@@ -107,4 +107,8 @@
         "caption": "Tutkain: Show ClojureDocs Examples",
         "command": "tutkain_show_clojuredocs_examples"
     },
+    {
+        "caption": "Tutkain: Zap Commas",
+        "command": "tutkain_zap_commas"
+    },
 ]

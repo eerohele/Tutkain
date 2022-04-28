@@ -1411,3 +1411,16 @@ class TutkainRefreshClojuredocsCacheCommand(WindowCommand):
 class TutkainShowClojuredocsExamplesCommand(TextCommand):
     def run(self, _):
         clojuredocs.show_examples(self.view)
+
+
+class TutkainZapCommasCommand(TextCommand):
+    def run(self, edit):
+        if len(self.view.sel()) == 1 and self.view.sel()[0].empty():
+            while commas := self.view.find_by_selector("comment.punctuation.comma"):
+                self.view.erase(edit, commas[0])
+        else:
+            for sel in self.view.sel():
+                while commas := list(filter(
+                    lambda comma: sel.contains(comma), self.view.find_by_selector("comment.punctuation.comma"))
+                ):
+                    self.view.erase(edit, commas[0])
