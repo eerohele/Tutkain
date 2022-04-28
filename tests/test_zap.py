@@ -1,4 +1,3 @@
-from sublime import Region
 from .util import ViewTestCase
 
 
