@@ -75,3 +75,63 @@
                     :source "/my/path/math.clj"}}
   (-> ex :val edn/read-string :via first :data
     (select-keys [:clojure.error/phase :clojure.error/source])))
+
+(backchannel/handle
+  {:op :transcribe
+   :eval-context eval-context
+   :eval-lock (Object.)
+   :code "(inc 1) (inc 2)"
+   :out-fn #(.put recvq %)})
+
+(recv)
+(xr/check! #{{:tag :in :val "(inc 1)\n"}})
+(recv)
+(xr/check! #{{:tag :ret :val "2\n"}})
+(recv)
+(xr/check! #{{:tag :in :val "(inc 2)\n"}})
+(recv)
+(xr/check! #{{:tag :ret :val "3\n"}})
+
+(get-in @eval-context [:thread-bindings #'*1])
+(xr/check! #{3})
+
+(backchannel/handle
+  {:op :transcribe
+   :eval-context eval-context
+   :eval-lock (Object.)
+   :code "(/ 4 0) (/ 4 4)"
+   :out-fn #(.put recvq %)})
+
+(recv)
+(xr/check! #{{:tag :in :val "(/ 4 0)\n"}})
+(recv)
+(xr/check! ::ex-ret)
+(recv) ; timeout
+(xr/check! nil?)
+
+(->
+  (get-in @eval-context [:thread-bindings #'*e])
+  (Throwable->map)
+  :via
+  first
+  :message)
+
+(xr/check! #{"Divide by zero"})
+
+(backchannel/handle
+  {:op :transcribe
+   :eval-context eval-context
+   :eval-lock (Object.)
+   :code "("
+   :out-fn #(.put recvq %)})
+
+(recv)
+
+(->
+  (get-in @eval-context [:thread-bindings #'*e])
+  (Throwable->map)
+  :via
+  first
+  :message)
+
+(xr/check! #{"java.lang.RuntimeException: EOF while reading, starting at line 1"})

@@ -1425,3 +1425,26 @@ class TutkainZapCommasCommand(TextCommand):
             for sel in self.view.sel():
                 for comma in filter(lambda comma: sel.contains(comma), self.find_commas()):
                     self.view.erase(edit, comma)
+
+
+class TutkainTranscribeCommand(TextCommand):
+    def run(self, _):
+        window = self.view.window()
+        dialect = dialects.for_view(self.view)
+
+        if dialect != edn.Keyword("clj"):
+            self.view.window().status_message(f"Transcription is only supported for Clojure.")
+        elif client := state.get_client(window, dialect):
+            if (sel := self.view.sel()) and not sel[0].empty():
+                region = sel[0]
+            else:
+                region = sublime.Region(0, self.view.size())
+
+            client.backchannel.send({
+                "op": edn.Keyword("transcribe"),
+                "file": self.view.file_name(),
+                "ns": namespace.name(self.view),
+                "code": self.view.substr(region)
+            })
+        else:
+            self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
