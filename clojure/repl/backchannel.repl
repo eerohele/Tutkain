@@ -8,7 +8,9 @@
    [tutkain.socket :as socket]
    [tutkain.test]))
 
-(let [{:keys [socket send-over-backchannel]} (backchannel/open {:port 1337})]
+(def eval-lock (Object.))
+
+(let [{:keys [socket send-over-backchannel]} (backchannel/open {:port 1337 :xform-in #(assoc % :eval-lock eval-lock)})]
   (def backchannel socket)
   (def send-over-backchannel send-over-backchannel))
 
@@ -51,7 +53,6 @@
 
 ;; Backchannel has access to the same bindings as the REPL thread
 (send {:op :test
-       :eval-lock (Object.)
        :ns "my.test"
        :file "/path/to/my/test.clj"
        :code (string->base64 "(ns my.test (:require [clojure.test :refer [deftest is]]))
