@@ -62,14 +62,14 @@
     (run! (fn [[sym _]] (ns-unmap ns sym)))))
 
 (defmethod handle :test
-  [{:keys [ns code file vars] :as message}]
+  [{:keys [eval-lock ns code file vars] :as message}]
   (let [filename (some-> file File. .getName)
         ns-sym (or (some-> ns symbol) 'user)]
     (try
       (clean-ns! (find-ns ns-sym))
 
       (with-open [reader (base64-reader code)]
-        (Compiler/load reader file filename))
+        (locking eval-lock (Compiler/load reader file filename)))
 
       (let [results (atom {:fail [] :pass [] :error []})
             var-meta (atom nil)]
