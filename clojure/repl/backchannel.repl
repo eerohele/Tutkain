@@ -51,6 +51,7 @@
 
 ;; Backchannel has access to the same bindings as the REPL thread
 (send {:op :test
+       :eval-lock (Object.)
        :ns "my.test"
        :file "/path/to/my/test.clj"
        :code (string->base64 "(ns my.test (:require [clojure.test :refer [deftest is]]))
