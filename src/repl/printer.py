@@ -21,11 +21,6 @@ from .keywords import (
 )
 
 
-def print_characters(view, characters):
-    if characters is not None:
-        view.run_command("append", {"characters": characters, "scroll_to_end": True})
-
-
 def show_repl_panel(view):
     if view and view.element() == "output:output" and settings.load().get("auto_show_output_panel", True):
         views.show_output_panel(sublime.active_window())
@@ -36,7 +31,10 @@ def append_to_view(view, characters):
 
     if view and characters:
         view.set_read_only(False)
-        print_characters(view, characters)
+
+        if characters is not None:
+            view.run_command("append", {"characters": characters, "scroll_to_end": True})
+
         view.set_read_only(True)
         view.run_command("move_to", {"to": "eof"})
 
