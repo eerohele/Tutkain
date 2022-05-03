@@ -51,6 +51,7 @@
 ;; when :vars is empty, run all tests in ns
 (send-op
   {:op :test
+   :eval-lock (Object.)
    :ns "my.app"
    :code (string->base64 "
            (ns my.app
@@ -64,6 +65,7 @@
 
 (send-op
   {:op :test
+   :eval-lock (Object.)
    :ns "my.app"
    :code (string->base64 "
            (ns my.app
@@ -77,6 +79,7 @@
 
 (send-op
   {:op :test
+   :eval-lock (Object.)
    :ns "my.app"
    :code (string->base64 "
            (ns my.app
@@ -91,6 +94,7 @@
 
 (send-op
   {:op :test
+   :eval-lock (Object.)
    :ns "my.app"
    :code (string->base64 "
            (ns my.app
@@ -107,6 +111,7 @@
 
 (send-op
   {:op :test
+   :eval-lock (Object.)
    :ns "my.app"
    :code (string->base64 "
            (ns my.app
