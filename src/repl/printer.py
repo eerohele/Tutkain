@@ -7,6 +7,7 @@ import sublime
 
 from .keywords import (
     CLIPBOARD,
+    COMMENT,
     ERR,
     IN,
     INLINE,
@@ -104,6 +105,18 @@ def print_loop(view, client, options={"gutter_marks": True}):
             if item.get(OUTPUT) == CLIPBOARD:
                 sublime.set_clipboard(item.get(STRING))
                 sublime.active_window().status_message("[Tutkain] Evaluation result copied to clipboard.")
+            elif item.get(OUTPUT) == COMMENT:
+                window = view.window() or sublime.active_window()
+
+                if target_view := views.find_by_id(window, item.get(VIEW_ID)):
+                    point = item.get(POINT)
+                    indentation = target_view.indentation_level(point) *  " "
+                    characters = f"\n{indentation};;=> {item.get(VAL)}"
+
+                    target_view.run_command("tutkain_insert_at_point", {
+                        "point": point,
+                        "characters": characters
+                    })
             elif item.get(OUTPUT) == INLINE:
                 window = view.window() or sublime.active_window()
 

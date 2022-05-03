@@ -435,12 +435,19 @@ class TutkainEvaluateCommand(TextCommand):
 
                 code = sublime.expand_variables(code, variables)
 
-                if inline_result and (sel := self.view.sel()):
-                    options["response"] = {
-                        "output": edn.Keyword("inline"),
-                        "view-id": self.view.id(),
-                        "point": sel[0].end()
-                    }
+                if sel := self.view.sel():
+                    if inline_result:
+                        options["response"] = {
+                            "output": edn.Keyword("inline"),
+                            "view-id": self.view.id(),
+                            "point": sel[0].end()
+                        }
+                    elif output == "comment":
+                        options["response"] = {
+                            "output": edn.Keyword("comment"),
+                            "view-id": self.view.id(),
+                            "point": eval_region.end()
+                        }
 
                 evaluate(self.view, client, code, options=options)
             elif scope == "view":
@@ -472,6 +479,12 @@ class TutkainEvaluateCommand(TextCommand):
                                 "view-id": self.view.id(),
                                 "point": eval_region.end()
                             }
+                        elif output == "comment":
+                            options["response"] = {
+                                "output": edn.Keyword("comment"),
+                                "view-id": self.view.id(),
+                                "point": eval_region.end()
+                            }
 
                         code = self.view.substr(eval_region)
                         evaluate(self.view, client, code, eval_region.begin(), options=options)
@@ -483,6 +496,13 @@ class TutkainEvaluateCommand(TextCommand):
             return None
         else:
             return EvaluationScopeInputHandler()
+
+
+class TutkainInsertAtPointCommand(TextCommand):
+    """Implementation detail, do not use."""
+    def run(self, edit, point=0, characters=""):
+        self.view.insert(edit, point, characters)
+
 
 
 class EvaluationScopeInputHandler(ListInputHandler):

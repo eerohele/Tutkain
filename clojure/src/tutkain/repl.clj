@@ -110,7 +110,7 @@
                          ;;
                          ;; https://clojure.atlassian.net/browse/CLJ-2692
                          _ (main/skip-whitespace in)
-                         backchannel-response? (#{:inline :clipboard} (:output response))]
+                         backchannel-response? (#{:inline :clipboard :comment} (:output response))]
                      (with-bindings thread-bindings
                        (when-not (identical? form ::EOF)
                          (try

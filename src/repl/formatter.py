@@ -1,5 +1,6 @@
 from .keywords import (
     CLIPBOARD,
+    COMMENT,
     ERR,
     OUT,
     OUTPUT,
@@ -37,7 +38,7 @@ def format(item):
         elif tag == ERR:
             item[VAL] = err_string(val)
 
-        if item.get(OUTPUT, VIEW) == CLIPBOARD:
+        if item.get(OUTPUT, VIEW) in {CLIPBOARD, COMMENT}:
             item[STRING] = val[:-1] if val[-1] == "\n" else val
 
         return item
