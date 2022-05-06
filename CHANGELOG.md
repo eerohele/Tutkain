@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
+## 0.15.0 (alpha) - 2022-05-06
 
 - Fix performance issues with `tutkain_insert_newline` and various ParEdit commands, especially when the caret was positioned toward the end of a long file
 
@@ -120,6 +120,10 @@ All notable changes to this project will be documented in this file.
   Tutkain will then use port number 4321 for the backchannel in that project only.
 
 - Add `inline_result` suport for `code` evaluations
+
+- Add **Tutkain: Zap Commas** command
+
+  If you have any text selected and run the command, Tutkain removes all [whitespace-commas](https://clojure.org/guides/weird_characters#_whitespace_character) in the selection. If you don't have any text selected, Tutkain removes all whitespace-commas in the current view.
 
 ## 0.14.1 (alpha) - 2022-03-14
 
