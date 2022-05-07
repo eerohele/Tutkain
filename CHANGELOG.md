@@ -58,7 +58,7 @@ All notable changes to this project will be documented in this file.
 
   Tutkain now selects the entire form your caret is on.
 
-- Fix **Tutkain: Explorer Stack Trace** after error caused by loading a view
+- Fix **Tutkain: Explore Stack Trace** after error caused by loading a view
 
 - Improve logic for determining current namespace
 
