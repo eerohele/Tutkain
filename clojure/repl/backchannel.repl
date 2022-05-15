@@ -10,11 +10,12 @@
 
 (def eval-lock (Object.))
 
-(let [{:keys [socket send-over-backchannel]} (backchannel/open {:port 1337 :xform-in #(assoc % :eval-lock eval-lock)})]
+(let [{:keys [socket send-over-backchannel close-fn]} (backchannel/open {:port 1337 :xform-in #(assoc % :eval-lock eval-lock)})]
   (def backchannel socket)
+  (def close-backchannel close-fn)
   (def send-over-backchannel send-over-backchannel))
 
-(xr/on-exit #(.close backchannel))
+(xr/on-exit #(close-backchannel))
 (def port (.getLocalPort backchannel))
 (def client (socket/client :host "localhost" :port port))
 (xr/on-exit #((:stop client)))
@@ -72,8 +73,3 @@
 (send-over-backchannel {:tag :out :val "Hello, world!"})
 (recv)
 (xr/check! #{{:tag :out :val "Hello, world!"}})
-
-(send {:op :quit})
-(Thread/sleep 3000)
-(.isClosed backchannel)
-(xr/check! true?)

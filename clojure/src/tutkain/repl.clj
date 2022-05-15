@@ -80,7 +80,8 @@
        (let [{backchannel :socket
               eval-context :eval-context
               ctxq :ctxq
-              send-over-backchannel :send-over-backchannel}
+              send-over-backchannel :send-over-backchannel
+              close-backchannel :close-fn}
              (backchannel/open
                (assoc opts
                  :xform-in #(assoc % :eval-lock eval-lock :in in :repl-thread repl-thread)
@@ -150,4 +151,4 @@
                  (recur)))
              (finally
                (.shutdown debounce-service)
-               (.close backchannel)))))))))
+               (close-backchannel)))))))))

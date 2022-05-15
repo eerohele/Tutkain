@@ -1,12 +1,13 @@
 (ns tutkain.backchannel
   (:require
+   [clojure.core.server :as server]
    [clojure.edn :as edn]
    [tutkain.format :as format])
   (:import
    (clojure.lang LineNumberingPushbackReader)
-   (java.io BufferedReader BufferedWriter File InputStreamReader OutputStreamWriter)
+   (java.io File IOException)
    (java.lang.reflect Field)
-   (java.net InetAddress ServerSocket)
+   (java.net SocketException)
    (java.util.concurrent LinkedBlockingQueue)
    (java.util.concurrent.atomic AtomicInteger)))
 
@@ -60,8 +61,48 @@
   (assert repl-thread)
   (.interrupt repl-thread))
 
-(def ^:private ^AtomicInteger thread-counter
+(defonce ^:private ^AtomicInteger thread-counter
   (AtomicInteger.))
+
+(defn accept
+  [{:keys [eventual-send-fn xform-in xform-out]
+    :or {xform-in identity xform-out identity}}]
+  (let [out *out*
+        lock (Object.)
+        out-fn (fn [message]
+                 (binding [*print-readably* true]
+                   (locking lock
+                     (.write out (pr-str (dissoc (xform-out message) :out-fn :eval-context)))
+                     (.write out "\n")
+                     (.flush out))))
+        tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})]
+    (deliver eventual-send-fn out-fn)
+    (add-tap tapfn)
+    (try
+      (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)]
+        (loop []
+          (let [recur?
+                (try
+                  (let [message (edn/read {:eof ::EOF} *in*)]
+                    (if (identical? ::EOF message)
+                      false
+                      (let [message (assoc (xform-in message) :out-fn out-fn)]
+                        (try
+                          (handle message)
+                          true
+                          (catch Throwable ex
+                            (respond-to message {:tag :ret
+                                                 :exception true
+                                                 :val (format/pp-str (Throwable->map ex))})
+                            true)))))
+                  ;; If we can't read from the socket, exit the loop.
+                  (catch clojure.lang.EdnReader$ReaderException _ false)
+                  (catch SocketException _ false)
+                  ;; If the remote host closes the connection, exit the loop.
+                  (catch IOException _ false))]
+            (when recur? (recur)))))
+      (finally
+        (remove-tap tapfn)))))
 
 (defn open
   "Open a backchannel that listens for editor tooling messages on a socket.
@@ -95,65 +136,25 @@
     - :send-over-backchannel
         A function you can call to send messages to the client connected to
         this backchannel."
-  [{:keys [port bind-address xform-in xform-out]
-    :or {port 0 bind-address "localhost" xform-in identity xform-out identity}}]
-  (let [address (InetAddress/getByName ^String bind-address)
-        socket (ServerSocket. port 0 address)
-        lock (Object.)
-        eval-context (atom {:thread-bindings {#'*ns* (the-ns 'user)}})
+  [{:keys [bind-address port xform-in xform-out]
+    :or {bind-address "localhost" port 0 xform-in identity xform-out identity}}]
+  (let [eval-context (atom {:thread-bindings {#'*ns* (the-ns 'user)}})
         ctxq (LinkedBlockingQueue. 128)
         eventual-send-fn (promise)
-        msg-loop (bound-fn []
-                   (try
-                     (let [conn (.accept socket)
-                           in (-> conn .getInputStream InputStreamReader. BufferedReader. LineNumberingPushbackReader.)
-                           out (-> conn .getOutputStream OutputStreamWriter. BufferedWriter.)
-                           EOF (Object.)
-                           out-fn (fn [message]
-                                    (binding [*print-readably* true]
-                                      (locking lock
-                                        (.write out (pr-str (dissoc (xform-out message) :out-fn :eval-context)))
-                                        (.write out "\n")
-                                        (.flush out))))
-                           tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})]
-                       (deliver eventual-send-fn out-fn)
-                       (add-tap tapfn)
-                       (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)]
-                         (try
-                           (loop []
-                             (when-not (.isClosed socket)
-                               (when-some [message (try
-                                                     (edn/read {:eof EOF} in)
-                                                     ;; If we can't read from the socket, exit the loop.
-                                                     (catch java.net.SocketException _)
-                                                     ;; If the remote host closes the connection, exit the loop.
-                                                     (catch java.io.IOException _))]
-                                 (when-not (identical? EOF message)
-                                   (let [recur? (case (:op message)
-                                                  :quit false
-                                                  (let [message (assoc (xform-in message)
-                                                                  :eval-context eval-context
-                                                                  :ctxq ctxq
-                                                                  :out-fn out-fn)]
-                                                    (try
-                                                      (handle message)
-                                                      true
-                                                      (catch Throwable ex
-                                                        (respond-to message {:tag :ret
-                                                                             :exception true
-                                                                             :val (format/pp-str (Throwable->map ex))})
-                                                        true))))]
-                                     (when recur? (recur)))))))
-                           (finally
-                             (remove-tap tapfn)))))
-                     (finally
-                       (.close socket))))
-        thread (Thread. ^Runnable msg-loop)]
-    (doto thread
-      (.setName (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter)))
-      (.setDaemon true)
-      (.start))
+        server-name (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter))
+        socket (server/start-server
+                 {:address bind-address
+                  :port port
+                  :name server-name
+                  :accept `accept
+                  :args [{:eventual-send-fn eventual-send-fn
+                          :xform-in #(assoc (xform-in %)
+                                       :ctxq ctxq
+                                       :eval-context eval-context)
+                          :xform-out #(xform-out %)}]})
+        send-over-backchannel (fn [message] (@eventual-send-fn message))]
     {:eval-context eval-context
      :ctxq ctxq
      :socket socket
-     :send-over-backchannel (fn [message] (@eventual-send-fn message))}))
+     :send-over-backchannel send-over-backchannel
+     :close-fn #(server/stop-server server-name)}))

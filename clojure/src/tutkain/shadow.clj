@@ -398,7 +398,8 @@
          debounce (make-debouncer debounce-service)
          {backchannel :socket
           ctxq :ctxq
-          send-over-backchannel :send-over-backchannel}
+          send-over-backchannel :send-over-backchannel
+          close-backchannel :close-fn}
          (backchannel/open
            (assoc opts
              :xform-in #(assoc % :build-id build-id :in *in*)
@@ -460,5 +461,4 @@
        (finally
          (async/>!! close-signal true)
          (.shutdown debounce-service)
-         (.close backchannel))))))
-
+         (close-backchannel))))))
