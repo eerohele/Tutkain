@@ -181,7 +181,7 @@
 (send :repl '(def f1 1))
 (recv :repl)
 
-;; Create var in bar.baz
+;; Create var in baz.quux
 (send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'baz.quux :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(def f2 2))
@@ -194,7 +194,7 @@
 (recv :repl)
 (send :repl '(deref p))
 
-;; While previous eval is in progress, eval f2 in bar.baz
+;; While previous eval is in progress, eval f2 in baz.quux
 (send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'baz.quux :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl 'f2)
