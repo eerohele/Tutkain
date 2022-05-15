@@ -17,14 +17,14 @@
    (java.util.concurrent Executors TimeUnit ThreadPoolExecutor$CallerRunsPolicy)))
 
 (defn ^:private read-one
-  [ctxq build-state reader]
+  [backchannel build-state reader]
   (try
     ;; FIXME: NO_SOURCE_FILE, use *source-path* from backchannel eval context?
     (let [in (readers/source-logging-push-back-reader reader 1 "NO_SOURCE_FILE")
           _ (readers/unread in (readers/read-char in))
           eof (Object.)
           reader-opts {:eof eof :read-cond :allow :features #{:cljs}}
-          eval-context (.poll ctxq)
+          eval-context (backchannel/next-eval-context backchannel)
           current-ns (or
                        (some-> eval-context :thread-bindings (get #'clojure.core/*ns*) ns-name)
                        (get-in build-state [:repl-state :current-ns] 'user))
@@ -71,7 +71,7 @@
            repl-result
            repl-stdout
            repl-stderr]}
-   ctxq]
+   backchannel]
   {:pre [(some? worker)
          (some? proc-stop)
          (some? close-signal)]}
@@ -134,7 +134,7 @@
         (loop []
           ;; wait until told to read
           (when (some? (async/<!! read-lock))
-            (let [{:keys [eof?] :as next} (read-one ctxq (some-> worker :state-ref deref :build-state) reader)]
+            (let [{:keys [eof?] :as next} (read-one backchannel (some-> worker :state-ref deref :build-state) reader)]
               (if eof?
                 (async/close! stdin)
                 ;; don't recur in case stdin was closed while in blocking read
@@ -396,16 +396,12 @@
          debounce-service (doto (Executors/newScheduledThreadPool 1)
                             (.setRejectedExecutionHandler (ThreadPoolExecutor$CallerRunsPolicy.)))
          debounce (make-debouncer debounce-service)
-         {backchannel :socket
-          ctxq :ctxq
-          send-over-backchannel :send-over-backchannel
-          close-backchannel :close-fn}
-         (backchannel/open
-           (assoc opts
-             :xform-in #(assoc % :build-id build-id :in *in*)
-             :xform-out #(dissoc % :in)))
-         out-writer (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
-         err-writer (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
+         backchannel (backchannel/open
+                       (assoc opts
+                         :xform-in #(assoc % :build-id build-id :in *in*)
+                         :xform-out #(dissoc % :in)))
+         out-writer (PrintWriter-on #(backchannel/send-to-client backchannel {:tag :out :val %1}) nil)
+         err-writer (PrintWriter-on #(backchannel/send-to-client backchannel {:tag :err :val %1}) nil)
          flush-out (debounce #(.flush out-writer) 50)
          flush-err (debounce #(.flush err-writer) 50)
          write-out (fn [string] (.write out-writer string) (flush-out))
@@ -415,8 +411,8 @@
      (try
        (let [_ (prn {:greeting (let [{:keys [major minor qualifier]} *clojurescript-version*]
                                  (format "ClojureScript %s.%s.%s\n" major minor qualifier))
-                     :host (-> backchannel .getInetAddress .getHostName)
-                     :port (-> backchannel .getLocalPort)})
+                     :host (backchannel/host backchannel)
+                     :port (backchannel/port backchannel)})
              {:keys [supervisor relay clj-runtime]} (api/get-runtime!)
              worker (supervisor/get-worker supervisor build-id)]
          (do-repl worker relay *in* close-signal
@@ -426,7 +422,7 @@
 
             :repl-read-ex
             (fn [{:keys [read-result]} ex]
-              (send-over-backchannel
+              (backchannel/send-to-client backchannel
                 {:tag :err
                  :val (format/Throwable->str ex)
                  :form (:source read-result)}))
@@ -435,12 +431,12 @@
             (fn [{:keys [read-result]} ret]
               (let [response (:response (:eval-context read-result))]
                 (if (#{:inline :clipboard} (:output response))
-                  (send-over-backchannel (assoc response :tag :ret :val (with-out-str (print-result lock ret))))
+                  (backchannel/send-to-client backchannel (assoc response :tag :ret :val (with-out-str (print-result lock ret))))
                   (out-fn ret))))
 
             :repl-val
             (fn [_ ret]
-              (send-over-backchannel
+              (backchannel/send-to-client backchannel
                 {:tag :ret
                  :val ret}))
 
@@ -453,12 +449,12 @@
             (fn [_ text]
               (.write out text)
               (.flush out))}
-           ctxq))
+           backchannel))
        (catch ExceptionInfo ex
-         (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
+         (backchannel/send-to-client backchannel {:tag :err :val (format/Throwable->str ex)}))
        (catch AssertionError ex
-         (send-over-backchannel {:tag :err :val (format/Throwable->str ex)}))
+         (backchannel/send-to-client backchannel {:tag :err :val (format/Throwable->str ex)}))
        (finally
          (async/>!! close-signal true)
          (.shutdown debounce-service)
-         (close-backchannel))))))
+         (backchannel/close backchannel))))))

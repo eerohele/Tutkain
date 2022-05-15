@@ -17,13 +17,13 @@
   main/repl-caught)
 
 (defn ^:private read-in-context
-  "Given an eval context and a LineNumberingPushbackReader, read a form from
-  the reader in the context of the eval context thread bindings and return
-  the eval context with these keys added:
+  "Given a tutkain.backchannel.Backchannel and a LineNumberingPushbackReader,
+  read a form from the reader in the context of the eval context thread
+  bindings and return the eval context with these keys added:
 
   - :form - The object read
   - :string - The string read"
-  [ctxq eval-context ^clojure.lang.LineNumberingPushbackReader reader]
+  [backchannel ^clojure.lang.LineNumberingPushbackReader reader]
   (.unread reader (.read reader))
   ;; If there's no new eval context immediately available, use the previous set
   ;; of thread bindings.
@@ -31,7 +31,8 @@
   ;; This way, if the user sends more than one form at once, we use the same
   ;; eval context for each form instead of waiting for a new one after every
   ;; form.
-  (let [eval-context (or (.poll ctxq) @eval-context)
+  (let [eval-context (or (backchannel/next-eval-context backchannel)
+                       (backchannel/eval-context backchannel))
         [form string] (with-bindings (:thread-bindings eval-context {})
                         (read+string {:eof ::EOF :read-cond :allow} reader))]
     (assoc eval-context :form form :string string)))
@@ -77,21 +78,16 @@
      (main/with-bindings
        (in-ns 'user)
        (apply require main/repl-requires)
-       (let [{backchannel :socket
-              eval-context :eval-context
-              ctxq :ctxq
-              send-over-backchannel :send-over-backchannel
-              close-backchannel :close-fn}
-             (backchannel/open
-               (assoc opts
-                 :xform-in #(assoc % :eval-lock eval-lock :in in :repl-thread repl-thread)
-                 :xform-out #(dissoc % :in)))
+       (let [backchannel (backchannel/open
+                           (assoc opts
+                             :xform-in #(assoc % :eval-lock eval-lock :in in :repl-thread repl-thread)
+                             :xform-out #(dissoc % :in)))
              ;; Prevent stdout/stderr from interleaving with eval results by
              ;; binding *out* and *err* such that they write into auxiliary
              ;; PrintWriters that send strings to client via backchannel, then
              ;; debounce flush said auxiliary PrintWriters.
-             out-writer (PrintWriter-on #(send-over-backchannel {:tag :out :val %1}) nil)
-             err-writer (PrintWriter-on #(send-over-backchannel {:tag :err :val %1}) nil)
+             out-writer (PrintWriter-on #(backchannel/send-to-client backchannel {:tag :out :val %1}) nil)
+             err-writer (PrintWriter-on #(backchannel/send-to-client backchannel {:tag :err :val %1}) nil)
              flush-out (debounce #(.flush out-writer) 50)
              flush-err (debounce #(.flush err-writer) 50)
              write-out (fn [string] (.write out-writer string) (flush-out))
@@ -101,12 +97,12 @@
                    *print* pretty-print]
            (try
              (pretty-print {:greeting (str "Clojure " (clojure-version) "\n")
-                            :host (-> backchannel .getInetAddress .getHostName)
-                            :port (-> backchannel .getLocalPort)})
+                            :host (backchannel/host backchannel)
+                            :port (backchannel/port backchannel)})
              (loop []
                (when
                  (try
-                   (let [{:keys [thread-bindings response form string]} (read-in-context ctxq eval-context in)
+                   (let [{:keys [thread-bindings response form string]} (read-in-context backchannel in)
                          ;; For (read-line) support. See also:
                          ;;
                          ;; https://clojure.atlassian.net/browse/CLJ-2692
@@ -123,32 +119,32 @@
                                (set! *2 *1)
                                (set! *1 ret)
                                (if backchannel-response?
-                                 (send-over-backchannel
+                                 (backchannel/send-to-client backchannel
                                    (assoc response :tag :ret :val (format/pp-str ret)))
                                  (pretty-print ret))
-                               (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+                               (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                                true))
                            (catch Throwable ex
                              (.flush ^Writer *out*)
                              (.flush ^Writer *err*)
                              (set! *e ex)
-                             (send-over-backchannel
+                             (backchannel/send-to-client backchannel
                                (merge response {:tag :err
                                                 :val (format/Throwable->str ex)
                                                 :ns (str (.name *ns*))
                                                 :form string}))
-                             (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+                             (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                              true)))))
                    (catch Throwable ex
                      (set! *e ex)
-                     (send-over-backchannel
+                     (backchannel/send-to-client backchannel
                        {:tag :ret
                         :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
                         :ns (str (.name *ns*))
                         :exception true})
-                     (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+                     (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                      true))
                  (recur)))
              (finally
                (.shutdown debounce-service)
-               (close-backchannel)))))))))
+               (backchannel/close backchannel)))))))))
