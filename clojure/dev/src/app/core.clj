@@ -30,11 +30,15 @@
   (tap> (rand-int 42))
   (set/union #{1 2 3} #{3 4 5})
   (println "Hello, world!")
-  (def f (future (Thread/sleep 1000) (println "Hello, world!") (map inc (range 10))))
+  (def f (future (Thread/sleep 10000) (println "Hello, world!") (map inc (range 10))))
   (deref f)
 
+  (inc 1)
+  (inc 2)
+  (inc 3)
+
   (do (Thread/sleep 1000) (square 1))
-  (do (Thread/sleep 2000) (square 2))
+  (do (Thread/sleep 2000) (square 5))
   (do (Thread/sleep 3000) (square 3))
 
   (ns-name *ns*)

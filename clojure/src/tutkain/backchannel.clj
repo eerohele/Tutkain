@@ -5,7 +5,7 @@
    [tutkain.format :as format])
   (:import
    (clojure.lang EdnReader$ReaderException LineNumberingPushbackReader)
-   (java.io File IOException)
+   (java.io File IOException StringReader)
    (java.lang.reflect Field)
    (java.net SocketException)
    (java.util.concurrent LinkedBlockingQueue)
@@ -59,48 +59,54 @@
   (.put eval-context-queue {:thread-bindings (make-thread-bindings {:file file :ns ns})})
   (respond-to message {:result :ok}))
 
+
+
 (defmethod handle :interrupt
-  [{:keys [^Thread repl-thread]}]
+  [{:keys [^Thread repl-thread eval-rpc-future]}]
   (assert repl-thread)
-  (.interrupt repl-thread))
+  (or (some-> eval-rpc-future deref future-cancel) (.interrupt repl-thread)))
 
 (defmethod handle :eval
-  [{:keys [eval-lock eval-context ns file line column code response]
+  [{:keys [eval-lock eval-context eval-rpc-future ns file line column code response]
     :or {line 0 column 0}
     :as message}]
-  (with-bindings (merge
-                   {#'*e nil
-                    #'*1 nil
-                    #'*2 nil
-                    #'*3 nil}
-                   (:thread-bindings @eval-context)
-                   (make-thread-bindings {:file file :ns ns}))
-    (try
-      ;; FIXME: line and column
-      (let [form (read-string code)]
+  (reset! eval-rpc-future
+    (future
+      (with-bindings (merge
+                       {#'*e nil
+                        #'*1 nil
+                        #'*2 nil
+                        #'*3 nil}
+                       (:thread-bindings @eval-context)
+                       (make-thread-bindings {:file file :ns ns}))
         (try
-          (let [ret (locking eval-lock (eval form))]
-            (set! *3 *2)
-            (set! *2 *1)
-            (set! *1 ret)
-            (swap! eval-context assoc :thread-bindings (get-thread-bindings))
-            (respond-to message (assoc response :tag :ret :val (format/pp-str ret))))
+          (with-open [reader (LineNumberingPushbackReader. (StringReader. code))]
+            (run!
+              (fn [form]
+                (try
+                  (let [ret (locking eval-lock (eval form))]
+                    (set! *3 *2)
+                    (set! *2 *1)
+                    (set! *1 ret)
+                    (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+                    (respond-to message (assoc response :tag :ret :val (format/pp-str ret))))
+                  (catch Throwable ex
+                    (set! *e ex)
+                    (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+                    (respond-to message
+                      (assoc response :tag :err
+                        :val (format/Throwable->str ex)
+                        :ns ns
+                        :form form)))))
+              (take-while #(not (identical? ::EOF %)) (repeatedly #(read {:eof ::EOF} reader)))))
           (catch Throwable ex
             (set! *e ex)
             (swap! eval-context assoc :thread-bindings (get-thread-bindings))
             (respond-to message
-              (assoc response :tag :err
-                :val (format/Throwable->str ex)
+              (assoc response :tag :ret
+                :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
                 :ns ns
-                :form form)))))
-      (catch Throwable ex
-        (set! *e ex)
-        (swap! eval-context assoc :thread-bindings (get-thread-bindings))
-        (respond-to message
-          (assoc response :tag :ret
-            :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
-            :ns ns
-            :exception true))))))
+                :exception true))))))))
 
 (defonce ^:private ^AtomicInteger thread-counter
   (AtomicInteger.))
@@ -174,6 +180,7 @@
   [{:keys [bind-address port xform-in xform-out]
       :or {bind-address "localhost" port 0 xform-in identity xform-out identity}}]
   (let [eval-context (atom {})
+        eval-rpc-future (atom nil)
         eval-context-queue (LinkedBlockingQueue. 128)
         eventual-send-fn (promise)
         server-name (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter))
@@ -184,6 +191,7 @@
                   :accept `accept
                   :args [{:eventual-send-fn eventual-send-fn
                           :xform-in #(assoc (xform-in %)
+                                       :eval-rpc-future eval-rpc-future
                                        :eval-context-queue eval-context-queue
                                        :eval-context eval-context)
                           :xform-out #(xform-out %)}]})]

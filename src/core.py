@@ -450,6 +450,9 @@ class TutkainEvaluateCommand(TextCommand):
                             "point": point
                         }
                     })
+                # TODO: Clipboard
+                else:
+                    evaluate(self.view, client, code, options=options)
             elif scope == "view":
                 syntax = self.view.syntax()
 
@@ -474,9 +477,9 @@ class TutkainEvaluateCommand(TextCommand):
 
                     if not eval_region.empty():
                         code = self.view.substr(eval_region)
+                        point = eval_region.begin()
 
                         if inline_result:
-                            point = eval_region.end()
                             line, column = self.view.rowcol(point)
 
                             client.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
@@ -491,11 +494,10 @@ class TutkainEvaluateCommand(TextCommand):
                                 "response": edn.kwmap({
                                     "output": edn.Keyword("inline"),
                                     "view-id": self.view.id(),
-                                    "point": point
+                                    "region": [eval_region.begin(), eval_region.end()]
                                 })
                             })
                         elif output == "clipboard":
-                            point = eval_region.end()
                             line, column = self.view.rowcol(point)
 
                             client.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
@@ -512,7 +514,7 @@ class TutkainEvaluateCommand(TextCommand):
                                 })
                             })
                         else:
-                            evaluate(self.view, client, code, eval_region.begin(), options=options)
+                            evaluate(self.view, client, code, point, options=options)
 
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):

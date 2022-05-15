@@ -3,36 +3,35 @@ import re
 import html
 from inspect import cleandoc
 
-
-def format(form):
-    if lines := cleandoc(form).splitlines():
-        first_line = lines[0] + "\n"
-        next_lines = "\n".join(map(lambda line: (3 * "&nbsp;") + line, lines[1:]))
-
-        if next_lines:
-            next_lines += "\n"
-
-        return f"""{first_line}{next_lines}"""
+from ..api import edn
 
 
-def show(view, point, value, inline_result=True):
-    layout = sublime.LAYOUT_INLINE
+keys = []
+
+
+def show(view, item, inline_result=True):
+    region = item.get(edn.Keyword("region"))
+    region = sublime.Region(region[0], region[1])
+    value = item.get(edn.Keyword("val"))
     value = html.escape(value)
 
-    if inline_result == "block":
-        value = format(re.sub(
-            r"(?m)^(\s+)",
-            lambda s: "&nbsp;" * (s.span()[1] - s.span()[0]),
-            value
-        )).replace("\n", "<br/>")
+    if item.get(edn.Keyword("tag")) == edn.Keyword("err"):
+        annotation_color = view.style_for_scope("region.redish")["foreground"]
+        value = f"""<span style="color: var(--redish)">{value}</span>"""
+    else:
+        annotation_color = view.style_for_scope("region.greenish")["foreground"]
 
-        layout = sublime.LAYOUT_BLOCK
+    print(region)
 
-    style = "color: color(var(--foreground) alpha(0.5));"
-    html_text = """<p style="margin: 0"><span style="{}">=></span> {}</p>""".format(style, value)
-    region = sublime.Region(point, point)
-    view.add_phantom("tutkain/eval", region, html_text, layout)
+    view.add_regions(
+        "tutkain/eval",
+        [region],
+        scope="region.greenish",
+        annotations=[value],
+        annotation_color=annotation_color,
+        flags=sublime.NO_UNDO | sublime.DRAW_NO_FILL
+    )
 
 
 def clear(view):
-    view.erase_phantoms("tutkain/eval")
+    view.erase_regions("tutkain/eval")

@@ -109,7 +109,7 @@ def print_loop(view, client, options={"gutter_marks": True}):
 
                 if target_view := views.find_by_id(window, item.get(VIEW_ID)):
                     inline.clear(target_view)
-                    inline.show(target_view, item.get(POINT), item.get(VAL))
+                    inline.show(target_view, item)
 
             print_item(view, item)
 
