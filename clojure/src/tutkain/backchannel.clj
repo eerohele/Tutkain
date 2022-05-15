@@ -45,21 +45,62 @@
   [ns]
   (or (some-> ns find-ns) (binding [*ns* (create-ns (or ns 'user))] (refer-clojure) *ns*)))
 
+(defn ^:private make-thread-bindings
+  [{:keys [ns file]}]
+  {#'*file* (or file "NO_SOURCE_PATH")
+   #'*source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")
+   #'*ns* (find-or-create-ns ns)})
+
 (defmethod handle :set-eval-context
-  [{:keys [^LineNumberingPushbackReader eval-context-queue in ns file line column response]
-    :or {line 0 column 0 response {}} :as message}]
+  [{:keys [^LineNumberingPushbackReader eval-context-queue in ns file line column]
+    :or {line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (let [thread-bindings {#'*file* (or file "NO_SOURCE_PATH")
-                         #'*source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")
-                         #'*ns* (find-or-create-ns ns)}]
-    (.put eval-context-queue {:response response :thread-bindings thread-bindings})
-    (respond-to message {:result :ok})))
+  (.put eval-context-queue {:thread-bindings (make-thread-bindings {:file file :ns ns})})
+  (respond-to message {:result :ok}))
 
 (defmethod handle :interrupt
   [{:keys [^Thread repl-thread]}]
   (assert repl-thread)
   (.interrupt repl-thread))
+
+(defmethod handle :eval
+  [{:keys [eval-lock eval-context ns file line column code response]
+    :or {line 0 column 0}
+    :as message}]
+  (with-bindings (merge
+                   {#'*e nil
+                    #'*1 nil
+                    #'*2 nil
+                    #'*3 nil}
+                   (:thread-bindings @eval-context)
+                   (make-thread-bindings {:file file :ns ns}))
+    (try
+      ;; FIXME: line and column
+      (let [form (read-string code)]
+        (try
+          (let [ret (locking eval-lock (eval form))]
+            (set! *3 *2)
+            (set! *2 *1)
+            (set! *1 ret)
+            (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+            (respond-to message (assoc response :tag :ret :val (format/pp-str ret))))
+          (catch Throwable ex
+            (set! *e ex)
+            (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+            (respond-to message
+              (assoc response :tag :err
+                :val (format/Throwable->str ex)
+                :ns ns
+                :form form)))))
+      (catch Throwable ex
+        (set! *e ex)
+        (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+        (respond-to message
+          (assoc response :tag :ret
+            :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
+            :ns ns
+            :exception true))))))
 
 (defonce ^:private ^AtomicInteger thread-counter
   (AtomicInteger.))

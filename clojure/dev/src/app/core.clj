@@ -33,6 +33,12 @@
   (def f (future (Thread/sleep 1000) (println "Hello, world!") (map inc (range 10))))
   (deref f)
 
+  (do (Thread/sleep 1000) (square 1))
+  (do (Thread/sleep 2000) (square 2))
+  (do (Thread/sleep 3000) (square 3))
+
+  (ns-name *ns*)
+
   (into (sorted-map)
     (zipmap (map (comp keyword str char) (range 97 123))
       (range 1 26)))

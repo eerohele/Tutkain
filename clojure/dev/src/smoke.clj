@@ -29,6 +29,7 @@ java.
 
 (comment
   (bmi 60 170)
+  (ns-name *ns*)
   )
 
 (defn prompt-bmi

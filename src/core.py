@@ -395,9 +395,6 @@ class TutkainEvaluateCommand(TextCommand):
                 ns = ns or namespace.name_or_default(self.view, dialect)
                 options["ns"] = ns
 
-            if output == "clipboard":
-                options["response"] = {"output": edn.Keyword("clipboard")}
-
             if scope == "input":
                 def evaluate_input(client, code):
                     evaluate(self.view, client, code + "\n", options=options)
@@ -436,13 +433,23 @@ class TutkainEvaluateCommand(TextCommand):
                 code = sublime.expand_variables(code, variables)
 
                 if inline_result and (sel := self.view.sel()):
-                    options["response"] = {
-                        "output": edn.Keyword("inline"),
-                        "view-id": self.view.id(),
-                        "point": sel[0].end()
-                    }
+                    point = sel[0].end()
+                    line, column = self.view.rowcol(point)
+                    code = reindent(code, column)
 
-                evaluate(self.view, client, code, options=options)
+                    client.backchannel.send({
+                        "op": edn.Keyword("eval"),
+                        "code": code,
+                        "ns": ns,
+                        "file": self.view.file,
+                        "line": line,
+                        "column": column,
+                        "response": {
+                            "output": edn.Keyword("inline"),
+                            "view-id": self.view.id(),
+                            "point": point
+                        }
+                    })
             elif scope == "view":
                 syntax = self.view.syntax()
 
@@ -466,15 +473,46 @@ class TutkainEvaluateCommand(TextCommand):
                     eval_region = self.get_eval_region(region, scope, ignore)
 
                     if not eval_region.empty():
-                        if inline_result:
-                            options["response"] = {
-                                "output": edn.Keyword("inline"),
-                                "view-id": self.view.id(),
-                                "point": eval_region.end()
-                            }
-
                         code = self.view.substr(eval_region)
-                        evaluate(self.view, client, code, eval_region.begin(), options=options)
+
+                        if inline_result:
+                            point = eval_region.end()
+                            line, column = self.view.rowcol(point)
+
+                            client.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
+
+                            client.backchannel.send({
+                                "op": edn.Keyword("eval"),
+                                "code": code,
+                                "ns": edn.Symbol(ns),
+                                "file": self.view.file_name(),
+                                "line": line,
+                                "column": column,
+                                "response": edn.kwmap({
+                                    "output": edn.Keyword("inline"),
+                                    "view-id": self.view.id(),
+                                    "point": point
+                                })
+                            })
+                        elif output == "clipboard":
+                            point = eval_region.end()
+                            line, column = self.view.rowcol(point)
+
+                            client.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
+
+                            client.backchannel.send({
+                                "op": edn.Keyword("eval"),
+                                "code": code,
+                                "ns": edn.Symbol(ns),
+                                "file": self.view.file_name(),
+                                "line": line,
+                                "column": column,
+                                "response": edn.kwmap({
+                                    "output": edn.Keyword("clipboard")
+                                })
+                            })
+                        else:
+                            evaluate(self.view, client, code, eval_region.begin(), options=options)
 
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):

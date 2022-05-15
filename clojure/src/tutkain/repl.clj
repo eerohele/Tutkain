@@ -102,12 +102,11 @@
              (loop []
                (when
                  (try
-                   (let [{:keys [thread-bindings response form string]} (read-in-context backchannel in)
+                   (let [{:keys [thread-bindings form string]} (read-in-context backchannel in)
                          ;; For (read-line) support. See also:
                          ;;
                          ;; https://clojure.atlassian.net/browse/CLJ-2692
-                         _ (main/skip-whitespace in)
-                         backchannel-response? (#{:inline :clipboard} (:output response))]
+                         _ (main/skip-whitespace in)]
                      (with-bindings thread-bindings
                        (when-not (identical? form ::EOF)
                          (try
@@ -118,10 +117,7 @@
                                (set! *3 *2)
                                (set! *2 *1)
                                (set! *1 ret)
-                               (if backchannel-response?
-                                 (backchannel/send-to-client backchannel
-                                   (assoc response :tag :ret :val (format/pp-str ret)))
-                                 (pretty-print ret))
+                               (pretty-print ret)
                                (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                                true))
                            (catch Throwable ex
@@ -129,10 +125,10 @@
                              (.flush ^Writer *err*)
                              (set! *e ex)
                              (backchannel/send-to-client backchannel
-                               (merge response {:tag :err
-                                                :val (format/Throwable->str ex)
-                                                :ns (str (.name *ns*))
-                                                :form string}))
+                               {:tag :err
+                                :val (format/Throwable->str ex)
+                                :ns (str (.name *ns*))
+                                :form string})
                              (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                              true)))))
                    (catch Throwable ex
