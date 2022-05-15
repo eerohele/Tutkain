@@ -4,7 +4,7 @@
    [clojure.edn :as edn]
    [tutkain.format :as format])
   (:import
-   (clojure.lang LineNumberingPushbackReader)
+   (clojure.lang EdnReader$ReaderException LineNumberingPushbackReader)
    (java.io File IOException)
    (java.lang.reflect Field)
    (java.net SocketException)
@@ -96,7 +96,7 @@
                                                  :val (format/pp-str (Throwable->map ex))})
                             true)))))
                   ;; If we can't read from the socket, exit the loop.
-                  (catch clojure.lang.EdnReader$ReaderException _ false)
+                  (catch EdnReader$ReaderException _ false)
                   (catch SocketException _ false)
                   ;; If the remote host closes the connection, exit the loop.
                   (catch IOException _ false))]
