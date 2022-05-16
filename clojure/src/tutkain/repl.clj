@@ -51,6 +51,11 @@
             delay
             TimeUnit/MILLISECONDS))))))
 
+(defn ^:private default-init
+  []
+  (in-ns 'user)
+  (apply require main/repl-requires))
+
 (defn repl
   "Tutkain's main read-eval-print loop.
 
@@ -61,7 +66,7 @@
     clojure.main/repl"
   ([]
    (repl {}))
-  ([opts]
+  ([{:keys [init] :as opts}]
    (let [print-lock (Object.)
          eval-lock (Object.)
          out *out*
@@ -76,8 +81,7 @@
                             (.setRejectedExecutionHandler (ThreadPoolExecutor$CallerRunsPolicy.)))
          debounce (make-debouncer debounce-service)]
      (main/with-bindings
-       (in-ns 'user)
-       (apply require main/repl-requires)
+       ((requiring-resolve (or init `default-init)))
        (let [backchannel (backchannel/open
                            (assoc opts
                              :xform-in #(assoc % :eval-lock eval-lock :in in :repl-thread repl-thread)

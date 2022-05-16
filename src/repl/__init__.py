@@ -231,10 +231,11 @@ class JVMClient(Client):
 
             self.buffer.readline()
 
+        init = self.options.get("init") or "tutkain.repl/default-init"
         backchannel_opts = self.options.get("backchannel", {})
         backchannel_port = backchannel_opts.get("port", 0)
         backchannel_bind_address = backchannel_opts.get("bind_address", "localhost")
-        self.write_line(f"""(try (tutkain.repl/repl {{:port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))""")
+        self.write_line(f"""(try (tutkain.repl/repl {{:init `{init} :port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))""")
         line = self.buffer.readline()
 
         if not line.startswith('{'):

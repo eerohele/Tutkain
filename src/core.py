@@ -513,7 +513,7 @@ class TutkainConnectCommand(WindowCommand):
                 flags=sublime.MONOSPACE_FONT
             )
 
-    def connect(self, dialect, host, port, view, output, backchannel, build_id):
+    def connect(self, dialect, host, port, view, output, backchannel, build_id, init):
         backchannel_options = repl.backchannel_options(self.window.project_data(), dialect, backchannel)
 
         if dialect == edn.Keyword("cljs"):
@@ -540,13 +540,13 @@ class TutkainConnectCommand(WindowCommand):
             client = repl.JVMClient(
                 host,
                 port,
-                options={"backchannel": backchannel_options}
+                options={"init": init, "backchannel": backchannel_options}
             )
 
             repl.start(view, client)
             repl.start_printer(client, view)
 
-    def run(self, dialect, host, port, view_id=None, output="view", backchannel=True, build_id=None):
+    def run(self, dialect, host, port, view_id=None, output="view", backchannel=True, build_id=None, init=None):
         active_view = self.window.active_view()
         output_view = repl.views.get_or_create_view(self.window, output, view_id)
         dialect = edn.Keyword(dialect)
@@ -560,7 +560,8 @@ class TutkainConnectCommand(WindowCommand):
                     output_view,
                     output,
                     backchannel,
-                    edn.Keyword(build_id) if build_id else None
+                    edn.Keyword(build_id) if build_id else None,
+                    init
                 )
             except ConnectionRefusedError:
                 output_view.close()
