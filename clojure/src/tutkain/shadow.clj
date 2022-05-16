@@ -24,7 +24,7 @@
           _ (readers/unread in (readers/read-char in))
           eof (Object.)
           reader-opts {:eof eof :read-cond :allow :features #{:cljs}}
-          eval-context (backchannel/next-eval-context backchannel)
+          eval-context (backchannel/eval-context backchannel)
           current-ns (or
                        (some-> eval-context :thread-bindings (get #'clojure.core/*ns*) ns-name)
                        (get-in build-state [:repl-state :current-ns] 'user))

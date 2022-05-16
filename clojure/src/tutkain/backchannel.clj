@@ -8,7 +8,6 @@
    (java.io File IOException)
    (java.lang.reflect Field)
    (java.net SocketException)
-   (java.util.concurrent LinkedBlockingQueue)
    (java.util.concurrent.atomic AtomicInteger)))
 
 (defn respond-to
@@ -46,14 +45,14 @@
   (or (some-> ns find-ns) (binding [*ns* (create-ns (or ns 'user))] (refer-clojure) *ns*)))
 
 (defmethod handle :set-eval-context
-  [{:keys [^LineNumberingPushbackReader eval-context-queue in ns file line column response]
+  [{:keys [^LineNumberingPushbackReader eval-context in ns file line column response]
     :or {line 0 column 0 response {}} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
   (let [thread-bindings {#'*file* (or file "NO_SOURCE_PATH")
                          #'*source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")
                          #'*ns* (find-or-create-ns ns)}]
-    (.put eval-context-queue {:response response :thread-bindings thread-bindings})
+    (swap! eval-context assoc :response response :thread-bindings thread-bindings)
     (respond-to message {:result :ok})))
 
 (defmethod handle :interrupt
@@ -106,7 +105,6 @@
 
 (defprotocol Backchannel
   (eval-context [this])
-  (next-eval-context [this])
   (update-thread-bindings [this thread-bindings])
   (host [this])
   (port [this])
@@ -133,7 +131,6 @@
   [{:keys [bind-address port xform-in xform-out]
       :or {bind-address "localhost" port 0 xform-in identity xform-out identity}}]
   (let [eval-context (atom {})
-        eval-context-queue (LinkedBlockingQueue. 128)
         eventual-send-fn (promise)
         server-name (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter))
         socket (server/start-server
@@ -142,15 +139,12 @@
                   :name server-name
                   :accept `accept
                   :args [{:eventual-send-fn eventual-send-fn
-                          :xform-in #(assoc (xform-in %)
-                                       :eval-context-queue eval-context-queue
-                                       :eval-context eval-context)
+                          :xform-in #(assoc (xform-in %) :eval-context eval-context)
                           :xform-out #(xform-out %)}]})]
     (reify Backchannel
       (eval-context [_] @eval-context)
-      (next-eval-context [_] (.poll eval-context-queue))
       (update-thread-bindings [_ thread-bindings]
-        (swap! eval-context assoc :thread-bindings thread-bindings))
+        (swap! eval-context update (fn [a b] (merge b a)) thread-bindings))
       (host [_] (-> socket .getInetAddress .getHostName))
       (port [_] (.getLocalPort socket))
       (send-to-client [_ message] (@eventual-send-fn message))

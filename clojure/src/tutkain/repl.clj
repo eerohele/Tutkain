@@ -31,8 +31,7 @@
   ;; This way, if the user sends more than one form at once, we use the same
   ;; eval context for each form instead of waiting for a new one after every
   ;; form.
-  (let [eval-context (or (backchannel/next-eval-context backchannel)
-                       (backchannel/eval-context backchannel))
+  (let [eval-context (backchannel/eval-context backchannel)
         [form string] (with-bindings (:thread-bindings eval-context {})
                         (read+string {:eof ::EOF :read-cond :allow} reader))]
     (assoc eval-context :form form :string string)))
