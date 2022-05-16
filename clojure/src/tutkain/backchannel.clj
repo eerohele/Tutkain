@@ -49,9 +49,10 @@
     :or {line 0 column 0 response {}} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (let [thread-bindings {#'*file* (or file "NO_SOURCE_PATH")
-                         #'*source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")
-                         #'*ns* (find-or-create-ns ns)}]
+  (let [thread-bindings (cond->
+                          {#'*file* (or file "NO_SOURCE_PATH")
+                           #'*source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")}
+                          ns (assoc #'*ns* (find-or-create-ns ns)))]
     (swap! eval-context assoc :response response :thread-bindings thread-bindings)
     (respond-to message {:result :ok})))
 

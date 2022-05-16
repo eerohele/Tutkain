@@ -117,12 +117,14 @@
 (send :repl `(require '[clojure.set]))
 (recv :repl)
 (xr/check! nil?)
-(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'clojure.set :line 1 :column 1 :id 1})
+;; no ns => ns auto switch disabled
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl `(in-ns 'clojure.set))
 (recv :repl)
 (xr/check! tagged-literal?)
-(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :ns 'clojure.set :line 1 :column 1 :id 1})
+;; no ns => ns auto switch disabled
+(send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(union #{1 2} #{2 3}))
 (recv :repl)
