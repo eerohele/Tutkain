@@ -71,15 +71,22 @@
       (or (some-> s io/resource str) s))))
 
 (defn prep-meta
-  [{sym-name :name sym-ns :ns :as m}]
-  (some->
-    m
-    (select-keys [:name :file :column :line :arglists :doc :fnspec :type])
-    (assoc :ns (some-> sym-ns ns-name name))
-    (assoc :name sym-name)
-    (update :file resolve-file)
-    (update :arglists #(map pr-str %))
-    (remove-empty)))
+  [{sym-name :name sym-ns :ns protocol :protocol :as m}]
+  (if protocol
+    (recur (assoc (meta protocol) :name sym-name :arglists (:arglists m) :doc (:doc m)))
+    (some->
+      m
+      (select-keys [:name :file :column :line :arglists :doc :fnspec :type])
+      (assoc :ns (some-> sym-ns ns-name name))
+      (assoc :name (cond
+                     (qualified-symbol? sym-name)
+                     sym-name
+                     (and (some? sym-ns) (nil? sym-name))
+                     (symbol (-> sym-ns ns-name str) (name sym-name))
+                     :else sym-name))
+      (update :file resolve-file)
+      (update :arglists #(map pr-str %))
+      (remove-empty))))
 
 (defn lookup
   "Given an ns symbol and a string representation of an ident, return selected

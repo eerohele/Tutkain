@@ -31,5 +31,13 @@
 (spec/def ::spec-info
   (spec/keys :req-un [::name ::spec]))
 
+(spec/def ::protocol-info
+  (spec/keys
+    :req-un [::name ::file ::ns ::column ::line ::doc]))
+
+(spec/def ::protocol-method-info
+  (spec/keys
+    :req-un [::name ::ns ::column ::file ::line ::arglists ::doc]))
+
 (spec/def ::infos
   (spec/coll-of (spec/or :info ::info :ns-info ::ns-info) :min-count 1 :distinct true))

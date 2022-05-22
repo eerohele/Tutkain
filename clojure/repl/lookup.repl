@@ -65,3 +65,13 @@
   :info)
 
 (xr/check! ::specs/info)
+
+(defprotocol MyProtocol
+  "protocol docstring"
+  (my-method [this] "method docstring"))
+
+(lookup "repl.lookup" "MyProtocol")
+(xr/check! ::specs/protocol-info)
+
+(lookup "repl.lookup" "my-method")
+(xr/check! ::specs/protocol-method-info)
