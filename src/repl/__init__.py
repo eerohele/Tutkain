@@ -526,6 +526,9 @@ def stop(window):
         for view in vs:
             view.close()
 
+    if view := window.active_view():
+        status.erase_connection_status(view)
+
 
 def backchannel_options(project_data, dialect, backchannel=True):
     dialect_name_lower = dialects.name(dialect).lower()
