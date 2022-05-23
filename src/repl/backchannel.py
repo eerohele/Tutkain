@@ -103,18 +103,22 @@ class Client:
 
         If there's no handler function for the message, call the default
         handler function instead."""
-        id = message.get(edn.Keyword("id"))
-
         try:
-            with self.lock:
-                handler = self.handlers.get(id, self.default_handler)
+            id = message.get(edn.Keyword("id"))
 
-            handler.__call__(message)
+            try:
+                with self.lock:
+                    handler = self.handlers.get(id, self.default_handler)
+
+                handler.__call__(message)
+            except AttributeError as error:
+                log.error({"event": "error", "message": message, "error": error})
+            finally:
+                with self.lock:
+                    self.handlers.pop(id, None)
         except AttributeError as error:
-            log.error({"event": "error", "message": message, "error": error})
-        finally:
-            with self.lock:
-                self.handlers.pop(id, None)
+            raise ValueError(f"Got invalid message: {message}")
+
 
     def halt(self):
         """Halt this backchannel client."""
