@@ -5,7 +5,7 @@
    [tutkain.format :as format])
   (:import
    (clojure.lang EdnReader$ReaderException LineNumberingPushbackReader)
-   (java.io File IOException)
+   (java.io File IOException Writer)
    (java.lang.reflect Field)
    (java.net SocketException)
    (java.util.concurrent.atomic AtomicInteger)))
@@ -79,7 +79,8 @@
     (deliver eventual-send-fn out-fn)
     (add-tap tapfn)
     (try
-      (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)]
+      (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
+                *err* (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)]
         (loop []
           (let [recur?
                 (try
@@ -89,11 +90,13 @@
                       (let [message (assoc (xform-in message) :out-fn out-fn)]
                         (try
                           (handle message)
+                          (.flush ^Writer *err*)
                           true
                           (catch Throwable ex
                             (respond-to message {:tag :ret
                                                  :exception true
                                                  :val (format/pp-str (Throwable->map ex))})
+                            (.flush ^Writer *err*)
                             true)))))
                   ;; If we can't read from the socket, exit the loop.
                   (catch EdnReader$ReaderException _ false)
