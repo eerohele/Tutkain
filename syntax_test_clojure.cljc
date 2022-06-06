@@ -2426,8 +2426,11 @@
   ;      ^ keyword.operator.macro.clojure
   ;       ^^^^^ constant.other.keyword.unqualified.edn
     Bar
-    (baz [_]))
-;    ^^^ entity.name.function.clojure
+    (^void baz [_]))
+;    ^ keyword.operator.macro.clojure
+;     ^^^^ meta.symbol.clojure
+;         ^ -meta.symbol
+;          ^^^ entity.name.function.clojure
 
   ; Scope the implemented protocols/interfaces
   (deftype DeclareType [fields]

@@ -531,6 +531,8 @@ contexts:
           scope: punctuation.section.parens.end.edn
           pop: true
         - include: constant
+        - include: metadata
+        - include: comment
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
           push:
