@@ -1278,6 +1278,11 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_backward_move_form")
         self.assertEquals("{:a [:b :d :c :e]}", self.view_content())
 
+        self.set_view_content("{:a [[:b] [:c] [:d] [:e]]}")
+        self.set_selections((15, 15))
+        self.view.run_command("tutkain_paredit_backward_move_form")
+        self.assertEquals("{:a [[:b] [:d] [:c] [:e]]}", self.view_content())
+
         ## Forward
         for sel in [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]:
             self.set_view_content("{:a 1 :b 2}")
@@ -1323,6 +1328,11 @@ class TestParedit(ViewTestCase):
         self.set_selections((8, 8))
         self.view.run_command("tutkain_paredit_forward_move_form")
         self.assertEquals("{:a [:b :d :c :e]}", self.view_content())
+
+        self.set_view_content("{:a [[:b] [:c] [:d] [:e]]}")
+        self.set_selections((5, 5))
+        self.view.run_command("tutkain_paredit_forward_move_form")
+        self.assertEquals("{:a [[:c] [:b] [:d] [:e]]}", self.view_content())
 
     def test_thread_first(self):
         self.set_view_content("(inc (dec (* 2 (/ 4 10))))")
