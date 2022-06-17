@@ -321,6 +321,7 @@ contexts:
       scope: punctuation.section.parens.begin.edn
       push:
       - meta_scope: meta.sexp.list.edn
+      - meta_content_scope: meta.sexp.content.list.edn
       - match: '\)'
         scope: punctuation.section.parens.end.edn
         pop: true
@@ -333,6 +334,7 @@ contexts:
       scope: punctuation.section.brackets.begin.edn
       push:
       - meta_scope: meta.sexp.vector.edn
+      - meta_content_scope: meta.sexp.content.vector.edn
       - match: '\]'
         scope: punctuation.section.brackets.end.edn
         pop: true
@@ -345,6 +347,7 @@ contexts:
       scope: punctuation.section.braces.begin.edn
       push:
         - meta_scope: meta.sexp.map.edn
+        - meta_content_scope: meta.sexp.content.map.edn
         - match: '[\]\)]'
           scope: invalid.illegal.stray-bracket-end.edn
         - match: \}
@@ -377,6 +380,7 @@ contexts:
         2: punctuation.section.braces.begin.edn
       push:
       - meta_scope: meta.sexp.set.edn
+      - meta_content_scope: meta.sexp.content.set.edn
       - match: \}
         scope: punctuation.section.braces.end.edn
         pop: true

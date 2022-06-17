@@ -131,6 +131,7 @@ contexts:
 
   list-head:
     - meta_scope: meta.sexp.list.edn
+    - meta_content_scope: meta.sexp.content.list.edn
     - include: list-end
     - include: metadata
     - include: comment
@@ -320,6 +321,7 @@ contexts:
           scope: punctuation.section.parens.begin.edn
           push:
           - meta_scope: meta.sexp.list.edn
+          - meta_content_scope: meta.sexp.content.list.edn
           - match: '(:)(require|refer-clojure|use){{end}}'
             captures:
               1: punctuation.definition.keyword.clojure
@@ -355,6 +357,7 @@ contexts:
       scope: punctuation.section.brackets.begin.edn
       push:
         - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+        - meta_content_scope: meta.sexp.content.vector.edn
         - match: '\]'
           scope: punctuation.section.brackets.end.edn
           set:
@@ -367,6 +370,7 @@ contexts:
       scope: punctuation.section.brackets.begin.edn
       push:
         - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+        - meta_content_scope: meta.sexp.content.vector.edn
         - match: '\]'
           scope: punctuation.section.brackets.end.edn
           set:
@@ -385,6 +389,7 @@ contexts:
       scope: punctuation.section.parens.begin.edn
       push:
         - meta_scope: meta.sexp.list.edn
+        - meta_content_scope: meta.sexp.content.list.edn
         - include: list-end
         - include: comment
         - include: metadata
@@ -392,6 +397,7 @@ contexts:
           scope: punctuation.section.brackets.begin.edn
           push:
             - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+            - meta_content_scope: meta.sexp.content.vector.edn
             - match: '\]'
               scope: punctuation.section.brackets.end.edn
               set:
@@ -401,6 +407,7 @@ contexts:
 
   fn-arity:
     - meta_scope: meta.sexp.list.edn meta.function-body.clojure
+    - meta_content_scope: meta.sexp.content.list.edn
     - include: list-end
     - include: comment
     - include: metadata
@@ -408,6 +415,7 @@ contexts:
       scope: punctuation.section.brackets.begin.edn
       push:
         - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+        - meta_content_scope: meta.sexp.content.vector.edn
         - match: '\]'
           scope: punctuation.section.brackets.end.edn
           set:
@@ -480,6 +488,7 @@ contexts:
                 scope: punctuation.section.brackets.begin.edn
                 push:
                   - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+                  - meta_content_scope: meta.sexp.content.vector.edn
                   - match: '\]'
                     scope: punctuation.section.brackets.end.edn
                     set:
@@ -497,6 +506,7 @@ contexts:
       scope: punctuation.section.brackets.begin.edn
       push:
       - meta_scope: meta.sexp.vector.edn
+      - meta_content_scope: meta.sexp.content.vector.edn
       - include: comment
       - include: metadata
       - match: '\]'
@@ -507,6 +517,7 @@ contexts:
             scope: punctuation.section.brackets.begin.edn
             push:
             - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+            - meta_content_scope: meta.sexp.content.vector.edn
             - match: '\]'
               scope: punctuation.section.brackets.end.edn
               pop: 2
@@ -527,6 +538,7 @@ contexts:
       scope: punctuation.section.parens.begin.edn
       push:
         - meta_scope: meta.sexp.list.edn
+        - meta_content_scope: meta.sexp.content.list.edn
         - match: '\)'
           scope: punctuation.section.parens.end.edn
           pop: true
@@ -547,6 +559,7 @@ contexts:
                 scope: punctuation.section.brackets.begin.edn
                 push:
                   - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+                  - meta_content_scope: meta.sexp.content.vector.edn
                   - match: '\]'
                     scope: punctuation.section.brackets.end.edn
                     set:
@@ -557,6 +570,7 @@ contexts:
             scope: punctuation.section.brackets.begin.edn
             set:
             - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+            - meta_content_scope: meta.sexp.content.vector.edn
             - match: '\]'
               scope: punctuation.section.brackets.end.edn
               set:
@@ -580,6 +594,7 @@ contexts:
           push:
           - include: forms
           - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+          - meta_content_scope: meta.sexp.content.vector.edn
           - match: '\]'
             scope: punctuation.section.brackets.end.edn
             set:
@@ -595,6 +610,7 @@ contexts:
       scope: punctuation.section.parens.begin.edn
       push:
         - meta_scope: meta.sexp.list.edn
+        - meta_content_scope: meta.sexp.content.list.edn
         - include: list-end-2
         - include: comment
         - include: metadata
@@ -606,6 +622,7 @@ contexts:
             scope: punctuation.section.brackets.begin.edn
             push:
             - meta_scope: meta.sexp.vector.edn meta.function.parameters.clojure
+            - meta_content_scope: meta.sexp.content.vector.edn
             - match: '\]'
               scope: punctuation.section.brackets.end.edn
               set:

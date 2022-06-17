@@ -2428,7 +2428,7 @@
     Bar
     (^void baz [_]))
 ;    ^ keyword.operator.macro.clojure
-;     ^^^^ meta.symbol.clojure
+;     ^^^^ meta.symbol.edn
 ;         ^ -meta.symbol
 ;          ^^^ entity.name.function.clojure
 

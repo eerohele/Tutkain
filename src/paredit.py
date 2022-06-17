@@ -442,11 +442,7 @@ def kill_form(view, edit, forward):
 
 
 def on_pairwise_form(view, point, selector):
-    scope_name = view.scope_name(point)
-
-    return view.match_selector(point, selector) and (
-        view.match_selector(point, "punctuation.section") or scope_name.index(selector) > scope_name.rindex("meta.sexp")
-    )
+    return view.match_selector(point, selector) and not view.match_selector(point, selector + " meta.sexp.content")
 
 
 def backward_move_form(view, edit):

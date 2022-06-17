@@ -791,9 +791,23 @@ class TutkainEventListener(EventListener):
 class TutkainExpandSelectionImplCommand(TextCommand):
     """Internal, do not use. Use the tutkain_expand_selection window command
     instead."""
-    def run(self, _, point):
-        if form := forms.find_adjacent(self.view, point):
+    def run(self, _, region):
+        region = sublime.Region(region[0], region[1])
+
+        if region.empty() and (form := forms.find_adjacent(self.view, region.begin())):
             self.view.sel().add(form)
+        elif region.empty() and not forms.find_adjacent(self.view, region.begin()):
+            self.view.run_command("expand_selection", {"to": "brackets"})
+        elif not region.empty() and self.view.match_selector(region.begin(), sexp.BEGIN_SELECTORS) and self.view.match_selector(region.end() - 1, sexp.END_SELECTORS):
+            self.view.run_command("expand_selection", {"to": "brackets"})
+        elif not region.empty() and self.view.match_selector(region.begin() - 1, sexp.BEGIN_SELECTORS) and self.view.match_selector(region.end(), sexp.END_SELECTORS):
+            innermost = sexp.innermost(self.view, region.begin(), edge=False)
+            self.view.sel().add(innermost.extent())
+        elif not region.empty() and not self.view.match_selector(region.begin(), sexp.BEGIN_SELECTORS) and not self.view.match_selector(region.end() - 1, sexp.END_SELECTORS):
+            innermost = sexp.innermost(self.view, region.begin(), edge=False)
+            self.view.sel().add(sublime.Region(innermost.open.region.end(), innermost.close.region.begin()))
+        elif innermost := sexp.innermost(self.view, region.begin(), edge=False):
+            self.view.sel().add(innermost.extent())
         else:
             self.view.run_command("expand_selection", {"to": "brackets"})
 
@@ -803,12 +817,10 @@ class TutkainExpandSelectionCommand(WindowCommand):
         view = self.window.active_view()
 
         for region in view.sel():
-            point = region.begin()
-
-            if not region.empty() or selectors.ignore(view, point):
+            if selectors.ignore(view, region.begin()):
                 view.run_command("expand_selection", {"to": "scope"})
             else:
-                view.run_command("tutkain_expand_selection_impl", {"point": region.begin()})
+                view.run_command("tutkain_expand_selection_impl", {"region": region.to_tuple()})
 
 
 class TutkainInterruptEvaluationCommand(WindowCommand):

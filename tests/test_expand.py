@@ -283,3 +283,45 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.assertEquals("foo #bar/baz [:quux 1]", self.selection(0))
         self.expand()
         self.assertEquals("(foo #bar/baz [:quux 1])", self.selection(0))
+
+    def test_adjacent_sexp(self):
+        self.set_view_content("((foo) (bar))")
+        self.set_selections((8, 8))
+        self.expand()
+        self.assertEquals("bar", self.selection(0))
+        self.expand()
+        self.assertEquals("(bar)", self.selection(0))
+        self.expand()
+        self.assertEquals("(foo) (bar)", self.selection(0))
+        self.expand()
+        self.assertEquals("((foo) (bar))", self.selection(0))
+
+    def test_macro_chars(self):
+        self.set_view_content("""(a #(-> "b" c))""")
+        self.set_selections((12, 12))
+        self.expand()
+        self.assertEquals("c", self.selection(0))
+        self.expand()
+        self.assertEquals("""-> "b" c""", self.selection(0))
+        self.expand()
+        self.assertEquals("""#(-> "b" c)""", self.selection(0))
+        self.expand()
+        self.assertEquals("""(a #(-> "b" c))""", self.selection(0))
+
+    def test_discard(self):
+        self.set_view_content("""#_(:foo :bar)""")
+        self.set_selections((8, 8))
+        self.expand()
+        self.assertEquals(":bar", self.selection(0))
+        self.expand()
+        self.assertEquals(""":foo :bar""", self.selection(0))
+        self.expand()
+        self.assertEquals("""#_(:foo :bar)""", self.selection(0))
+
+    def test_existing_selection(self):
+        self.set_view_content("""(-> "a" b)""")
+        self.set_selections((4, 8))
+        self.expand()
+        self.assertEquals("""-> "a" b""", self.selection(0))
+        self.expand()
+        self.assertEquals("""(-> "a" b)""", self.selection(0))
