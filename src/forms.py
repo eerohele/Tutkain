@@ -91,7 +91,7 @@ def absorb_macro_characters(view, region):
 
 
 def find_previous(view, point):
-    """Given a View and a point, return the previous Clojure form to the right
+    """Given a View and a point, return the previous Clojure form to the left
     of the point."""
     if view.match_selector(point, "comment.line"):
         return view.word(view.find_by_class(point, False, CLASS_WORD_START))
