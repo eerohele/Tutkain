@@ -23,15 +23,21 @@ def ignore(view, point):
     )
 
 
-def find(view, start_point, selector, forward=True):
+def find(view, start_point, selector, forward=True, stop_at=None):
     """Given a View, a start point, and a selector, return the first point
     to the right of the start point that matches the selector.
 
-    If `forward=False`, walk left instead."""
+    If `forward=False`, walk left instead.
+
+    If `stop_at` is a selector and if the point matches that selector, abort
+    and return None."""
     point = start_point if forward else start_point - 1
     max_size = view.size()
 
     while point >= 0 and point <= max_size:
+        if stop_at and view.match_selector(point, stop_at):
+            return None
+
         if view.match_selector(point, selector):
             return point
 
