@@ -597,6 +597,41 @@ def thread_last(view, edit, join_on):
     thread(view, edit, "->>", join_on)
 
 
+def unthread(view, edit, join_on=" "):
+    for region, sel in iterate(view):
+        if ((enclosing_sexp := sexp.innermost(view, region.begin()))
+            and (head := forms.find_next(view, enclosing_sexp.open.region.end()))
+            and view.substr(head) in {"->", "->>"}
+        ):
+            threaded_form = forms.find_next(view, head.end())
+            last_form = forms.find_previous(view, enclosing_sexp.close.region.begin())
+
+            if view.match_selector(last_form.end() - 1, sexp.END_SELECTORS):
+                innermost = sexp.innermost(view, enclosing_sexp.close.region.begin())
+                new_head = Region(innermost.open.region.end(), innermost.close.region.begin())
+            else:
+                new_head = last_form
+
+            # The form following the threaded form is the last form in the enclosing S-expression.
+            if threaded_form == forms.find_previous(view, last_form.begin()):
+                prefix = f"""{view.substr(enclosing_sexp.open.region)}{view.substr(new_head)}{join_on}"""
+
+                view.replace(edit, enclosing_sexp.extent(),
+                    f"""{prefix}{view.substr(threaded_form)}{view.substr(enclosing_sexp.close.region)}"""
+                )
+
+                sel.append(enclosing_sexp.open.region.end() + len(prefix) - 1)
+            else:
+                between = view.substr(Region(head.end(), last_form.begin())).rstrip()
+                new_threaded_content = f"""{view.substr(enclosing_sexp.open.region)}{view.substr(head)}{between}{view.substr(enclosing_sexp.close.region)}"""
+                prefix = f"""{view.substr(enclosing_sexp.open.region)}{view.substr(new_head)}{join_on}"""
+
+                view.replace(edit, enclosing_sexp.extent(),
+                    f"""{prefix}{new_threaded_content}{view.substr(enclosing_sexp.close.region)}"""
+                )
+
+                sel.append(enclosing_sexp.open.region.end() + len(prefix) - 1)
+
 def forward_up(view, edit):
     for region, sel in iterate(view):
         innermost = sexp.innermost(view, region.begin(), edge=False)

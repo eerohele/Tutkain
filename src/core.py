@@ -1049,6 +1049,12 @@ class TutkainPareditThreadLastCommand(TextCommand):
         paredit.thread_last(self.view, edit, join_on=join_on)
 
 
+class TutkainPareditUnthreadCommand(TextCommand):
+    def run(self, edit, join_on=" "):
+        paredit.unthread(self.view, edit, join_on=join_on)
+
+
+
 class TutkainPareditForwardUpCommand(TextCommand):
     def run(self, edit):
         paredit.forward_up(self.view, edit)

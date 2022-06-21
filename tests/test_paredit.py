@@ -1371,6 +1371,26 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_thread_first", {"join_on": "\n"})
         self.assertEquals("(->\n  2\n  (dec)\n  (inc))", self.view_content())
 
+    def test_thread_unthread(self):
+        self.set_view_content("(* 2 (inc (dec 1)))")
+        self.set_selections((15, 15))
+        self.view.run_command("tutkain_paredit_thread_first")
+        self.assertEquals("(* 2 (inc (-> 1 (dec))))", self.view_content())
+        self.view.run_command("tutkain_paredit_thread_first")
+        self.assertEquals("(* 2 (-> 1 (dec) (inc)))", self.view_content())
+        self.view.run_command("tutkain_paredit_thread_first")
+        self.assertEquals("(-> 1 (dec) (inc) (* 2))", self.view_content())
+        self.view.run_command("tutkain_paredit_thread_first")
+        self.assertEquals("(-> 1 (dec) (inc) (* 2))", self.view_content())
+        self.view.run_command("tutkain_paredit_unthread")
+        self.assertEquals("(* 2 (-> 1 (dec) (inc)))", self.view_content())
+        self.view.run_command("tutkain_paredit_unthread")
+        self.assertEquals("(* 2 (inc (-> 1 (dec))))", self.view_content())
+        self.view.run_command("tutkain_paredit_unthread")
+        self.assertEquals("(* 2 (inc (dec 1)))", self.view_content())
+        self.view.run_command("tutkain_paredit_unthread")
+        self.assertEquals("(* 2 (inc (dec 1)))", self.view_content())
+
     def test_forward_up(self):
         self.set_view_content("""({[#{a} b] c} d)""")
         self.set_selections((6, 6))
