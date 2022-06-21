@@ -1267,6 +1267,11 @@ class TestParedit(ViewTestCase):
             self.view.run_command("tutkain_paredit_backward_move_form")
             self.assertEquals("{:b 2\n:a 1}", self.view_content())
 
+        self.set_view_content("{:a {:b :c}}")
+        self.set_selections((8, 8))
+        self.view.run_command("tutkain_paredit_backward_move_form")
+        self.assertEquals("{:a {:b :c}}", self.view_content())
+
         # Pairwise at sexp delim
         self.set_view_content("{:a [:b] :c [:d]}")
         self.set_selections((12, 12))
