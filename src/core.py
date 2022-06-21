@@ -1040,13 +1040,13 @@ class TutkainPareditForwardMoveFormCommand(TextCommand):
 
 
 class TutkainPareditThreadFirstCommand(TextCommand):
-    def run(self, edit):
-        paredit.thread_first(self.view, edit)
+    def run(self, edit, join_on=" "):
+        paredit.thread_first(self.view, edit, join_on=join_on)
 
 
 class TutkainPareditThreadLastCommand(TextCommand):
-    def run(self, edit):
-        paredit.thread_last(self.view, edit)
+    def run(self, edit, join_on=" "):
+        paredit.thread_last(self.view, edit, join_on=join_on)
 
 
 class TutkainPareditForwardUpCommand(TextCommand):

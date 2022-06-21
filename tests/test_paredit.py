@@ -1350,6 +1350,27 @@ class TestParedit(ViewTestCase):
         self.assertEquals("(-> 4 (/ 10) (* 2) (dec) (inc))", self.view_content())
         self.assertEquals([(0, 0)], self.selections())
 
+        self.set_view_content("(inc\n  (dec 2))")
+        self.set_selections((12, 12))
+        self.view.run_command("tutkain_paredit_thread_first")
+        self.assertEquals("(inc\n  (-> 2 (dec)))", self.view_content())
+        self.view.run_command("tutkain_paredit_thread_first")
+        self.assertEquals("(-> 2 (dec) (inc))", self.view_content())
+
+        self.set_view_content("(inc\n  (dec 2))")
+        self.set_selections((12, 12))
+        self.view.run_command("tutkain_paredit_thread_first")
+        self.assertEquals("(inc\n  (-> 2 (dec)))", self.view_content())
+        self.view.run_command("tutkain_paredit_thread_first")
+        self.assertEquals("(-> 2 (dec) (inc))", self.view_content())
+
+        self.set_view_content("(inc\n  (dec 2))")
+        self.set_selections((12, 12))
+        self.view.run_command("tutkain_paredit_thread_first", {"join_on": "\n"})
+        self.assertEquals("(inc\n  (->\n    2\n    (dec)))", self.view_content())
+        self.view.run_command("tutkain_paredit_thread_first", {"join_on": "\n"})
+        self.assertEquals("(->\n  2\n  (dec)\n  (inc))", self.view_content())
+
     def test_forward_up(self):
         self.set_view_content("""({[#{a} b] c} d)""")
         self.set_selections((6, 6))

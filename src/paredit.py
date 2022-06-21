@@ -534,7 +534,7 @@ def forward_move_form(view, edit):
 
 
 # FIXME: This is awful. Also, it doesn't handle line breaks.
-def thread(view, edit, arrow):
+def thread(view, edit, arrow, join_on=" "):
     for region, sel in iterate(view):
         point = region.begin()
 
@@ -547,50 +547,54 @@ def thread(view, edit, arrow):
             innermost = sexp.innermost(view, point, edge=False)
 
             def thread_unthreaded():
-                characters = "({} {} ".format(arrow, view.substr(form))
-                insert = view.insert(edit, innermost.open.region.begin(), characters)
-                begin = insert + form.begin()
-                view.insert(edit, innermost.close.region.end() + insert, ")")
+                head_form = forms.find_next(view, innermost.open.region.end())
+                left = view.substr(Region(head_form.begin(), form.begin()))
+                right = view.substr(Region(form.end(), innermost.close.region.begin()))
+                open_delim = view.substr(innermost.open.region)
+                close_delim = view.substr(innermost.close.region)
+                replacee = f"""{open_delim}{arrow}{join_on}{view.substr(form)}{join_on}{open_delim}{left.rstrip()}{right}{close_delim}{close_delim}"""
+                view.replace(edit, innermost.extent(), replacee)
 
-                erase = Region(begin - 1, begin + form.size())
-                view.erase(edit, erase)
+                indent.indent_region(
+                    view,
+                    edit,
+                    sexp.innermost(view, innermost.open.region.begin()).extent(),
+                    prune=True
+                )
 
             # If the form is the first form in a sexp, abort.
             if form and innermost and forms.find_previous(view, point):
                 sel.append(innermost.open.region.begin())
 
-                if view.match_selector(
-                    form.begin(), "punctuation.section.parens.begin"
-                ):
+                if view.match_selector(form.begin(), sexp.BEGIN_SELECTORS):
                     head = forms.find_next(view, form.begin() + 1)
 
                     if view.substr(head) == arrow:
-                        element_str = view.substr(form)
-                        view.erase(edit, form)
-                        enclosing = sexp.innermost(
-                            view, form.begin(), edge=False
-                        ).extent()
-                        enclosing_str = view.substr(enclosing)
-                        view.erase(edit, enclosing)
-                        insert = (
-                            element_str[:-1]
-                            + " "
-                            + indent.prune_string(enclosing_str + ")")
-                        )
-                        view.insert(edit, enclosing.begin(), insert)
+                        enclosing_sexp = sexp.innermost(view, form.begin(), edge=False)
+                        left = view.substr(Region(enclosing_sexp.open.region.begin(), form.begin()))
+                        right = view.substr(Region(form.end(), enclosing_sexp.close.region.end()))
+                        form_str = view.substr(form)
+                        replacee = f"""{form_str[:-1]}{join_on}{left.rstrip()}{right}{form_str[-1]}"""
+                        view.replace(edit, enclosing_sexp.extent(), replacee)
 
+                        indent.indent_region(
+                            view,
+                            edit,
+                            sexp.innermost(view, enclosing_sexp.open.region.begin()).extent(),
+                            prune=True
+                        )
                     else:
                         thread_unthreaded()
                 else:
                     thread_unthreaded()
 
 
-def thread_first(view, edit):
-    thread(view, edit, "->")
+def thread_first(view, edit, join_on):
+    thread(view, edit, "->", join_on)
 
 
-def thread_last(view, edit):
-    thread(view, edit, "->>")
+def thread_last(view, edit, join_on):
+    thread(view, edit, "->>", join_on)
 
 
 def forward_up(view, edit):
