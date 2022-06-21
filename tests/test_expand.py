@@ -440,6 +440,16 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.assertEquals(""":b :c :d :e""", self.selection(0))
         self.expand()
         self.assertEquals("""{:b :c :d :e}""", self.selection(0))
+        self.set_view_content("""{:a 'b}""")
+        self.set_selections((1, 1))
+        self.expand()
+        self.assertEquals(""":a""", self.selection(0))
+        self.expand()
+        self.assertEquals(""":a 'b""", self.selection(0))
+        self.expand()
+        self.assertEquals("""{:a 'b}""", self.selection(0))
+        self.expand()
+        self.assertEquals("""{:a 'b}""", self.selection(0))
 
     def test_set_in_map(self):
         self.set_view_content("""#{{:a :b}}""")

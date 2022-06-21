@@ -814,9 +814,9 @@ class TutkainExpandSelectionImplCommand(TextCommand):
 
             if not value_begin and (innermost := sexp.innermost(self.view, region.begin())):
                 self.view.sel().add(innermost.extent())
-            elif self.view.match_selector(value_begin, "meta.reader-form"):
-                end = selectors.expand_by_selector(self.view, value_begin, "meta.reader-form").end()
-                self.view.sel().add(sublime.Region(region.begin(), end))
+            elif self.view.match_selector(value_begin, "meta.reader-form | keyword.operator.macro"):
+                form = forms.find_next(self.view, value_begin)
+                self.view.sel().add(sublime.Region(region.begin(), form.end()))
             elif self.view.match_selector(value_begin, "meta.mapping.value meta.sexp.content"):
                 end = sexp.innermost(self.view, value_begin).close.region.begin()
                 self.view.sel().add(sublime.Region(region.begin(), end))
