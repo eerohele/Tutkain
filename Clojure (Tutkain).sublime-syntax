@@ -64,7 +64,7 @@ contexts:
     - include: var-quote
     - include: anonymous-function-literal
     - include: reader-conditional
-    - include: tagged-literal
+    - include: tagged-element
     - include: qualified-map
 
   # Dispatch

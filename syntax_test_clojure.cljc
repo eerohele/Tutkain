@@ -2100,7 +2100,9 @@
 ;               ^ keyword.operator.macro.clojure
 ;                ^^^ meta.reader-form.edn meta.symbol.edn
   (defn f ([x]) #foo/bar)
-;               ^^^^^^^^ meta.reader-form.edn keyword.operator.macro.edn
+;               ^^^^^^^^ meta.tagged-element.edn keyword.operator.macro.edn
+;                       ^ -meta.tagged-element.edn
+;                       ^ -meta.reader-form.edn
   (defn f ([x]) , true)
 ;               ^ punctuation.comma.edn comment.punctuation.comma.edn
 ;                 ^^^^ meta.reader-form.edn constant.language.edn
@@ -3119,14 +3121,17 @@
 ;       ^^^^^^^^ meta.reader-form.edn
 
   #inst "2018-03-28T10:48:00.000" #uuid "3b8a31ed-fd89-4f1b-a00f-42e3d60cf5ce"
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn
 ;                                ^ - meta
-;                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.reader-form.edn
+;                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn
 
   #foo/bar {:a {:b [:c]}} [1 2 3]
 ; ^^^^^^^^ keyword.operator.macro.edn
-;         ^ - meta.reader-form.edn
-;                        ^ - meta.reader-form.edn
+; ^^^^^^^^ meta.tagged-element.tag.edn
+;         ^ -meta.tagged-element.tag
+;          ^^^^^^^^^^^^^^ meta.tagged-element.element.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn
+;                        ^ -meta
 
 
 

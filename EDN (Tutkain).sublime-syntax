@@ -190,7 +190,7 @@ contexts:
   dispatch:
     - include: discard
     - include: regexp
-    - include: tagged-literal
+    - include: tagged-element
     - include: qualified-map
 
   # Dispatch
@@ -274,28 +274,36 @@ contexts:
       - meta_scope: meta.reader-form.edn string.regexp.edn
       - include: regexp_group
 
-  tagged-literal:
+  tagged-element:
     - match: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*")){{end}}'
-      scope: meta.reader-form.edn constant.other.instant.edn
+      scope: meta.reader-form.edn meta.tagged-element.edn constant.other.instant.edn
       captures:
-        2: keyword.operator.macro.edn
-        3: string.quoted.double.edn
+        2: keyword.operator.macro.edn meta.tagged-element.tag.edn
+        3: string.quoted.double.edn meta.tagged-element.element.edn
         4: punctuation.definition.string.begin.edn
         5: punctuation.definition.string.end.edn
         6: invalid.illegal.instant.edn
     - match: '((#\s*uuid)\s*((")\h{8}-\h{4}-\h{4}-\h{4}-\h{12}("))|(#uuid\s*"[^"]*")){{end}}'
-      scope: meta.reader-form.edn constant.other.uuid.edn
+      scope: meta.reader-form.edn meta.tagged-element.edn constant.other.uuid.edn
       captures:
-        2: keyword.operator.macro.edn
-        3: string.quoted.double.edn
+        2: keyword.operator.macro.edn meta.tagged-element.tag.edn
+        3: string.quoted.double.edn meta.tagged-element.element.edn
         4: punctuation.definition.string.begin.edn
         5: punctuation.definition.string.end.edn
         6: invalid.illegal.uuid.edn
-    - match: '(#{{qualified_symbol}}){{end}}'
-      scope: meta.reader-form.edn
+    - match: '(#{{qualified_symbol}})'
+      scope: meta.tagged-element.tag.edn
       captures:
         1: keyword.operator.macro.edn
         3: punctuation.definition.symbol.namespace.edn
+      push:
+        - meta_scope: meta.tagged-element.edn
+        - match: '(?=[^\s,])'
+          push:
+            - meta_scope: meta.tagged-element.element.edn
+            - include: forms
+            - match: ''
+              pop: 2
 
   qualified-map:
     - match: '(#)(?=:)'

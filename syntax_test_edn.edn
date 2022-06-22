@@ -258,23 +258,38 @@ string"
 
 
 ;; TAGS
+  #inst
+; ^^^^^ meta.tagged-element.edn meta.tagged-element.tag.edn keyword.operator.macro.edn
   #inst "1985-01-25"
-; ^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
-;                   ^ -constant.other.instant.edn
+; ^^^^^ meta.tagged-element.tag.edn
+;      ^ -meta.tagged-element.tag
+;       ^^^^^^^^^^^^ meta.tagged-element.element.edn
+; ^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn constant.other.instant.edn
+;                   ^ -constant.other.instant.edn -meta.tagged-element
   #inst"2018-03-28T10:48:00.000"
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+; ^^^^^ meta.tagged-element.tag.edn
+;      ^ -meta.tagged-element.tag
+;      ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.element.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn constant.other.instant.edn
   #inst   "2018-03-28T10:48:00.000Z"
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn constant.other.instant.edn
   #inst "2018-03-28T10:48:00.000+01:30"
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn constant.other.instant.edn
   #inst "2018-12-31T23:59:60.999999999-23:59"
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.instant.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn constant.other.instant.edn
   #uuid "c5634984-363d-4727-B8CE-b06ab1253c81"
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constant.other.uuid.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn constant.other.uuid.edn
+  #foo
+; ^^^^ meta.tagged-element.edn meta.tagged-element.tag.edn keyword.operator.macro.edn
+  #foo/bar
+; ^^^^^^^^ meta.tagged-element.edn meta.tagged-element.tag.edn keyword.operator.macro.edn
   #datascript/DB {:schema {}, :datoms {}}
-; ^^^^^^^^^^^^^^ meta.reader-form.edn keyword.operator.macro.edn
+; ^^^^^^^^^^^^^^ meta.tagged-element.tag.edn keyword.operator.macro.edn
+;               ^ -meta.tagged-element.tag
+;                ^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.element.edn
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.tagged-element.edn
 ;            ^ punctuation.definition.symbol.namespace.edn
-;               ^ -meta.reader-form.edn
+;                                        ^ -meta.tagged-element
 ;; NOT TAGS
   #inst "1985-"
 ; ^^^^^^^^^^^^^ constant.other.instant.edn & invalid.illegal.instant.edn
