@@ -18,7 +18,7 @@ def adjacent_direction(view, point):
         return 0
 
 
-def find_adjacent(view, point):
+def find_adjacent(view, point, include_tagged_element=True):
     """Given a View and a point, return the Clojure form adjacent to the point,
     if any.
 
@@ -31,14 +31,14 @@ def find_adjacent(view, point):
     direction = adjacent_direction(view, point)
 
     if direction == 1:
-        return find_next(view, point)
+        return find_next(view, point, include_tagged_element)
     elif direction == -1:
-        return find_previous(view, point)
+        return find_previous(view, point, include_tagged_element)
     else:
         return None
 
 
-def find_next(view, point):
+def find_next(view, point, include_tagged_element=True):
     """Given a View and a point, return the next Clojure form to the right of
     the point."""
     max_point = view.size()
@@ -47,7 +47,9 @@ def find_next(view, point):
         return view.word(view.find_by_class(point, True, CLASS_WORD_END))
     else:
         while point < max_point:
-            if view.match_selector(point, "punctuation.section.parens.end | punctuation.section.brackets.end | punctuation.section.braces.end"):
+            if include_tagged_element and view.match_selector(point, "meta.tagged-element"):
+                return selectors.expand_by_selector(view, point, "meta.tagged-element")
+            elif view.match_selector(point, "punctuation.section.parens.end | punctuation.section.brackets.end | punctuation.section.braces.end"):
                 return None
             elif view.match_selector(point, selectors.SEXP_BEGIN):
                 return sexp.innermost(view, point, edge="forward").extent()
@@ -90,14 +92,16 @@ def absorb_macro_characters(view, region):
         return region
 
 
-def find_previous(view, point):
+def find_previous(view, point, include_tagged_element=True):
     """Given a View and a point, return the previous Clojure form to the left
     of the point."""
     if view.match_selector(point, "comment.line"):
         return view.word(view.find_by_class(point, False, CLASS_WORD_START))
     else:
         while point > 0:
-            if view.match_selector(point - 1, "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin"):
+            if include_tagged_element and view.match_selector(point - 1, "meta.tagged-element"):
+                return selectors.expand_by_selector(view, point - 1, "meta.tagged-element")
+            elif view.match_selector(point - 1, "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin"):
                 return None
             elif view.match_selector(point - 1, selectors.SEXP_END):
                 innermost = sexp.innermost(view, point, edge="backward").extent()

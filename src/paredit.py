@@ -276,7 +276,7 @@ def wrap_bracket(view, edit, open_bracket):
             view.insert(edit, region.begin(), open_bracket)
         else:
             point = region.begin()
-            form = forms.find_adjacent(view, point)
+            form = forms.find_adjacent(view, point, include_tagged_element=False)
 
             # cursor is in between the dispatch macro and an open paren
             if (

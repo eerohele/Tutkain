@@ -798,6 +798,10 @@ class TutkainExpandSelectionImplCommand(TextCommand):
             pass
         elif not region.empty() and self.view.match_selector(region.end(), "-meta.sexp"):
             self.view.sel().add(sublime.Region(0, self.view.size()))
+        elif region.empty() and self.view.match_selector(region.begin(), "meta.tagged-element.element") and (form := forms.find_adjacent(self.view, region.begin(), include_tagged_element=False)):
+            self.view.sel().add(form)
+        elif region.empty() and self.view.match_selector(region.begin(), "meta.tagged-element.tag") and (form := forms.find_adjacent(self.view, region.begin())):
+            self.view.sel().add(form)
         elif region.empty() and (form := forms.find_adjacent(self.view, region.begin())):
             self.view.sel().add(form)
         elif region.empty() and not forms.find_adjacent(self.view, region.begin()):
@@ -846,6 +850,9 @@ class TutkainExpandSelectionImplCommand(TextCommand):
             innermost = sexp.innermost(self.view, region.begin(), edge=False)
             self.view.sel().add(innermost.extent())
         elif not region.empty() and not self.view.match_selector(region.begin(), sexp.BEGIN_SELECTORS) and not self.view.match_selector(region.end() - 1, sexp.END_SELECTORS):
+            if innermost := sexp.innermost(self.view, region.begin(), edge=False):
+                self.view.sel().add(sublime.Region(innermost.open.region.end(), innermost.close.region.begin()))
+        elif self.view.match_selector(region.begin(), "meta.tagged-element") and self.view.match_selector(region.end() - 1, "meta.tagged-element") and not self.view.match_selector(region.begin() - 1, "meta.tagged-element") and not self.view.match_selector(region.end(), "meta.tagged-element"):
             if innermost := sexp.innermost(self.view, region.begin(), edge=False):
                 self.view.sel().add(sublime.Region(innermost.open.region.end(), innermost.close.region.begin()))
         elif innermost := sexp.innermost(self.view, region.begin(), edge=False):
