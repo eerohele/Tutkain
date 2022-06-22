@@ -298,7 +298,9 @@ contexts:
         3: punctuation.definition.symbol.namespace.edn
       push:
         - meta_scope: meta.tagged-element.edn
-        - match: '(?=[^\s,])'
+        - match: '\n'
+          pop: true
+        - match: '(?=[^\s,;])'
           push:
             - meta_scope: meta.tagged-element.element.edn
             - include: forms
@@ -362,14 +364,16 @@ contexts:
           scope: punctuation.section.braces.end.edn
           pop: true
         - include: comma
-        - match: '(?=[^\s,])'
+        - include: comment
+        - match: '(?=[^\s,;])'
           push:
             - meta_content_scope: meta.mapping.key.edn
             - include: forms
             - match: ''
               set:
                 - include: comma
-                - match: '(?=[^\s,])'
+                - include: comment
+                - match: '(?=[^\s,;])'
                   set:
                     - meta_content_scope: meta.mapping.value.edn
                     - match: ','

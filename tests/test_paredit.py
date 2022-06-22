@@ -1279,6 +1279,13 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_backward_move_form")
         self.assertEquals("{:F :G :a #b/c [:d 'e]}", self.view_content())
 
+        self.set_view_content("{:a :b ; comment\n :c :d}")
+        self.set_selections((18, 18))
+        self.view.run_command("tutkain_paredit_backward_move_form")
+        self.assertEquals("{:c :d ; comment\n :a :b}", self.view_content())
+        self.view.run_command("tutkain_paredit_backward_move_form")
+        self.assertEquals("{:c :d ; comment\n :a :b}", self.view_content())
+
         # Pairwise at sexp delim
         self.set_view_content("{:a [:b] :c [:d]}")
         self.set_selections((12, 12))
@@ -1336,6 +1343,13 @@ class TestParedit(ViewTestCase):
         self.assertEquals("{:a #b/c [:d 'e] :F :G}", self.view_content())
         self.view.run_command("tutkain_paredit_forward_move_form")
         self.assertEquals("{:a #b/c [:d 'e] :F :G}", self.view_content())
+
+        self.set_view_content("{:a :b ; comment\n :c :d}")
+        self.set_selections((1, 1))
+        self.view.run_command("tutkain_paredit_forward_move_form")
+        self.assertEquals("{:c :d ; comment\n :a :b}", self.view_content())
+        self.view.run_command("tutkain_paredit_forward_move_form")
+        self.assertEquals("{:c :d ; comment\n :a :b}", self.view_content())
 
         # Pairwise at sexp delim
         self.set_view_content("{:a [:b] :c [:d]}")

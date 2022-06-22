@@ -481,6 +481,20 @@ string"
 ;               ^ meta.mapping.value.edn
 ;                ^^ -meta.mapping
 
+  {:a ; comment
+;     ^^^^^^^^^ comment.line.edn - meta.mapping
+   :b}
+;  ^^ meta.mapping.value.edn
+;    ^ -meta.mapping
+
+  {:a :b ; comment
+;        ^^^^^^^^^ comment.line.edn - meta.mapping
+   :c :d}
+;  ^^ meta.mapping.key.edn
+;    ^ -meta.mapping
+;     ^^ meta.mapping.value
+;       ^ -meta.mapping
+
   {:a #b "c"}
 ;  ^^ meta.mapping.key.edn
 ;    ^ -meta.mapping.key
