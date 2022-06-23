@@ -827,19 +827,6 @@ class TutkainExpandSelectionImplCommand(TextCommand):
             elif self.view.match_selector(value_begin, "meta.mapping.value meta.sexp"):
                 end = sexp.innermost(self.view, value_begin).close.region.end()
                 self.view.sel().add(sublime.Region(region.begin(), end))
-        elif (not region.empty() and self.view.match_selector(region.begin(), "meta.mapping.value")
-            and self.view.match_selector(region.end() - 1, "meta.mapping.value")
-            and (not self.view.match_selector(region.begin(), "meta.mapping.value meta.sexp.content")
-                or self.view.match_selector(region.begin(), "meta.mapping.value meta.sexp.content meta.mapping.value"))
-        ):
-            key_end = selectors.find(self.view, region.begin(), "meta.mapping.key", forward=False)
-
-            if self.view.match_selector(key_end, "meta.reader-form"):
-                begin = selectors.find(self.view, key_end, "-meta.reader-form", forward=False) + 1
-            else:
-                begin = sexp.innermost(self.view, key_end).open.region.begin()
-
-            self.view.sel().add(sublime.Region(begin, region.end()))
         elif not region.empty() and self.view.match_selector(region.begin(), sexp.BEGIN_SELECTORS) and self.view.match_selector(region.end() - 1, sexp.END_SELECTORS):
             self.view.run_command("expand_selection", {"to": "brackets"})
 
