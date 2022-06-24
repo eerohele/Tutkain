@@ -45,7 +45,7 @@
   (or (some-> ns find-ns) (binding [*ns* (create-ns (or ns 'user))] (refer-clojure) *ns*)))
 
 (defmethod handle :set-eval-context
-  [{:keys [^LineNumberingPushbackReader eval-context in ns file line column response]
+  [{:keys [eval-context ^LineNumberingPushbackReader in ns file line column response]
     :or {line 0 column 0 response {}} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
