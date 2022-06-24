@@ -237,6 +237,30 @@
 (recv :backchannel)
 (xr/check! ::ret) ;; Error
 
+;; Resolve stack trace
+
+(spec/def ::line nat-int?)
+(spec/def ::column nat-int?)
+
+(spec/def ::name
+  (spec/and string? (partial re-matches #".+/.+")))
+
+(spec/def ::file-name string?)
+
+(spec/def ::file string?)
+
+(spec/def ::element
+  (spec/keys :opt-un [::file] :req-un [::line ::column ::name ::file-name]))
+
+(spec/def ::stacktrace
+  (spec/coll-of ::element :min-count 1))
+
+(send :backchannel {:op :resolve-stacktrace})
+(recv :backchannel)
+
+(:stacktrace *1)
+(xr/check! ::stacktrace)
+
 (send :backchannel {:op :set-eval-context :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl :repl/quit)
