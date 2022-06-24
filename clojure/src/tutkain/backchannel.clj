@@ -49,12 +49,13 @@
     :or {line 0 column 0 response {}} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (let [thread-bindings (cond->
-                          {#'*file* (or file "NO_SOURCE_PATH")
-                           #'*source-path* (or (some-> file File. .getName) "NO_SOURCE_FILE")}
-                          ns (assoc #'*ns* (find-or-create-ns ns)))]
-    (swap! eval-context assoc :response response :thread-bindings thread-bindings)
-    (respond-to message {:result :ok})))
+  (swap! eval-context
+    #(cond-> %
+       true (assoc :response response)
+       true (assoc-in [:thread-bindings #'*file*] (or file "NO_SOURCE_PATH"))
+       true (assoc-in [:thread-bindings #'*source-path*] (or (some-> file File. .getName) "NO_SOURCE_FILE"))
+       ns (assoc-in [:thread-bindings #'*ns*] (find-or-create-ns ns))))
+  (respond-to message {:result :ok}))
 
 (defmethod handle :interrupt
   [{:keys [^Thread repl-thread]}]
@@ -65,7 +66,7 @@
   (AtomicInteger.))
 
 (defn accept
-  [{:keys [eventual-send-fn xform-in xform-out]
+  [{:keys [eventual-send-fn eval-context xform-in xform-out]
     :or {xform-in identity xform-out identity}}]
   (let [out *out*
         lock (Object.)
@@ -87,7 +88,7 @@
                   (let [message (edn/read {:eof ::EOF} *in*)]
                     (if (identical? ::EOF message)
                       false
-                      (let [message (assoc (xform-in message) :out-fn out-fn)]
+                      (let [message (assoc (xform-in message) :eval-context eval-context :out-fn out-fn)]
                         (try
                           (handle message)
                           (.flush ^Writer *err*)
@@ -142,13 +143,14 @@
                   :port port
                   :name server-name
                   :accept `accept
-                  :args [{:eventual-send-fn eventual-send-fn
-                          :xform-in #(assoc (xform-in %) :eval-context eval-context)
+                  :args [{:eval-context eval-context
+                          :eventual-send-fn eventual-send-fn
+                          :xform-in #(xform-in %)
                           :xform-out #(xform-out %)}]})]
     (reify Backchannel
       (eval-context [_] @eval-context)
       (update-thread-bindings [_ thread-bindings]
-        (swap! eval-context update (fn [a b] (merge b a)) thread-bindings))
+        (swap! eval-context update :thread-bindings merge (dissoc thread-bindings #'*file* #'*source-path* #'*ns*)))
       (host [_] (-> socket .getInetAddress .getHostName))
       (port [_] (.getLocalPort socket))
       (send-to-client [_ message] (@eventual-send-fn message))
