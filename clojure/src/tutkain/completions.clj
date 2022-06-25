@@ -24,7 +24,7 @@
   {:candidate kw :type :keyword})
 
 (defn all-keywords
-  "Return the name of every interned keyword in the Clojure runtime."
+  "Return every interned keyword in the Clojure runtime."
   []
   (let [^Field field (.getDeclaredField clojure.lang.Keyword "table")]
     (.setAccessible field true)
