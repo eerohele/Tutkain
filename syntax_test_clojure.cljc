@@ -2335,6 +2335,13 @@
 ; ^^^^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
 ;                          ^ -meta.sexp
 
+  (defprotocol Foo (bar [baz {:keys [quux]}]))
+;                        ^^^ meta.symbol.edn
+;                           ^ -meta.symbol
+;                             ^^^^^ constant.other.keyword
+;                                  ^ -constant.other.keyword
+;                                           ^ -meta.function.parameters
+
 
 ; # definterface
 

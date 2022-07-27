@@ -628,6 +628,7 @@ contexts:
               set:
                 - include: list-end-3
                 - include: main
+            - include: main
     - include: list-tail
 
   typedef-tail:
