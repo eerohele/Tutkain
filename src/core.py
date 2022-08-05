@@ -546,7 +546,7 @@ class TutkainConnectCommand(WindowCommand):
             repl.start(view, client)
             repl.start_printer(client, view)
 
-    def run(self, dialect, host, port, view_id=None, output="view", backchannel=True, build_id=None, init=None):
+    def run(self, dialect, host, port, view_id=None, output="panel", backchannel=True, build_id=None, init=None):
         active_view = self.window.active_view()
         output_view = repl.views.get_or_create_view(self.window, output, view_id)
         dialect = edn.Keyword(dialect)
