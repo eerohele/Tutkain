@@ -1,0 +1,25 @@
+┌──────────────╼═══════════════════════════════════════════════╾──────────────┐
+╽       ___       ___       ___       ___       ___       ___       ___       ╽
+║      /\  \     /\__\     /\  \     /\__\     /\  \     /\  \     /\__\      ║
+║      \:\  \   /:/ _/_    \:\  \   /:/ _/_   /::\  \   _\:\  \   /:| _|_     ║
+║      /::\__\ /:/_/\__\   /::\__\ /::-"\__\ /::\:\__\ /\/::\__\ /::|/\__\    ║
+║     /:/\/__/ \:\/:/  /  /:/\/__/ \;:;-",-" \/\::/  / \::/\/__/ \/|::/  /    ║
+║     \/__/     \::/  /   \/__/     |:|  |     /:/  /   \:\__\     |:/  /     ║
+║                \/__/               \|__|     \/__/     \/__/     \/__/      ║
+╿                                                                             ╿
+└───────────────────┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄──────────────────┘
+
+Hey there! Tutkain has been updated.
+
+You might want to restart both your REPL server and Sublime Text to make sure
+Tutkain keeps working correctly.
+
+To see the changes in this version, see:
+
+  https://github.com/eerohele/Tutkain/blob/master/CHANGELOG.md
+
+If you encounter any problems, please file an issue on GitHub:
+
+  https://github.com/eerohele/Tutkain/issues
+
+Thanks!
