@@ -2107,6 +2107,10 @@
 ;               ^ punctuation.comma.edn comment.punctuation.comma.edn
 ;                 ^^^^ meta.reader-form.edn constant.language.edn
 
+  (defn f ([a]) (b (c)))
+;                  ^ punctuation.section.parens.begin.edn
+;                      ^ -invalid
+
   (def !bang (atom 1))
 ;      ^^^^^ entity.name.constant.clojure
 

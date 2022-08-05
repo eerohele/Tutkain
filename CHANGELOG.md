@@ -42,6 +42,7 @@ All notable changes to this project will be documented in this file.
 
   It does the reverse of `tutkain_paredit_thread_first`/`tutkain_paredit_thread_last`.
 
+- Fix multi-arity function syntax definition issue
 - Fix pairwise movement of map entries (ParEdit)
 - Fix bugs with namespace auto-switching
 - Fix protocol and protocol method information lookup (`tutkain_show_information`)

@@ -422,6 +422,7 @@ contexts:
             - include: list-end-2
             - include: main
         - include: main
+    - include: main
 
   named-fn-body:
     - include: list-end-3
