@@ -284,6 +284,14 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.expand()
         self.assertEquals("(foo #bar/baz [:quux 1])", self.selection(0))
 
+    def test_nested_tagged_literal(self):
+        self.set_view_content("""(#baz/quux [#foo/bar [1]])""")
+
+        for i in range(12, 16):
+            self.set_selections((i, i))
+            self.expand()
+            self.assertEquals("""#foo/bar [1]""", self.selection(0))
+
     def test_adjacent_sexp(self):
         self.set_view_content("((foo) (bar))")
         self.set_selections((8, 8))

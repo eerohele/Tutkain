@@ -798,6 +798,9 @@ class TutkainExpandSelectionImplCommand(TextCommand):
             pass
         elif not region.empty() and self.view.match_selector(region.end(), "-meta.sexp"):
             self.view.sel().add(sublime.Region(0, self.view.size()))
+        elif region.empty() and self.view.match_selector(region.begin(), "meta.tagged-element.element meta.tagged-element.tag") and (element := forms.find_next(self.view, region.begin(), include_tagged_element=False)):
+            tag = selectors.expand_by_selector(self.view, region.begin(), "meta.tagged-element.tag")
+            self.view.sel().add(sublime.Region(tag.begin(), element.end()))
         elif region.empty() and self.view.match_selector(region.begin(), "meta.tagged-element.element") and (form := forms.find_adjacent(self.view, region.begin(), include_tagged_element=False)):
             self.view.sel().add(form)
         elif region.empty() and self.view.match_selector(region.begin(), "meta.tagged-element.tag") and (form := forms.find_adjacent(self.view, region.begin())):
