@@ -2,6 +2,55 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.16.0 (alpha) - SOON
+
+- Add `init` argument to `tutkain_connect`
+
+  You can pass the fully-qualified name of a function that accepts no arguments to have Tutkain call that function when it connects to a socket server.
+
+  For example, given:
+
+  ```clojure
+  (ns my.repl)
+
+  (defn init
+    []
+    (set! *print-namespace-maps* false)
+    (set! *print-length* 16)
+    (set! *print-level* 8))
+  ```
+
+  You can define a key binding that looks like this:
+
+  ```json
+      {
+        "keys": ["ctrl+c", "ctrl+x"],
+        "command": "tutkain_connect",
+        "args": {
+            "init": "my.repl/init",
+            // ...
+        }
+    },
+  ```
+
+  Then, once you connect to a socket server, Tutkain calls `my.repl/init`.
+
+- Use panel instead of regular view when connecting via the Command Palette
+- Add support for expanding the selection to map entries #97
+- Improve `tutkain_paredit_thread_first` and `tutkain_paredit_thread_last`
+- Add `tutkain_paredit_unthread` command
+
+  It does the reverse of `tutkain_paredit_thread_first`/`tutkain_paredit_thread_last`.
+
+- Fix pairwise movement of map entries (ParEdit)
+- Fix bugs with namespace auto-switching
+- Fix protocol and protocol method information lookup (`tutkain_show_information`)
+- Fix bug where Tutkain would sometimes fail to update the connection status indicator in the status bar on disconnecting
+- Fix syntax definition issues related to `deftype` and `defprotocol`
+- Improve syntax definition, selection expansion, and ParEdit support for tagged elements
+- Fix bug where Tutkain would sometimes not show the namespace of a symbol when looking up that symbol via `tutkain_show_information`
+- Fix ParEdit Move Form for map entries
+
 ## 0.15.0 (alpha) - 2022-05-06
 
 - Fix performance issues with `tutkain_insert_newline` and various ParEdit commands, especially when the caret was positioned toward the end of a long file
