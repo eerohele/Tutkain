@@ -99,9 +99,7 @@ def find_previous(view, point):
         return view.word(view.find_by_class(point, False, CLASS_WORD_START))
     else:
         while point > 0:
-            if view.match_selector(point - 1, "meta.tagged-element"):
-                return selectors.expand_by_selector(view, point - 1, "meta.tagged-element")
-            elif view.match_selector(point - 1, "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin"):
+            if view.match_selector(point - 1, "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin"):
                 return None
             elif view.match_selector(point - 1, selectors.SEXP_END):
                 innermost = sexp.innermost(view, point, edge="backward").extent()
@@ -109,6 +107,8 @@ def find_previous(view, point):
             elif view.match_selector(point - 1, "meta.reader-form"):
                 form = selectors.expand_by_selector(view, point - 1, "meta.reader-form")
                 return absorb_macro_characters(view, form)
+            elif not view.match_selector(point, "meta.tagged-element.element") and view.match_selector(point - 1, "meta.tagged-element.element"):
+                return selectors.expand_by_selector(view, point - 1, "meta.tagged-element")
             else:
                 point -= 1
 
