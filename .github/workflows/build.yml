@@ -31,7 +31,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         java-version: ['8', '11', '17']
-        java-distribution: ['temurin', 'zulu']
+        java-distribution: ['temurin']
 
     runs-on: ${{ matrix.os }}
 
