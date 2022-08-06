@@ -678,6 +678,12 @@
     },
 
     {
+        "keys": ["ctrl+z", "ctrl+x"],
+        "command": "tutkain_paredit_unthread",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"}]
+    },
+
+    {
         "keys": ["super+alt+shift+-"],
         "command": "tutkain_discard_undiscard_sexp",
         "args": {"scope": "innermost"},
