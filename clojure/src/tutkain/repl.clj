@@ -32,7 +32,7 @@
   ;; eval context for each form instead of waiting for a new one after every
   ;; form.
   (let [eval-context (backchannel/eval-context backchannel)
-        [form string] (with-bindings (or (not-empty (:thread-bindings eval-context)) #_(get-thread-bindings))
+        [form string] (with-bindings (not-empty (:thread-bindings eval-context))
                         (read+string {:eof ::EOF :read-cond :allow} reader))]
     (assoc eval-context :form form :string string)))
 
