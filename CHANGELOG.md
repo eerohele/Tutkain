@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.16.0 (alpha) - SOON
+## 0.16.0 (alpha) - 2022-08-08
 
 - Add `init` argument to `tutkain_connect`
 
