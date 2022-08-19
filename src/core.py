@@ -323,30 +323,31 @@ class TutkainEvaluateInputCommand(WindowCommand):
         self.window.active_view().run_command("tutkain_evaluate", {"scope": "input"})
 
 
+def without_discard_macro(view, region):
+    if region:
+        s = sublime.Region(region.begin(), region.begin() + 2)
+
+        if view.substr(s) == "#_":
+            return sublime.Region(s.end(), region.end())
+
+    return region
+
+def get_eval_region(view, region, scope="outermost", ignore={}):
+    eval_region = region
+
+    if not eval_region.empty():
+        return eval_region
+    elif scope == "form":
+        eval_region = forms.find_adjacent(view, region.begin())
+    elif scope == "innermost" and (innermost := sexp.innermost(view, region.begin(), edge=True)):
+        eval_region = innermost.extent()
+    elif scope == "outermost" and (outermost := sexp.outermost(view, region.begin(), ignore=ignore)):
+        eval_region = outermost.extent()
+
+    return without_discard_macro(view, eval_region)
+
+
 class TutkainEvaluateCommand(TextCommand):
-    def without_discard_macro(self, region):
-        if region:
-            s = sublime.Region(region.begin(), region.begin() + 2)
-
-            if self.view.substr(s) == "#_":
-                return sublime.Region(s.end(), region.end())
-
-        return region
-
-    def get_eval_region(self, region, scope="outermost", ignore={}):
-        eval_region = region
-
-        if not eval_region.empty():
-            return eval_region
-        elif scope == "form":
-            eval_region = forms.find_adjacent(self.view, region.begin())
-        elif scope == "innermost" and (innermost := sexp.innermost(self.view, region.begin(), edge=True)):
-            eval_region = innermost.extent()
-        elif scope == "outermost" and (outermost := sexp.outermost(self.view, region.begin(), ignore=ignore)):
-            eval_region = outermost.extent()
-
-        return self.without_discard_macro(eval_region)
-
     def evaluate_view(self, client, code):
         view = self.view
         window = view.window()
@@ -398,7 +399,13 @@ class TutkainEvaluateCommand(TextCommand):
             if output == "clipboard":
                 options["response"] = {"output": edn.Keyword("clipboard")}
 
-            if scope == "input":
+            if scope == "mark" and (mark := self.view.window().settings().get("tutkain_mark")):
+                options = {**options, **mark["options"]}
+
+                if code := reindent(mark["code"], options.get("column", 1)):
+                    client.evaluate(code, options)
+
+            elif scope == "input":
                 def evaluate_input(client, code):
                     evaluate(self.view, client, code + "\n", options=options)
                     history.update(self.view.window(), code)
@@ -430,7 +437,7 @@ class TutkainEvaluateCommand(TextCommand):
                     variables["file"] = file_name
 
                 for index, region in enumerate(self.view.sel()):
-                    if eval_region := self.get_eval_region(region, scope, ignore):
+                    if eval_region := get_eval_region(self.view, region, scope, ignore):
                         variables[str(index)] = self.view.substr(eval_region)
 
                 code = sublime.expand_variables(code, variables)
@@ -463,7 +470,7 @@ class TutkainEvaluateCommand(TextCommand):
                     evaluate(self.view, client, code, point=form.begin(), options=options)
             else:
                 for region in self.view.sel():
-                    eval_region = self.get_eval_region(region, scope, ignore)
+                    eval_region = get_eval_region(self.view, region, scope, ignore)
 
                     if not eval_region.empty():
                         if inline_result:
@@ -1483,3 +1490,27 @@ class TutkainZapCommasCommand(TextCommand):
             for sel in self.view.sel():
                 for comma in filter(lambda comma: sel.contains(comma), self.find_commas()):
                     self.view.erase(edit, comma)
+
+
+class TutkainMarkFormCommand(TextCommand):
+    def run(self, _, scope="outermost"):
+        for region in self.view.sel():
+            if eval_region := get_eval_region(self.view, region, scope, ignore={"comment"}):
+                point = eval_region.begin()
+                code = self.view.substr(eval_region)
+                dialect = dialects.for_point(self.view, point) or edn.Keyword("clj")
+                ns = namespace.name_or_default(self.view, dialect)
+                line, column = self.view.rowcol(point)
+
+                self.view.window().settings().set(
+                    "tutkain_mark", {
+                        "code": code,
+                        "options": {
+                            "line": line,
+                            "column": column,
+                            "ns": ns,
+                            "file": self.view.file_name()
+                        }
+                })
+
+                self.view.window().status_message("Form marked")

@@ -4,6 +4,7 @@ import queue
 import unittest
 import unittesting
 import tempfile
+import time
 
 from Tutkain.api import edn
 from Tutkain.src import repl
@@ -733,6 +734,44 @@ class TestJVMClient(PackageTestCase):
         self.server.backchannel.send(response)
 
         self.assertEquals(response, self.get_print())
+
+    #@unittest.SkipTest
+    def test_mark_outermost(self):
+        self.set_view_content("(comment (inc 1))")
+        self.set_selections((9, 9))
+        self.view.run_command("tutkain_mark_form")
+        self.view.run_command("tutkain_evaluate", {"scope": "mark"})
+        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.eval_context(column=10)
+        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.server.send("2")
+        self.assertEquals(ret("2\n"), self.get_print())
+
+    #@unittest.SkipTest
+    def test_mark_innermost(self):
+        self.set_view_content("(map inc (range 10))")
+        self.set_selections((9, 9))
+        self.view.run_command("tutkain_mark_form", {"scope": "innermost"})
+        self.view.run_command("tutkain_evaluate", {"scope": "mark"})
+        self.assertEquals(input("(range 10)\n"), self.get_print())
+        self.eval_context(column=10)
+        self.assertEquals("(range 10)\n", self.server.recv())
+        self.server.send("(0 1 2 3 4 5 6 7 8 9)")
+        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
+
+    #@unittest.SkipTest
+    def test_mark_ns_file(self):
+        file = os.path.join(tempfile.gettempdir(), "my.clj")
+        self.view.retarget(file)
+        self.set_view_content("(ns foo.bar) (inc 1)")
+        self.set_selections((13, 13))
+        self.view.run_command("tutkain_mark_form")
+        self.view.run_command("tutkain_evaluate", {"scope": "mark"})
+        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.eval_context(ns=edn.Symbol("foo.bar"), column=14, file=file)
+        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.server.send("2")
+        self.assertEquals(ret("2\n"), self.get_print())
 
 
 class TestNoBackchannelJVMClient(PackageTestCase):
