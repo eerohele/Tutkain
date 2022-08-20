@@ -5,7 +5,8 @@
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.socket :as socket]
-   [tutkain.repl :as repl])
+   [tutkain.repl :as repl]
+   [tutkain.java])
   (:import
    (java.net ConnectException)))
 
