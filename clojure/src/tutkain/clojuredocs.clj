@@ -7,7 +7,7 @@
 (defmethod handle :examples
   [{:keys [source-path ns sym] :as message}]
   (respond-to message
-    (if-some [qualified-symbol (some-> (ns-resolve ns sym) symbol)]
+    (if-some [qualified-symbol (some-> (ns-resolve (or (find-ns ns) (the-ns 'clojure.core)) sym) symbol)]
       (with-open [reader (PushbackReader. (io/reader source-path))]
         (assoc (-> reader edn/read qualified-symbol) :symbol qualified-symbol))
       {:symbol sym})))
