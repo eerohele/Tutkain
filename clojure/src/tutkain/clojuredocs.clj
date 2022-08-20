@@ -1,8 +1,7 @@
 (ns tutkain.clojuredocs
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [tutkain.backchannel :refer [handle respond-to]]
-            [tutkain.format :refer [pp-str]])
+            [tutkain.backchannel :refer [handle respond-to]])
   (:import (java.io PushbackReader)))
 
 (defmethod handle :examples
