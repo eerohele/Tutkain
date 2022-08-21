@@ -1089,6 +1089,11 @@ class TutkainPareditJoinSexpsCommand(TextCommand):
         paredit.join_sexps(self.view, edit)
 
 
+class TutkainPareditRecenterOnSexpCommand(TextCommand):
+    def run(self, edit):
+        paredit.recenter_on_sexp(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)

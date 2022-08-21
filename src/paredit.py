@@ -738,3 +738,9 @@ def join_sexps(view, edit):
                 view.erase(edit, next_sexp.open.region)
                 view.erase(edit, prev_sexp.close.region)
 
+
+def recenter_on_sexp(view, _):
+    sel = view.sel()
+
+    if sel and (innermost := sexp.innermost(view, sel[0].begin(), edge=True)):
+        view.show_at_center(innermost.extent())
