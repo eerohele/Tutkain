@@ -692,3 +692,49 @@ def discard_undiscard(view, edit, scope="innermost"):
 
             if expression:
                 view.insert(edit, expression.open.region.begin(), '#_')
+
+
+def split_sexp(view, edit):
+    for region, sel in iterate(view):
+        point = region.begin()
+
+        if innermost := sexp.innermost(view, point, edge=False):
+            close_bracket = view.substr(innermost.close.region)
+            open_bracket = view.substr(innermost.open.region)
+
+            if not view.match_selector(point, "string") and re.match(r'\s', view.substr(point)):
+                sel.append(point + 1)
+                view.insert(edit, point + 1, open_bracket)
+                view.insert(edit, point, close_bracket)
+            elif not view.match_selector(point, "string") and re.match(r'\s', view.substr(point - 1)):
+                sel.append(point)
+                view.insert(edit, point, open_bracket)
+                view.insert(edit, point - 1, close_bracket)
+            else:
+                sel.append(point + 1)
+                view.insert(edit, point, close_bracket + " " + open_bracket)
+
+
+def join_sexps(view, edit):
+    for region, sel in iterate(view):
+        point = region.begin()
+
+        if view.match_selector(point - 1, "string"):
+            innermost = sexp.innermost(view, point)
+
+            if next_form := forms.find_next(view, innermost.close.region.end()):
+                if view.match_selector(next_form.begin(), "string"):
+                    word_start_point = view.find_by_class(next_form.begin(), True, CLASS_WORD_START)
+                    region = Region(innermost.close.region.begin(), next_form.begin() + 1)
+                    string = view.substr(Region(innermost.close.region.end() + 1, next_form.begin()))
+                    view.replace(edit, region, string)
+
+        if (prev_form := find_previous_slurp_barf_form(view, point)) and view.match_selector(prev_form.begin(), sexp.BEGIN_SELECTORS):
+            prev_sexp = sexp.innermost(view, prev_form.begin(), edge=True)
+
+            if (next_form := find_next_slurp_barf_form(view, prev_form.end())) and view.match_selector(next_form.begin(), sexp.BEGIN_SELECTORS):
+                next_sexp = sexp.innermost(view, next_form.begin(), edge=True)
+
+                view.erase(edit, next_sexp.open.region)
+                view.erase(edit, prev_sexp.close.region)
+

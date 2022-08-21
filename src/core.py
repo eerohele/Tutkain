@@ -1079,6 +1079,16 @@ class TutkainPareditBackwardDownCommand(TextCommand):
         paredit.backward_down(self.view, edit)
 
 
+class TutkainPareditSplitSexpCommand(TextCommand):
+    def run(self, edit):
+        paredit.split_sexp(self.view, edit)
+
+
+class TutkainPareditJoinSexpsCommand(TextCommand):
+    def run(self, edit):
+        paredit.join_sexps(self.view, edit)
+
+
 class TutkainCycleCollectionTypeCommand(TextCommand):
     def run(self, edit):
         sexp.cycle_collection_type(self.view, edit)
