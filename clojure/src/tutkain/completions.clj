@@ -32,20 +32,15 @@
 
 (comment (all-keywords),)
 
-(defn- resolve-namespace
-  [sym aliases]
-  (get aliases sym (find-ns sym)))
-
 (defn qualified-auto-resolved-keywords
-  "Given a list of keywords and a list of ns aliases, return all available
-  qualified auto-resolved keyword candidates."
+  "Given a list of keywords and a map of ns aliases to nses, return all
+  available qualified auto-resolved keyword candidates in those namespaces."
   [keywords aliases]
-  (mapcat (fn [[ns-alias _]]
-            (let [ns-alias-name (str (resolve-namespace (symbol ns-alias) aliases))]
-              (eduction
-                (filter #(= (namespace %) ns-alias-name))
-                (map #(str "::" ns-alias "/" (name %)))
-                keywords)))
+  (mapcat (fn [[ns-alias ns]]
+            (eduction
+              (filter #(= (namespace %) (str ns)))
+              (map #(str "::" ns-alias "/" (name %)))
+              keywords))
     aliases))
 
 (comment (qualified-auto-resolved-keywords (all-keywords) (ns-aliases 'clojure.main)),)
