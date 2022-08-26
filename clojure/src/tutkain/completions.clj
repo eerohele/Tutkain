@@ -64,6 +64,20 @@
 
 (comment (keyword-namespace-aliases (ns-aliases 'clojure.main)),)
 
+(defn auto-resolved-keyword-candidates
+  "Given a list of keywords, a map of ns alias to ns symbol, and a context ns,
+  return the auto-resolved keyword candidates available in that namespace."
+  [keywords aliases ns]
+  (map annotate-keyword
+    (lazy-cat
+      (qualified-auto-resolved-keywords keywords aliases)
+      (unqualified-auto-resolved-keywords keywords ns)
+      (keyword-namespace-aliases aliases))))
+
+(comment
+  (auto-resolved-keyword-candidates (all-keywords) (ns-aliases 'clojure.main) 'clojure.main)
+  )
+
 (defn simple-keywords
   "Given a list of keywords, return a list of simple keyword candidates."
   [keywords]
@@ -71,20 +85,9 @@
 
 (comment (simple-keywords (all-keywords)),)
 
-(defn keyword-candidates
-  "Given a list of keywords, a map of ns alias to ns symbol, and a context
-  ns, return the keyword candidates available in that context."
-  [keywords aliases ns]
-  (map annotate-keyword
-    (lazy-cat
-      (qualified-auto-resolved-keywords keywords aliases)
-      (unqualified-auto-resolved-keywords keywords ns)
-      (keyword-namespace-aliases aliases)
-      (simple-keywords keywords))))
-
-(comment
-  (keyword-candidates (all-keywords) (ns-aliases 'clojure.main) 'clojure.main)
-  )
+(defn simple-keyword-candidates
+  [keywords]
+  (map annotate-keyword (simple-keywords keywords)))
 
 (defn namespaces
   "Given an ns symbol, return a list of ns and ns alias symbols available in
@@ -350,8 +353,11 @@
   [^String prefix ns]
   (when (seq prefix)
     (cond
+      (.startsWith prefix "::")
+      (candidates-for-prefix prefix (auto-resolved-keyword-candidates (all-keywords) (ns-aliases ns) ns))
+
       (.startsWith prefix ":")
-      (candidates-for-prefix prefix (keyword-candidates (all-keywords) (ns-aliases ns) ns))
+      (candidates-for-prefix prefix (simple-keyword-candidates (all-keywords)))
 
       (.startsWith prefix ".")
       (candidates-for-prefix prefix (ns-java-method-candidates ns))

@@ -137,11 +137,11 @@
     (map annotate-var)
     (analyzer.api/ns-interns env ns)))
 
-(defn ^:private keyword-candidates
-  "Given a compiler environment and an ns symbol, return all keyword
-  auto-completion candidates in the context of the namespace."
+(defn ^:private auto-resolved-keyword-candidates
+  "Given a compiler environment and an ns symbol, return all auto-resolved
+  keyword auto-completion candidates in the context of the namespace."
   [env ns]
-  (completions/keyword-candidates
+  (completions/auto-resolved-keyword-candidates
     (all-keywords env)
     (into {} (remove #(= (key %) (val %)) (ns-aliases env ns)))
     ns))
@@ -152,7 +152,8 @@
   [env ^String prefix ns]
   (assert (symbol? ns))
   (let [candidates (cond
-                     (.startsWith prefix ":") (keyword-candidates env ns)
+                     (.startsWith prefix "::") (auto-resolved-keyword-candidates env ns)
+                     (.startsWith prefix ":") (completions/simple-keyword-candidates (all-keywords env))
                      (completions/scoped? prefix) (scoped-candidates env prefix ns)
                      (.contains prefix ".") (ns-candidates env)
                      :else (concat (ns-var-candidates env ns) (core-candidates env) (ns-alias-candidates env ns)))]
