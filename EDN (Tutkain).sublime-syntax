@@ -158,7 +158,7 @@ contexts:
       captures:
         1: punctuation.definition.keyword.edn
         2: meta.namespace.edn
-        3: punctuation.definition.constant.namespace.edn
+        3: punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 
   unqualified_keyword:
     - match: '(:)(?:/|[^{{non_symbol_chars}}:][[^{{non_symbol_chars}}:]:]*)(?=$|[{{end_chars}}''`#])'

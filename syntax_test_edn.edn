@@ -176,16 +176,16 @@ string"
   :a/b :1/2 :абв/где :abc.def/uvw.xyz :kv/
 ; ^^^^ constant.other.keyword.qualified.edn
 ; ^    punctuation.definition.keyword.edn
-;   ^  punctuation.definition.constant.namespace.edn
+;   ^  punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 ;     ^ -constant.other.keyword.qualified.edn
 ;      ^^^^ constant.other.keyword.qualified.edn
-;        ^ punctuation.definition.constant.namespace.edn
+;        ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 ;           ^^^^^^^^ constant.other.keyword.qualified.edn
-;               ^ punctuation.definition.constant.namespace.edn
+;               ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 ;                    ^^^^^^^^^^^^^^^^ constant.other.keyword.qualified.edn
-;                            ^ punctuation.definition.constant.namespace.edn
+;                            ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 ;                                     ^ punctuation.definition.keyword.edn
-;                                        ^ punctuation.definition.constant.namespace.edn
+;                                        ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 ;                                     ^^^^ constant.other.keyword.qualified.edn
 ;; NOT KEYWORDS
   ::kv :::kv

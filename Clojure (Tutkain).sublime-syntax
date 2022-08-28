@@ -18,7 +18,7 @@ contexts:
       captures:
         1: punctuation.definition.keyword.clojure
         2: meta.namespace.clojure
-        4: punctuation.definition.constant.namespace.clojure
+        4: punctuation.accessor.clojure punctuation.definition.constant.namespace.clojure
 
   macro_characters:
     - include: quote

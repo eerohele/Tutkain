@@ -578,12 +578,12 @@
 ; ^^^^^ constant.other.keyword.unqualified.edn
   :blah/blah
 ; ^^^^^^^^^^ constant.other.keyword.qualified.edn
-;      ^ punctuation.definition.constant.namespace.edn
+;      ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
   :blah.blah
 ; ^^^^^^^^^^ constant.other.keyword.unqualified.edn
   :blah.blah/blah
 ;  ^^^^^^^^^ meta.namespace.edn
-;           ^ punctuation.definition.constant.namespace.edn
+;           ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 ; ^^^^^^^^^^^^^^^ constant.other.keyword.qualified.edn
   :blah.blah/blah.blah
 ;  ^^^^^^^^^ meta.namespace.edn
@@ -608,21 +608,21 @@
   ::blah///blah
 ; ^^ punctuation.definition.keyword.clojure
 ;   ^^^^ meta.namespace.clojure
-;       ^ punctuation.definition.constant.namespace.clojure
+;       ^ punctuation.accessor.clojure punctuation.definition.constant.namespace.clojure
 ; ^^^^^^^^^^^^^ constant.other.keyword.auto-qualified.clojure
   ://blah
 ; ^^^^^^^ constant.other.keyword.qualified.edn
-;  ^ punctuation.definition.constant.namespace.edn
+;  ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
   :///
 ; ^^^^ constant.other.keyword.qualified.edn
-;  ^ punctuation.definition.constant.namespace.edn
+;  ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
   :/blah/blah
 ; ^^^^^^^^^^^ constant.other.keyword.qualified.edn
-;  ^ punctuation.definition.constant.namespace.edn
+;  ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
   :blah//
 ;  ^^^^ meta.namespace.edn
 ; ^^^^^^^ constant.other.keyword.qualified.edn
-;      ^ punctuation.definition.constant.namespace.edn
+;      ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 
 ; ## These are valid, unlike symbols
 
@@ -678,7 +678,7 @@
   :/blah
   ::blah/
 ; ^^ punctuation.definition.keyword.clojure
-;       ^ punctuation.definition.constant.namespace.clojure
+;       ^ punctuation.accessor.clojure punctuation.definition.constant.namespace.clojure
 ; ^^^^^^^ constant.other.keyword.auto-qualified.clojure
 
 
