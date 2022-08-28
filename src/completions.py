@@ -74,7 +74,7 @@ def get_completions(view, prefix, point):
 
         if view.match_selector(
             point,
-            "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | (constant.other.keyword - punctuation.definition.keyword)",
+            "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | constant.other.keyword",
         ) and (dialect := dialects.for_point(view, point)) and (client := state.get_client(view.window(), dialect)):
             if scope := selectors.expand_by_selector(view, point, "meta.symbol | constant.other.keyword"):
                 prefix = view.substr(scope)
