@@ -16,7 +16,8 @@
     :class
     :method
     :multimethod
-    :field})
+    :field
+    :navigation})
 
 (spec/def ::completion
   (spec/keys :req-un [::candidate ::type]))

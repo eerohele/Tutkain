@@ -23,6 +23,10 @@
   [kw]
   {:candidate kw :type :keyword})
 
+(defn annotate-navigation
+  [candidate]
+  {:candidate (str candidate "/") :type :navigation})
+
 (defn all-keywords
   "Return every interned keyword in the Clojure runtime."
   []
@@ -93,9 +97,15 @@
   "Given an ns symbol, return a list of ns and ns alias symbols available in
   the context of that ns."
   [ns]
-  (concat (map ns-name (all-ns)) (keys (ns-aliases ns))))
+  (map ns-name (all-ns)))
 
 (comment (namespaces 'clojure.main),)
+
+(defn namespace-aliases
+  [ns]
+  (keys (ns-aliases ns)))
+
+(comment (namespace-aliases 'clojure.main) ,,,)
 
 (defn- static?
   "Given a member of a class, return true if it is a static member."
@@ -252,10 +262,12 @@
   "Given an ns symbol, return all namespace candidates that are available in
   the context of that namespace."
   [ns]
-  (map #(let [doc (some-> % find-ns meta :doc)]
-          (cond-> (annotate-namespace %)
-            doc (assoc :doc doc)))
-    (namespaces ns)))
+  (lazy-cat
+    (map (fn [ns]
+           (let [doc (some-> ns find-ns meta :doc)]
+             (cond-> (annotate-namespace (name ns)) doc (assoc :doc doc))))
+      (namespaces ns))
+    (map annotate-navigation (namespace-aliases ns))))
 
 (comment (ns-candidates 'clojure.main),)
 
