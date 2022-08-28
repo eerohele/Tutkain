@@ -46,8 +46,8 @@
 (comment (qualified-auto-resolved-keywords (all-keywords) (ns-aliases 'clojure.main)),)
 
 (defn unqualified-auto-resolved-keywords
-  "Given a list of keywords and an ns symbol, return all unqualified
-  auto-resolved keywords in the context of that namespace."
+  "Given a list of keywords and an ns symbol, return all auto-resolved keywords
+  in that namespace."
   [keywords ns]
   (eduction
     (filter #(= (namespace %) (str ns)))
