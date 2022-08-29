@@ -69,8 +69,14 @@
   compiler knows about."
   [env]
   (into language-keywords
-    (filter keyword?)
-    (keys (::analyzer/constant-table @env))))
+    (comp
+      (map val)
+      (map ::analyzer/constants)
+      (mapcat :seen)
+      (filter keyword?))
+    (::analyzer/namespaces @env)))
+
+(comment (all-keywords (compiler-env :node-script)) ,,,)
 
 (defn ns-candidates
   "Given a compiler environment, return all namespace auto-completion
