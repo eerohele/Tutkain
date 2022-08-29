@@ -30,13 +30,22 @@
 ;; auto-qualified keywords where the namespace is a namespace alias of the
 ;; given namespace.
 (candidates "::spec/" *ns*)
-(xr/check! (prefixed-candidates ::specs/completions "::spec/"))
+(xr/check! (prefixed-candidates ::specs/completions "::spec"))
+
+(candidates "::spec/k" *ns*)
+(xr/check! (prefixed-candidates ::specs/completions "::spec/k"))
+
+(candidates "::edn" *ns*)
+(xr/check! empty?)
 
 ;; A prefix that starts with a single colon and contains a forward slash
 ;; yields qualified keywords with synthetic namespaces.
 :foo/bar
 (candidates ":foo/" *ns*)
-(xr/check! (prefixed-candidates ::specs/completions ":foo/"))
+(xr/check! (prefixed-candidates ::specs/completions ":foo"))
+
+(candidates ":foo/b" *ns*)
+(xr/check! (prefixed-candidates ::specs/completions ":foo/b"))
 
 ;; Yields every loaded keyword.
 (spec/def ::pass? #{true})
@@ -57,7 +66,7 @@
 ;; A prefix that starts with an alias and contains a forward slash yields
 ;; candidates in the aliased namespace.
 (candidates "spec/" 'clojure.main)
-(xr/check! (prefixed-candidates ::specs/symbol-completions "spec/"))
+(xr/check! (prefixed-candidates ::specs/symbol-completions "spec"))
 
 ;; A prefix that starts with a Java package name yields fully-qualified class
 ;; candidates from that package.

@@ -38,6 +38,10 @@
               %))
 
 (set (cljs/candidates (env) ":m" 'my.browser.app))
+(xr/check! #(set/subset? #{{:candidate ":my.browser.app" :type :navigation}
+                           {:candidate ":my.other" :type :navigation}} %))
+
+(set (cljs/candidates (env) ":my.browser.app/" 'my.browser.app))
 (xr/check! #(set/subset? #{{:candidate ":my.browser.app/running" :type :keyword}
                            {:candidate ":my.browser.app/stopped", :type :keyword}} %))
 
@@ -48,8 +52,14 @@
 (xr/check! #(set/subset? #{{:candidate ":require" :type :keyword}} %))
 
 ;; auto-resolved qualified keywords
+(set (cljs/candidates (env) "::other/" 'my.browser.app))
+(xr/check! #(set/subset? #{{:candidate "::other/keyword" :type :keyword}} %))
+
 (set (cljs/candidates (env) "::other/k" 'my.browser.app))
 (xr/check! #(set/subset? #{{:candidate "::other/keyword" :type :keyword}} %))
+
+(set (cljs/candidates (env) "::pprint" 'my.browser.app))
+(xr/check! empty?)
 
 ;; scoped candidates
 (cljs/candidates (env) "pprint/" 'my.browser.app)

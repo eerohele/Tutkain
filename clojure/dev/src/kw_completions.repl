@@ -1,0 +1,28 @@
+;; Evaluate this
+(require '[clojure.core :as core])
+
+;; type ::core, press Tab once, then once more
+
+
+
+;; append e, press Tab
+
+::core/V
+
+;; type :clojure., press Tab once, then once more
+
+
+
+;; append o, press Tab
+
+:clojure.error/s
+
+;; Evaluate this
+(require '[clojure.reflect :as reflect])
+
+;; type refle, choose reflect/, press Tab, then once more
+
+
+
+;; AC doesn't trigger if the character to the right of the caret is EOF
+(comment ,,,)

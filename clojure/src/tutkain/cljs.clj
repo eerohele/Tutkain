@@ -143,14 +143,11 @@
     (map annotate-var)
     (analyzer.api/ns-interns env ns)))
 
-(defn ^:private auto-resolved-keyword-candidates
-  "Given a compiler environment and an ns symbol, return all auto-resolved
-  keyword auto-completion candidates in the context of the namespace."
+(defn ^:private namespace-aliases
+  "Given a compiler environment and an ns symbol, return all namespace aliases
+  available in ns, excluding any where the alias is the same as the ns name."
   [env ns]
-  (completions/auto-resolved-keyword-candidates
-    (all-keywords env)
-    (into {} (remove #(= (key %) (val %)) (ns-aliases env ns)))
-    ns))
+  (into {} (remove #(= (key %) (val %)) (ns-aliases env ns))))
 
 (defn candidates
   "Given a compiler environment, a string prefix, and an ns symbol, return all
@@ -158,11 +155,40 @@
   [env ^String prefix ns]
   (assert (symbol? ns))
   (let [candidates (cond
-                     (.startsWith prefix "::") (auto-resolved-keyword-candidates env ns)
-                     (.startsWith prefix ":") (completions/simple-keyword-candidates (all-keywords env))
-                     (completions/scoped? prefix) (scoped-candidates env prefix ns)
-                     (.contains prefix ".") (ns-candidates env)
-                     :else (concat (ns-var-candidates env ns) (core-candidates env) (ns-alias-candidates env ns)))]
+                     (and (.startsWith prefix "::") (.endsWith prefix "/"))
+                     (completions/scoped-auto-resolved-keyword-candidates
+                       (all-keywords env)
+                       (namespace-aliases env ns)
+                       prefix)
+
+                     (and (.startsWith prefix "::") (.contains prefix "/"))
+                     (completions/qualified-auto-resolved-keyword-candidates
+                       (all-keywords env)
+                       (namespace-aliases env ns))
+
+                     (and (.startsWith prefix ":") (.endsWith prefix "/"))
+                     (completions/scoped-qualified-keyword-candidates (all-keywords env) prefix)
+
+                     (and (.startsWith prefix ":") (.contains prefix "/"))
+                     (completions/qualified-keyword-candidates (all-keywords env))
+
+                     (.startsWith prefix "::")
+                     (completions/auto-resolved-keyword-candidates
+                       (all-keywords env)
+                       (namespace-aliases env ns)
+                       ns)
+
+                     (.startsWith prefix ":")
+                     (completions/keyword-candidates (all-keywords env))
+
+                     (completions/scoped? prefix)
+                     (scoped-candidates env prefix ns)
+
+                     (.contains prefix ".")
+                     (ns-candidates env)
+
+                     :else
+                     (concat (ns-var-candidates env ns) (core-candidates env) (ns-alias-candidates env ns)))]
     (sort-by :candidate (filter #(completions/candidate? prefix %) candidates))))
 
 (defn ^:private parse-ns

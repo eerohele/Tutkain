@@ -25,7 +25,7 @@
 
 (defn annotate-navigation
   [candidate]
-  {:candidate (str candidate "/") :type :navigation})
+  {:candidate (name candidate) :type :navigation})
 
 (defn all-keywords
   "Return every interned keyword in the Clojure runtime."
@@ -36,18 +36,62 @@
 
 (comment (all-keywords),)
 
-(defn qualified-auto-resolved-keywords
-  "Given a list of keywords and a map of ns aliases to nses, return all
-  available qualified auto-resolved keyword candidates in those namespaces."
+(defn qualified-auto-resolved-keyword-candidates
+  "Given a list of keywords and a map of ns alias to ns, return all qualified
+  auto-resolved keyword candidates in all namespaces in that alias map."
   [keywords aliases]
   (mapcat (fn [[ns-alias ns]]
             (eduction
               (filter #(= (namespace %) (str ns)))
               (map #(str "::" ns-alias "/" (name %)))
+              (map annotate-keyword)
               keywords))
     aliases))
 
-(comment (qualified-auto-resolved-keywords (all-keywords) (ns-aliases 'clojure.main)),)
+(comment (qualified-auto-resolved-keyword-candidates (all-keywords) (ns-aliases 'clojure.main)),)
+
+(defn scoped-auto-resolved-keyword-candidates
+  "Given a list of keywords, a list of namespace aliases, and an auto-completion
+  prefix like ::foo/, return a list of keyword candidates whose namespace is
+  the namespace the alias foo resolves to."
+  [keywords aliases ^String prefix]
+  (let [prefix-ns-alias (symbol (subs prefix 2 (-> prefix count dec)))
+        prefix-ns (str (get aliases prefix-ns-alias))]
+    (eduction
+      (filter qualified-keyword?)
+      (filter #(= (namespace %) prefix-ns))
+      (map #(str prefix (name %)))
+      (map annotate-keyword)
+      keywords)))
+
+(comment (scoped-auto-resolved-keyword-candidates (all-keywords) (ns-aliases 'clojure.spec.alpha) "::c/") ,,,)
+
+(defn scoped-qualified-keyword-candidates
+  "Given a list of keywords and an auto-completion prefix like :clojure.core/,
+  return a list of keyword candidates whose namespace is the namespace in the
+  prefix (e.g. clojure.core)."
+  [keywords prefix]
+  (let [prefix-ns (subs prefix 1 (-> prefix count dec))]
+    (eduction
+      (filter qualified-keyword?)
+      (filter #(= (namespace %) prefix-ns))
+      (map str)
+      (map annotate-keyword)
+      keywords)))
+
+(comment (scoped-qualified-keyword-candidates (all-keywords) ":clojure.core/") ,,,)
+
+(defn qualified-keyword-candidates
+  "Given a list of keywords, return all qualified keyword candidates in that
+  list of keywords."
+  [keywords]
+  (eduction
+    (filter qualified-keyword?)
+    (map str)
+    (map annotate-keyword)
+    keywords))
+
+(comment (qualified-keyword-candidates (all-keywords)) ,,,)
 
 (defn unqualified-auto-resolved-keywords
   "Given a list of keywords and an ns symbol, return all auto-resolved keywords
@@ -61,37 +105,71 @@
 (comment (unqualified-auto-resolved-keywords (all-keywords) 'clojure.main),)
 
 (defn keyword-namespace-aliases
-  "Given a map of ns alias to ns, return a list of keyword namespace alias
-  candidates."
-  [aliases]
-  (map (comp #(str "::" %) name first) aliases))
+  "Given a list of keywords and a map of ns alias to ns, return a list of
+  keyword namespace alias candidates.
 
-(comment (keyword-namespace-aliases (ns-aliases 'clojure.main)),)
+  Only returns keyword namespace aliases that are a part of an interned
+  keyword."
+  [keywords aliases]
+  (let [keyword-nses (into #{}
+                       (comp
+                         (filter qualified-keyword?)
+                         (map (comp symbol namespace)))
+                       keywords)]
+    (eduction
+      (filter (fn [[_ ns]]
+                ;; ns-name for ClojureScript compatibility
+                (let [ns (if (symbol? ns) ns (ns-name ns))]
+                  (contains? keyword-nses ns))))
+      (map (fn [[alias _]] (str "::" (name alias))))
+      aliases)))
+
+(comment (keyword-namespace-aliases (all-keywords) (ns-aliases 'clojure.main)),)
 
 (defn auto-resolved-keyword-candidates
   "Given a list of keywords, a map of ns alias to ns symbol, and a context ns,
   return the auto-resolved keyword candidates available in that namespace."
   [keywords aliases ns]
-  (map annotate-keyword
-    (lazy-cat
-      (qualified-auto-resolved-keywords keywords aliases)
-      (unqualified-auto-resolved-keywords keywords ns)
-      (keyword-namespace-aliases aliases))))
+  (concat
+    (map annotate-keyword (unqualified-auto-resolved-keywords keywords ns))
+    (map annotate-navigation (keyword-namespace-aliases keywords aliases))))
 
 (comment
   (auto-resolved-keyword-candidates (all-keywords) (ns-aliases 'clojure.main) 'clojure.main)
   )
 
+(defn keyword-namespaces
+  "Given a list of keywords, return a list of the namespaces of all qualified
+  keywords in the list."
+  [keywords]
+  (eduction
+    (filter qualified-keyword?)
+    (map namespace)
+    (distinct)
+    (map #(str ":" %))
+    keywords))
+
+(comment (keyword-namespaces (all-keywords)) ,,,)
+
 (defn simple-keywords
   "Given a list of keywords, return a list of simple keyword candidates."
   [keywords]
-  (map str keywords))
+  (eduction
+    (filter simple-keyword?)
+    (map str)
+    keywords))
 
 (comment (simple-keywords (all-keywords)),)
 
-(defn simple-keyword-candidates
+(defn keyword-candidates
+  "Given a list of keywords, return a list of simple keyword and keyword
+  namespace completion candidates."
   [keywords]
-  (map annotate-keyword (simple-keywords keywords)))
+  (concat
+    (map annotate-keyword (simple-keywords keywords))
+    (map annotate-navigation (keyword-namespaces keywords))))
+
+(comment (keyword-candidates (all-keywords)) ,,,)
 
 (defn namespaces
   "Given an ns symbol, return a list of ns and ns alias symbols available in
@@ -262,7 +340,7 @@
   "Given an ns symbol, return all namespace candidates that are available in
   the context of that namespace."
   [ns]
-  (lazy-cat
+  (concat
     (map (fn [ns]
            (let [doc (some-> ns find-ns meta :doc)]
              (cond-> (annotate-namespace (name ns)) doc (assoc :doc doc))))
@@ -365,11 +443,23 @@
   [^String prefix ns]
   (when (seq prefix)
     (cond
+      (and (.startsWith prefix "::") (.endsWith prefix "/"))
+      (candidates-for-prefix prefix (scoped-auto-resolved-keyword-candidates (all-keywords) (ns-aliases ns) prefix))
+
+      (and (.startsWith prefix "::") (.contains prefix "/"))
+      (candidates-for-prefix prefix (qualified-auto-resolved-keyword-candidates (all-keywords) (ns-aliases ns)))
+
+      (and (.startsWith prefix ":") (.endsWith prefix "/"))
+      (candidates-for-prefix prefix (scoped-qualified-keyword-candidates (all-keywords) prefix))
+
+      (and (.startsWith prefix ":") (.contains prefix "/"))
+      (candidates-for-prefix prefix (qualified-keyword-candidates (all-keywords)))
+
       (.startsWith prefix "::")
       (candidates-for-prefix prefix (auto-resolved-keyword-candidates (all-keywords) (ns-aliases ns) ns))
 
       (.startsWith prefix ":")
-      (candidates-for-prefix prefix (simple-keyword-candidates (all-keywords)))
+      (candidates-for-prefix prefix (keyword-candidates (all-keywords)))
 
       (.startsWith prefix ".")
       (candidates-for-prefix prefix (ns-java-method-candidates ns))

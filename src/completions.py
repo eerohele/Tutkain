@@ -39,9 +39,12 @@ def completion_item(item):
 
         details = f"""<a href="{sublime.command_url("tutkain_show_popup", args={"item": d})}">More</a>"""
 
+    type = item.get(edn.Keyword("type"))
     candidate = item.get(edn.Keyword("candidate"))
     trigger = candidate + " "
-    type = item.get(edn.Keyword("type"))
+
+    if type == edn.Keyword("navigation"):
+        candidate = candidate + "/"
 
     arglists = item.get(edn.Keyword("arglists"), [])
     annotation = ""
