@@ -451,7 +451,7 @@ def start(view, client):
 
         views.configure(view, client.dialect, client.id, client.host, client.port, settings.load().get("repl_view_settings", {}))
 
-        if client.dialect == edn.Keyword("bb") or (not client.has_backchannel() and len(state.get_connections()) == 1):
+        if not client.has_backchannel() and len(state.get_connections()) == 1:
             view.assign_syntax("Plain Text.tmLanguage")
 
         client.ready = True
