@@ -216,7 +216,7 @@ class Client(ABC):
 class JVMClient(Client):
     def handshake(self):
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
-        self.write_line("""(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))""")
+        self.write_line("""(clojure.main/repl :init (constantly nil) :prompt (constantly "") :need-prompt (constantly false))""")
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
         self.write_line(BASE64_BLOB)
