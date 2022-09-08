@@ -27,3 +27,9 @@ def backchannel_options(dialect, backchannel=True):
             "port": load().get("clojure").get("backchannel").get("port"),
             "bind_address": load().get("clojure").get("backchannel").get("bind_address", "localhost")
         }
+    elif dialect == edn.Keyword("bb"):
+        return {
+            "enabled": backchannel,
+            "port": load().get("babashka").get("backchannel").get("port"),
+            "bind_address": load().get("babashka").get("backchannel").get("bind_address", "localhost")
+        }

@@ -542,7 +542,7 @@ class TutkainConnectCommand(WindowCommand):
             repl.start(view, client)
             repl.start_printer(client, view)
         elif dialect == edn.Keyword("bb"):
-            client = repl.BabashkaClient(host, port)
+            client = repl.BabashkaClient(host, port, options={"init": init, "backchannel": backchannel_options})
             repl.start(view, client)
             repl.start_printer(client, view, {"gutter_marks": False})
         else:
