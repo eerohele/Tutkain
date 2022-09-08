@@ -311,7 +311,9 @@ class PortInputHandler(TextInputHandler):
         return text.isdigit()
 
     def initial_text(self):
-        if alts := ports.discover(self.window, edn.Keyword(self.dialect)):
+        if self.dialect == "bb":
+            return "1666"
+        elif alts := ports.discover(self.window, edn.Keyword(self.dialect)):
             return alts[0][1]
         else:
             return ""
