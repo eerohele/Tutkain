@@ -53,7 +53,8 @@
          (when (class? val) val))
     (catch Exception e
       (when (not= ClassNotFoundException
-              (class (main/repl-exception e)))
+              ;; FIXME
+              (class #?(:bb e :clj (main/repl-exception e))))
         (throw e)))))
 
 (comment (resolve-class 'clojure.core 'String) ,)

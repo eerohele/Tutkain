@@ -51,7 +51,7 @@
   (spec/with-gen string? (constantly (gen/fmap str gen/symbol))))
 
 (spec/def ::ns
-  (spec/with-gen (partial instance? clojure.lang.Namespace) #(gen/elements (all-ns))))
+  (spec/with-gen #?(:bb any? :clj (partial instance? clojure.lang.Namespace)) #(gen/elements (all-ns))))
 
 (spec/def ::top-level-class-completion
   (spec/and #(= (:type %) :class) #(not (.contains (:candidate %) "$"))))

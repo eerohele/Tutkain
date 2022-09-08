@@ -1,20 +1,18 @@
 (ns tutkain.load-blob
   (:require
    [tutkain.format :refer [pp-str]]
-   [tutkain.base64 :refer [base64-reader]]
+   [tutkain.base64 :refer [read-base64]]
    [tutkain.backchannel :refer [handle respond-to]])
   (:import
-   (clojure.lang Compiler)
    (java.io File)))
 
 (defmethod handle :load
   [{:keys [eval-lock eval-context code file] :as message}]
   (try
-    (with-open [reader (base64-reader code)]
-      (let [file-name (some-> file File. .getName)
-            val (locking eval-lock (Compiler/load reader (or file "NO_SOURCE_FILE") file-name))]
-        (respond-to message {:tag :ret
-                             :val (pp-str val)})))
+    (let [file-name (some-> file File. .getName)
+          val (locking eval-lock (read-base64 code (or file "NO_SOURCE_FILE") file-name))]
+      (respond-to message {:tag :ret
+                           :val (pp-str val)}))
     (catch Throwable ex
       (swap! eval-context assoc-in [:thread-bindings #'*e] ex)
       (respond-to message {:tag :ret

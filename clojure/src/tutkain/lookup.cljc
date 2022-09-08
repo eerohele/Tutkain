@@ -1,11 +1,11 @@
 (ns tutkain.lookup
   (:require
    [clojure.java.io :as io]
-   [clojure.spec.alpha :as spec]
+   #?@(:bb [] :clj [[clojure.spec.alpha :as spec]])
    [tutkain.format :refer [pp-str]]
    [tutkain.backchannel :refer [handle respond-to]]))
 
-(set! *warn-on-reflection* true)
+#_(set! *warn-on-reflection* true)
 
 ;; Adapted from nrepl.util.lookup
 
@@ -21,9 +21,10 @@
 (defn fnspec
   "Given a var, return a description of the fnspec of that var, if any."
   [v]
-  (into {}
-    (keep #(some->> (get (spec/get-spec v) %) spec/describe pr-str (vector %)))
-    [:args :ret :fn]))
+  #?(:bb {}
+     :clj (into {}
+            (keep #(some->> (get (spec/get-spec v) %) spec/describe pr-str (vector %)))
+            [:args :ret :fn])))
 
 (defn ns-meta
   [sym]
@@ -99,14 +100,15 @@
   (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))
         ident (binding [*ns* ns] (read-string ident))]
     (if (keyword? ident)
-      (when-some [spec (some-> ident spec/get-spec spec/describe pr-str)]
-        {:name ident
-         :spec spec})
+      #?(:bb {}
+         :clj (when-some [spec (some-> ident spec/get-spec spec/describe pr-str)]
+                {:name ident
+                 :spec spec}))
       (prep-meta (sym-meta ns ident)))))
 
 (defmulti info :dialect)
 
-(defmethod info :clj
+(defmethod info :default
   [{:keys [ident ns] :as message}]
   (try
     (when-some [result (lookup ns ident)]

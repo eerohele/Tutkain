@@ -46,16 +46,11 @@ def make_color_scheme(cache_dir):
     Add the tutkain.repl.stderr scope into the current color scheme.
 
     We want stderr messages in the same REPL output view as evaluation results, but we don't
-    want them to use syntax highlighting. We can use view.add_regions() to add a scope to such
-    messages such that they are not highlighted. Unfortunately, it is not possible to use
-    view.add_regions() to only set the foreground color of a region. Furthermore, if we set the
-    background color of the scope to use exactly the same color as the global background color of
-    the color scheme, Sublime Text refuses to apply the scope.
-
-    We therefore have to resort to this awful hack where every time the plugin is loaded or the
-    color scheme changes, we generate a new color scheme in the Sublime Text cache directory. That
-    color scheme defines the tutkain.repl.stderr scope which has an almost-transparent background
-    color, creating the illusion that we're only setting the foreground color of the text.
+    want them to use syntax highlighting. We therefore have to resort to this awful hack where
+    every time the plugin is loaded or the color scheme changes, we generate a new color scheme in
+    the Sublime Text cache directory. That color scheme defines the tutkain.repl.stderr scope which
+    has an almost-transparent background color, creating the illusion that we're only setting the
+    foreground color of the text.
     """
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
@@ -189,7 +184,7 @@ class TutkainEvaluateViewCommand(TextCommand):
 
 class TutkainRunTests(TextCommand):
     def run(self, _, scope="ns"):
-        dialect = edn.Keyword("clj")
+        dialect = dialects.for_view(self.view)
         window = self.view.window()
 
         if scope == "ns":
@@ -438,7 +433,7 @@ class TutkainEvaluateCommand(TextCommand):
             elif scope == "view":
                 syntax = self.view.syntax()
 
-                if syntax and syntax.scope not in {"source.clojure", "source.clojure.clojure-common"}:
+                if syntax and syntax.scope not in {"source.clojure", "source.clojure.clojure-common", "source.clojure.babashka"}:
                     self.view.window().status_message(
                         "Active view has incompatible syntax; can't evaluate."
                     )
@@ -1298,7 +1293,7 @@ class TutkainAproposCommand(WindowCommand):
         }, handler=lambda response: query.handle_response(self.window, completions.KINDS, response))
 
     def run(self, pattern=None):
-        dialect = edn.Keyword("clj")
+        dialect = dialects.for_view(self.window.active_view())
 
         if client := state.get_client(self.window, dialect):
             if pattern is None:

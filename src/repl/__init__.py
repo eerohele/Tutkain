@@ -38,7 +38,7 @@ def read_until_prompt(socket: socket.SocketType):
     return bs
 
 
-BASE64_BLOB = "(def load-base64 (let [decoder (java.util.Base64/getDecoder)] (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))"
+BASE64_BLOB = """(def load-base64 (let [decoder (java.util.Base64/getDecoder)] #?(:bb (fn [blob _ _] (load-string (String. (.decode decoder blob) "UTF-8"))) :clj (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename))))))"""
 
 
 class Client(ABC):
@@ -50,6 +50,8 @@ class Client(ABC):
 
     Tutkain uses the REPL for evaluations and the backchannel for everything
     else (auto-completion, metadata lookup, static analysis, etc.)"""
+
+    connection_err_msg = "NOTE: Tutkain requires Clojure 1.10.0 or newer.\n"
 
     def start_workers(self):
         self.executor.submit(self.send_loop)
@@ -66,8 +68,8 @@ class Client(ABC):
         if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
             self.capabilities.add(response.get(edn.Keyword("filename")))
 
-    def load_modules(self, modules):
-        for filename, requires in modules.items():
+    def load_modules(self):
+        for filename, requires in self.modules.items():
             path = os.path.join(settings.source_root(), filename)
 
             with open(path, "rb") as file:
@@ -141,7 +143,6 @@ class Client(ABC):
         self.socket.shutdown(socket.SHUT_RDWR)
         log.debug({"event": "thread/exit"})
 
-    @abstractmethod
     def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
         """Given a string of Clojure code, send it for evaluation to the
         Clojure runtime this client is connected to.
@@ -151,7 +152,15 @@ class Client(ABC):
                   associated with (default `"NO_SOURCE_FILE"`)
         - `line`: the line number the code is positioned at (default `0`)
         - `column`: the column number the code is positioned at (default `0`)"""
-        pass
+        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
+
+        if self.has_backchannel():
+            self.backchannel.send(
+                self.eval_context_message(options),
+                lambda _: self.sendq.put(code)
+            )
+        else:
+            self.sendq.put(code)
 
     def print(self, item):
         self.printq.put(formatter.format(item))
@@ -214,6 +223,24 @@ class Client(ABC):
 
 
 class JVMClient(Client):
+    modules = {
+        "java.cljc": [],
+        "lookup.cljc": [],
+        "completions.cljc": [],
+        "load_blob.cljc": [],
+        "test.cljc": [],
+        "query.cljc": [],
+        "clojuredocs.clj": [],
+        "analyzer.clj": [
+            edn.Symbol("clojure.tools.reader"),
+            edn.Symbol("clojure.tools.analyzer.ast")
+        ],
+        "analyzer/jvm.clj": [
+            edn.Symbol("tutkain.analyzer"),
+            edn.Symbol("clojure.tools.analyzer.jvm")
+        ]
+    }
+
     def handshake(self):
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
         self.write_line("""(clojure.main/repl :init (constantly nil) :prompt (constantly "") :need-prompt (constantly false))""")
@@ -222,7 +249,7 @@ class JVMClient(Client):
         self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
-        for filename in ["format.clj", "backchannel.clj", "base64.clj", "repl.clj"]:
+        for filename in ["format.cljc", "backchannel.cljc", "base64.cljc", "repl.cljc"]:
             path = self.source_path(filename)
 
             with open(path, "rb") as file:
@@ -251,7 +278,7 @@ class JVMClient(Client):
 
             self.print(edn.kwmap({
                 "tag": edn.Keyword("err"),
-                "val": "NOTE: Tutkain requires Clojure 1.10.0 or newer.\n"
+                "val": self.connection_err_msg
             }))
         else:
             ret = edn.read(line)
@@ -262,23 +289,7 @@ class JVMClient(Client):
             else:
                 self.print(ret)
 
-        self.load_modules({
-            "java.clj": [],
-            "lookup.clj": [],
-            "completions.clj": [],
-            "load_blob.clj": [],
-            "test.clj": [],
-            "query.clj": [],
-            "clojuredocs.clj": [],
-            "analyzer.clj": [
-                edn.Symbol("clojure.tools.reader"),
-                edn.Symbol("clojure.tools.analyzer.ast")
-            ],
-            "analyzer/jvm.clj": [
-                edn.Symbol("tutkain.analyzer"),
-                edn.Symbol("clojure.tools.analyzer.jvm")
-            ]
-        })
+        self.load_modules()
 
     def __init__(self, host, port, options={}):
         super().__init__(host, port, "tutkain.clojure.client", edn.Keyword("clj"), options=options)
@@ -292,26 +303,35 @@ class JVMClient(Client):
         self.start_workers()
         return self
 
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
-
-        if self.has_backchannel():
-            self.backchannel.send(
-                self.eval_context_message(options),
-                lambda _: self.sendq.put(code)
-            )
-        else:
-            self.sendq.put(code)
-
 
 class JSClient(Client):
+    # NOTE: If you make changes to module loading, make sure you manually
+    # test connecting to a ClojureScript runtime *without* connecting to
+    # a Clojure runtime first to make sure we're loading everything we
+    # need.
+    modules = {
+        "lookup.cljc": [],
+        "java.cljc": [],
+        "completions.cljc": [],
+        "query.cljc": [],
+        "cljs.clj": [],
+        "shadow.clj": [],
+        "analyzer.clj": [
+            edn.Symbol("clojure.tools.reader"),
+            edn.Symbol("clojure.tools.analyzer.ast")
+        ],
+        "analyzer/js.clj": [
+            edn.Symbol("tutkain.analyzer")
+        ]
+    }
+
     def __init__(self, host, port, options={}):
         super().__init__(host, port, "tutkain.cljs.client", edn.Keyword("cljs"), options=options)
 
     def connect(self):
         super().connect()
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
-        self.write_line('(clojure.main/repl :prompt (constantly "") :need-prompt (constantly false))')
+        self.write_line('(clojure.main/repl :init (constantly nil) :prompt (constantly "") :need-prompt (constantly false))')
         self.write_line("""(sort (shadow.cljs.devtools.api/get-build-ids))""")
         build_id_options = edn.read_line(self.buffer)
 
@@ -332,7 +352,7 @@ class JSClient(Client):
         self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
-        for filename in ["format.clj", "backchannel.clj", "base64.clj", "shadow.clj"]:
+        for filename in ["format.cljc", "backchannel.cljc", "base64.cljc", "shadow.clj"]:
             path = self.source_path(filename)
 
             with open(path, "rb") as file:
@@ -355,58 +375,25 @@ class JSClient(Client):
             greeting = ret.get(edn.Keyword("greeting"))
             self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": greeting}))
 
-            # NOTE: If you make changes to module loading, make sure you manually
-            # test connecting to a ClojureScript runtime *without* connecting to
-            # a Clojure runtime first to make sure we're loading everything we
-            # need.
-            self.load_modules({
-                "lookup.clj": [],
-                "java.clj": [],
-                "completions.clj": [],
-                "query.clj": [],
-                "cljs.clj": [],
-                "shadow.clj": [],
-                "analyzer.clj": [
-                    edn.Symbol("clojure.tools.reader"),
-                    edn.Symbol("clojure.tools.analyzer.ast")
-                ],
-                "analyzer/js.clj": [
-                    edn.Symbol("tutkain.analyzer")
-                ]
-            })
+            self.load_modules()
 
             self.start_workers()
 
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
 
-        if self.has_backchannel():
-            self.backchannel.send(
-                self.eval_context_message(options),
-                lambda _: self.sendq.put(code)
-            )
-        else:
-            self.sendq.put(code)
+class BabashkaClient(JVMClient):
+    connection_err_msg = "NOTE: Tutkain requires Babashka v0.9.163 or newer.\n"
 
+    modules = {
+        "java.cljc": [],
+        "lookup.cljc": [],
+        "completions.cljc": [],
+        "load_blob.cljc": [],
+        "test.cljc": [],
+        "query.cljc": []
+    }
 
-class BabashkaClient(Client):
-    def __init__(self, host, port):
-        super().__init__(host, port, "tutkain.bb.client", edn.Keyword("bb"))
-
-    def handshake(self):
-        pass
-
-    def connect(self):
-        super().connect()
-        self.start_workers()
-        return self
-
-    def has_backchannel(self):
-        return False
-
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
-        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
-        self.sendq.put(code)
+    def __init__(self, host, port, options={}):
+        super(JVMClient, self).__init__(host, port, "tutkain.bb.client", edn.Keyword("bb"), options=options)
 
 
 def set_layout(window):

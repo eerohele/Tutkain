@@ -7,12 +7,10 @@
    [tutkain.backchannel :refer [handle respond-to]]
    [tutkain.java :as java])
   (:import
-   (clojure.lang Reflector)
    (java.util.jar JarFile)
    (java.io File)
    (java.lang.reflect Field Member Method Modifier)
-   (java.util.jar JarEntry)
-   (java.util.concurrent ConcurrentHashMap)))
+   (java.util.jar JarEntry)))
 
 #_(set! *warn-on-reflection* true)
 
@@ -30,9 +28,10 @@
 (defn all-keywords
   "Return every interned keyword in the Clojure runtime."
   []
-  (let [^Field field (.getDeclaredField clojure.lang.Keyword "table")]
-    (.setAccessible field true)
-    (map keyword (.keySet ^ConcurrentHashMap (.get field nil)))))
+  #?(:bb [] ; TODO
+     :clj (let [field (.getDeclaredField clojure.lang.Keyword "table")]
+            (.setAccessible field true)
+            (map keyword (.keySet (.get field nil))))))
 
 (comment (all-keywords),)
 
@@ -268,9 +267,12 @@
   "A future that holds a sorted list of the names of all non-base Java classes
   in the class path."
   (->>
-    ["sun.boot.class.path" "java.ext.dirs" "java.class.path"]
+    #?(:bb [(babashka.classpath/get-classpath)]
+       :clj [(System/getProperty "sun.boot.class.path")
+             (System/getProperty "java.ext.dirs")
+             (System/getProperty "java.class.path")])
     (eduction
-      (keep #(some-> ^String % System/getProperty (.split File/pathSeparator)))
+      (keep #(some-> ^String % (.split File/pathSeparator)))
       cat
       (mapcat path-files)
       (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__"))))
@@ -284,17 +286,18 @@
 
   On < JDK11, holds nil."
   (future
-    (try
-      (when-some [module-finder (Class/forName "java.lang.module.ModuleFinder")]
-        (->>
-          (Reflector/invokeStaticMethod module-finder "ofSystem" (into-array Object []))
-          .findAll
-          (eduction
-            (mapcat #(-> % .open .list .iterator iterator-seq))
-            ;; Remove anonymous nested classes
-            (remove #(re-find #".+\$\d.+\.class" %))
-            (map #(.. % (replace ".class" "") (replace "/" "."))))))
-      (catch ClassNotFoundException _))))
+    #?(:bb (map (memfn getName) (babashka.classes/all-classes))
+       :clj (try
+              (when-some [module-finder (Class/forName "java.lang.module.ModuleFinder")]
+                (->>
+                  (clojure.lang.Reflector/invokeStaticMethod module-finder "ofSystem" (into-array Object []))
+                  .findAll
+                  (eduction
+                    (mapcat #(-> % .open .list .iterator iterator-seq))
+                    ;; Remove anonymous nested classes
+                    (remove #(re-find #".+\$\d.+\.class" %))
+                    (map #(.. % (replace ".class" "") (replace "/" "."))))))
+              (catch ClassNotFoundException _)))))
 
 (def ^:private all-class-names
   (future (sort (concat @base-class-names @non-base-class-names))))
@@ -498,7 +501,7 @@
 
 (defmulti completions :dialect)
 
-(defmethod completions :clj
+(defmethod completions :default
   [{:keys [prefix ns] :as message}]
   (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))]
     (respond-to message {:completions (candidates prefix ns)})))

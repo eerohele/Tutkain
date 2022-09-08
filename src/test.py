@@ -101,7 +101,7 @@ def response_results(view, response):
 
     if edn.Keyword("fail") in response:
         for result in response[edn.Keyword("fail")]:
-            line = result[edn.Keyword("line")] - 1
+            line = result.get(edn.Keyword("line"), 0) - 1
             point = view.text_point(line, 0)
 
             results["fail"][line] = {
@@ -114,8 +114,9 @@ def response_results(view, response):
 
     if edn.Keyword("error") in response:
         for result in response[edn.Keyword("error")]:
-            line = result[edn.Keyword("var-meta")][edn.Keyword("line")] - 1
-            column = result[edn.Keyword("var-meta")][edn.Keyword("column")] - 1
+            # We don't get line number in var-meta with Babashka -- only in result
+            line = result[edn.Keyword("var-meta")].get(edn.Keyword("line"), result.get(edn.Keyword("line"))) - 1
+            column = result[edn.Keyword("var-meta")].get(edn.Keyword("column"), 2) - 1
             point = view.text_point(line, column)
 
             results["error"][line] = {
@@ -131,8 +132,10 @@ def response_results(view, response):
             line = result[edn.Keyword("line")] - 1
             point = view.text_point(line, 0)
 
+            # We don't get line numbers for passes in Babashka.
+            #
             # Only add pass for line if there's no fail for the same line.
-            if line not in results["fail"]:
+            if line > -1 and line not in results["fail"]:
                 results["pass"][line] = {
                     "name": var_meta_name(result),
                     "type": result[edn.Keyword("type")],

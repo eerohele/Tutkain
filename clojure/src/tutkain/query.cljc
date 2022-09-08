@@ -7,14 +7,15 @@
 
 (defn ^:private meta-with-type
   [var]
-  (let [{:keys [macro arglists] :as m} (meta var)
-        v (var-get var)]
-    (assoc m :type (cond
-                     (= clojure.lang.MultiFn (class v)) :multimethod
-                     (and (map? v) (contains? v :impls)) :protocol
-                     macro :macro
-                     arglists :function
-                     :else :var))))
+  (when (var? var)
+    (let [{:keys [macro arglists] :as m} (meta var)
+          v (var-get var)]
+      (assoc m :type (cond
+                       (= clojure.lang.MultiFn (class v)) :multimethod
+                       (and (map? v) (contains? v :impls)) :protocol
+                       macro :macro
+                       arglists :function
+                       :else :var)))))
 
 (defmethod handle :apropos
   [{:keys [pattern] :as message}]
@@ -41,7 +42,7 @@
                          ;; ns alias symbol
                          (get (ns-aliases ns) sym)
                          ;; non-ns symbol
-                         (some-> (ns-resolve ns sym) .ns))]
+                         (symbol (namespace (symbol (ns-resolve ns sym)))))]
       (let [vars (eduction
                    (map val)
                    (map meta-with-type)
@@ -52,15 +53,17 @@
 
 (defmulti loaded-libs :dialect)
 
-(defmethod loaded-libs :default
+(defmethod loaded-libs :clj
   [message]
   (let [libs (eduction
                (map lookup/ns-meta)
                (map lookup/prep-meta)
                (filter :file)
                (remove (comp #{"NO_SOURCE_PATH"} :file))
-               (core/loaded-libs))]
+               #?(:bb [] :clj (core/loaded-libs)))]
     (respond-to message {:results libs})))
+
+(defmethod loaded-libs :bb [_])
 
 (defmethod handle :loaded-libs
   [message]

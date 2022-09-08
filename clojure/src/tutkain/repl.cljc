@@ -14,7 +14,7 @@
 
 (def ^:dynamic ^:experimental *caught*
   "A function you can use as the :caught arg of clojure.main/repl."
-  main/repl-caught)
+  #?(:bb pr-str :clj main/repl-caught))
 
 (defn ^:private read-in-context
   "Given a tutkain.backchannel.Backchannel and a LineNumberingPushbackReader,
@@ -33,7 +33,8 @@
   ;; form.
   (let [eval-context (backchannel/eval-context backchannel)
         [form string] (with-bindings (not-empty (:thread-bindings eval-context))
-                        (read+string {:eof ::EOF :read-cond :allow} reader))]
+                        #?(:bb (read+string reader false ::EOF)
+                           :clj (read+string {:eof ::EOF :read-cond :allow} reader)))]
     (assoc eval-context :form form :string string)))
 
 (defn ^:private make-debouncer
@@ -54,6 +55,25 @@
   []
   (in-ns 'user)
   (apply require main/repl-requires))
+
+;; Vendored in from clojure.main -- Babashka doesn't have this.
+(defn ^:private skip-whitespace
+  "Skips whitespace characters on stream s. Returns :line-start, :stream-end,
+  or :body to indicate the relative location of the next character on s.
+  Interprets comma as whitespace and semicolon as comment to end of line.
+  Does not interpret #! as comment to end of line because only one
+  character of lookahead is available. The stream must either be an
+  instance of LineNumberingPushbackReader or duplicate its behavior of both
+  supporting .unread and collapsing all of CR, LF, and CRLF to a single
+  \\newline."
+  [s]
+  (loop [c (.read s)]
+    (cond
+     (= c (int \newline)) :line-start
+     (= c -1) :stream-end
+     (= c (int \;)) (do (.readLine s) :line-start)
+     (or (Character/isWhitespace (char c)) (= c (int \,))) (recur (.read s))
+     :else (do (.unread s c) :body))))
 
 (defn repl
   "Tutkain's main read-eval-print loop.
@@ -83,6 +103,7 @@
        ((requiring-resolve (or init `default-init)))
        (let [backchannel (backchannel/open
                            (assoc opts
+                             :bindings (get-thread-bindings)
                              :xform-in #(assoc % :eval-lock eval-lock :in in :repl-thread repl-thread)
                              :xform-out #(dissoc % :in)))
              ;; Prevent stdout/stderr from interleaving with eval results by
@@ -109,7 +130,7 @@
                          ;; For (read-line) support. See also:
                          ;;
                          ;; https://clojure.atlassian.net/browse/CLJ-2692
-                         _ (main/skip-whitespace in)
+                         _ (skip-whitespace in)
                          backchannel-response? (#{:inline :clipboard} (:output response))]
                      (with-bindings thread-bindings
                        (when-not (identical? form ::EOF)
@@ -134,7 +155,7 @@
                              (backchannel/send-to-client backchannel
                                (merge response {:tag :err
                                                 :val (format/Throwable->str ex)
-                                                :ns (str (.name *ns*))
+                                                :ns (str *ns*)
                                                 :form string}))
                              (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                              true)))))
@@ -143,7 +164,7 @@
                      (backchannel/send-to-client backchannel
                        {:tag :ret
                         :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
-                        :ns (str (.name *ns*))
+                        :ns (str *ns*)
                         :exception true})
                      (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                      true))

@@ -33,6 +33,7 @@ class TestBabashkaClient(PackageTestCase):
         self.client.printq.get(timeout=1)
 
         self.addClassCleanup(repl.stop, self.window)
+        self.addClassCleanup(self.server.backchannel.stop)
         self.addClassCleanup(self.server.stop)
 
     def setUp(self):
@@ -43,6 +44,7 @@ class TestBabashkaClient(PackageTestCase):
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.assertEquals(input("(range 10)\n"), self.get_print())
+        self.eval_context(column=10)
         self.assertEquals("(range 10)\n", self.server.recv())
         self.server.send("(0 1 2 3 4 5 6 7 8 9)")
         self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())

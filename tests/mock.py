@@ -188,3 +188,45 @@ class BabashkaServer(PlainServer):
         self.buffer.flush()
         self.buffer.write("user=> ")
         self.buffer.flush()
+
+    def handshake(self):
+        # Client starts clojure.main/repl
+        self.recv()
+
+        # Client switches into the bootstrap namespace
+        self.recv()
+        self.send("nil")
+
+        # Client defines load-base64 function
+        self.recv()
+        self.send("#'tutkain.bootstrap/load-base64")
+
+        # Client loads modules
+        self.recv()
+        self.send("#'tutkain.format/pp-str")
+        self.recv()
+        self.send("#'tutkain.backchannel/open")
+        self.recv()
+        self.send("""#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]""")
+        self.recv()
+        self.send("#'tutkain.repl/repl")
+
+        # Client starts REPL
+        self.recv()
+
+        backchannel = Backchannel().start()
+        self.send(f"""{{:greeting "Clojure 1.11.1-SCI\\n", :host "localhost", :port {backchannel.port}}}""")
+        # Client connects to backchannel
+        self.backchannel = backchannel.connection.result(timeout=5)
+
+        # Client loads modules
+        for _ in range(6):
+            module = edn.read(backchannel.recv())
+
+            backchannel.send(edn.kwmap({
+                "id": module.get(edn.Keyword("id")),
+                "result": edn.Keyword("ok"),
+                "filename": module.get(edn.Keyword("filename"))
+            }))
+
+        return self.backchannel

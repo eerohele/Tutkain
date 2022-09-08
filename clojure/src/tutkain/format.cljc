@@ -1,12 +1,14 @@
 (ns tutkain.format
   (:require
    [clojure.main :as main]
+   [clojure.repl :as repl]
    [clojure.pprint :as pprint]))
 
 (defn Throwable->str
   "Print a java.lang.Throwable into a string."
   [t]
-  (-> t Throwable->map main/ex-triage main/ex-str))
+  #?(:bb (with-out-str (repl/pst t))
+     :clj (-> t Throwable->map main/ex-triage main/ex-str)))
 
 (defn pp-str
   [x]
