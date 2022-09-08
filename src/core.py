@@ -1209,7 +1209,8 @@ class TutkainShowUnsuccessfulTestsCommand(TextCommand):
 class TutkainChooseEvaluationDialectCommand(WindowCommand):
     dialects = [
         ["clj", "Clojure"],
-        ["cljs", "ClojureScript"]
+        ["cljs", "ClojureScript"],
+        ["bb", "Babashka"]
     ]
 
     def finish(self, index):
