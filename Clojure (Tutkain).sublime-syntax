@@ -316,6 +316,8 @@ contexts:
         - include: list-end-3
         - include: comment
         - include: metadata
+        - include: map
+        - include: reader-conditional
         - include: string
         - match: '\('
           scope: punctuation.section.parens.begin.edn

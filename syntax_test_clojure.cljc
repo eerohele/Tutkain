@@ -2891,6 +2891,17 @@
  ;                  ^^^^^^^^ constant.other.keyword.unqualified.edn
  ;   ^ punctuation.definition.keyword.clojure
 
+  (ns foo.bar {:no-doc true} (:require [baz.quux :as qux]))
+;             ^ meta.sexp.map.edn punctuation.section.braces.begin.edn
+;              ^^^^^^^ constant.other.keyword.unqualified.edn
+;                            ^ punctuation.section.parens.begin.edn
+;                             ^ constant.other.keyword.unqualified.clojure punctuation.definition.keyword.clojure
+
+(ns foo.bar #?(:clj (:require [baz.quux :as qux]) :bb (:require [baz2.quux2 :as qux2])))
+;           ^^ keyword.operator.macro
+;             ^ punctuation.section.parens.begin.edn
+;              ^ constant.other.keyword.unqualified.edn punctuation.definition.keyword.edn
+
 
 ; # in-ns
 
