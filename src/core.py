@@ -601,7 +601,8 @@ class TutkainDisconnectCommand(WindowCommand):
 class TutkainNewScratchViewCommand(WindowCommand):
     syntaxes = {
         "Clojure": "Packages/Tutkain/Clojure (Tutkain).sublime-syntax",
-        "ClojureScript": "Packages/Tutkain/ClojureScript (Tutkain).sublime-syntax"
+        "ClojureScript": "Packages/Tutkain/ClojureScript (Tutkain).sublime-syntax",
+        "Babashka": "Packages/Tutkain/Babashka (Tutkain).sublime-syntax",
     }
 
     def finish(self, view, index):
