@@ -551,3 +551,39 @@ class TestIndentRegionCommand(ViewTestCase):
           :d :e}
          {:f :g}]""")
 
+
+    def test_reindent(self):
+        self.assertEquals("(inc 1)", indent.reindent("(inc 1)", 0))
+        self.assertEquals(
+"""(inc
+     1)""", indent.reindent(
+"""(inc
+     1)"""
+, 0))
+
+        self.assertEquals(
+"""(inc
+ 1)""", indent.reindent(
+"""(inc
+ 1)"""
+, 0))
+
+        self.assertEquals(
+"""(inc
+     1)""", indent.reindent(
+"""  (inc
+       1)"""
+, 2))
+
+        self.assertEquals(
+"""(inc
+  1)""", indent.reindent(
+"""  (inc
+    1)"""
+, 2))
+        self.assertEquals(
+"""(identity
+{:a 1 :b 2})""", indent.reindent(
+"""    (identity
+{:a 1 :b 2})"""
+, 4))

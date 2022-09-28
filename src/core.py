@@ -109,30 +109,13 @@ def plugin_unloaded():
     preferences.clear_on_change("Tutkain")
 
 
-def reindent(code, column):
-    # TODO: Clean this up
-    lines = code.splitlines()
-    new_lines = []
-
-    for line in lines[1:]:
-        chars = []
-
-        for index, char in enumerate(line):
-            if not str.isspace(char) or index >= column:
-                chars.append(char)
-
-        new_lines.append("".join(chars))
-
-    return (lines[0] + "\n" + "\n".join(new_lines)).strip()
-
-
 def evaluate(view, client, code, point=0, options={}):
     line, column = view.rowcol(point)
     options["line"] = line
     options["column"] = column
 
     # Don't try evaluating empty string
-    if code := reindent(code, column):
+    if code := indent.reindent(code, column):
         client.evaluate(code, options)
 
 
@@ -404,7 +387,7 @@ class TutkainEvaluateCommand(TextCommand):
             if scope == "mark" and (mark := self.view.window().settings().get("tutkain_mark")):
                 options = {**options, **mark["options"]}
 
-                if code := reindent(mark["code"], options.get("column", 1)):
+                if code := indent.reindent(mark["code"], options.get("column", 1)):
                     client.evaluate(code, options)
 
             elif scope == "input":

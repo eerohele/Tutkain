@@ -151,3 +151,26 @@ def indent_region(view, edit, region, prune=False):
                 view.replace(edit, replacee, replacer)
                 new_lines.append(view.full_line(replacee.begin()))
                 restore_cursors(view)
+
+
+def reindent(code, column):
+    # TODO: Clean this up
+    lines = code.splitlines()
+    new_lines = []
+
+    for line in lines[1:]:
+        chars = []
+        seen_significant_char = False
+
+        for index, char in enumerate(line):
+            if char != " ":
+                seen_significant_char = True
+
+            if not seen_significant_char and index < column:
+                pass
+            else:
+                chars.append(char)
+
+        new_lines.append("".join(chars))
+
+    return (lines[0] + "\n" + "\n".join(new_lines)).strip()
