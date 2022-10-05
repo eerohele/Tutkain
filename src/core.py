@@ -495,6 +495,7 @@ class EvaluationScopeInputHandler(ListInputHandler):
             sublime.ListInputItem("Innermost S-expression", "innermost", details="The innermost S-expression with respect to the caret position."),
             sublime.ListInputItem("Outermost S-expression", "outermost", details="The outermost S-expression with respect to the caret position.", annotation="ignores (comment)"),
             sublime.ListInputItem("Up to Point", "up_to_point", details="Up to the caret position within the innermost S-expression."),
+            sublime.ListInputItem("Mark", "mark", details="The form marked via Tutkain: Mark."),
             sublime.ListInputItem("Active View", "view", details="The entire contents of the currently active view."),
             sublime.ListInputItem("Input", "input", details="Tutkain prompts you for input to evaluate."),
             sublime.ListInputItem("Namespace Declarations", "ns", details="Every namespace declaration (<code>ns</code> form) in the active view."),
