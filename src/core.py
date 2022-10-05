@@ -834,10 +834,12 @@ class TutkainExpandSelectionImplCommand(TextCommand):
             self.view.sel().add(innermost.extent())
         elif not region.empty() and not self.view.match_selector(region.begin(), sexp.BEGIN_SELECTORS) and not self.view.match_selector(region.end() - 1, sexp.END_SELECTORS):
             if innermost := sexp.innermost(self.view, region.begin(), edge=False):
-                self.view.sel().add(sublime.Region(innermost.open.region.end(), innermost.close.region.begin()))
+                if innermost.open and innermost.close:
+                    self.view.sel().add(sublime.Region(innermost.open.region.end(), innermost.close.region.begin()))
         elif self.view.match_selector(region.begin(), "meta.tagged-element") and self.view.match_selector(region.end() - 1, "meta.tagged-element") and not self.view.match_selector(region.begin() - 1, "meta.tagged-element") and not self.view.match_selector(region.end(), "meta.tagged-element"):
             if innermost := sexp.innermost(self.view, region.begin(), edge=False):
-                self.view.sel().add(sublime.Region(innermost.open.region.end(), innermost.close.region.begin()))
+                if innermost.open and innermost.close:
+                    self.view.sel().add(sublime.Region(innermost.open.region.end(), innermost.close.region.begin()))
         elif innermost := sexp.innermost(self.view, region.begin(), edge=False):
             self.view.sel().add(innermost.extent())
         else:
