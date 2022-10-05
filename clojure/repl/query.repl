@@ -152,3 +152,30 @@
    :sym 'foo})
 
 (xr/check! false? (contains? (ns-aliases *ns*) 'foo))
+
+;; all-namespaces
+
+(->
+  {:op :all-namespaces
+   :dialect :clj}
+  send-op
+  :results)
+
+(xr/check! (spec/coll-of ::specs/ns-info :min-count 1))
+
+;; :remove-namespace
+
+;; Removing a namespace that does not exist does not throw
+(send-op
+  {:op :remove-namespace
+   :dialect :clj
+   :ns 'foobar})
+
+(create-ns 'foobar)
+
+(send-op
+  {:op :remove-namespace
+   :dialect :clj
+   :ns 'foobar})
+
+(xr/check! false? (contains? (set (map ns-name (all-ns))) 'foobar))

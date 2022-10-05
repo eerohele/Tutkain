@@ -123,4 +123,8 @@
         "caption": "Tutkain: Remove Namespace Alias",
         "command": "tutkain_remove_namespace_alias"
     },
+    {
+        "caption": "Tutkain: Remove Namespace",
+        "command": "tutkain_remove_namespace"
+    },
 ]

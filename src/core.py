@@ -1596,3 +1596,36 @@ class TutkainRemoveNamespaceAliasCommand(TextCommand):
             }, lambda response: self.handler(client, dialect, response))
         else:
             self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
+
+
+class TutkainRemoveNamespaceCommand(TextCommand):
+    def remove(self, client, dialect, results, index):
+        if index != -1 and (item := results[index]):
+            client.backchannel.send({
+                "op": edn.Keyword("remove-namespace"),
+                "ns": item[edn.Keyword("name")],
+                "dialect": dialect
+            }, lambda response: self.view.window().status_message(f"""Namespace {response.get(edn.Keyword('ns'))} removed."""))
+
+
+    def handler(self, client, dialect, response):
+        results = response.get(edn.Keyword("results"), [])
+        items = query.to_quick_panel_items(completions.KINDS, results)
+
+        self.view.window().show_quick_panel(
+            items,
+            lambda index: self.remove(client, dialect, results, index)
+        )
+
+    def run(self, _):
+        window = self.view.window()
+        dialect = dialects.for_view(self.view) or edn.Keyword("clj")
+
+        if client := state.get_client(window, dialect):
+            client.backchannel.send({
+                "op": edn.Keyword("all-namespaces"),
+                "ns": namespace.name(self.view),
+                "dialect": dialect
+            }, lambda response: self.handler(client, dialect, response))
+        else:
+            self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")

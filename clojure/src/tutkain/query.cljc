@@ -127,3 +127,31 @@
 (defmethod handle :remove-namespace-alias
   [message]
   (remove-namespace-alias message))
+
+(defmulti all-namespaces :dialect)
+
+(defmethod all-namespaces :clj
+  [message]
+  (let [ns-metas (sort-by :name
+                   (keep (fn [ns]
+                           (-> ns ns-name lookup/ns-meta lookup/prep-meta))
+                     (all-ns)))]
+    (respond-to message {:results ns-metas})))
+
+(defmethod handle :all-namespaces
+  [message]
+  (all-namespaces message))
+
+(defmulti remove-namespace :dialect)
+
+(defmethod remove-namespace :clj
+  [{:keys [ns] :as message}]
+  (try
+    (some-> ns remove-ns)
+    (respond-to message {:result :ok :ns ns})
+    (catch Exception _
+      (respond-to message {:result :nok}))))
+
+(defmethod handle :remove-namespace
+  [message]
+  (remove-namespace message))
