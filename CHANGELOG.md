@@ -2,6 +2,68 @@
 
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Improved Babashka support
+
+  NOTE: Requires Babashka v0.9.163 or newer.
+
+  Tutkain now supports auto-completion, var metadata lookup, clojure.test integration, **Tutkain: Apropos**, etc. when connected to a Babashka socket REPL server.
+
+- Add support for `up_to_point` scope of `tutkain_evaluate` command
+
+  Example key binding:
+
+  ```json
+  {
+    "keys": ["ctrl+c", "ctrl+."],
+    "command": "tutkain_evaluate",
+    "args": {"scope": "up_to_point"},
+    "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+  },
+  ```
+
+  `up_to_point` is useful when you want to evaluate a form whose head is `->` or `->>` up to a certain point.
+
+  For example, given that the pipe character (`|`) represents the caret, and given:
+
+  ```clojure
+  (-> 1 inc| dec)
+  ```
+
+  If you run `tutkain_evaluate` with `up_to_point` scope, Tutkain evaluates `(-> 1 inc)` instead of the entire form.
+
+  If your caret is not inside an S-expression, `up_to_point` evaluates every top-level form up to that point. For example, given:
+
+  ```clojure
+  (inc 1)
+  (inc 2)|
+  (inc 3)
+  ```
+
+  If you run `tutkain_evaluate` with `up_to_point` scope, Tutkain evaluates `(inc 1)` and `(inc 2)`. This can be useful when you want to evaluate every top-level form in the namespace up to a certain point
+
+- Add **Tutkain: Mark Form** and `mark` scope of `tutkain_evaluate`
+
+  To mark a form and (repeatedly) evaluate it later:
+
+  1. Put your caret on top of a form.
+  2. Run **Tutkain: Mark Form**.
+
+  Then, to evaluate the marked form, run **Tutkain: Evaluate** > **Mark** (`tutkain_evaluate` with `"scope": "mark"`).
+
+- Improve keyword and symbol auto-completion support
+- Add **Tutkain: Remove Namespace Mapping**, **Tutkain: Remove Namespace Alias**, and **Tutkain: Remove Namespace**
+
+  These offer a simple UI over `ns-unmap`, `ns-unalias`, and `remove-ns` respectively.
+
+- Allow running **Tutkain: Apropos** when the current view has a non-Clojure syntax
+- Fix showing ClojureDocs examples in unloaded namespace #94
+- Implement ParEdit Split/Join Sexp #9
+- Implement ParEdit Recenter on Sexp #9
+- Fix bug when evaluating a multiline form where subsequent lines are dedented relative to the first line
+
+
 ## 0.16.0 (alpha) - 2022-08-08
 
 - Add `init` argument to `tutkain_connect`
