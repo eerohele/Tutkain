@@ -352,7 +352,7 @@ class TutkainEvaluateCommand(TextCommand):
         pass
 
     def run(self, edit, scope="outermost", code="", ns=None, ignore={"comment"}, snippet=None, inline_result=False, output="view", dialect=None):
-        assert scope in {"input", "form", "ns", "innermost", "outermost", "view"}
+        assert scope in {"input", "form", "ns", "innermost", "outermost", "view", "up_to_point"}
         assert output in {"view", "clipboard"}
 
         point = self.view.sel()[0].begin()
@@ -384,6 +384,16 @@ class TutkainEvaluateCommand(TextCommand):
 
                 if code := indent.reindent(mark["code"], options.get("column", 1)):
                     client.evaluate(code, options)
+
+            elif scope == "up_to_point":
+                for region in self.view.sel():
+                    if innermost := sexp.innermost(self.view, region.end(), edge=False):
+                        region_up_to_point = sublime.Region(innermost.open.region.begin(), region.end())
+                        code = self.view.substr(region_up_to_point) + self.view.substr(innermost.close.region)
+                        evaluate(self.view, client, code, region.end(), options=options)
+                    else:
+                        code = self.view.substr(sublime.Region(0, region.end()))
+                        evaluate(self.view, client, code, region.end(), options=options)
 
             elif scope == "input":
                 def evaluate_input(client, code):
@@ -484,6 +494,7 @@ class EvaluationScopeInputHandler(ListInputHandler):
             sublime.ListInputItem("Adjacent Form", "form", details="The form (not necessarily S-expression) adjacent to the caret."),
             sublime.ListInputItem("Innermost S-expression", "innermost", details="The innermost S-expression with respect to the caret position."),
             sublime.ListInputItem("Outermost S-expression", "outermost", details="The outermost S-expression with respect to the caret position.", annotation="ignores (comment)"),
+            sublime.ListInputItem("Up to Point", "up_to_point", details="Up to the caret position within the innermost S-expression."),
             sublime.ListInputItem("Active View", "view", details="The entire contents of the currently active view."),
             sublime.ListInputItem("Input", "input", details="Tutkain prompts you for input to evaluate."),
             sublime.ListInputItem("Namespace Declarations", "ns", details="Every namespace declaration (<code>ns</code> form) in the active view."),
