@@ -225,6 +225,24 @@
         "args": {"code": "((requiring-resolve 'clojure.repl/pst) *e)"}
     },
 
+    // Evaluate a form up to the point where your caret currently is.
+    //
+    // Useful when you want to evaluate a form whose head is a threading macro
+    // (e.g. ->) only up to a certain point.
+    //
+    // For example, given (-> 1 inc dec), you can position your caret so that
+    // it immediately follows inc, then evaluate up to that point. Tutkain will
+    // evaluate (-> 1 inc) instead of (-> 1 inc dec).
+    //
+    // If your caret is not inside an S-expression, up_to_point evaluates
+    // every top-level form up to that point.
+    {
+        "keys": ["ctrl+c", "ctrl+."],
+        "command": "tutkain_evaluate",
+        "args": {"scope": "up_to_point"},
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
+    },
+
     // Clear the currently active REPL view.
     {
         "keys": ["ctrl+c", "ctrl+z"],
@@ -511,6 +529,14 @@
     {
         "keys": ["ctrl+c", "ctrl+0"],
         "command": "tutkain_explore_stack_trace"
+    },
+
+    // Mark a form to (repeatedly) evaluate it later via Tutkain: Evaluate >
+    // Mark.
+    {
+        "keys": ["ctrl+w", "ctrl+a"],
+        "command": "tutkain_mark_form",
+        "context": [{"key": "selector", "operator": "equal", "operand": "source.clojure"}]
     },
 
     // Paredit commands
