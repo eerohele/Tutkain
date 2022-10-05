@@ -1304,7 +1304,7 @@ class TutkainAproposCommand(WindowCommand):
         }, handler=lambda response: query.handle_response(self.window, completions.KINDS, response))
 
     def run(self, pattern=None):
-        dialect = dialects.for_view(self.window.active_view())
+        dialect = dialects.for_view(self.window.active_view()) or edn.Keyword("clj")
 
         if client := state.get_client(self.window, dialect):
             if pattern is None:
