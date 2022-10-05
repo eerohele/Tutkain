@@ -113,7 +113,7 @@ class PackageTestCase(DeferrableTestCase):
 
         self.executor.shutdown(wait=False)
 
-    def setUp(self, syntax="Clojure (Tutkain).sublime-syntax"):
+    def setUp(self, syntax="Packages/Tutkain/Clojure (Tutkain).sublime-syntax"):
         self.view = self.window.new_file()
         self.view.set_name("tutkain.clj")
         self.view.set_scratch(True)

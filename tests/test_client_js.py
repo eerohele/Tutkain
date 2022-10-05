@@ -37,7 +37,7 @@ class TestJSClient(PackageTestCase):
         self.addClassCleanup(self.server.stop)
 
     def setUp(self):
-        super().setUp(syntax="ClojureScript (Tutkain).sublime-syntax")
+        super().setUp(syntax="Packages/Tutkain/ClojureScript (Tutkain).sublime-syntax")
 
     def test_innermost(self):
         self.set_view_content("(map inc (range 10))")

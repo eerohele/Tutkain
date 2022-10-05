@@ -37,7 +37,7 @@ class TestBabashkaClient(PackageTestCase):
         self.addClassCleanup(self.server.stop)
 
     def setUp(self):
-        super().setUp(syntax="Babashka (Tutkain).sublime-syntax")
+        super().setUp(syntax="Packages/Tutkain/Babashka (Tutkain).sublime-syntax")
 
     def test_innermost(self):
         self.set_view_content("(map inc (range 10))")
