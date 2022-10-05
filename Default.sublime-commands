@@ -119,4 +119,8 @@
         "caption": "Tutkain: Remove Namespace Mapping",
         "command": "tutkain_remove_namespace_mapping"
     },
+    {
+        "caption": "Tutkain: Remove Namespace Alias",
+        "command": "tutkain_remove_namespace_alias"
+    },
 ]

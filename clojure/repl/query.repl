@@ -112,3 +112,43 @@
    :sym 'x})
 
 (xr/check! false? (contains? (ns-publics *ns*) 'x))
+
+;; alias-mappings
+
+(->
+  {:op :alias-mappings
+   :dialect :clj
+   :ns 'does.not.exist}
+  send-op
+  :results)
+
+(xr/check! nil?)
+
+(->
+  {:op :alias-mappings
+   :dialect :clj
+   :ns (ns-name *ns*)}
+  send-op
+  :results
+  set)
+
+(xr/check! (partial set/subset? #{{:type :namespace :doc "cognitect.transcriptor" :name 'xr}}))
+
+;; :remove-namespace-alias
+
+;; Removing an alias that does not exist does not throw
+(send-op
+  {:op :remove-namespace-alias
+   :dialect :clj
+   :ns (ns-name *ns*)
+   :sym 'foo})
+
+(alias 'foo (ns-name *ns*))
+
+(send-op
+  {:op :remove-namespace-alias
+   :dialect :clj
+   :ns (ns-name *ns*)
+   :sym 'foo})
+
+(xr/check! false? (contains? (ns-aliases *ns*) 'foo))

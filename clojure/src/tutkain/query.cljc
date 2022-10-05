@@ -98,3 +98,32 @@
 (defmethod handle :remove-namespace-mapping
   [message]
   (remove-namespace-mapping message))
+
+(defmulti alias-mappings :dialect)
+
+(defmethod alias-mappings :clj
+  [{:keys [ns] :as message}]
+  (when-some [ns (some-> ns find-ns)]
+    (let [aliases (map (fn [[alias ns]] {:type :namespace
+                                         :doc (-> ns ns-name str)
+                                         :name alias})
+                    (ns-aliases ns))]
+      (respond-to message {:results aliases}))))
+
+(defmethod handle :alias-mappings
+  [message]
+  (alias-mappings message))
+
+(defmulti remove-namespace-alias :dialect)
+
+(defmethod remove-namespace-alias :clj
+  [{:keys [ns sym] :as message}]
+  (try
+    (ns-unalias (some-> ns find-ns) sym)
+    (respond-to message {:result :ok :ns ns :sym sym})
+    (catch Exception _
+      (respond-to message {:result :nok}))))
+
+(defmethod handle :remove-namespace-alias
+  [message]
+  (remove-namespace-alias message))
