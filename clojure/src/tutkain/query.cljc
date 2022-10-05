@@ -68,3 +68,33 @@
 (defmethod handle :loaded-libs
   [message]
   (loaded-libs message))
+
+(defmulti intern-mappings :dialect)
+
+(defmethod intern-mappings :clj
+  [{:keys [ns] :as message}]
+  (when-some [ns (some-> ns find-ns)]
+    (let [interns (eduction
+                    (map val)
+                    (map meta-with-type)
+                    (map lookup/prep-meta)
+                    (ns-interns ns))]
+      (respond-to message {:results interns}))))
+
+(defmethod handle :intern-mappings
+  [message]
+  (intern-mappings message))
+
+(defmulti remove-namespace-mapping :dialect)
+
+(defmethod remove-namespace-mapping :clj
+  [{:keys [ns sym] :as message}]
+  (try
+    (ns-unmap (some-> ns find-ns) sym)
+    (respond-to message {:result :ok :ns ns :sym sym})
+    (catch Exception _
+      (respond-to message {:result :nok}))))
+
+(defmethod handle :remove-namespace-mapping
+  [message]
+  (remove-namespace-mapping message))

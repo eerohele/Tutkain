@@ -12,9 +12,8 @@ def goto(window, view, items, index):
         info.goto(window, info.parse_location(item))
 
 
-def handle_response(window, kinds, response):
+def to_quick_panel_items(kinds, results, symbol=None):
     items = []
-    results = response.get(edn.Keyword("results"), [])
 
     for result in results:
         symbol = result.get(edn.Keyword("name"))
@@ -38,11 +37,21 @@ def handle_response(window, kinds, response):
             kind = kinds.get(type.name, sublime.KIND_AMBIGUOUS)
 
             if type == edn.Keyword("namespace"):
-                items.append(sublime.QuickPanelItem(name, kind=kind))
+                items.append(sublime.QuickPanelItem(name, details=docstring, kind=kind))
             else:
                 items.append(
                     sublime.QuickPanelItem(name, details=docstring, annotation=arglists, kind=kind)
                 )
+
+    return items
+
+
+def handle_response(window, kinds, response):
+    results = response.get(edn.Keyword("results"), [])
+
+    items = to_quick_panel_items(kinds, results)
+
+    active_view = window.active_view()
 
     if symbol := response.get(edn.Keyword("symbol")):
         names = list(map(lambda v: v.get(edn.Keyword("name")), results))
@@ -53,8 +62,6 @@ def handle_response(window, kinds, response):
             selected_index = 0
     else:
         selected_index = -1
-
-    active_view = window.active_view()
 
     window.show_quick_panel(
         items,

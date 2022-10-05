@@ -115,4 +115,8 @@
         "caption": "Tutkain: Mark Form",
         "command": "tutkain_mark_form"
     },
+    {
+        "caption": "Tutkain: Remove Namespace Mapping",
+        "command": "tutkain_remove_namespace_mapping"
+    },
 ]

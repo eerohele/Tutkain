@@ -1,11 +1,8 @@
 (ns repl.query
   (:require
-   [clojure.edn :as edn]
+   [clojure.set :as set]
    [clojure.spec.alpha :as spec]
-   [clojure.string :as string]
    [cognitect.transcriptor :as xr]
-   [clojure.test.check.generators :as gen]
-   [tutkain.backchannel :as backchannel]
    [tutkain.backchannel.test :refer [send-op]]
    [tutkain.lookup.specs :as specs]
    [tutkain.query]))
@@ -76,3 +73,42 @@
   :results)
 
 (xr/check! (spec/coll-of ::lib-results :min-count 1))
+
+;; intern-mappings
+
+(->
+  {:op :intern-mappings
+   :dialect :clj
+   :ns 'does.not.exist}
+  send-op
+  :results)
+
+(xr/check! nil?)
+
+(->
+  {:op :intern-mappings
+   :dialect :clj
+   :ns 'clojure.set}
+  send-op
+  :results)
+
+(xr/check! (spec/coll-of ::specs/info :min-count 1))
+
+;; :remove-namespace-mapping
+
+;; Removing a mapping that does not exist does not throw
+(send-op
+  {:op :remove-namespace-mapping
+   :dialect :clj
+   :ns (ns-name *ns*)
+   :sym 'x})
+
+(def x 1)
+
+(send-op
+  {:op :remove-namespace-mapping
+   :dialect :clj
+   :ns (ns-name *ns*)
+   :sym 'x})
+
+(xr/check! false? (contains? (ns-publics *ns*) 'x))
