@@ -1,0 +1,37 @@
+┌──────────────╼═══════════════════════════════════════════════╾──────────────┐
+╽       ___       ___       ___       ___       ___       ___       ___       ╽
+║      /\  \     /\__\     /\  \     /\__\     /\  \     /\  \     /\__\      ║
+║      \:\  \   /:/ _/_    \:\  \   /:/ _/_   /::\  \   _\:\  \   /:| _|_     ║
+║      /::\__\ /:/_/\__\   /::\__\ /::-"\__\ /::\:\__\ /\/::\__\ /::|/\__\    ║
+║     /:/\/__/ \:\/:/  /  /:/\/__/ \;:;-",-" \/\::/  / \::/\/__/ \/|::/  /    ║
+║     \/__/     \::/  /   \/__/     |:|  |     /:/  /   \:\__\     |:/  /     ║
+║                \/__/               \|__|     \/__/     \/__/     \/__/      ║
+╿                                                                             ╿
+└───────────────────┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄──────────────────┘
+
+Hey there! Tutkain has been updated.
+
+IMPORTANT: If you're a Babashka user, either:
+
+- Update Babashka to v0.9.163 or newer to use the improved Babashka support in
+  this version of Tutkain.
+- Disable the backchannel when connecting to a Babashka runtime:
+
+    {
+        "keys": ["ctrl+c", "ctrl+x"],
+        "command": "tutkain_connect",
+        "args": { "dialect": "bb", "backchannel": false }
+    }
+
+In addition, as usual, you might want to restart both your REPL server and
+Sublime Text to make sure Tutkain keeps working correctly.
+
+To see the changes in this version, see:
+
+  https://github.com/eerohele/Tutkain/blob/master/CHANGELOG.md
+
+If you encounter any problems, please file an issue on GitHub:
+
+  https://github.com/eerohele/Tutkain/issues
+
+Thanks!
