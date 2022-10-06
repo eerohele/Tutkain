@@ -392,7 +392,11 @@ class TutkainEvaluateCommand(TextCommand):
                         code = self.view.substr(region_up_to_point) + self.view.substr(innermost.close.region)
                         evaluate(self.view, client, code, region.end(), options=options)
                     else:
-                        code = self.view.substr(sublime.Region(0, region.end()))
+                        # Stop at the first point that has a non-Clojure scope
+                        # (presumably when within a Markdown code block), or
+                        # at 0 if not found.
+                        begin = max((selectors.find(self.view, region.begin(), "-source.clojure", forward=False) or 0) + 1, 0)
+                        code = self.view.substr(sublime.Region(begin, region.end()))
                         evaluate(self.view, client, code, region.end(), options=options)
 
             elif scope == "input":

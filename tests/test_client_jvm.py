@@ -155,6 +155,19 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals(ret("1\n"), self.get_print())
         self.assertEquals(ret("2\n"), self.get_print())
 
+        self.view.assign_syntax("Markdown.sublime-syntax")
+        self.set_view_content("""```clojure
+1
+2
+```""")
+        self.set_selections((12, 12))
+        self.view.run_command("tutkain_evaluate", {"scope": "up_to_point"})
+        self.assertEquals(input("1\n"), self.get_print())
+        self.eval_context(line=2, column=2)
+        self.assertEquals("1\n", self.server.recv())
+        self.server.send("1")
+        self.assertEquals(ret("1\n"), self.get_print())
+
     #@unittest.SkipTest
     def test_empty_string(self):
         self.set_view_content(" ")
