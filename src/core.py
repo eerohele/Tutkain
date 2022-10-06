@@ -1634,3 +1634,24 @@ class TutkainRemoveNamespaceCommand(TextCommand):
             }, lambda response: self.handler(client, dialect, response))
         else:
             self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
+
+
+class TutkainTutorialCommand(WindowCommand):
+    def run(self):
+        path = os.path.join(
+            sublime.packages_path(),
+            "Tutkain", "tutorial.md"
+        )
+
+        with open(path, "r") as file:
+            view = self.window.new_file()
+            view.set_name("tutorial.md")
+            view.set_scratch(True)
+
+            view.run_command("append", {
+                "characters": file.read()
+            })
+
+            view.assign_syntax("Markdown.sublime-syntax")
+            view.set_read_only(True)
+            self.window.focus_view(view)

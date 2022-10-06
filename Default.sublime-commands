@@ -1,5 +1,9 @@
 [
     {
+        "caption": "Tutkain: Tutorial",
+        "command": "tutkain_tutorial"
+    },
+    {
         "caption": "Tutkain: Edit Key Bindings",
         "command": "edit_settings",
         "args": {
