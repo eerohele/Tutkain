@@ -791,6 +791,12 @@ class TutkainEventListener(EventListener):
     def on_pre_close_project(self, window):
         repl.stop(window)
 
+    def on_post_text_command(self, view, command_name, _):
+        if view.settings().has("tutkain_repl_client_id"):
+            if command_name == "copy":
+                text = str(sublime.get_clipboard()).replace("\u2063", "")
+                sublime.set_clipboard(text)
+
 
 class TutkainExpandSelectionImplCommand(TextCommand):
     """Internal, do not use. Use the tutkain_expand_selection window command
