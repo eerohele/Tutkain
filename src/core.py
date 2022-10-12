@@ -1335,20 +1335,44 @@ class TutkainAproposCommand(WindowCommand):
 
 
 class TutkainDirCommand(TextCommand):
+    def send_request(self, client, symbol):
+        client.backchannel.send({
+            "op": edn.Keyword("dir"),
+            "ns": namespace.name(self.view),
+            "sym": symbol
+        }, lambda response: query.handle_response(self.view.window(), completions.KINDS, response))
+
+    def choose(self, client, results, index):
+        if index != -1 and (item := results[index]):
+            self.send_request(client, item[edn.Keyword("name")])
+
+
+    def show_namespaces(self, client, response):
+        results = response.get(edn.Keyword("results"), [])
+        items = query.to_quick_panel_items(completions.KINDS, results)
+
+        self.view.window().show_quick_panel(
+            items,
+            lambda index: self.choose(client, results, index)
+        )
+
     def run(self, _):
         window = self.view.window()
-        dialect = dialects.for_view(self.view)
+        dialect = dialects.for_view(self.view) or edn.Keyword("clj")
 
         if client := state.get_client(window, dialect):
             if sel := self.view.sel():
                 point = sel[0].begin()
 
-                if symbol := selectors.expand_by_selector(self.view, point, "meta.symbol"):
+                if self.view.match_selector(point, "meta.symbol") and (symbol := selectors.expand_by_selector(self.view, point, "meta.symbol")):
+                    self.send_request(client, self.view.substr(symbol))
+                else:
                     client.backchannel.send({
-                        "op": edn.Keyword("dir"),
+                        "op": edn.Keyword("all-namespaces"),
                         "ns": namespace.name(self.view),
-                        "sym": self.view.substr(symbol)
-                    }, lambda response: query.handle_response(window, completions.KINDS, response))
+                        "dialect": dialect
+                    }, lambda response: self.show_namespaces(client, response))
+
         else:
             self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
 
