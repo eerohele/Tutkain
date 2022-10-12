@@ -362,7 +362,9 @@ contexts:
         - meta_content_scope: meta.sexp.content.vector.edn
         - match: '\]'
           scope: punctuation.section.brackets.end.edn
-          pop: 2
+          set:
+            - include: list-end-3
+            - include: main
         - include: main
 
   fn-params-3:
