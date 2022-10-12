@@ -84,7 +84,7 @@ def close_bracket(view, edit, close_bracket):
     for region, sel in iterate(view):
         point = region.begin()
 
-        if selectors.ignore(view, point):
+        if selectors.ignore(view, point) or view.match_selector(point - 1, "punctuation.definition.character.begin"):
             view.insert(edit, point, close_bracket)
         else:
             innermost = sexp.innermost(view, point, edge=False)
