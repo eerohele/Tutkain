@@ -6,9 +6,11 @@ All notable changes to this project will be documented in this file.
 
 - Improved Babashka support
 
-  NOTE: Requires Babashka v0.9.163 or newer.
+  NOTE: Requires Babashka v1.0.164 or newer.
 
   Tutkain now supports auto-completion, var metadata lookup, clojure.test integration, **Tutkain: Apropos**, etc. when connected to a Babashka socket REPL server.
+
+  If you cannot update Babashka to v1.0.164 or newer, pass `"backchannel" : false` when connecting to a Babashka runtime.
 
 - Add support for `up_to_point` scope of `tutkain_evaluate` command
 
@@ -59,9 +61,13 @@ All notable changes to this project will be documented in this file.
 
 - Allow running **Tutkain: Apropos** when the current view has a non-Clojure syntax
 - Fix showing ClojureDocs examples in unloaded namespace #94
+- Use relative path in `:file` meta of vars evaluated from Tutkain (for e.g. `clojure.repl/source-fn` compatibility)
 - Implement ParEdit Split/Join Sexp #9
 - Implement ParEdit Recenter on Sexp #9
+- Prevent ParEdit from interfering with typing `\)`
+- Remove invisible Unicode characters when copying text from the output view
 - Fix bug when evaluating a multiline form where subsequent lines are dedented relative to the first line
+- Fix Tutkain opening too many files when navigating the results of the Apropos and Dir commands
 
 
 ## 0.16.0 (alpha) - 2022-08-08

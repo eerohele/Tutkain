@@ -13,7 +13,7 @@ Hey there! Tutkain has been updated.
 
 IMPORTANT: If you're a Babashka user, either:
 
-- Update Babashka to v0.9.163 or newer to use the improved Babashka support in
+- Update Babashka to v1.0.164 or newer to use the improved Babashka support in
   this version of Tutkain.
 - Disable the backchannel when connecting to a Babashka runtime:
 
