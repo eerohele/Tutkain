@@ -38,7 +38,7 @@
 
   ;; test
   (is (= {:fail []
-          :pass [{:type :pass :line 0 :var-meta {:file nil :name 'baz :ns "foo.bar"}}]
+          :pass [{:type :pass :line 0 :var-meta {:file nil :line 1 :column 60 :name 'baz :ns "foo.bar"}}]
           :error []
           :tag :ret
           :val "{:test 1, :pass 1, :fail 0, :error 0, :assert 1, :type :summary}\n"}
