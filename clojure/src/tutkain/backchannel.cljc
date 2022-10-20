@@ -66,14 +66,16 @@
 
   If the file doesn't exist, return \"NO_SOURCE_PATH\"."
   [path-str]
-  (if-some [^Path path (some-> path-str not-empty make-path)]
-    (if (Files/exists path (into-array LinkOption []))
-      (let [^Path path (.toRealPath path (into-array LinkOption []))]
-        (if-some [^Path root (some #(when (.startsWith path ^Path %) %) @classpath-root-paths)]
-          (str (.relativize root path))
-          path-str))
-      path-str)
-    "NO_SOURCE_PATH"))
+  #?(:bb path-str
+     :clj
+     (if-some [^Path path (some-> path-str not-empty make-path)]
+       (if (Files/exists path (into-array LinkOption []))
+         (let [^Path path (.toRealPath path (into-array LinkOption []))]
+           (if-some [^Path root (some #(when (.startsWith path ^Path %) %) @classpath-root-paths)]
+             (str (.relativize root path))
+             path-str))
+         path-str)
+       "NO_SOURCE_PATH")))
 
 (defmethod handle :set-eval-context
   [{:keys [eval-context ^LineNumberingPushbackReader in ns file line column response]
