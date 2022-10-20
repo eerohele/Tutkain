@@ -5,10 +5,13 @@
    [clojure.main :as main]
    [tutkain.format :as format])
   (:import
-   (clojure.lang LineNumberingPushbackReader)
+   (clojure.lang LineNumberingPushbackReader RT)
+   (java.nio.file LinkOption Files Paths Path)
    (java.io File IOException Writer)
-   (java.net SocketException)
+   (java.net SocketException URL)
    (java.util.concurrent.atomic AtomicInteger)))
+
+(comment (set! *warn-on-reflection* true) ,,,)
 
 (defn respond-to
   "Respond to a backchannel op message."
@@ -45,6 +48,34 @@
   [ns]
   (or (some-> ns find-ns) (binding [*ns* (create-ns (or ns 'user))] (refer-clojure) *ns*)))
 
+(defn ^:private make-path
+  [& args]
+  (Paths/get (first args) (into-array String (rest args))))
+
+(def ^:private classpath-root-paths
+  (delay
+    (sequence
+      (comp
+        (map #(.getPath ^URL %))
+        (remove #(.contains ^String % ".jar!"))
+        (map #(make-path %)))
+      (-> (RT/baseLoader) (.getResources "") (enumeration-seq)))))
+
+(defn relative-to-classpath-root
+  "Given a string path to a file, return the relative (to a classpath root) path
+  to the file.
+
+  If the file doesn't exist, return \"NO_SOURCE_PATH\"."
+  [path-str]
+  (if-some [^Path path (some-> path-str not-empty make-path)]
+    (if (Files/exists path (into-array LinkOption []))
+      (let [^Path path (.toRealPath path (into-array LinkOption []))]
+        (if-some [^Path root (some #(when (.startsWith path ^Path %) %) @classpath-root-paths)]
+          (str (.relativize root path))
+          path-str))
+      path-str)
+    "NO_SOURCE_PATH"))
+
 (defmethod handle :set-eval-context
   [{:keys [eval-context ^LineNumberingPushbackReader in ns file line column response]
     :or {line 0 column 0 response {}} :as message}]
@@ -53,7 +84,7 @@
   (swap! eval-context
     #(cond-> %
        true (assoc :response response)
-       true (assoc-in [:thread-bindings #'*file*] (or file "NO_SOURCE_PATH"))
+       true (assoc-in [:thread-bindings #'*file*] (relative-to-classpath-root file))
        ;; Babashka doesn't have *source-path*, but unlike in Clojure *file*
        ;; has the same effect.
        true (assoc-in [:thread-bindings #?(:bb #'*file* :clj #'*source-path*)] (or (some-> file File. .getName) "NO_SOURCE_FILE"))

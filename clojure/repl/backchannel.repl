@@ -1,6 +1,7 @@
 (ns repl.backchannel
   (:refer-clojure :exclude [send])
   (:require
+   [clojure.java.io :as io]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.backchannel :as backchannel]
@@ -69,3 +70,19 @@
 (backchannel/send-to-client backchannel {:tag :out :val "Hello, world!"})
 (recv)
 (xr/check! #{{:tag :out :val "Hello, world!"}})
+
+;; Resolving a absolute path relative to classpath root
+
+(backchannel/relative-to-classpath-root nil)
+(xr/check! #{"NO_SOURCE_PATH"})
+
+(backchannel/relative-to-classpath-root "")
+(xr/check! #{"NO_SOURCE_PATH"})
+
+(backchannel/relative-to-classpath-root "/does/not/exist.clj")
+(xr/check! #{"/does/not/exist.clj"})
+
+(backchannel/relative-to-classpath-root
+  (.getAbsolutePath (io/as-file (io/resource "tutkain/backchannel.cljc"))))
+
+(xr/check! #{"tutkain/backchannel.cljc"})
