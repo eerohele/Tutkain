@@ -9,7 +9,7 @@ def goto(window, view, items, index):
         window.focus_view(view)
     else:
         item = items[index]
-        info.goto(window, info.parse_location(item))
+        info.goto(window, info.parse_location(item), flags=sublime.ADD_TO_SELECTION | sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU | sublime.CLEAR_TO_RIGHT)
 
 
 def to_quick_panel_items(kinds, results, symbol=None):
