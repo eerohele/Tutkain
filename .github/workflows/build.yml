@@ -47,6 +47,10 @@ jobs:
         with:
           cli: '1.10.3.1075'
 
+      - uses: turtlequeue/setup-babashka@v1.5.0
+        with:
+          babashka-version: 1.0.164
+
       - uses: actions/setup-node@v2
         with:
           node-version: '17'
@@ -82,4 +86,8 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         run: clojure -J-Dclojure.main.report=stderr -X:dev:shadow-cljs user/-main
         shell: powershell
+        working-directory: ./clojure
+
+      - name: Run Babashka tests
+        run: bb test_runner.bb
         working-directory: ./clojure
