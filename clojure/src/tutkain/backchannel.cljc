@@ -2,7 +2,6 @@
   (:require
    [clojure.core.server :as server]
    [clojure.edn :as edn]
-   [clojure.main :as main]
    [tutkain.format :as format])
   (:import
    (clojure.lang LineNumberingPushbackReader RT)
