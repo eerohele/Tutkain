@@ -151,8 +151,8 @@ class TestJVMClient(PackageTestCase):
         self.eval_context(column=8)
         self.assertEquals("(a) (b)\n", self.server.recv())
         self.server.send("1")
-        self.server.send("2")
         self.assertEquals(ret("1\n"), self.get_print())
+        self.server.send("2")
         self.assertEquals(ret("2\n"), self.get_print())
 
         self.view.assign_syntax("Markdown.sublime-syntax")
