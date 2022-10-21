@@ -945,11 +945,17 @@ class TestParedit(ViewTestCase):
         self.assertEquals("(a b ; \n c)", self.view_content())
 
     def test_semicolon(self):
+        self.set_view_content("")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_paredit_semicolon")
+        self.assertEquals(";", self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
+
         self.set_view_content("(a b)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_paredit_semicolon")
-        self.assertEquals(" ;(a b)", self.view_content())
-        self.assertEquals([(2, 2)], self.selections())
+        self.assertEquals(";(a b)", self.view_content())
+        self.assertEquals([(1, 1)], self.selections())
 
         self.set_view_content("(a b)")
         self.set_selections((1, 1))

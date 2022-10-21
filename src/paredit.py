@@ -385,7 +385,7 @@ def semicolon(view, edit):
             if innermost and view.line(point).contains(innermost.close.region):
                 view.insert(edit, innermost.close.region.begin(), "\n")
 
-            if not re.match(r"[\s\(\[\{\)\]\}]", view.substr(point - 1)):
+            if not re.match(r"[\x00\s\(\[\{\)\]\}]", view.substr(point - 1)):
                 n = view.insert(edit, point, " ;")
             else:
                 n = view.insert(edit, point, ";")
