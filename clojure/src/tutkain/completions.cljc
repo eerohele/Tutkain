@@ -171,12 +171,11 @@
 (comment (keyword-candidates (all-keywords)) ,,,)
 
 (defn namespaces
-  "Given an ns symbol, return a list of ns and ns alias symbols available in
-  the context of that ns."
-  [ns]
+  "Return a sequence of symbols naming all namespaces loaded into the runtime."
+  []
   (map ns-name (all-ns)))
 
-(comment (namespaces 'clojure.main),)
+(comment (namespaces) ,,,)
 
 (defn namespace-aliases
   [ns]
@@ -347,7 +346,7 @@
     (map (fn [ns]
            (let [doc (some-> ns find-ns meta :doc)]
              (cond-> (annotate-namespace (name ns)) doc (assoc :doc doc))))
-      (namespaces ns))
+      (namespaces))
     (map annotate-navigation (namespace-aliases ns))))
 
 (comment (ns-candidates 'clojure.main),)
