@@ -263,7 +263,7 @@
     (map #(.replace ^String (.getPath %) path "") (-> path File. file-seq))))
 
 (def non-base-class-names
-  "A future that holds a sorted list of the names of all non-base Java classes
+  "A future that holds a sequence of the names of all non-base Java classes
   in the class path."
   (->>
     #?(:bb [(babashka.classpath/get-classpath)]
@@ -280,7 +280,7 @@
     future))
 
 (def ^:private base-class-names
-  "A future that, on JDK11 and newer, holds a sorted list of all classes in
+  "A future that, on JDK11 and newer, holds a sequence of all classes in
   every Java module in the current JDK.
 
   On < JDK11, holds nil."
