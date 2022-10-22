@@ -54,6 +54,7 @@ All notable changes to this project will be documented in this file.
 
   Then, to evaluate the marked form, run **Tutkain: Evaluate** > **Mark** (`tutkain_evaluate` with `"scope": "mark"`).
 
+- Improve **Tutkain: Dir** to prompt for namespace when caret is not on symbol
 - Improve keyword and symbol auto-completion support
 - Add **Tutkain: Remove Namespace Mapping**, **Tutkain: Remove Namespace Alias**, and **Tutkain: Remove Namespace**
 
