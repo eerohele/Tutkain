@@ -36,12 +36,12 @@ def to_quick_panel_items(kinds, results, symbol=None):
         if type:
             kind = kinds.get(type.name, sublime.KIND_AMBIGUOUS)
 
-            if type == edn.Keyword("namespace"):
-                items.append(sublime.QuickPanelItem(name, details=docstring, kind=kind))
-            else:
-                items.append(
-                    sublime.QuickPanelItem(name, details=docstring, annotation=arglists, kind=kind)
-                )
+        if type == edn.Keyword("namespace"):
+            items.append(sublime.QuickPanelItem(name, details=docstring, kind=kind))
+        else:
+            items.append(
+                sublime.QuickPanelItem(name, details=docstring, annotation=arglists, kind=kind)
+            )
 
     return items
 
