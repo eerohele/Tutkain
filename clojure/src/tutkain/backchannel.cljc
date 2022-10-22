@@ -47,17 +47,12 @@
   [ns]
   (or (some-> ns find-ns) (binding [*ns* (create-ns (or ns 'user))] (refer-clojure) *ns*)))
 
-(defn ^:private make-path
-  [& args]
-  (Paths/get (first args) (into-array String (rest args))))
-
 (def ^:private classpath-root-paths
   (delay
     (sequence
       (comp
-        (map #(.getPath ^URL %))
-        (remove #(.contains ^String % ".jar!"))
-        (map #(make-path %)))
+        (remove #(.contains ^String (.getPath ^URL %) ".jar!"))
+        (map #(Paths/get (.toURI ^URL %))))
       (-> (RT/baseLoader) (.getResources "") (enumeration-seq)))))
 
 (defn relative-to-classpath-root
@@ -68,7 +63,7 @@
   [path-str]
   #?(:bb path-str
      :clj
-     (if-some [^Path path (some-> path-str not-empty make-path)]
+     (if-some [^Path path (some-> path-str not-empty (Paths/get (into-array String [])))]
        (if (Files/exists path (into-array LinkOption []))
          (let [^Path path (.toRealPath path (into-array LinkOption []))]
            (if-some [^Path root (some #(when (.startsWith path ^Path %) %) @classpath-root-paths)]
