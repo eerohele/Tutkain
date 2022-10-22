@@ -64,12 +64,14 @@
   #?(:bb path-str
      :clj
      (if-some [^Path path (some-> path-str not-empty (Paths/get (into-array String [])))]
-       (if (Files/exists path (into-array LinkOption []))
-         (let [^Path path (.toRealPath path (into-array LinkOption []))]
-           (if-some [^Path root (some #(when (.startsWith path ^Path %) %) @classpath-root-paths)]
-             (str (.relativize root path))
-             path-str))
-         path-str)
+       (.replace
+         (if (Files/exists path (into-array LinkOption []))
+           (let [^Path path (.toRealPath path (into-array LinkOption []))]
+             (if-some [^Path root (some #(when (.startsWith path ^Path %) %) @classpath-root-paths)]
+               (str (.relativize root path))
+               path-str))
+           path-str)
+         "\\" "/")
        "NO_SOURCE_PATH")))
 
 (defmethod handle :set-eval-context
