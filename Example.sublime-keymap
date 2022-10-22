@@ -319,6 +319,16 @@
         ]
     },
 
+    // Hard wrap a (doc)string or a multi-line comment to the given width.
+    {
+        "keys": ["super+l", "super+l"],
+        "command": "tutkain_hard_wrap",
+        "args": {"width": "78"},
+        "context": [
+            {"key": "selector", "operator": "equal", "operand": "source.edn | source.clojure"},
+        ]
+    },
+
     // Cycle collection type.
     //
     // For example, given:
