@@ -10,8 +10,8 @@
 (def base64-decoder
   (Base64/getDecoder))
 
-(defn ^LineNumberingPushbackReader base64-reader
-  [blob]
+(defn base64-reader
+  ^LineNumberingPushbackReader [blob]
   (->
     base64-decoder
     (.decode blob)
