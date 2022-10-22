@@ -1,6 +1,7 @@
 (ns tutkain.format
   (:require
    [clojure.main :as main]
+   [clojure.repl :as repl]
    [clojure.pprint :as pprint]))
 
 (defn Throwable->str
