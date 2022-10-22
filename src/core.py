@@ -1664,3 +1664,9 @@ class TutkainRemoveNamespaceCommand(TextCommand):
             }, lambda response: self.handler(client, dialect, response))
         else:
             self.view.window().status_message(f"⚠ Not connected to a {dialects.name(dialect)} REPL.")
+
+
+class TutkainHardWrapCommand(TextCommand):
+    def run(self, edit, width=78):
+        width = width or self.view.settings().get("rulers", [78])[0]
+        indent.hard_wrap(self.view, edit, width)

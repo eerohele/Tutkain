@@ -1,4 +1,6 @@
+import math
 import re
+import textwrap
 from sublime import Region
 
 from itertools import groupby
@@ -174,3 +176,112 @@ def reindent(code, column):
         new_lines.append("".join(chars))
 
     return (lines[0] + "\n" + "\n".join(new_lines)).strip()
+
+
+def normalize_whitespace(string):
+    return " ".join(string.split())
+
+
+def wrap_text(text, width, indent):
+    return textwrap.wrap(text, width=width - len(indent), subsequent_indent=indent)
+
+
+def leading_spaces(view, start_point):
+    point = view.line(start_point).begin()
+    spaces = 0
+
+    while view.substr(point).isspace():
+        spaces += 1
+        point += 1
+
+    return spaces * " "
+
+
+def hard_wrap_string(view, edit, region, width):
+    point = region.begin()
+
+    if region.empty():
+        region = view.expand_to_scope(point, 'string')
+
+    indent = leading_spaces(view, region.begin())
+
+    text = view.substr(region)
+    text = re.sub(r"\n(\s)+\n", "\n\n", text)
+
+    paragraphs = map(
+        lambda string: "\n".join(string),
+        [wrap_text(normalize_whitespace(paragraph), width, indent)
+        for paragraph in text.split("\n\n")]
+    )
+
+    view.replace(edit, region, f"\n\n{indent}".join(paragraphs))
+
+
+def hard_wrap_comment(view, edit, region, width):
+    point = region.begin()
+    indent = leading_spaces(view, view.line(point).begin())
+
+    if region.empty():
+        current_line = line = view.line(point)
+
+        # Seek the line where the comment begins.
+        while (point := line.begin() - 1) and view.substr(point) != "\x00" and view.match_selector(line.end(), 'comment'):
+            line = view.line(point)
+
+        # The beginning of the line is the beginning of the view, and the
+        # line has a comment.
+        if view.substr(line.begin() - 1) == "\x00" and view.match_selector(line.end(), 'comment'):
+            # Find the first point on the line with a non-comment character
+            # if exists, else the beginning of the line.
+            non_comment_point = selectors.find(view, line.begin(), 'meta.reader-form')
+
+            if non_comment_point is not None:
+                begin = non_comment_point + 1
+            else:
+                begin = line.begin()
+        else:
+            begin = line.end() + 1
+
+        line = current_line
+
+        while (point := line.end()) and view.substr(point) != "\x00" and view.match_selector(point, 'comment'):
+            line = view.line(point + 1)
+
+        if view.substr(line.end()) == "\x00":
+            end = line.end()
+        else:
+            end = line.begin() - 1
+
+        region = Region(begin, end)
+
+    new_lines = []
+
+    text = ''.join(
+        map(
+            lambda pair: view.substr(pair[0]),
+            filter(lambda pair: view.match_selector(pair[0].begin(), '-punctuation'),
+                view.extract_tokens_with_scopes(region)
+            )
+        )
+    )
+
+    text = re.sub(r"\n(\s)+\n", "\n\n", text)
+    paragraphs = text.split("\n\n")
+
+    for paragraph in paragraphs:
+        paragraph = " ".join(paragraph.split())
+        new_paragraphs = textwrap.wrap(paragraph, width=width - 4 - len(indent), subsequent_indent=indent)
+        new_paragraphs = map(lambda paragraph: paragraph.lstrip(), new_paragraphs)
+        new_line = f"{indent};; " + (f"\n{indent};; ".join(new_paragraphs))
+        new_lines.append(new_line)
+
+    view.replace(edit, region, f"\n{indent};;\n".join(new_lines))
+
+
+# TODO: Don't break if the first non-whitespace char is a hyphen
+def hard_wrap(view, edit, width):
+    for region in view.sel():
+        if view.match_selector(region.begin(), 'string'):
+            hard_wrap_string(view, edit, region, width)
+        elif view.match_selector(region.begin(), 'comment'):
+            hard_wrap_comment(view, edit, region, width)

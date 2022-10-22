@@ -127,4 +127,8 @@
         "caption": "Tutkain: Remove Namespace",
         "command": "tutkain_remove_namespace"
     },
+    {
+        "caption": "Tutkain: Hard Wrap",
+        "command": "tutkain_hard_wrap"
+    },
 ]

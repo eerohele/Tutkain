@@ -587,3 +587,30 @@ class TestIndentRegionCommand(ViewTestCase):
 """    (identity
 {:a 1 :b 2})"""
 , 4))
+
+
+class TestHardWrapCommand(ViewTestCase):
+    def wraps_to(self, input, expected, width=0, start_at=0):
+        self.set_view_content(input)
+
+        for n in range(start_at, len(input)):
+            self.set_selections((n, n))
+            self.view.run_command("tutkain_hard_wrap", {"width": width})
+            self.assertEquals(expected, self.view_content())
+
+    def test_hard_wrap(self):
+        self.wraps_to(""";; a""", """;; a""", width=5)
+        self.wraps_to(""";; a b""", """;; a\n;; b""", width=5)
+
+        # Preserves empty lines
+        self.wraps_to(""";; a b\n;;\n;; c d""", """;; a\n;; b\n;;\n;; c\n;; d""", width=5)
+
+        # Indented comment
+        self.wraps_to("""  ;; a b\n  ;;\n  ;; c d""", """  ;; a\n  ;; b\n  ;;\n  ;; c\n  ;; d""", start_at=4, width=7)
+
+        self.wraps_to("""1\n  ;; a b\n  ;;\n  ;; c d""", """1\n  ;; a\n  ;; b\n  ;;\n  ;; c\n  ;; d""", start_at=5, width=7)
+        self.wraps_to("""1 ;; a b""", "1;; a\n;; b", start_at=2, width=6)
+        self.wraps_to('''"a"''', '''"a"''', width=4)
+        self.wraps_to('''"a b c d"''', '''"a b\nc d"''', width=4)
+        self.wraps_to('''"a b c d\n\ne d f g"''', '''"a b\nc d\n\ne d\nf g"''', width=4)
+        self.wraps_to('''  "foo bar\n\n  baz qux"''', '''  "foo\n  bar\n\n  baz\n  qux\n  "''', start_at=2, width=7)
