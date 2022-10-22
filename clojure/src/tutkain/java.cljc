@@ -45,10 +45,10 @@
       (str package-name "." class-name)
       class-name)))
 
-(defn ^Class resolve-class
+(defn resolve-class
   "Given an ns symbol and a symbol, if the symbol resolves to a class in the
   context of the given namespace, return that class (java.lang.Class)."
-  [ns sym]
+  ^Class [ns sym]
   (try (let [val (ns-resolve ns sym)]
          (when (class? val) val))
     (catch Exception e
