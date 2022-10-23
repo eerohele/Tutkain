@@ -616,3 +616,15 @@ class TestHardWrapCommand(ViewTestCase):
         self.wraps_to('''"a b c d"''', '''"a b\nc d"''', width=4)
         self.wraps_to('''"a b c d\n\ne d f g"''', '''"a b\nc d\n\ne d\nf g"''', width=4)
         self.wraps_to('''  "foo bar\n\n  baz qux"''', '''  "foo\n  bar\n\n  baz\n  qux\n  "''', start_at=2, width=7)
+
+        self.set_view_content(""";; a b\n\n;; c d""")
+        self.set_selections((0, 0), (8, 8))
+        self.view.run_command("tutkain_hard_wrap", {"width": 5})
+        self.assertEquals(""";; a\n;; b\n\n;; c\n;; d""", self.view_content())
+
+        self.set_view_content('''"a b c d"\n\n"e f g h"''')
+        self.set_selections((0, 0), (11, 11))
+        self.view.run_command("tutkain_hard_wrap", {"width": 4})
+        self.assertEquals('''"a b\nc d"\n\n"e f\ng h"''', self.view_content())
+
+
