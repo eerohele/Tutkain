@@ -281,6 +281,7 @@ def hard_wrap_comment(view, edit, region, width):
 # TODO: Don't break if the first non-whitespace char is a hyphen
 def hard_wrap(view, edit, width):
     for region in view.sel():
+        print("<<<WIDTH>>>", width)
         if view.match_selector(region.begin(), 'string'):
             hard_wrap_string(view, edit, region, width)
         elif view.match_selector(region.begin(), 'comment'):
