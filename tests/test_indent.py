@@ -599,7 +599,7 @@ class TestHardWrapCommand(ViewTestCase):
             self.view.run_command("tutkain_hard_wrap", {"width": width})
             self.assertEquals(expected, self.view_content())
 
-    @unittest.SkipTest
+    #@unittest.SkipTest
     def test_hard_wrap(self):
         self.wraps_to(""";; a""", """;; a""", width=5)
         self.wraps_to(""";; a b""", """;; a\n;; b""", width=5)
