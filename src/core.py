@@ -1667,6 +1667,10 @@ class TutkainRemoveNamespaceCommand(TextCommand):
 
 
 class TutkainHardWrapCommand(TextCommand):
-    def run(self, edit, width=78):
-        width = width or self.view.settings().get("rulers", [78])[0]
+    def run(self, edit, width=None):
+        if width is None and (rulers := self.view.settings().get("rulers")):
+            width = rulers[0]
+        elif width is None:
+            width = 80
+
         indent.hard_wrap(self.view, edit, width)
