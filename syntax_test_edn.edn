@@ -367,9 +367,7 @@ string"
 ;   ^ meta.sexp.list.edn
 ;    ^ punctuation.section.parens.end.edn
 ;     ^ -meta.sexp.list.edn
-;   ^ meta.sexp.content.list.edn
-;  ^ -meta.sexp.content
-;    ^ -meta.sexp.content
+
   (foo/bar (baz/quux 1))
 ; ^ punctuation.section.parens.begin.edn
 ; ^^^^^^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
@@ -384,9 +382,7 @@ string"
 ;  ^^^ meta.sexp.vector.edn
 ;    ^ punctuation.section.brackets.end.edn
 ;     ^ -meta.sexp.vector.edn
-;   ^ meta.sexp.content.vector.edn
-;  ^ -meta.sexp.content
-;    ^ -meta.sexp.content
+
   [1 [2] 3]
 ; ^ punctuation.section.brackets.begin.edn
 ; ^^^^^^^^^ meta.sexp.vector.edn
@@ -395,19 +391,14 @@ string"
 ;      ^ punctuation.section.brackets.end.edn
 ;         ^ punctuation.section.brackets.end.edn
 ;          ^ -meta.sexp.vector.edn
-;  ^^^^^^^ meta.sexp.content.vector.edn
-;     ^ meta.sexp.content.vector.edn meta.sexp.content.vector.edn
-; ^ -meta.sexp.content
-;         ^ -meta.sexp.content
+
    { }
 ; ^ -meta.sexp.map.edn
 ;  ^ punctuation.section.braces.begin.edn
 ;  ^^^ meta.sexp.map.edn
 ;    ^ punctuation.section.braces.end.edn
 ;     ^ -meta.sexp.map.edn
-;   ^ meta.sexp.content.map.edn
-;  ^ -meta.sexp.content
-;    ^ -meta.sexp.content
+
   {:a {:b 2} :c 3}
 ; ^ punctuation.section.braces.begin.edn
 ; ^^^^^^^^^^^^^^^^ meta.sexp.map.edn
@@ -416,10 +407,7 @@ string"
 ;          ^ punctuation.section.braces.end.edn
 ;                ^ punctuation.section.braces.end.edn
 ;                 ^ -meta.sexp.map.edn
-;  ^^^^^^^^^^^^^^ meta.sexp.content.map.edn
-;      ^^^^ meta.sexp.content.map.edn meta.sexp.content.map.edn
-; ^ -meta.sexp.content
-;                ^ -meta.sexp.content
+
    #{ }
 ; ^ -meta.sexp.set.edn
 ;  ^ keyword.operator.macro.edn
@@ -427,9 +415,7 @@ string"
 ;  ^^^^ meta.sexp.set.edn
 ;     ^ punctuation.section.braces.end.edn
 ;      ^ -meta.sexp.set.edn
-;    ^ meta.sexp.content.set.edn
-;  ^^ -meta.sexp.content
-;     ^ -meta.sexp.content
+
   #{1 #{2} 3}
 ; ^ keyword.operator.macro.edn
 ;  ^ punctuation.section.braces.begin.edn
@@ -440,10 +426,7 @@ string"
 ;        ^ punctuation.section.braces.end.edn
 ;           ^ punctuation.section.braces.end.edn
 ;            ^ -meta.sexp.set.edn
-;   ^^^^^^^^ meta.sexp.content.set.edn
-;       ^ meta.sexp.content.set.edn
-; ^^ -meta.sexp.content
-;           ^ -meta.sexp.content
+
   {,}
 ;  ^ comment.punctuation.comma.edn
 

@@ -445,7 +445,7 @@ def on_pairwise_form(view, point, selector):
     scope_name = view.scope_name(point)
 
     return view.match_selector(point, selector) and (
-        scope_name.rindex(selector) > scope_name.rindex("meta.sexp.content")
+        scope_name.rindex(selector) > scope_name.rindex("meta.sexp")
     )
 
 

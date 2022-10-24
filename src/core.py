@@ -823,7 +823,7 @@ class TutkainExpandSelectionImplCommand(TextCommand):
             self.view.run_command("expand_selection", {"to": "brackets"})
         elif (not region.empty() and self.view.match_selector(region.begin(), "meta.mapping.key")
             and self.view.match_selector(region.end() - 1, "meta.mapping.key")
-            and not self.view.match_selector(region.begin(), "meta.mapping.key meta.sexp.content")
+            and not self.view.match_selector(region.begin(), "meta.mapping.key meta.sexp")
             and not self.view.match_selector(region.begin(), sexp.BEGIN_SELECTORS)
             and not self.view.match_selector(region.end() - 1, sexp.END_SELECTORS)
         ):
@@ -834,9 +834,6 @@ class TutkainExpandSelectionImplCommand(TextCommand):
             elif self.view.match_selector(value_begin, "meta.reader-form | keyword.operator.macro"):
                 form = forms.find_next(self.view, value_begin)
                 self.view.sel().add(sublime.Region(region.begin(), form.end()))
-            elif self.view.match_selector(value_begin, "meta.mapping.value meta.sexp.content"):
-                end = sexp.innermost(self.view, value_begin).close.region.begin()
-                self.view.sel().add(sublime.Region(region.begin(), end))
             elif self.view.match_selector(value_begin, "meta.mapping.value meta.sexp"):
                 end = sexp.innermost(self.view, value_begin).close.region.end()
                 self.view.sel().add(sublime.Region(region.begin(), end))
