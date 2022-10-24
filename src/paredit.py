@@ -469,13 +469,6 @@ def backward_move_form(view, edit):
                     if prev_val := forms.find_previous(view, form.begin()):
                         if prev_key := forms.find_previous(view, prev_val.begin()):
                             previous_form = prev_val.cover(prev_key)
-            elif on_pairwise_form(view, form.begin(), "meta.mapping.value"):
-                if key_form := previous_form:
-                    form = form.cover(key_form)
-
-                    if previous_form := forms.find_previous(view, key_form.begin()):
-                        if prev_key := forms.find_previous(view, previous_form.begin()):
-                            previous_form = previous_form.cover(prev_key)
 
         if previous_form:
             form_str = view.substr(form)
@@ -510,13 +503,6 @@ def forward_move_form(view, edit):
                     form = form.cover(val_form)
 
                     if next_form := forms.find_next(view, val_form.end()):
-                        if next_val := forms.find_next(view, next_form.end()):
-                            next_form = next_form.cover(next_val)
-            elif form and on_pairwise_form(view, form.begin(), "meta.mapping.value"):
-                if key_form := forms.find_previous(view, form.begin()):
-                    form = form.cover(key_form)
-
-                    if next_form := forms.find_next(view, form.end()):
                         if next_val := forms.find_next(view, next_form.end()):
                             next_form = next_form.cover(next_val)
 

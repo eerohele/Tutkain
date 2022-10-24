@@ -1253,11 +1253,20 @@ class TestParedit(ViewTestCase):
         # Pairwise (map)
 
         ## Backward
-        for sel in [(6, 6), (7, 7), (8, 8), (9, 9), (10, 10)]:
+
+        ## Key
+        for sel in [(6, 6), (7, 7), (8, 8)]:
             self.set_view_content("{:a 1 :b 2}")
             self.set_selections(sel)
             self.view.run_command("tutkain_paredit_backward_move_form")
             self.assertEquals("{:b 2 :a 1}", self.view_content())
+
+        ## Val
+        for sel in [(9, 9), (10, 10)]:
+            self.set_view_content("{:a 1 :b 2}")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_backward_move_form")
+            self.assertEquals("{:a 1 2 :b}", self.view_content())
 
         for sel in [(1, 1), (2, 2), (3, 3)]:
             self.set_view_content("{:a}")
@@ -1275,13 +1284,19 @@ class TestParedit(ViewTestCase):
             self.set_view_content("{:a 1}")
             self.set_selections(sel)
             self.view.run_command("tutkain_paredit_backward_move_form")
-            self.assertEquals("{:a 1}", self.view_content())
+            self.assertEquals("{1 :a}", self.view_content())
 
-        for sel in [(7, 7), (8, 8), (9, 9), (10, 10), (11, 11)]:
+        for sel in [(7, 7), (8, 8), (9, 9)]:
             self.set_view_content("{:a 1, :b 2}")
             self.set_selections(sel)
             self.view.run_command("tutkain_paredit_backward_move_form")
             self.assertEquals("{:b 2, :a 1}", self.view_content())
+
+        for sel in [(10, 10), (11, 11)]:
+            self.set_view_content("{:a 1, :b 2}")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_backward_move_form")
+            self.assertEquals("{:a 1, 2 :b}", self.view_content())
 
         for sel in [(6, 6), (7, 7), (8, 8)]:
             self.set_view_content("{:a 1 :b}")
@@ -1289,11 +1304,17 @@ class TestParedit(ViewTestCase):
             self.view.run_command("tutkain_paredit_backward_move_form")
             self.assertEquals("{:a :b 1}", self.view_content())
 
-        for sel in [(6, 6), (7, 7), (8, 8), (9, 9), (10, 10)]:
+        for sel in [(6, 6), (7, 7), (8, 8)]:
             self.set_view_content("{:a 1\n:b 2}")
             self.set_selections(sel)
             self.view.run_command("tutkain_paredit_backward_move_form")
             self.assertEquals("{:b 2\n:a 1}", self.view_content())
+
+        for sel in [(9, 9), (10, 10)]:
+            self.set_view_content("{:a 1\n:b 2}")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_backward_move_form")
+            self.assertEquals("{:a 1\n2 :b}", self.view_content())
 
         for sel in [(15, 15), (16, 16), (17, 17)]:
             self.set_view_content("{:a :b :c [{:d :e}]}")
@@ -1304,7 +1325,7 @@ class TestParedit(ViewTestCase):
         self.set_view_content("{:a {:b :c}}")
         self.set_selections((8, 8))
         self.view.run_command("tutkain_paredit_backward_move_form")
-        self.assertEquals("{:a {:b :c}}", self.view_content())
+        self.assertEquals("{:a {:c :b}}", self.view_content())
 
         self.set_view_content("{:a #b/c [:d 'e] :F :G}")
         self.set_selections((17, 17))
@@ -1337,11 +1358,17 @@ class TestParedit(ViewTestCase):
         self.assertEquals("{:a [[:b] [:d] [:c] [:e]]}", self.view_content())
 
         ## Forward
-        for sel in [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]:
+        for sel in [(1, 1), (2, 2), (3, 3)]:
             self.set_view_content("{:a 1 :b 2}")
             self.set_selections(sel)
             self.view.run_command("tutkain_paredit_forward_move_form")
             self.assertEquals("{:b 2 :a 1}", self.view_content())
+
+        for sel in [(4, 4), (5, 5)]:
+            self.set_view_content("{:a 1 :b 2}")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_forward_move_form")
+            self.assertEquals("{:a :b 1 2}", self.view_content())
 
         for sel in [(1, 1), (2, 2)]:
             self.set_view_content("{:a}")
@@ -1358,6 +1385,8 @@ class TestParedit(ViewTestCase):
             self.set_selections(sel)
             self.view.run_command("tutkain_paredit_forward_move_form")
             self.assertEquals("{:a 1}", self.view_content())
+
+        for sel in [(1, 1), (2, 2), (3, 3)]:
             self.set_view_content("{:a 1, :b 2}")
             self.set_selections(sel)
             self.view.run_command("tutkain_paredit_forward_move_form")
@@ -1370,6 +1399,20 @@ class TestParedit(ViewTestCase):
             self.set_selections(sel)
             self.view.run_command("tutkain_paredit_forward_move_form")
             self.assertEquals("{:b 2\n:a 1}", self.view_content())
+
+        for sel in [(4, 4), (5, 5)]:
+            self.set_view_content("{:a 1, :b 2}")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_forward_move_form")
+            self.assertEquals("{:a :b, 1 2}", self.view_content())
+            self.set_view_content("{:a 1 :b}")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_forward_move_form")
+            self.assertEquals("{:a :b 1}", self.view_content())
+            self.set_view_content("{:a 1\n:b 2}")
+            self.set_selections(sel)
+            self.view.run_command("tutkain_paredit_forward_move_form")
+            self.assertEquals("{:a :b\n1 2}", self.view_content())
 
         for sel in [(9, 9), (10, 10), (11, 11)]:
             self.set_view_content("{:a :b [{:c :d}]}")
