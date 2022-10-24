@@ -60,6 +60,13 @@ All notable changes to this project will be documented in this file.
 
   These offer a simple UI over `ns-unmap`, `ns-unalias`, and `remove-ns` respectively.
 
+- Fix syntax highlighting issues in deeply nested S-expressions
+- Fix ParEdit Forward/Backward Move Form when the caret is on map value
+
+  Previously, Tutkain moved the entire map entry when the caret was on a map
+  value. Now, Tutkain only moves the map value. Tutkain still moves the entire
+  map entry if the caret is on a map key.
+
 - Allow running **Tutkain: Apropos** when the current view has a non-Clojure syntax
 - Fix showing ClojureDocs examples in unloaded namespace #94
 - Use relative path in `:file` meta of vars evaluated from Tutkain (for e.g. `clojure.repl/source-fn` compatibility)
