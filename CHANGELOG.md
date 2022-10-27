@@ -43,7 +43,7 @@ All notable changes to this project will be documented in this file.
   (inc 3)
   ```
 
-  If you run `tutkain_evaluate` with `up_to_point` scope, Tutkain evaluates `(inc 1)` and `(inc 2)`. This can be useful when you want to evaluate every top-level form in the namespace up to a certain point
+  If you run `tutkain_evaluate` with `up_to_point` scope, Tutkain evaluates `(inc 1)` and `(inc 2)`. This can be useful when you want to evaluate every top-level form in the namespace up to a certain point.
 
 - Add **Tutkain: Mark Form** and `mark` scope of `tutkain_evaluate`
 
@@ -60,7 +60,7 @@ All notable changes to this project will be documented in this file.
 
   These offer a simple UI over `ns-unmap`, `ns-unalias`, and `remove-ns` respectively.
 
-- Fix syntax highlighting issues in deeply nested S-expressions
+- Fix syntax highlighting issues in deeply nested S-expressions #99
 - Fix ParEdit Forward/Backward Move Form when the caret is on map value
 
   Previously, Tutkain moved the entire map entry when the caret was on a map
@@ -76,7 +76,6 @@ All notable changes to this project will be documented in this file.
 - Remove invisible Unicode characters when copying text from the output view
 - Fix bug when evaluating a multiline form where subsequent lines are dedented relative to the first line
 - Fix Tutkain opening too many files when navigating the results of the Apropos and Dir commands
-
 
 ## 0.16.0 (alpha) - 2022-08-08
 
