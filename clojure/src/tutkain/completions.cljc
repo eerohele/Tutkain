@@ -262,52 +262,53 @@
     :else
     (map #(.replace ^String (.getPath %) path "") (-> path File. file-seq))))
 
-(def non-base-class-names
+(defn ^:private non-base-classes
   "A future that holds a sequence of the names of all non-base Java classes
   in the class path."
-  (future
-    (eduction
-      (mapcat path-files)
-      (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__"))))
-      (remove #(re-find #".+\$\d.*" %))
-      (map #(.. % (replace ".class" "") (replace "/" ".")))
-      #?(:bb (babashka.classpath/get-classpath)
-         :clj (.split (System/getProperty "java.class.path") File/pathSeparator)))))
+  []
+  (mapcat path-files
+    #?(:bb [(babashka.classpath/get-classpath)]
+       :clj (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
-(def ^:private base-class-names
+(defn ^:private base-classes
   "A future that holds a sequence of all java.* and javax.* classes in every
   Java module in the current JDK."
-  (future
-    #?(:bb (map (memfn getName) (babashka.classes/all-classes))
-       :clj (let [module-finder (java.lang.module.ModuleFinder/ofSystem)]
-              (eduction
-                cat
-                ;; Remove anonymous nested classes
-                (remove #(re-find #".+\$\d.+\.class" %))
-                (map #(.. % (replace ".class" "") (replace "/" ".")))
-                ;; Only retain java.* and javax.* to limit memory consumption
-                (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
-                (for [module-reference (.findAll module-finder)]
-                  (with-open [module-reader (.open module-reference)
-                              stream (.list module-reader)]
-                    (.toList stream))))))))
+  []
+  #?(:bb (map (memfn getName) (babashka.classes/all-classes))
+     :clj (let [module-finder (java.lang.module.ModuleFinder/ofSystem)]
+            (eduction
+              cat
+              ;; Only retain java.* and javax.* to limit memory consumption
+              (filter #(or (.startsWith ^String % "java/") (.startsWith ^String % "javax/")))
+              (for [^java.lang.module.ModuleReference module-reference (.findAll module-finder)]
+                (with-open [module-reader (.open module-reference)
+                            stream (.list module-reader)]
+                  (.toList stream)))))))
 
 (def ^:private all-class-names
-  (future (sort (concat @base-class-names @non-base-class-names))))
-
-(def ^:private top-level-class-names
   (future
-    (eduction
-      (remove #(.contains ^String % "$"))
-      (map annotate-class)
-      @all-class-names)))
+    (into (sorted-set)
+      (comp
+        (filter #(.endsWith ^String % ".class"))
+        (remove #(.contains ^String % "__"))
+        ;; Remove anonymous nested classes
+        (remove #(re-find #".+\$\d.+\.class" %))
+        (map #(.. % (replace ".class" "") (replace "/" "."))))
+      (concat (non-base-classes) (base-classes)))))
 
-(def ^:private nested-class-names
-  (future
-    (eduction
-      (filter #(.contains ^String % "$"))
-      (map annotate-class)
-      @all-class-names)))
+(defn ^:private top-level-class-names
+  []
+  (eduction
+    (remove #(.contains ^String % "$"))
+    (map annotate-class)
+    @all-class-names))
+
+(defn ^:private nested-class-names
+  []
+  (eduction
+    (filter #(.contains ^String % "$"))
+    (map annotate-class)
+    @all-class-names))
 
 (def special-form-candidates
   "All Clojure special form candidates."
@@ -411,7 +412,7 @@
     ;; until the first class that's not a candidate.
     (drop-while (complement (partial candidate? prefix)))
     (take-while (partial candidate? prefix))
-    @top-level-class-names))
+    (top-level-class-names)))
 
 (comment
   (seq (top-level-class-candidates "clojure.lang"))
@@ -423,7 +424,7 @@
   (eduction
     (drop-while (complement (partial candidate? prefix)))
     (take-while (partial candidate? prefix))
-    @nested-class-names))
+    (nested-class-names)))
 
 (comment (seq (nested-class-candidates "java.util.Spliterator")) ,)
 
