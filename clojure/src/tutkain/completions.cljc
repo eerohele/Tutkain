@@ -268,7 +268,11 @@
   []
   (eduction
     (mapcat path-files)
+    (filter #(.endsWith ^String % ".class"))
     (remove #(.startsWith % "META-INF/"))
+    (remove #(.contains ^String % "__"))
+    (remove #(re-find #".+\$\d.*" %))
+    (map #(.. % (replace ".class" "") (replace "/" ".")))
     #?(:bb [(babashka.classpath/get-classpath)]
        :clj (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
@@ -280,8 +284,11 @@
      :clj (let [module-finder (java.lang.module.ModuleFinder/ofSystem)]
             (eduction
               cat
+              ;; Remove anonymous nested classes
+              (remove #(re-find #".+\$\d.+\.class" %))
               ;; Only retain java.* and javax.* to limit memory consumption
-              (filter #(or (.startsWith ^String % "java/") (.startsWith ^String % "javax/")))
+              (map #(.. % (replace ".class" "") (replace "/" ".")))
+              (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
               (for [^java.lang.module.ModuleReference module-reference (.findAll module-finder)]
                 (with-open [module-reader (.open module-reference)
                             stream (.list module-reader)]
@@ -290,12 +297,6 @@
 (def ^:private all-class-names
   (future
     (into (sorted-set)
-      (comp
-        (filter #(.endsWith ^String % ".class"))
-        (remove #(.contains ^String % "__"))
-        ;; Remove anonymous nested classes
-        (remove #(re-find #".+\$\d.+\.class" %))
-        (map #(.. % (replace ".class" "") (replace "/" "."))))
       (concat (non-base-classes) (base-classes)))))
 
 (defn ^:private top-level-class-names
