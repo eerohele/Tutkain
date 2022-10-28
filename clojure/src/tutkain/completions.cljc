@@ -263,8 +263,8 @@
     (map #(.replace ^String (.getPath %) path "") (-> path File. file-seq))))
 
 (defn ^:private non-base-classes
-  "A future that holds a sequence of the names of all non-base Java classes
-  in the class path."
+  "Return a sequence of the names of all non-base Java classes in the class
+  path."
   []
   (eduction
     (mapcat path-files)
@@ -277,8 +277,8 @@
        :clj (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
 (defn ^:private base-classes
-  "A future that holds a sequence of all java.* and javax.* classes in every
-  Java module in the current JDK."
+  "Return a sequence of all java.* and javax.* classes in every Java module in
+  the current JDK."
   []
   #?(:bb (map (memfn getName) (babashka.classes/all-classes))
      :clj (let [module-finder (java.lang.module.ModuleFinder/ofSystem)]
