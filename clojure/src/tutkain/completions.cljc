@@ -265,19 +265,14 @@
 (def non-base-class-names
   "A future that holds a sequence of the names of all non-base Java classes
   in the class path."
-  (->>
-    #?(:bb [(babashka.classpath/get-classpath)]
-       :clj [(System/getProperty "sun.boot.class.path")
-             (System/getProperty "java.ext.dirs")
-             (System/getProperty "java.class.path")])
+  (future
     (eduction
-      (keep #(some-> ^String % (.split File/pathSeparator)))
-      cat
       (mapcat path-files)
       (filter #(and (.endsWith ^String % ".class") (not (.contains ^String % "__"))))
       (remove #(re-find #".+\$\d.*" %))
-      (map #(.. % (replace ".class" "") (replace "/" "."))))
-    future))
+      (map #(.. % (replace ".class" "") (replace "/" ".")))
+      #?(:bb (babashka.classpath/get-classpath)
+         :clj (.split (System/getProperty "java.class.path") File/pathSeparator)))))
 
 (def ^:private base-class-names
   "A future that holds a sequence of all java.* and javax.* classes in every
