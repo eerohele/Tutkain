@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+- BREAKING: Tutkain no longer supports Java 8.
+
+  Tutkain now requires Java 11 or newer.
+
 - Improved Babashka support
 
   NOTE: Requires Babashka v1.0.164 or newer.

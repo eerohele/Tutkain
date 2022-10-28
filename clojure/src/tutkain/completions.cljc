@@ -280,28 +280,22 @@
     future))
 
 (def ^:private base-class-names
-  "A future that, on JDK11 and newer, holds a sequence of all java.* and
-  javax.* classes in every Java module in the current JDK.
-
-  On < JDK11, holds nil."
+  "A future that holds a sequence of all java.* and javax.* classes in every
+  Java module in the current JDK."
   (future
     #?(:bb (map (memfn getName) (babashka.classes/all-classes))
-       :clj (try
-              (when-some [module-finder (Class/forName "java.lang.module.ModuleFinder")]
-                (let [system-module-finder (clojure.lang.Reflector/invokeStaticMethod module-finder "ofSystem" (into-array Object []))
-                      module-references (.findAll system-module-finder)]
-                  (eduction
-                    cat
-                    ;; Remove anonymous nested classes
-                    (remove #(re-find #".+\$\d.+\.class" %))
-                    (map #(.. % (replace ".class" "") (replace "/" ".")))
-                    ;; Only retain java.* and javax.* to limit memory consumption
-                    (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
-                    (for [module-reference module-references]
-                      (with-open [module-reader (.open module-reference)
-                                  stream (.list module-reader)]
-                        (.toList stream))))))
-              (catch ClassNotFoundException _)))))
+       :clj (let [module-finder (java.lang.module.ModuleFinder/ofSystem)]
+              (eduction
+                cat
+                ;; Remove anonymous nested classes
+                (remove #(re-find #".+\$\d.+\.class" %))
+                (map #(.. % (replace ".class" "") (replace "/" ".")))
+                ;; Only retain java.* and javax.* to limit memory consumption
+                (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
+                (for [module-reference (.findAll module-finder)]
+                  (with-open [module-reader (.open module-reference)
+                              stream (.list module-reader)]
+                    (.toList stream))))))))
 
 (def ^:private all-class-names
   (future (sort (concat @base-class-names @non-base-class-names))))
