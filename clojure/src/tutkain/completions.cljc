@@ -266,15 +266,15 @@
   "Return a sequence of the names of all non-base Java classes in the class
   path."
   []
-  (eduction
-    (mapcat path-files)
-    (filter #(.endsWith ^String % ".class"))
-    (remove #(.startsWith % "META-INF/"))
-    (remove #(.contains ^String % "__"))
-    (remove #(re-find #".+\$\d.*" %))
-    (map #(.. % (replace ".class" "") (replace "/" ".")))
-    #?(:bb (remove nil? [(babashka.classpath/get-classpath)])
-       :clj (.split (System/getProperty "java.class.path") File/pathSeparator))))
+  #?(:bb []
+     :clj (eduction
+            (mapcat path-files)
+            (filter #(.endsWith ^String % ".class"))
+            (remove #(.startsWith % "META-INF/"))
+            (remove #(.contains ^String % "__"))
+            (remove #(re-find #".+\$\d.*" %))
+            (map #(.. % (replace ".class" "") (replace "/" ".")))
+            (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
 (defn ^:private base-classes
   "Return a sequence of all java.* and javax.* classes in every Java module in
