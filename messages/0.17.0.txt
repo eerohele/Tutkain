@@ -11,6 +11,9 @@
 
 Hey there! Tutkain has been updated.
 
+IMPORTANT: This version of Tutkain drops compatibility with Java 8. Tutkain now
+requires Java 11 or newer.
+
 IMPORTANT: If you're a Babashka user, either:
 
 - Update Babashka to v1.0.164 or newer to use the improved Babashka support in
