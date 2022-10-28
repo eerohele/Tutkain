@@ -255,8 +255,8 @@
 
     (.endsWith path ".jar")
     (try
-      (map (memfn ^JarEntry getName)
-        (-> path JarFile. .entries enumeration-seq))
+      (with-open [jar-file (JarFile. path)]
+        (mapv (memfn ^JarEntry getName) (-> jar-file .entries enumeration-seq)))
       (catch Exception _))
 
     :else
