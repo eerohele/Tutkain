@@ -288,16 +288,19 @@
     #?(:bb (map (memfn getName) (babashka.classes/all-classes))
        :clj (try
               (when-some [module-finder (Class/forName "java.lang.module.ModuleFinder")]
-                (->>
-                  (clojure.lang.Reflector/invokeStaticMethod module-finder "ofSystem" (into-array Object []))
-                  .findAll
+                (let [system-module-finder (clojure.lang.Reflector/invokeStaticMethod module-finder "ofSystem" (into-array Object []))
+                      module-references (.findAll system-module-finder)]
                   (eduction
-                    (mapcat #(-> % .open .list .iterator iterator-seq))
+                    cat
                     ;; Remove anonymous nested classes
                     (remove #(re-find #".+\$\d.+\.class" %))
                     (map #(.. % (replace ".class" "") (replace "/" ".")))
                     ;; Only retain java.* and javax.* to limit memory consumption
-                    (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax."))))))
+                    (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
+                    (for [module-reference module-references]
+                      (with-open [module-reader (.open module-reference)
+                                  stream (.list module-reader)]
+                        (.toList stream))))))
               (catch ClassNotFoundException _)))))
 
 (def ^:private all-class-names
