@@ -273,7 +273,7 @@
     (remove #(.contains ^String % "__"))
     (remove #(re-find #".+\$\d.*" %))
     (map #(.. % (replace ".class" "") (replace "/" ".")))
-    #?(:bb [(babashka.classpath/get-classpath)]
+    #?(:bb (remove nil? [(babashka.classpath/get-classpath)])
        :clj (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
 (defn ^:private base-classes
