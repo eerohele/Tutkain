@@ -266,7 +266,9 @@
   "A future that holds a sequence of the names of all non-base Java classes
   in the class path."
   []
-  (mapcat path-files
+  (eduction
+    (mapcat path-files)
+    (remove #(.startsWith % "META-INF/"))
     #?(:bb [(babashka.classpath/get-classpath)]
        :clj (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
