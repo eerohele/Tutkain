@@ -285,7 +285,7 @@
               (for [^java.lang.module.ModuleReference module-reference (.findAll module-finder)]
                 (with-open [module-reader (.open module-reference)
                             stream (.list module-reader)]
-                  (.toList stream)))))))
+                  (iterator-seq (.iterator stream))))))))
 
 (def ^:private all-class-names
   (future
