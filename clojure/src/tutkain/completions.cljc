@@ -280,8 +280,8 @@
     future))
 
 (def ^:private base-class-names
-  "A future that, on JDK11 and newer, holds a sequence of all classes in
-  every Java module in the current JDK.
+  "A future that, on JDK11 and newer, holds a sequence of all java.* and
+  javax.* classes in every Java module in the current JDK.
 
   On < JDK11, holds nil."
   (future
@@ -295,7 +295,9 @@
                     (mapcat #(-> % .open .list .iterator iterator-seq))
                     ;; Remove anonymous nested classes
                     (remove #(re-find #".+\$\d.+\.class" %))
-                    (map #(.. % (replace ".class" "") (replace "/" "."))))))
+                    (map #(.. % (replace ".class" "") (replace "/" ".")))
+                    ;; Only retain java.* and javax.* to limit memory consumption
+                    (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax."))))))
               (catch ClassNotFoundException _)))))
 
 (def ^:private all-class-names

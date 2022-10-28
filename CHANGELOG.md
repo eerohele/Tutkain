@@ -76,6 +76,9 @@ All notable changes to this project will be documented in this file.
 - Remove invisible Unicode characters when copying text from the output view
 - Fix bug when evaluating a multiline form where subsequent lines are dedented relative to the first line
 - Fix Tutkain opening too many files when navigating the results of the Apropos and Dir commands
+- Reduce memory consumption and improve performance of base Java class name auto-completion
+
+  Tutkain now only auto-completes java.* and javax.* class names.
 
 ## 0.16.0 (alpha) - 2022-08-08
 
