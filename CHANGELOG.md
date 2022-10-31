@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
+## 0.17.0 (alpha) - 2022-10-31
 
 - BREAKING: Tutkain no longer supports Java 8.
 
