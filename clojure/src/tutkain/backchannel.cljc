@@ -1,13 +1,14 @@
 (ns tutkain.backchannel
   (:require
    [clojure.core.server :as server]
+   [clojure.java.io :as io]
    [clojure.edn :as edn]
    [tutkain.format :as format])
   (:import
    (clojure.lang LineNumberingPushbackReader RT)
    (java.nio.file LinkOption Files Paths Path)
-   (java.io File IOException Writer)
-   (java.net SocketException URL)
+   (java.io IOException Writer)
+   (java.net ServerSocket SocketException URL)
    (java.util.concurrent.atomic AtomicInteger)))
 
 (comment (set! *warn-on-reflection* true) ,,,)
@@ -64,14 +65,13 @@
   #?(:bb path-str
      :clj
      (if-some [^Path path (some-> path-str not-empty (Paths/get (into-array String [])))]
-       (.replace
-         (if (Files/exists path (into-array LinkOption []))
-           (let [^Path path (.toRealPath path (into-array LinkOption []))]
-             (if-some [^Path root (some #(when (.startsWith path ^Path %) %) @classpath-root-paths)]
-               (str (.relativize root path))
-               path-str))
-           path-str)
-         "\\" "/")
+       (let [^String path-str (if (Files/exists path (into-array LinkOption []))
+                                (let [^Path path (.toRealPath path (into-array LinkOption []))]
+                                  (if-some [^Path root (some #(when (.startsWith path ^Path %) %) @classpath-root-paths)]
+                                    (str (.relativize root path))
+                                    path-str))
+                                path-str)]
+         (.replace path-str "\\" "/"))
        "NO_SOURCE_PATH")))
 
 (defmethod handle :set-eval-context
@@ -85,7 +85,7 @@
        true (assoc-in [:thread-bindings #'*file*] (relative-to-classpath-root file))
        ;; Babashka doesn't have *source-path*, but unlike in Clojure *file*
        ;; has the same effect.
-       true (assoc-in [:thread-bindings #?(:bb #'*file* :clj #'*source-path*)] (or (some-> file File. .getName) "NO_SOURCE_FILE"))
+       true (assoc-in [:thread-bindings #?(:bb #'*file* :clj #'*source-path*)] (or (some-> file io/file .getName) "NO_SOURCE_FILE"))
        ns (assoc-in [:thread-bindings #'*ns*] (find-or-create-ns ns))))
   (respond-to message {:result :ok}))
 
@@ -171,16 +171,16 @@
   (let [eval-context (atom {})
         eventual-send-fn (promise)
         server-name (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter))
-        socket (server/start-server
-                 {:address bind-address
-                  :port port
-                  :name server-name
-                  :accept `accept
-                  :args [{:bindings (select-keys bindings [#'*e #'*1 #'*2 #'*3 #'*warn-on-reflection*])
-                          :eval-context eval-context
-                          :eventual-send-fn eventual-send-fn
-                          :xform-in #(xform-in %)
-                          :xform-out #(xform-out %)}]})]
+        ^ServerSocket socket (server/start-server
+                               {:address bind-address
+                                :port port
+                                :name server-name
+                                :accept `accept
+                                :args [{:bindings (select-keys bindings [#'*e #'*1 #'*2 #'*3 #'*warn-on-reflection*])
+                                        :eval-context eval-context
+                                        :eventual-send-fn eventual-send-fn
+                                        :xform-in #(xform-in %)
+                                        :xform-out #(xform-out %)}]})]
     (reify Backchannel
       (eval-context [_] @eval-context)
       (update-thread-bindings [_ thread-bindings]

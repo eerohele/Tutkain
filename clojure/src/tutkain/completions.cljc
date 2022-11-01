@@ -12,8 +12,6 @@
    (java.lang.reflect Field Member Method Modifier)
    (java.util.jar JarEntry)))
 
-#_(set! *warn-on-reflection* true)
-
 (when (nil? (System/getProperty "apple.awt.UIElement"))
   (System/setProperty "apple.awt.UIElement" "true"))
 
@@ -287,7 +285,7 @@
               ;; Remove anonymous nested classes
               (remove #(re-find #".+\$\d.+\.class" %))
               ;; Only retain java.* and javax.* to limit memory consumption
-              (map #(.. % (replace ".class" "") (replace "/" ".")))
+              (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
               (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
               (for [^java.lang.module.ModuleReference module-reference (.findAll module-finder)]
                 (with-open [module-reader (.open module-reference)
