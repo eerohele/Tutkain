@@ -75,3 +75,21 @@
                     :source "/my/path/math.clj"}}
   (-> ex :val edn/read-string :via first :data
     (select-keys [:clojure.error/phase :clojure.error/source])))
+
+(def sw (PrintWriter-on #(.put recvq {:tag :err :val %1}) nil))
+
+(backchannel/handle
+  {:op :load
+   :eval-lock (Object.)
+   :eval-context (atom {:thread-bindings {#'*err* sw
+                                          #'*warn-on-reflection* true}})
+   :file "/my/path/math.clj"
+   :code (string->base64 "(def i 23) (.toString i)")
+   :out-fn #(.put recvq %)})
+
+(recv)
+(xr/check! #{{:tag :err
+              :val "Reflection warning, /my/path/math.clj:1:12 - reference to field toString can't be resolved.\n"}})
+
+(recv)
+(xr/check! #{{:tag :ret :val "nil\n"}})
