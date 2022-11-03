@@ -71,10 +71,11 @@
 (def ex (recv))
 (xr/check! ::ex ex)
 (xr/check!
-  #{#:clojure.error{:phase :read-source
-                    :source "/my/path/math.clj"}}
-  (-> ex :val edn/read-string :via first :data
-    (select-keys [:clojure.error/phase :clojure.error/source])))
+  #{{:tag :err
+     :val
+     "Syntax error reading source at (/my/path/math.clj:2:1).\nEOF while reading, starting at line 1\n"
+     :exception true}}
+  ex)
 
 (def sw (PrintWriter-on #(.put recvq {:tag :err :val %1}) nil))
 
@@ -92,4 +93,4 @@
               :val "Reflection warning, /my/path/math.clj:1:12 - reference to field toString can't be resolved.\n"}})
 
 (recv)
-(xr/check! #{{:tag :ret :val "nil\n"}})
+(xr/check! #{{:tag :ret :val "\"23\"\n"}})
