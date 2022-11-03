@@ -55,6 +55,8 @@ def for_point(view: View, point: int) -> Union[edn.Keyword, None]:
         return edn.Keyword("cljs")
     if view.match_selector(point, "source.clojure.babashka"):
         return edn.Keyword("bb")
+    if view.match_selector(point, "source.clojure") and evaluation_dialect(view) == edn.Keyword("bb"):
+        return edn.Keyword("bb")
     if view.match_selector(point, "source.clojure"):
         return edn.Keyword("clj")
 
