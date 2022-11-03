@@ -12,9 +12,10 @@
   (try
     (let [file-name (some-> file io/file .getName)
           val (locking eval-lock (with-bindings (:thread-bindings @eval-context {})
-                                   (read-base64 code (relative-to-classpath-root file) file-name)
-                                   (.flush ^Writer *err*)
-                                   (swap! eval-context assoc :thread-bindings (get-thread-bindings))))]
+                                   (let [ret (read-base64 code (relative-to-classpath-root file) file-name)]
+                                     (swap! eval-context assoc :thread-bindings (get-thread-bindings))
+                                     (.flush ^Writer *err*)
+                                     ret)))]
       (respond-to message {:tag :ret
                            :val (pp-str val)}))
     (catch Throwable ex
