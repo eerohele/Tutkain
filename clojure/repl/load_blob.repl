@@ -88,9 +88,12 @@
    :code (string->base64 "(def i 23) (.toString i)")
    :out-fn #(.put recvq %)})
 
-(recv)
-(xr/check! #{{:tag :err
-              :val "Reflection warning, /my/path/math.clj:1:12 - reference to field toString can't be resolved.\n"}})
+(def ret (recv))
+(xr/check!
+  (partial re-matches #"Reflection warning, /my/path/math.clj:\d+:\d+ - reference to field toString can't be resolved.\n")
+  (:val ret))
+
+(xr/check! #{:err} (:tag ret))
 
 (recv)
 (xr/check! #{{:tag :ret :val "\"23\"\n"}})
