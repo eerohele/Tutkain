@@ -71,11 +71,10 @@
 (def ex (recv))
 (xr/check! ::ex ex)
 (xr/check!
-  #{{:tag :err
-     :val
-     "Syntax error reading source at (/my/path/math.clj:2:1).\nEOF while reading, starting at line 1\n"
-     :exception true}}
-  ex)
+  (partial re-matches #"(?s)Syntax error reading source at \(/my/path/math.clj:\d+:\d+\)\.\nEOF while reading, starting at line \d+\n")
+  (:val ex))
+
+(xr/check! #{:err} (:tag ex))
 
 (def sw (PrintWriter-on #(.put recvq {:tag :err :val %1}) nil))
 
@@ -90,7 +89,7 @@
 
 (def ret (recv))
 (xr/check!
-  (partial re-matches #"Reflection warning, /my/path/math.clj:\d+:\d+ - reference to field toString can't be resolved.\n")
+  (partial re-matches #"Reflection warning, /my/path/math.clj:\d+:\d+ - reference to field toString can't be resolved\.\n")
   (:val ret))
 
 (xr/check! #{:err} (:tag ret))
