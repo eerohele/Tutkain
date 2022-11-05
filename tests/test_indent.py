@@ -18,13 +18,17 @@ class TestPruneRegion(ViewTestCase):
 
 
 class TestIndentInsertNewLineCommand(ViewTestCase):
-    def becomes(self, a, b, selections=[(0, 0)], newlines=1, clean=True, extend_comment=True):
+    def becomes(
+        self, a, b, selections=[(0, 0)], newlines=1, clean=True, extend_comment=True
+    ):
         self.set_view_content(cleandoc(a) if clean else a)
 
         self.set_selections(*selections)
 
         for n in range(newlines):
-            self.view.run_command("tutkain_insert_newline", {"extend_comment": extend_comment})
+            self.view.run_command(
+                "tutkain_insert_newline", {"extend_comment": extend_comment}
+            )
 
         self.assertEquals(cleandoc(b) if clean else b, self.view_content())
 
@@ -379,18 +383,14 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
         )
 
     def test_extend_comment(self):
-        self.becomes(
-            """;; foo""",
-            """;; foo\n;;\x20""",
-            selections=[(6, 6)]
-        )
+        self.becomes(""";; foo""", """;; foo\n;;\x20""", selections=[(6, 6)])
 
         self.becomes(
             """;; foo""",
             """;; foo\n""",
             selections=[(6, 6)],
             extend_comment=False,
-            clean=False
+            clean=False,
         )
 
 
@@ -528,66 +528,81 @@ class TestIndentRegionCommand(ViewTestCase):
         for n in range(173):
             self.becomes(text, text, selections=[(n, n)])
 
-
     def test_find_open_bracket(self):
         self.becomes(
-        """
+            """
         [[:a
           :b]
         :c]""",
-        """
+            """
         [[:a
           :b]
-         :c]""")
+         :c]""",
+        )
 
         self.becomes(
-        """
+            """
         [{:a :b}
          {:b :c
           :d :e}
          {:f :g}]""",
-        """
+            """
         [{:a :b}
          {:b :c
           :d :e}
-         {:f :g}]""")
-
+         {:f :g}]""",
+        )
 
     def test_reindent(self):
         self.assertEquals("(inc 1)", indent.reindent("(inc 1)", 0))
         self.assertEquals(
-"""(inc
-     1)""", indent.reindent(
-"""(inc
-     1)"""
-, 0))
+            """(inc
+     1)""",
+            indent.reindent(
+                """(inc
+     1)""",
+                0,
+            ),
+        )
 
         self.assertEquals(
-"""(inc
- 1)""", indent.reindent(
-"""(inc
- 1)"""
-, 0))
+            """(inc
+ 1)""",
+            indent.reindent(
+                """(inc
+ 1)""",
+                0,
+            ),
+        )
 
         self.assertEquals(
-"""(inc
-     1)""", indent.reindent(
-"""  (inc
-       1)"""
-, 2))
+            """(inc
+     1)""",
+            indent.reindent(
+                """  (inc
+       1)""",
+                2,
+            ),
+        )
 
         self.assertEquals(
-"""(inc
-  1)""", indent.reindent(
-"""  (inc
-    1)"""
-, 2))
+            """(inc
+  1)""",
+            indent.reindent(
+                """  (inc
+    1)""",
+                2,
+            ),
+        )
         self.assertEquals(
-"""(identity
-{:a 1 :b 2})""", indent.reindent(
-"""    (identity
-{:a 1 :b 2})"""
-, 4))
+            """(identity
+{:a 1 :b 2})""",
+            indent.reindent(
+                """    (identity
+{:a 1 :b 2})""",
+                4,
+            ),
+        )
 
 
 class TestHardWrapCommand(ViewTestCase):
@@ -599,23 +614,40 @@ class TestHardWrapCommand(ViewTestCase):
             self.view.run_command("tutkain_hard_wrap", {"width": width})
             self.assertEquals(expected, self.view_content())
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_hard_wrap(self):
         self.wraps_to(""";; a""", """;; a""", width=5)
         self.wraps_to(""";; a b""", """;; a\n;; b""", width=5)
 
         # Preserves empty lines
-        self.wraps_to(""";; a b\n;;\n;; c d""", """;; a\n;; b\n;;\n;; c\n;; d""", width=5)
+        self.wraps_to(
+            """;; a b\n;;\n;; c d""", """;; a\n;; b\n;;\n;; c\n;; d""", width=5
+        )
 
         # Indented comment
-        self.wraps_to("""  ;; a b\n  ;;\n  ;; c d""", """  ;; a\n  ;; b\n  ;;\n  ;; c\n  ;; d""", start_at=4, width=7)
+        self.wraps_to(
+            """  ;; a b\n  ;;\n  ;; c d""",
+            """  ;; a\n  ;; b\n  ;;\n  ;; c\n  ;; d""",
+            start_at=4,
+            width=7,
+        )
 
-        self.wraps_to("""1\n  ;; a b\n  ;;\n  ;; c d""", """1\n  ;; a\n  ;; b\n  ;;\n  ;; c\n  ;; d""", start_at=5, width=7)
+        self.wraps_to(
+            """1\n  ;; a b\n  ;;\n  ;; c d""",
+            """1\n  ;; a\n  ;; b\n  ;;\n  ;; c\n  ;; d""",
+            start_at=5,
+            width=7,
+        )
         self.wraps_to("""1 ;; a b""", "1;; a\n;; b", start_at=2, width=6)
         self.wraps_to('''"a"''', '''"a"''', width=4)
         self.wraps_to('''"a b c d"''', '''"a b\nc d"''', width=4)
         self.wraps_to('''"a b c d\n\ne d f g"''', '''"a b\nc d\n\ne d\nf g"''', width=4)
-        self.wraps_to('''  "foo bar\n\n  baz qux"''', '''  "foo\n  bar\n\n  baz\n  qux\n  "''', start_at=2, width=7)
+        self.wraps_to(
+            '''  "foo bar\n\n  baz qux"''',
+            '''  "foo\n  bar\n\n  baz\n  qux\n  "''',
+            start_at=2,
+            width=7,
+        )
 
         self.set_view_content(""";; a b\n\n;; c d""")
         self.set_selections((0, 0), (8, 8))
@@ -626,5 +658,3 @@ class TestHardWrapCommand(ViewTestCase):
         self.set_selections((0, 0), (11, 11))
         self.view.run_command("tutkain_hard_wrap", {"width": 4})
         self.assertEquals('''"a b\nc d"\n\n"e f\ng h"''', self.view_content())
-
-

@@ -41,7 +41,6 @@ class TestClear(TestCase):
         self.assertEquals("", view_content(self.repl_view))
         self.assertEquals("", view_content(self.tap_panel))
 
-
         # Explicit pass "tap" and "repl":
 
         reset_view(self.repl_view)
@@ -54,7 +53,6 @@ class TestClear(TestCase):
 
         self.assertEquals("", view_content(self.repl_view))
         self.assertEquals("", view_content(self.tap_panel))
-
 
         # Clear "tap" only:
 
@@ -69,7 +67,6 @@ class TestClear(TestCase):
         self.assertEquals("foo", view_content(self.repl_view))
         self.assertEquals("", view_content(self.tap_panel))
 
-
         # Clear "repl" only:
 
         reset_view(self.repl_view)
@@ -82,7 +79,6 @@ class TestClear(TestCase):
 
         self.assertEquals("", view_content(self.repl_view))
         self.assertEquals("bar", view_content(self.tap_panel))
-
 
         # Clear none:
 

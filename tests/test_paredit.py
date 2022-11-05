@@ -169,10 +169,10 @@ class TestParedit(ViewTestCase):
         self.assertEquals('(a "b")', self.view_content())
         self.assertEquals(self.selections(), [(7, 7)])
 
-        self.set_view_content('(\\ )')
+        self.set_view_content("(\\ )")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_paredit_close_round")
-        self.assertEquals('(\\) )', self.view_content())
+        self.assertEquals("(\\) )", self.view_content())
         self.assertEquals(self.selections(), [(3, 3)])
 
     def test_close_round_in_string(self):
@@ -527,7 +527,9 @@ class TestParedit(ViewTestCase):
         self.set_view_content("""[["/foo"\n  {:bar :baz}\n  ["/quux"]]]""")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_paredit_forward_barf")
-        self.assertEquals("""[["/foo"\n  {:bar :baz}]\n ["/quux"]]""", self.view_content())
+        self.assertEquals(
+            """[["/foo"\n  {:bar :baz}]\n ["/quux"]]""", self.view_content()
+        )
         self.assertEquals(self.selections(), [(2, 2)])
 
     # TODO: I'm not asserting selections here because I haven't figured out how to ensure the

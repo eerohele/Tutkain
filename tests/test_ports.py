@@ -18,13 +18,13 @@ class TestPorts(TestCase):
     def test_parse_port(self):
         # Parsing port from string to int
         self.assertEquals(
-            1234,
-            ports.parse(self.window, "1234", edn.Keyword("clj"), lambda *_: [])
+            1234, ports.parse(self.window, "1234", edn.Keyword("clj"), lambda *_: [])
         )
 
         # Pass "auto" -> use discovered port
         self.assertEquals(
             1234,
-            ports.parse(self.window, "auto", edn.Keyword("clj"), lambda *_: [("", "1234")])
+            ports.parse(
+                self.window, "auto", edn.Keyword("clj"), lambda *_: [("", "1234")]
+            ),
         )
-

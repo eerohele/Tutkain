@@ -47,7 +47,11 @@ def move(view, forward, extend):
             innermost = sexp.innermost(view, point, edge=False)
 
             if innermost:
-                new_point = innermost.close.region.end() if forward else innermost.open.region.begin()
+                new_point = (
+                    innermost.close.region.end()
+                    if forward
+                    else innermost.open.region.begin()
+                )
 
         if new_point is not None:
             if extend and forward:
@@ -84,7 +88,9 @@ def close_bracket(view, edit, close_bracket):
     for region, sel in iterate(view):
         point = region.begin()
 
-        if selectors.ignore(view, point) or view.match_selector(point - 1, "punctuation.definition.character.begin"):
+        if selectors.ignore(view, point) or view.match_selector(
+            point - 1, "punctuation.definition.character.begin"
+        ):
             view.insert(edit, point, close_bracket)
         else:
             innermost = sexp.innermost(view, point, edge=False)
@@ -167,7 +173,9 @@ def forward_slurp(view, edit):
 def backward_slurp(view, edit):
     for region, sel in iterate(view):
         form, innermost = find_slurp_barf_targets(
-            view, region.begin(), lambda s: forms.find_previous(view, s.open.region.begin())
+            view,
+            region.begin(),
+            lambda s: forms.find_previous(view, s.open.region.begin()),
         )
 
         if form:
@@ -176,13 +184,17 @@ def backward_slurp(view, edit):
             view.insert(edit, form.begin(), chars)
             new_innermost = sexp.innermost(view, form.begin(), edge="forward")
             indent.indent_region(view, edit, new_innermost.extent(), prune=True)
-            innermost_after_indent = sexp.innermost(view, new_innermost.open.region.begin(), edge="forward")
+            innermost_after_indent = sexp.innermost(
+                view, new_innermost.open.region.begin(), edge="forward"
+            )
 
             # If pruning changes the size of the sexp we slurped into, move the
             # caret(s) in front the first form in the sexp. If not, keep the
             # carets where they were.
             if new_innermost.extent().size() != innermost_after_indent.extent().size():
-                last_form = forms.find_previous(view, innermost_after_indent.close.region.begin())
+                last_form = forms.find_previous(
+                    view, innermost_after_indent.close.region.begin()
+                )
                 sel.append(last_form.begin())
             else:
                 sel.append(region)
@@ -202,13 +214,14 @@ def find_previous_slurp_barf_form(view, point):
         return forms.find_previous(view, point)
 
 
-
 def forward_barf(view, edit):
     for region, sel in iterate(view):
         sel.append(region)
 
         form, innermost = find_slurp_barf_targets(
-            view, region.begin(), lambda s: find_previous_slurp_barf_form(view, s.close.region.begin())
+            view,
+            region.begin(),
+            lambda s: find_previous_slurp_barf_form(view, s.close.region.begin()),
         )
 
         if innermost and form:
@@ -234,15 +247,12 @@ def forward_barf(view, edit):
                 view,
                 edit,
                 sexp.innermost(view, innermost.open.region.end(), edge=False).extent(),
-                prune=True
+                prune=True,
             )
 
             # Reindent the form we barfed
             indent.indent_region(
-                view,
-                edit,
-                forms.find_next(view, insert_point + 1),
-                prune=True
+                view, edit, forms.find_next(view, insert_point + 1), prune=True
             )
 
 
@@ -251,7 +261,9 @@ def backward_barf(view, edit):
         sel.append(region)
 
         form, innermost = find_slurp_barf_targets(
-            view, region.begin(), lambda s: find_next_slurp_barf_form(view, s.open.region.end())
+            view,
+            region.begin(),
+            lambda s: find_next_slurp_barf_form(view, s.open.region.end()),
         )
 
         if innermost and form:
@@ -324,7 +336,9 @@ def backward_delete(view, edit):
             innermost = sexp.innermost(view, point, edge="backward")
 
             if view.match_selector(point - 1, "constant.character - invalid.illegal"):
-                erase = selectors.expand_by_selector(view, point - 1, "constant.character")
+                erase = selectors.expand_by_selector(
+                    view, point - 1, "constant.character"
+                )
                 view.erase(edit, erase)
             elif not innermost:
                 view.erase(edit, Region(point - 1, point))
@@ -475,7 +489,9 @@ def backward_move_form(view, edit):
             previous_form_str = view.substr(previous_form)
             between = view.substr(Region(previous_form.end(), form.begin()))
             view.erase(edit, Region(previous_form.begin(), form.end()))
-            view.insert(edit, previous_form.begin(), form_str + between + previous_form_str)
+            view.insert(
+                edit, previous_form.begin(), form_str + between + previous_form_str
+            )
 
             begin = previous_form.begin()
 
@@ -549,7 +565,7 @@ def thread(view, edit, arrow, join_on=" "):
                     view,
                     edit,
                     sexp.innermost(view, innermost.open.region.begin()).extent(),
-                    prune=True
+                    prune=True,
                 )
 
             # If the form is the first form in a sexp, abort.
@@ -561,8 +577,12 @@ def thread(view, edit, arrow, join_on=" "):
 
                     if view.substr(head) == arrow:
                         enclosing_sexp = sexp.innermost(view, form.begin(), edge=False)
-                        left = view.substr(Region(enclosing_sexp.open.region.begin(), form.begin()))
-                        right = view.substr(Region(form.end(), enclosing_sexp.close.region.end()))
+                        left = view.substr(
+                            Region(enclosing_sexp.open.region.begin(), form.begin())
+                        )
+                        right = view.substr(
+                            Region(form.end(), enclosing_sexp.close.region.end())
+                        )
                         form_str = view.substr(form)
                         replacee = f"""{form_str[:-1]}{join_on}{left.rstrip()}{right}{form_str[-1]}"""
                         view.replace(edit, enclosing_sexp.extent(), replacee)
@@ -570,8 +590,10 @@ def thread(view, edit, arrow, join_on=" "):
                         indent.indent_region(
                             view,
                             edit,
-                            sexp.innermost(view, enclosing_sexp.open.region.begin()).extent(),
-                            prune=True
+                            sexp.innermost(
+                                view, enclosing_sexp.open.region.begin()
+                            ).extent(),
+                            prune=True,
                         )
                     else:
                         thread_unthreaded()
@@ -589,7 +611,8 @@ def thread_last(view, edit, join_on):
 
 def unthread(view, edit, join_on=" "):
     for region, sel in iterate(view):
-        if ((enclosing_sexp := sexp.innermost(view, region.begin()))
+        if (
+            (enclosing_sexp := sexp.innermost(view, region.begin()))
             and (head := forms.find_next(view, enclosing_sexp.open.region.end()))
             and view.substr(head) in {"->", "->>"}
         ):
@@ -598,7 +621,9 @@ def unthread(view, edit, join_on=" "):
 
             if view.match_selector(last_form.end() - 1, sexp.END_SELECTORS):
                 innermost = sexp.innermost(view, enclosing_sexp.close.region.begin())
-                new_head = Region(innermost.open.region.end(), innermost.close.region.begin())
+                new_head = Region(
+                    innermost.open.region.end(), innermost.close.region.begin()
+                )
             else:
                 new_head = last_form
 
@@ -606,8 +631,10 @@ def unthread(view, edit, join_on=" "):
             if threaded_form == forms.find_previous(view, last_form.begin()):
                 prefix = f"""{view.substr(enclosing_sexp.open.region)}{view.substr(new_head)}{join_on}"""
 
-                view.replace(edit, enclosing_sexp.extent(),
-                    f"""{prefix}{view.substr(threaded_form)}{view.substr(enclosing_sexp.close.region)}"""
+                view.replace(
+                    edit,
+                    enclosing_sexp.extent(),
+                    f"""{prefix}{view.substr(threaded_form)}{view.substr(enclosing_sexp.close.region)}""",
                 )
 
                 sel.append(enclosing_sexp.open.region.end() + len(prefix) - 1)
@@ -616,11 +643,14 @@ def unthread(view, edit, join_on=" "):
                 new_threaded_content = f"""{view.substr(enclosing_sexp.open.region)}{view.substr(head)}{between}{view.substr(enclosing_sexp.close.region)}"""
                 prefix = f"""{view.substr(enclosing_sexp.open.region)}{view.substr(new_head)}{join_on}"""
 
-                view.replace(edit, enclosing_sexp.extent(),
-                    f"""{prefix}{new_threaded_content}{view.substr(enclosing_sexp.close.region)}"""
+                view.replace(
+                    edit,
+                    enclosing_sexp.extent(),
+                    f"""{prefix}{new_threaded_content}{view.substr(enclosing_sexp.close.region)}""",
                 )
 
                 sel.append(enclosing_sexp.open.region.end() + len(prefix) - 1)
+
 
 def forward_up(view, edit):
     for region, sel in iterate(view):
@@ -663,7 +693,7 @@ def discard_undiscard(view, edit, scope="innermost"):
                 view,
                 point,
                 "punctuation.definition.comment & keyword.operator.macro",
-                forward=False
+                forward=False,
             )
 
             if hash != -1:
@@ -677,7 +707,7 @@ def discard_undiscard(view, edit, scope="innermost"):
                 expression = sexp.outermost(view, point, edge=True)
 
             if expression:
-                view.insert(edit, expression.open.region.begin(), '#_')
+                view.insert(edit, expression.open.region.begin(), "#_")
 
 
 def split_sexp(view, edit):
@@ -688,11 +718,15 @@ def split_sexp(view, edit):
             close_bracket = view.substr(innermost.close.region)
             open_bracket = view.substr(innermost.open.region)
 
-            if not view.match_selector(point, "string") and re.match(r'\s', view.substr(point)):
+            if not view.match_selector(point, "string") and re.match(
+                r"\s", view.substr(point)
+            ):
                 sel.append(point + 1)
                 view.insert(edit, point + 1, open_bracket)
                 view.insert(edit, point, close_bracket)
-            elif not view.match_selector(point, "string") and re.match(r'\s', view.substr(point - 1)):
+            elif not view.match_selector(point, "string") and re.match(
+                r"\s", view.substr(point - 1)
+            ):
                 sel.append(point)
                 view.insert(edit, point, open_bracket)
                 view.insert(edit, point - 1, close_bracket)
@@ -710,15 +744,25 @@ def join_sexps(view, edit):
 
             if next_form := forms.find_next(view, innermost.close.region.end()):
                 if view.match_selector(next_form.begin(), "string"):
-                    word_start_point = view.find_by_class(next_form.begin(), True, CLASS_WORD_START)
-                    region = Region(innermost.close.region.begin(), next_form.begin() + 1)
-                    string = view.substr(Region(innermost.close.region.end() + 1, next_form.begin()))
+                    word_start_point = view.find_by_class(
+                        next_form.begin(), True, CLASS_WORD_START
+                    )
+                    region = Region(
+                        innermost.close.region.begin(), next_form.begin() + 1
+                    )
+                    string = view.substr(
+                        Region(innermost.close.region.end() + 1, next_form.begin())
+                    )
                     view.replace(edit, region, string)
 
-        if (prev_form := find_previous_slurp_barf_form(view, point)) and view.match_selector(prev_form.begin(), sexp.BEGIN_SELECTORS):
+        if (
+            prev_form := find_previous_slurp_barf_form(view, point)
+        ) and view.match_selector(prev_form.begin(), sexp.BEGIN_SELECTORS):
             prev_sexp = sexp.innermost(view, prev_form.begin(), edge=True)
 
-            if (next_form := find_next_slurp_barf_form(view, prev_form.end())) and view.match_selector(next_form.begin(), sexp.BEGIN_SELECTORS):
+            if (
+                next_form := find_next_slurp_barf_form(view, prev_form.end())
+            ) and view.match_selector(next_form.begin(), sexp.BEGIN_SELECTORS):
                 next_sexp = sexp.innermost(view, next_form.begin(), edge=True)
 
                 view.erase(edit, next_sexp.open.region)

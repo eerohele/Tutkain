@@ -138,26 +138,26 @@ class PackageTestCase(DeferrableTestCase):
         for begin, end in pairs:
             self.view.sel().add(sublime.Region(begin, end))
 
-    def eval_context(self, file="NO_SOURCE_FILE", ns=edn.Symbol("user"), line=1, column=1):
+    def eval_context(
+        self, file="NO_SOURCE_FILE", ns=edn.Symbol("user"), line=1, column=1
+    ):
         actual = edn.read(self.server.backchannel.recv())
 
         id = actual.get(edn.Keyword("id"))
 
-        message = edn.kwmap({
-             "id": id,
-             "op": edn.Keyword("set-eval-context"),
-             "file": file,
-             "ns": ns,
-             "line": line,
-             "column": column,
-        })
+        message = edn.kwmap(
+            {
+                "id": id,
+                "op": edn.Keyword("set-eval-context"),
+                "file": file,
+                "ns": ns,
+                "line": line,
+                "column": column,
+            }
+        )
 
         self.assertEquals(message, actual)
 
-        response = edn.kwmap({
-            "id": id,
-            "result": edn.Keyword("ok")
-        })
+        response = edn.kwmap({"id": id, "result": edn.Keyword("ok")})
 
         self.server.backchannel.send(response)
-

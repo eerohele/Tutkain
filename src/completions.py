@@ -19,7 +19,7 @@ KINDS = {
     "static-method": (sublime.KIND_ID_FUNCTION, "c", "Static method"),
     "keyword": sublime.KIND_KEYWORD,
     "protocol": sublime.KIND_TYPE,
-    "navigation": sublime.KIND_NAVIGATION
+    "navigation": sublime.KIND_NAVIGATION,
 }
 
 
@@ -76,25 +76,37 @@ def get_completions(view, prefix, point):
     try:
         view.settings().set("word_separators", word_separators.replace("/", ""))
 
-        if view.match_selector(
-            point,
-            "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | constant.other.keyword",
-        ) and (dialect := dialects.for_point(view, point)) and (client := state.get_client(view.window(), dialect)):
-            if scope := selectors.expand_by_selector(view, point, "meta.symbol | constant.other.keyword"):
+        if (
+            view.match_selector(
+                point,
+                "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | constant.other.keyword",
+            )
+            and (dialect := dialects.for_point(view, point))
+            and (client := state.get_client(view.window(), dialect))
+        ):
+            if scope := selectors.expand_by_selector(
+                view, point, "meta.symbol | constant.other.keyword"
+            ):
                 prefix = view.substr(scope)
 
             completion_list = sublime.CompletionList()
 
-            client.backchannel.send({
-                "op": edn.Keyword("completions"),
-                "prefix": prefix,
-                "ns": namespace.name(view),
-                "dialect": dialect
-            }, handler=lambda response: (
-                completion_list.set_completions(
-                    map(completion_item, response.get(edn.Keyword("completions"), []))
-                )
-            ))
+            client.backchannel.send(
+                {
+                    "op": edn.Keyword("completions"),
+                    "prefix": prefix,
+                    "ns": namespace.name(view),
+                    "dialect": dialect,
+                },
+                handler=lambda response: (
+                    completion_list.set_completions(
+                        map(
+                            completion_item,
+                            response.get(edn.Keyword("completions"), []),
+                        )
+                    )
+                ),
+            )
 
             return completion_list
     finally:

@@ -5,25 +5,27 @@ from .repl import views
 from typing import Union
 
 
-DIALECT_NAMES = edn.kwmap({
-    "clj": "Clojure",
-    "cljs": "ClojureScript",
-    "cljc": "Clojure Common",
-    "bb": "Babashka"
-})
+DIALECT_NAMES = edn.kwmap(
+    {
+        "clj": "Clojure",
+        "cljs": "ClojureScript",
+        "cljc": "Clojure Common",
+        "bb": "Babashka",
+    }
+)
 
 
 SYNTAXES = {
     edn.Keyword("clj"): "Packages/Tutkain/Clojure (Tutkain).sublime-syntax",
-    edn.Keyword("cljs"): "Packages/Tutkain/ClojureScript (Tutkain).sublime-syntax"
+    edn.Keyword("cljs"): "Packages/Tutkain/ClojureScript (Tutkain).sublime-syntax",
 }
 
 
 DIALECTS = {
- edn.Keyword("clj"): ".clj",
- edn.Keyword("cljs"): ".cljs",
- edn.Keyword("cljc"): ".cljc",
- edn.Keyword("bb"): ".bb"
+    edn.Keyword("clj"): ".clj",
+    edn.Keyword("cljs"): ".cljs",
+    edn.Keyword("cljc"): ".cljc",
+    edn.Keyword("bb"): ".bb",
 }
 
 
@@ -42,8 +44,10 @@ def name(dialect: edn.Keyword) -> str:
 def evaluation_dialect(view: Union[View, None]) -> Union[edn.Keyword, None]:
     """Given a Tutkain REPL view, return the evaluation dialect for the
     window the view belongs to."""
-    if view and (window := view.window()) and (
-        dialect := window.settings().get("tutkain_evaluation_dialect")
+    if (
+        view
+        and (window := view.window())
+        and (dialect := window.settings().get("tutkain_evaluation_dialect"))
     ):
         return edn.Keyword(dialect)
 
@@ -55,7 +59,9 @@ def for_point(view: View, point: int) -> Union[edn.Keyword, None]:
         return edn.Keyword("cljs")
     if view.match_selector(point, "source.clojure.babashka"):
         return edn.Keyword("bb")
-    if view.match_selector(point, "source.clojure") and evaluation_dialect(view) == edn.Keyword("bb"):
+    if view.match_selector(point, "source.clojure") and evaluation_dialect(
+        view
+    ) == edn.Keyword("bb"):
         return edn.Keyword("bb")
     if view.match_selector(point, "source.clojure"):
         return edn.Keyword("clj")
@@ -71,4 +77,3 @@ def for_view(view):
             return edn.Keyword("bb")
         if syntax.scope == "source.clojure":
             return edn.Keyword("clj")
-

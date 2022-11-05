@@ -27,17 +27,16 @@ def current(view, point):
 
 
 def add_annotation(response):
-    args = {
-        "reference": response["expected"],
-        "actual": response["actual"]
-    }
+    args = {"reference": response["expected"], "actual": response["actual"]}
 
     return """
     <a style="font-size: 0.8rem"
        href='{}'>{}</a>
     """.format(
         sublime.command_url("tutkain_open_diff_window", args=args),
-        "diff" if response.get("type", edn.Keyword("fail")) == edn.Keyword("fail") else "show",
+        "diff"
+        if response.get("type", edn.Keyword("fail")) == edn.Keyword("fail")
+        else "show",
     )
 
 
@@ -115,7 +114,12 @@ def response_results(view, response):
     if edn.Keyword("error") in response:
         for result in response[edn.Keyword("error")]:
             # We don't get line number in var-meta with Babashka -- only in result
-            line = result[edn.Keyword("var-meta")].get(edn.Keyword("line"), result.get(edn.Keyword("line"))) - 1
+            line = (
+                result[edn.Keyword("var-meta")].get(
+                    edn.Keyword("line"), result.get(edn.Keyword("line"))
+                )
+                - 1
+            )
             column = result[edn.Keyword("var-meta")].get(edn.Keyword("column"), 2) - 1
             point = view.text_point(line, column)
 
@@ -161,12 +165,14 @@ def serializable_results(results):
         return {
             "name": result["name"].name,
             "type": result["type"].name,
-            "region": result["region"].to_tuple()
+            "region": result["region"].to_tuple(),
         }
 
-    return [serialize(result)
-            for result_type in ["pass", "fail", "error"]
-            for result in results[result_type].values()]
+    return [
+        serialize(result)
+        for result_type in ["pass", "fail", "error"]
+        for result in results[result_type].values()
+    ]
 
 
 def add_markers(view, results):
@@ -217,11 +223,17 @@ def print_summary(window, response):
             errors = val.get(edn.Keyword("error"))
 
             if errors > 0:
-                window.status_message(f"""⚠ {maybe_pluralize(errors, "error")}, {maybe_pluralize(failures, "failure")} ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")}).""")
+                window.status_message(
+                    f"""⚠ {maybe_pluralize(errors, "error")}, {maybe_pluralize(failures, "failure")} ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")})."""
+                )
             elif failures > 0:
-                window.status_message(f"""✗ {maybe_pluralize(failures, "failure")} ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")}).""")
+                window.status_message(
+                    f"""✗ {maybe_pluralize(failures, "failure")} ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")})."""
+                )
             else:
-                window.status_message(f"""✓ All tests passed ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")}).""")
+                window.status_message(
+                    f"""✓ All tests passed ({maybe_pluralize(tests, "test")}, {maybe_pluralize(assertions, "assertion")})."""
+                )
     except:
         pass
 
@@ -246,13 +258,16 @@ def handle_test_response(view, client, response):
 def run_tests(view, client, test_vars):
     code = view.substr(sublime.Region(0, view.size()))
 
-    client.backchannel.send({
-        "op": edn.Keyword("test"),
-        "ns": namespace.name(view),
-        "code": base64.encode(code.encode("utf-8")),
-        "file": view.file_name(),
-        "vars": test_vars
-    }, handler=lambda response: handle_test_response(view, client, response))
+    client.backchannel.send(
+        {
+            "op": edn.Keyword("test"),
+            "ns": namespace.name(view),
+            "code": base64.encode(code.encode("utf-8")),
+            "file": view.file_name(),
+            "vars": test_vars,
+        },
+        handler=lambda response: handle_test_response(view, client, response),
+    )
 
 
 def run(view, client, test_vars=[]):

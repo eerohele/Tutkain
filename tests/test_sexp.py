@@ -10,29 +10,53 @@ class TestSexp(ViewTestCase):
     def test_find_open(self):
         self.set_view_content("(a)")
         self.assertEquals(None, sexp.find_open(self.view, 0))
-        self.assertEquals(sexp.Delimiter("punctuation.section.parens.begin", Region(0, 1)), sexp.find_open(self.view, 1))
+        self.assertEquals(
+            sexp.Delimiter("punctuation.section.parens.begin", Region(0, 1)),
+            sexp.find_open(self.view, 1),
+        )
         self.assertEquals(None, sexp.find_open(self.view, 3))
         self.set_view_content("(a [b] c)")
-        self.assertEquals(sexp.Delimiter("punctuation.section.brackets.begin", Region(3, 4)), sexp.find_open(self.view, 4))
-        self.assertEquals(sexp.Delimiter("punctuation.section.parens.begin", Region(0, 1)), sexp.find_open(self.view, 6))
+        self.assertEquals(
+            sexp.Delimiter("punctuation.section.brackets.begin", Region(3, 4)),
+            sexp.find_open(self.view, 4),
+        )
+        self.assertEquals(
+            sexp.Delimiter("punctuation.section.parens.begin", Region(0, 1)),
+            sexp.find_open(self.view, 6),
+        )
 
     def test_find_close(self):
         self.set_view_content("(a)")
         self.assertEquals(None, sexp.find_close(self.view, None))
         self.assertEquals(
-            sexp.Delimiter(selector="punctuation.section.parens.end", region=Region(2, 3)),
-            sexp.find_close(self.view, sexp.Delimiter("punctuation.section.parens.begin", Region(0, 1)))
+            sexp.Delimiter(
+                selector="punctuation.section.parens.end", region=Region(2, 3)
+            ),
+            sexp.find_close(
+                self.view,
+                sexp.Delimiter("punctuation.section.parens.begin", Region(0, 1)),
+            ),
         )
 
         self.set_view_content("(a [b] c)")
         self.assertEquals(
-            sexp.Delimiter(selector="punctuation.section.brackets.end", region=Region(5, 6)),
-            sexp.find_close(self.view, sexp.Delimiter("punctuation.section.brackets.begin", Region(4, 5)))
+            sexp.Delimiter(
+                selector="punctuation.section.brackets.end", region=Region(5, 6)
+            ),
+            sexp.find_close(
+                self.view,
+                sexp.Delimiter("punctuation.section.brackets.begin", Region(4, 5)),
+            ),
         )
 
         self.assertEquals(
-            sexp.Delimiter(selector="punctuation.section.parens.end", region=Region(8, 9)),
-            sexp.find_close(self.view, sexp.Delimiter("punctuation.section.parens.begin", Region(6, 7)))
+            sexp.Delimiter(
+                selector="punctuation.section.parens.end", region=Region(8, 9)
+            ),
+            sexp.find_close(
+                self.view,
+                sexp.Delimiter("punctuation.section.parens.begin", Region(6, 7)),
+            ),
         )
 
     def test_inside_string(self):
@@ -258,9 +282,11 @@ class TestSexp(ViewTestCase):
         self.assertEquals([(0, 0), (7, 7)], self.selections())
 
     def test_outermost_first_col(self):
-        self.set_view_content("""(defn f
+        self.set_view_content(
+            """(defn f
 (let [x 1]
   (inc x))
-)""")
+)"""
+        )
 
         self.assertEquals(sexp.outermost(self.view, 9).extent(), Region(8, 29))

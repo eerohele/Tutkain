@@ -3,7 +3,9 @@ from ..api import edn
 
 
 def find_regions(view):
-    return view.find_by_selector("meta.sexp entity.name.namespace.clojure - (meta.sexp meta.sexp)")
+    return view.find_by_selector(
+        "meta.sexp entity.name.namespace.clojure - (meta.sexp meta.sexp)"
+    )
 
 
 def name(view):

@@ -17,11 +17,11 @@ from .keywords import (
 # This is probably somewhat evil, but the performance is *so*
 # much better than with view.add_regions.
 def out_string(val):
-    return '⁣' + val + '⁣'
+    return "⁣" + val + "⁣"
 
 
 def err_string(val):
-    return '⁣⁣' + val + '⁣⁣'
+    return "⁣⁣" + val + "⁣⁣"
 
 
 def format(item):

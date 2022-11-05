@@ -144,4 +144,3 @@ def get_or_create_view(window, output, view_id=None):
         return window.find_output_panel(name) or window.create_output_panel(name)
     else:
         return window.new_file()
-

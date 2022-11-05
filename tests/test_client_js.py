@@ -26,7 +26,9 @@ class TestJSClient(PackageTestCase):
 
         self.window = sublime.active_window()
         server = JsBackchannelServer().start()
-        self.client = repl.JSClient(server.host, server.port, options={"build_id": edn.Keyword("app")})
+        self.client = repl.JSClient(
+            server.host, server.port, options={"build_id": edn.Keyword("app")}
+        )
         self.output_view = repl.views.get_or_create_view(self.window, "view")
         repl.start(self.output_view, self.client)
         self.server = server.connection.result(timeout=5)

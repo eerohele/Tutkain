@@ -9,7 +9,15 @@ def goto(window, view, items, index):
         window.focus_view(view)
     else:
         item = items[index]
-        info.goto(window, info.parse_location(item), flags=sublime.ADD_TO_SELECTION | sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU | sublime.CLEAR_TO_RIGHT)
+        info.goto(
+            window,
+            info.parse_location(item),
+            flags=sublime.ADD_TO_SELECTION
+            | sublime.ENCODED_POSITION
+            | sublime.SEMI_TRANSIENT
+            | sublime.REPLACE_MRU
+            | sublime.CLEAR_TO_RIGHT,
+        )
 
 
 def to_quick_panel_items(kinds, results, symbol=None):
@@ -40,7 +48,9 @@ def to_quick_panel_items(kinds, results, symbol=None):
             items.append(sublime.QuickPanelItem(name, details=docstring, kind=kind))
         else:
             items.append(
-                sublime.QuickPanelItem(name, details=docstring, annotation=arglists, kind=kind)
+                sublime.QuickPanelItem(
+                    name, details=docstring, annotation=arglists, kind=kind
+                )
             )
 
     return items
@@ -67,5 +77,5 @@ def handle_response(window, kinds, response):
         items,
         lambda index: goto(window, active_view, results, index),
         on_highlight=lambda index: goto(window, active_view, results, index),
-        selected_index=selected_index
+        selected_index=selected_index,
     )

@@ -86,7 +86,7 @@ def read_meta(b, ch):
 
 def read_list(b, _):
     """Given a file object, read a single EDN list."""
-    return read_delimited_list(b, ')')
+    return read_delimited_list(b, ")")
 
 
 def read_delimited_list(b, delim):
@@ -105,12 +105,12 @@ def read_delimited_list(b, delim):
 
 def read_vector(b, _):
     """Given a file object, read a single EDN vector."""
-    return read_delimited_list(b, ']')
+    return read_delimited_list(b, "]")
 
 
 def read_set(b, _):
     """Given a file object, read a single EDN set."""
-    return set(read_delimited_list(b, '}'))
+    return set(read_delimited_list(b, "}"))
 
 
 class UnmatchedDelimiterError(ValueError):
@@ -123,7 +123,7 @@ def read_unmatched_delimiter(b, ch):
 
 def read_map(b, _):
     """Given a file object, read a single EDN map."""
-    xs = read_delimited_list(b, '}')
+    xs = read_delimited_list(b, "}")
 
     if (len(xs) & 1) == 1:
         raise ValueError("Map must have an even number of elements")
@@ -154,7 +154,7 @@ def read_dispatch(b, ch):
     dispatch macro."""
     x = b.read(1)
 
-    if x == '{':
+    if x == "{":
         return read_set(b, ch)
     else:
         error(NotImplementedError, b, ch)
@@ -163,16 +163,16 @@ def read_dispatch(b, ch):
 # https://github.com/clojure/clojure/blob/ecd5ff59e07de649a9f9affb897d02165fe7e553/src/jvm/clojure/lang/EdnReader.java#L37-L59
 MACROS = {
     '"': read_string,
-    ';': read_comment,
-    '^': read_meta,
-    '(': read_list,
-    ')': read_unmatched_delimiter,
-    '[': read_vector,
-    ']': read_unmatched_delimiter,
-    '{': read_map,
-    '}': read_unmatched_delimiter,
-    '\\': read_character,
-    '#': read_dispatch
+    ";": read_comment,
+    "^": read_meta,
+    "(": read_list,
+    ")": read_unmatched_delimiter,
+    "[": read_vector,
+    "]": read_unmatched_delimiter,
+    "{": read_map,
+    "}": read_unmatched_delimiter,
+    "\\": read_character,
+    "#": read_dispatch,
 }
 
 
@@ -206,7 +206,7 @@ def is_terminating_macro(ch):
     """Given a character, return true if it's a terminating macro.
 
     A terminating macro signifies the end of an EDN token."""
-    return (ch != "#" and ch != "'" and is_macro(ch))
+    return ch != "#" and ch != "'" and is_macro(ch)
 
 
 def read_token(b, ch):
@@ -318,10 +318,10 @@ def write_str(b, x):
         while ch := s.read(1):
             if ch == '"':
                 b.write('\\"')
-            elif ch == '\\':
-                b.write('\\\\')
-            elif ch == '\n':
-                b.write('\\n')
+            elif ch == "\\":
+                b.write("\\\\")
+            elif ch == "\n":
+                b.write("\\n")
             else:
                 b.write(ch)
 

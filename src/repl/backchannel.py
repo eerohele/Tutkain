@@ -119,7 +119,6 @@ class Client:
         except AttributeError as error:
             raise ValueError(f"Got invalid message: {message}")
 
-
     def halt(self):
         """Halt this backchannel client."""
         log.debug({"event": "backchannel/halt"})

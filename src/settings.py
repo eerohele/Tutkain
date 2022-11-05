@@ -9,9 +9,7 @@ def load():
 
 
 def source_root():
-    return os.path.join(
-        sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain"
-    )
+    return os.path.join(sublime.packages_path(), "Tutkain", "clojure", "src", "tutkain")
 
 
 def backchannel_options(dialect, backchannel=True):
@@ -19,17 +17,26 @@ def backchannel_options(dialect, backchannel=True):
         return {
             "enabled": backchannel,
             "port": load().get("clojurescript").get("backchannel").get("port"),
-            "bind_address": load().get("clojurescript").get("backchannel").get("bind_address", "localhost")
+            "bind_address": load()
+            .get("clojurescript")
+            .get("backchannel")
+            .get("bind_address", "localhost"),
         }
     elif dialect == edn.Keyword("clj"):
         return {
             "enabled": backchannel,
             "port": load().get("clojure").get("backchannel").get("port"),
-            "bind_address": load().get("clojure").get("backchannel").get("bind_address", "localhost")
+            "bind_address": load()
+            .get("clojure")
+            .get("backchannel")
+            .get("bind_address", "localhost"),
         }
     elif dialect == edn.Keyword("bb"):
         return {
             "enabled": backchannel,
             "port": load().get("babashka").get("backchannel").get("port"),
-            "bind_address": load().get("babashka").get("backchannel").get("bind_address", "localhost")
+            "bind_address": load()
+            .get("babashka")
+            .get("backchannel")
+            .get("bind_address", "localhost"),
         }

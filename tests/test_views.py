@@ -55,7 +55,6 @@ class TestConfigure(TestCase):
         self.assertEquals(False, configured_view.settings().get("word_wrap"))
         self.assertEquals(1, configured_view.settings().get("scroll_past_end"))
 
-
         # Test internal settings overwrites:
 
         configured_view = self.configure(
@@ -69,6 +68,10 @@ class TestConfigure(TestCase):
         # Internal settings can't be overwritten by the user,
         # so the provided settings above doesn't matter:
 
-        self.assertEquals("clj", configured_view.settings().get("tutkain_repl_view_dialect"))
-        self.assertEquals("localhost", configured_view.settings().get("tutkain_repl_host"))
+        self.assertEquals(
+            "clj", configured_view.settings().get("tutkain_repl_view_dialect")
+        )
+        self.assertEquals(
+            "localhost", configured_view.settings().get("tutkain_repl_host")
+        )
         self.assertEquals(1234, configured_view.settings().get("tutkain_repl_port"))

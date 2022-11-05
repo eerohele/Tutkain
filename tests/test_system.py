@@ -85,25 +85,31 @@ class TestConnectDisconnect(TestCase):
     def disconnect(self, window):
         window.run_command("tutkain_disconnect")
 
-    def eval_context(self, backchannel, ns=edn.Symbol("user"), file="NO_SOURCE_FILE", line=1, column=1):
+    def eval_context(
+        self,
+        backchannel,
+        ns=edn.Symbol("user"),
+        file="NO_SOURCE_FILE",
+        line=1,
+        column=1,
+    ):
         actual = edn.read(backchannel.recv())
         id = actual.get(edn.Keyword("id"))
 
-        response = edn.kwmap({
-             "id": id,
-             "op": edn.Keyword("set-eval-context"),
-             "file": file,
-             "ns": ns,
-             "line": line,
-             "column": column,
-        })
+        response = edn.kwmap(
+            {
+                "id": id,
+                "op": edn.Keyword("set-eval-context"),
+                "file": file,
+                "ns": ns,
+                "line": line,
+                "column": column,
+            }
+        )
 
         self.assertEquals(response, actual)
 
-        response = edn.kwmap({
-            "id": id,
-            "result": edn.Keyword("ok")
-        })
+        response = edn.kwmap({"id": id, "result": edn.Keyword("ok")})
 
         backchannel.send(response)
 
@@ -120,7 +126,7 @@ class TestConnectDisconnect(TestCase):
         else:
             return view.get_regions(f"tutkain_gutter_marks/{tag}")
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_smoke_view(self):
         window = self.make_window()
         view = self.make_scratch_view(window)
@@ -135,7 +141,7 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
-            self.content(output_view)
+            self.content(output_view),
         )
 
         yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(output_view, "in")
@@ -147,7 +153,7 @@ class TestConnectDisconnect(TestCase):
         server.backchannel.stop()
         server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_view_tap_panel_enabled(self):
         window = self.make_window()
         self.make_scratch_view(window)
@@ -156,8 +162,7 @@ class TestConnectDisconnect(TestCase):
         server.backchannel.send(edn.kwmap({"tag": edn.Keyword("tap"), "val": "42"}))
 
         yield lambda: self.equals(
-            """42""",
-            self.content(window.find_output_panel("tutkain.tap_panel"))
+            """42""", self.content(window.find_output_panel("tutkain.tap_panel"))
         )
 
         self.disconnect(window)
@@ -166,7 +171,7 @@ class TestConnectDisconnect(TestCase):
         server.backchannel.stop()
         server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_view_tap_panel_disabled(self):
         window = self.make_window()
         view = self.make_scratch_view(window)
@@ -181,14 +186,13 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\n""",
-            self.content(output_view)
+            self.content(output_view),
         )
 
         yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(output_view, "in")
 
         yield lambda: self.equals(
-            """""",
-            self.content(window.find_output_panel("tutkain.tap_panel"))
+            """""", self.content(window.find_output_panel("tutkain.tap_panel"))
         )
 
         self.disconnect(window)
@@ -197,7 +201,7 @@ class TestConnectDisconnect(TestCase):
         server.backchannel.stop()
         server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_panel_tap_panel_enabled(self):
         window = self.make_window()
         view = self.make_scratch_view(window)
@@ -212,21 +216,27 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\ntrue\n42\n""",
-            self.content(self.output_panel(window))
+            self.content(self.output_panel(window)),
         ) or self.equals(
             """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\n42\ntrue\n""",
-            self.content(self.output_panel(window))
+            self.content(self.output_panel(window)),
         )
 
-        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
+        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(
+            self.output_panel(window), "in"
+        )
 
-        yield lambda: [sublime.Region(34, 34)] == self.gutter_marks(self.output_panel(window), "ret") or [
-            sublime.Region(37, 37)
-        ] == self.gutter_marks(self.output_panel(window), "ret")
+        yield lambda: [sublime.Region(34, 34)] == self.gutter_marks(
+            self.output_panel(window), "ret"
+        ) or [sublime.Region(37, 37)] == self.gutter_marks(
+            self.output_panel(window), "ret"
+        )
 
-        yield lambda: [sublime.Region(39, 39)] == self.gutter_marks(self.output_panel(window), "tap") or [
-            sublime.Region(34, 34)
-        ] == self.gutter_marks(self.output_panel(window), "tap")
+        yield lambda: [sublime.Region(39, 39)] == self.gutter_marks(
+            self.output_panel(window), "tap"
+        ) or [sublime.Region(34, 34)] == self.gutter_marks(
+            self.output_panel(window), "tap"
+        )
 
         self.disconnect(window)
         self.assertEquals(":repl/quit\n", server.recv())
@@ -234,7 +244,7 @@ class TestConnectDisconnect(TestCase):
         server.backchannel.stop()
         server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_panel_tap_panel_disabled(self):
         window = self.make_window()
         view = self.make_scratch_view(window)
@@ -248,11 +258,15 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """\u2063Clojure 1.11.0-alpha1\n\u2063(tap> 42)\ntrue\n""",
-            self.content(self.output_panel(window))
+            self.content(self.output_panel(window)),
         )
 
-        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
-        yield lambda: [sublime.Region(34, 34)] == self.gutter_marks(self.output_panel(window), "ret")
+        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(
+            self.output_panel(window), "in"
+        )
+        yield lambda: [sublime.Region(34, 34)] == self.gutter_marks(
+            self.output_panel(window), "ret"
+        )
 
         self.disconnect(window)
         self.assertEquals(":repl/quit\n", server.recv())
@@ -260,7 +274,7 @@ class TestConnectDisconnect(TestCase):
         server.backchannel.stop()
         server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_smoke_panel(self):
         window = self.make_window()
         view = self.make_scratch_view(window)
@@ -274,11 +288,15 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
-            self.content(self.output_panel(window))
+            self.content(self.output_panel(window)),
         )
 
-        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
-        yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(self.output_panel(window), "ret")
+        yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(
+            self.output_panel(window), "in"
+        )
+        yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(
+            self.output_panel(window), "ret"
+        )
 
         self.disconnect(window)
         self.assertEquals(":repl/quit\n", server.recv())
@@ -286,7 +304,7 @@ class TestConnectDisconnect(TestCase):
         server.backchannel.stop()
         server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_panel_multiple(self):
         if not sys.platform.startswith("win"):
             window = self.make_window()
@@ -303,14 +321,22 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
-                self.content(self.output_panel(window))
+                self.content(self.output_panel(window)),
             )
 
-            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
-            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(self.output_panel(window), "ret")
+            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(
+                self.output_panel(window), "in"
+            )
+            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(
+                self.output_panel(window), "ret"
+            )
 
-            js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
-            js_server = self.connect(window, {"dialect": "cljs", "output": "panel", "build_id": "app"})
+            js_view = self.make_scratch_view(
+                window, "ClojureScript (Tutkain).sublime-syntax"
+            )
+            js_server = self.connect(
+                window, {"dialect": "cljs", "output": "panel", "build_id": "app"}
+            )
 
             self.set_view_content(js_view, """(js/parseInt "42")""")
             self.set_selections(js_view, (0, 0))
@@ -322,17 +348,17 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063ClojureScript 1.10.844\n\u2063(js/parseInt "42")\n42\n""",
-                self.content(self.output_panel(window))
+                self.content(self.output_panel(window)),
             )
 
             yield lambda: [
                 sublime.Region(24, 24),
-                sublime.Region(59, 59)
+                sublime.Region(59, 59),
             ] == self.gutter_marks(self.output_panel(window), "in")
 
             yield lambda: [
                 sublime.Region(32, 32),
-                sublime.Region(78, 78)
+                sublime.Region(78, 78),
             ] == self.gutter_marks(self.output_panel(window), "ret")
 
             self.disconnect(window)
@@ -351,7 +377,7 @@ class TestConnectDisconnect(TestCase):
             js_server.backchannel.stop()
             js_server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_panel_multiple_same_runtime(self):
         if not sys.platform.startswith("win"):
             window = self.make_window()
@@ -368,11 +394,15 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
-                self.content(self.output_panel(window))
+                self.content(self.output_panel(window)),
             )
 
-            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(self.output_panel(window), "in")
-            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(self.output_panel(window), "ret")
+            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(
+                self.output_panel(window), "in"
+            )
+            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(
+                self.output_panel(window), "ret"
+            )
 
             jvm_view_2 = self.make_scratch_view(window)
             jvm_2_server = self.connect(window, {"dialect": "clj", "output": "panel"})
@@ -387,17 +417,17 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063Clojure 1.11.0-alpha1\n\u2063(inc 2)\n3\n""",
-                self.content(self.output_panel(window))
+                self.content(self.output_panel(window)),
             )
 
             yield lambda: [
                 sublime.Region(24, 24),
-                sublime.Region(58, 58)
+                sublime.Region(58, 58),
             ] == self.gutter_marks(self.output_panel(window), "in")
 
             yield lambda: [
                 sublime.Region(32, 32),
-                sublime.Region(66, 66)
+                sublime.Region(66, 66),
             ] == self.gutter_marks(self.output_panel(window), "ret")
 
             self.disconnect(window)
@@ -418,10 +448,14 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 f"""\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063Clojure 1.11.0-alpha1\n\u2063(inc 2)\n3\n\u2063\u2063[Tutkain] Disconnected from Clojure runtime at {jvm_1_server.host}:{jvm_1_server.port}.\n\u2063\u2063(inc 3)\n4\n""",
-                self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+                self.content(
+                    state.get_active_connection(window, edn.Keyword("clj")).view
+                ),
             ) or self.equals(
                 f"""\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063Clojure 1.11.0-alpha1\n\u2063(inc 2)\n3\n(inc 3)\n\u2063\u2063[Tutkain] Disconnected from Clojure runtime at {jvm_1_server.host}:{jvm_1_server.port}.\n\u2063\u20634\n""",
-                self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+                self.content(
+                    state.get_active_connection(window, edn.Keyword("clj")).view
+                ),
             )
 
             yield lambda: [
@@ -433,7 +467,7 @@ class TestConnectDisconnect(TestCase):
             yield lambda: [
                 sublime.Region(32, 32),
                 sublime.Region(66, 66),
-                sublime.Region(144, 144)
+                sublime.Region(144, 144),
             ] == self.gutter_marks(self.output_panel(window), "ret")
 
             self.disconnect(window)
@@ -445,7 +479,7 @@ class TestConnectDisconnect(TestCase):
             jvm_2_server.stop()
             jvm_2_server.backchannel.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_view_multiple(self):
         if not sys.platform.startswith("win"):
             window = self.make_window()
@@ -463,14 +497,22 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
-                self.content(output_view)
+                self.content(output_view),
             )
 
-            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(output_view, "in")
-            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(output_view, "ret")
+            yield lambda: [sublime.Region(24, 24)] == self.gutter_marks(
+                output_view, "in"
+            )
+            yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(
+                output_view, "ret"
+            )
 
-            js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
-            js_server = self.connect(window, {"dialect": "cljs", "output": "view", "build_id": "app"})
+            js_view = self.make_scratch_view(
+                window, "ClojureScript (Tutkain).sublime-syntax"
+            )
+            js_server = self.connect(
+                window, {"dialect": "cljs", "output": "view", "build_id": "app"}
+            )
 
             self.set_view_content(js_view, """(js/parseInt "42")""")
             self.set_selections(js_view, (0, 0))
@@ -483,11 +525,15 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063ClojureScript 1.10.844\n\u2063(js/parseInt "42")\n42\n""",
-                self.content(output_view)
+                self.content(output_view),
             )
 
-            yield lambda: [sublime.Region(25, 25)] == self.gutter_marks(output_view, "in")
-            yield lambda: [sublime.Region(44, 44)] == self.gutter_marks(output_view, "ret")
+            yield lambda: [sublime.Region(25, 25)] == self.gutter_marks(
+                output_view, "in"
+            )
+            yield lambda: [sublime.Region(44, 44)] == self.gutter_marks(
+                output_view, "ret"
+            )
 
             self.disconnect(window)
             # Move down to select ClojureScript runtime
@@ -510,17 +556,17 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n(inc 2)\n3\n""",
-                self.content(output_view)
+                self.content(output_view),
             )
 
             yield lambda: [
                 sublime.Region(24, 24),
-                sublime.Region(34, 34)
+                sublime.Region(34, 34),
             ] == self.gutter_marks(output_view, "in")
 
             yield lambda: [
                 sublime.Region(32, 32),
-                sublime.Region(42, 42)
+                sublime.Region(42, 42),
             ] == self.gutter_marks(output_view, "ret")
 
             self.disconnect(window)
@@ -532,7 +578,7 @@ class TestConnectDisconnect(TestCase):
             js_server.backchannel.stop()
             js_server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_panel_and_view(self):
         if not sys.platform.startswith("win"):
             window = self.make_window()
@@ -549,11 +595,15 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n""",
-                self.content(self.output_panel(window))
+                self.content(self.output_panel(window)),
             )
 
-            js_view = self.make_scratch_view(window, "ClojureScript (Tutkain).sublime-syntax")
-            js_server = self.connect(window, {"dialect": "cljs", "output": "view", "build_id": "app"})
+            js_view = self.make_scratch_view(
+                window, "ClojureScript (Tutkain).sublime-syntax"
+            )
+            js_server = self.connect(
+                window, {"dialect": "cljs", "output": "view", "build_id": "app"}
+            )
 
             self.set_view_content(js_view, """(js/parseInt "42")""")
             self.set_selections(js_view, (0, 0))
@@ -566,11 +616,15 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063ClojureScript 1.10.844\n\u2063(js/parseInt "42")\n42\n""",
-                self.content(output_view)
+                self.content(output_view),
             )
 
-            yield lambda: [sublime.Region(25, 25)] == self.gutter_marks(output_view, "in")
-            yield lambda: [sublime.Region(44, 44)] == self.gutter_marks(output_view, "ret")
+            yield lambda: [sublime.Region(25, 25)] == self.gutter_marks(
+                output_view, "in"
+            )
+            yield lambda: [sublime.Region(44, 44)] == self.gutter_marks(
+                output_view, "ret"
+            )
 
             self.disconnect(window)
 
@@ -592,7 +646,9 @@ class TestConnectDisconnect(TestCase):
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n(inc 2)\n3\n""",
-                self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+                self.content(
+                    state.get_active_connection(window, edn.Keyword("clj")).view
+                ),
             )
 
             self.disconnect(window)
@@ -604,7 +660,7 @@ class TestConnectDisconnect(TestCase):
             js_server.backchannel.stop()
             js_server.stop()
 
-    #@unittest.SkipTest
+    # @unittest.SkipTest
     def test_no_backchannel(self):
         window = self.make_window()
         view = self.make_scratch_view(window)
@@ -613,7 +669,7 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """user=> """,
-            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view),
         )
 
         self.set_view_content(view, "(inc 1)")
@@ -623,14 +679,14 @@ class TestConnectDisconnect(TestCase):
 
         yield lambda: self.equals(
             """user=> (inc 1)\n""",
-            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view),
         )
 
         server.send("2")
 
         yield lambda: self.equals(
             """user=> (inc 1)\n2\n""",
-            self.content(state.get_active_connection(window, edn.Keyword("clj")).view)
+            self.content(state.get_active_connection(window, edn.Keyword("clj")).view),
         )
 
         self.disconnect(window)

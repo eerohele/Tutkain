@@ -20,16 +20,18 @@ def show(view, point, value, inline_result=True):
     value = html.escape(value)
 
     if inline_result == "block":
-        value = format(re.sub(
-            r"(?m)^(\s+)",
-            lambda s: "&nbsp;" * (s.span()[1] - s.span()[0]),
-            value
-        )).replace("\n", "<br/>")
+        value = format(
+            re.sub(
+                r"(?m)^(\s+)", lambda s: "&nbsp;" * (s.span()[1] - s.span()[0]), value
+            )
+        ).replace("\n", "<br/>")
 
         layout = sublime.LAYOUT_BLOCK
 
     style = "color: color(var(--foreground) alpha(0.5));"
-    html_text = """<p style="margin: 0"><span style="{}">=></span> {}</p>""".format(style, value)
+    html_text = """<p style="margin: 0"><span style="{}">=></span> {}</p>""".format(
+        style, value
+    )
     region = sublime.Region(point, point)
     view.add_phantom("tutkain/eval", region, html_text, layout)
 

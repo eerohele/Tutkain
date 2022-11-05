@@ -28,11 +28,13 @@ def discover(window, dialect):
 
 def parse(window: Window, port: str, dialect: edn.Keyword, port_gen: Callable):
     if port == "auto":
-        if (alts := port_gen(window, dialect)):
+        if alts := port_gen(window, dialect):
             if alts[0] and (port := alts[0][1]):
                 return int(port)
             else:
-                window.status_message(f"⚠ File containing port number for a {dialects.name(dialect)} REPL not found.")
+                window.status_message(
+                    f"⚠ File containing port number for a {dialects.name(dialect)} REPL not found."
+                )
         else:
             return None
     else:

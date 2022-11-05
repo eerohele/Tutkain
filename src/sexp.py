@@ -7,30 +7,36 @@ from sublime import CLASS_WORD_START, Region, View
 OPEN = {"(": ")", "[": "]", "{": "}"}
 CLOSE = {")": "(", "]": "[", "}": "{"}
 
-BEGIN_SELECTORS = inspect.cleandoc("""punctuation.section.parens.begin
+BEGIN_SELECTORS = inspect.cleandoc(
+    """punctuation.section.parens.begin
 | punctuation.section.brackets.begin
-| punctuation.section.braces.begin""")
+| punctuation.section.braces.begin"""
+)
 
-END_SELECTORS = inspect.cleandoc("""punctuation.section.parens.end
+END_SELECTORS = inspect.cleandoc(
+    """punctuation.section.parens.end
 | punctuation.section.brackets.end
-| punctuation.section.braces.end""")
+| punctuation.section.braces.end"""
+)
 
 CHAR_TO_SELECTOR = {
     "(": "punctuation.section.parens.begin",
     "[": "punctuation.section.brackets.begin",
-    "{": "punctuation.section.braces.begin"
+    "{": "punctuation.section.braces.begin",
 }
 
 BEGIN_TO_END_SELECTOR = {
     "punctuation.section.parens.begin": "punctuation.section.parens.end",
     "punctuation.section.brackets.begin": "punctuation.section.brackets.end",
-    "punctuation.section.braces.begin": "punctuation.section.braces.end"
+    "punctuation.section.braces.begin": "punctuation.section.braces.end",
 }
 
-ABSORB_SELECTOR = inspect.cleandoc("""keyword.operator.macro
+ABSORB_SELECTOR = inspect.cleandoc(
+    """keyword.operator.macro
 | punctuation.definition.keyword
 | punctuation.definition.comment
-| constant.other.keyword""")
+| constant.other.keyword"""
+)
 
 
 @dataclass(eq=True, frozen=True)
@@ -44,6 +50,7 @@ class Sexp:
     """A dataclass that encapsulates an S-expression in a View.
 
     Do not initialize directly; use make_sexp instead."""
+
     view: View
     open: Delimiter
     close: Delimiter
@@ -71,10 +78,7 @@ def absorb_macro_characters(view: View, delimiter: Delimiter):
         # Find the first point that contains a character other than a macro character or a
         # character that's part of a keyword
         boundary = (
-            selectors.find(
-                view, begin - 1, f"- ({ABSORB_SELECTOR})", forward=False
-            )
-            + 1
+            selectors.find(view, begin - 1, f"- ({ABSORB_SELECTOR})", forward=False) + 1
         )
 
         begin = max(boundary, 0)
@@ -146,17 +150,58 @@ def move_inside(view, point, edge):
     if not edge or selectors.inside_string(view, point):
         return point
     elif (
-        (edge is True or edge == "forward") and view.match_selector(point, selectors.SEXP_BEGIN)
-    ) or (
-        selectors.match_many(view, point, "keyword.operator.macro", selectors.SEXP_BEGIN)) or (
-        selectors.match_many(view, point, "keyword.operator.macro", selectors.SEXP_BEGIN)) or (
-        selectors.match_many(view, point, "keyword.operator.macro", "keyword.operator.macro", selectors.SEXP_BEGIN)) or (
-        selectors.match_many(view, point, "keyword.operator.macro", "keyword.operator.macro", "keyword.operator.macro", selectors.SEXP_BEGIN)) or (
-        selectors.match_many(view, point, "punctuation.definition.comment", selectors.SEXP_BEGIN)) or (
-        selectors.match_many(view, point, "keyword.operator.macro", "punctuation.definition.comment", selectors.SEXP_BEGIN)
+        (
+            (edge is True or edge == "forward")
+            and view.match_selector(point, selectors.SEXP_BEGIN)
+        )
+        or (
+            selectors.match_many(
+                view, point, "keyword.operator.macro", selectors.SEXP_BEGIN
+            )
+        )
+        or (
+            selectors.match_many(
+                view, point, "keyword.operator.macro", selectors.SEXP_BEGIN
+            )
+        )
+        or (
+            selectors.match_many(
+                view,
+                point,
+                "keyword.operator.macro",
+                "keyword.operator.macro",
+                selectors.SEXP_BEGIN,
+            )
+        )
+        or (
+            selectors.match_many(
+                view,
+                point,
+                "keyword.operator.macro",
+                "keyword.operator.macro",
+                "keyword.operator.macro",
+                selectors.SEXP_BEGIN,
+            )
+        )
+        or (
+            selectors.match_many(
+                view, point, "punctuation.definition.comment", selectors.SEXP_BEGIN
+            )
+        )
+        or (
+            selectors.match_many(
+                view,
+                point,
+                "keyword.operator.macro",
+                "punctuation.definition.comment",
+                selectors.SEXP_BEGIN,
+            )
+        )
     ):
         return view.find(r"[\(\[\{\"]", point).end()
-    elif (edge is True or edge == "backward") and view.match_selector(point - 1, selectors.SEXP_END):
+    elif (edge is True or edge == "backward") and view.match_selector(
+        point - 1, selectors.SEXP_END
+    ):
         return point - 1
     else:
         return point
@@ -186,8 +231,12 @@ def innermost(view, start_point, edge=True):
         )
 
         # TODO: Is a string a sexp?
-        open_delim = Delimiter("punctuation.definition.string.begin", Region(begin, begin + 1))
-        close_delim = Delimiter("punctuation.definition.string.end", Region(end, end + 1))
+        open_delim = Delimiter(
+            "punctuation.definition.string.begin", Region(begin, begin + 1)
+        )
+        close_delim = Delimiter(
+            "punctuation.definition.string.end", Region(end, end + 1)
+        )
         return make_sexp(view, open_delim, close_delim)
     else:
         if open_delim := find_open(view, point):
@@ -229,9 +278,8 @@ def outermost(view, point, edge=True, ignore={}):
         current = find_open(view, point)
 
         if previous and (
-            not current or (
-                ignore and head_word(view, current.region.begin()) in ignore
-            )
+            not current
+            or (ignore and head_word(view, current.region.begin()) in ignore)
         ):
             return make_sexp(view, previous, find_close(view, previous))
         else:

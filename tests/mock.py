@@ -85,7 +85,9 @@ class JvmBackchannelServer(JvmServer):
         self.recv()
         self.send("#'tutkain.backchannel/open")
         self.recv()
-        self.send("""#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]""")
+        self.send(
+            """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""
+        )
         self.recv()
         self.send("#'tutkain.repl/repl")
 
@@ -93,7 +95,9 @@ class JvmBackchannelServer(JvmServer):
         self.recv()
 
         backchannel = Backchannel().start()
-        self.send(f"""{{:greeting "Clojure 1.11.0-alpha1\\n", :host "localhost", :port {backchannel.port}}}""")
+        self.send(
+            f"""{{:greeting "Clojure 1.11.0-alpha1\\n", :host "localhost", :port {backchannel.port}}}"""
+        )
         # Client connects to backchannel
         self.backchannel = backchannel.connection.result(timeout=5)
 
@@ -101,11 +105,15 @@ class JvmBackchannelServer(JvmServer):
         for _ in range(9):
             module = edn.read(backchannel.recv())
 
-            backchannel.send(edn.kwmap({
-                "id": module.get(edn.Keyword("id")),
-                "result": edn.Keyword("ok"),
-                "filename": module.get(edn.Keyword("filename"))
-            }))
+            backchannel.send(
+                edn.kwmap(
+                    {
+                        "id": module.get(edn.Keyword("id")),
+                        "result": edn.Keyword("ok"),
+                        "filename": module.get(edn.Keyword("filename")),
+                    }
+                )
+            )
 
         return self.backchannel
 
@@ -148,7 +156,9 @@ class JsBackchannelServer(PlainServer):
         self.recv()
         self.send("#'tutkain.backchannel/open")
         self.recv()
-        self.send("""#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]""")
+        self.send(
+            """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""
+        )
         self.recv()
         self.send("#'tutkain.repl/repl")
 
@@ -158,18 +168,24 @@ class JsBackchannelServer(PlainServer):
         backchannel = Backchannel().start()
 
         backchannel = Backchannel().start()
-        self.send(f"""{{:greeting "ClojureScript 1.10.844\\n" :host "localhost", :port {backchannel.port}}}""")
+        self.send(
+            f"""{{:greeting "ClojureScript 1.10.844\\n" :host "localhost", :port {backchannel.port}}}"""
+        )
         # Client connects to backchannel
         self.backchannel = backchannel.connection.result(timeout=5)
 
         for _ in range(8):
             module = edn.read(backchannel.recv())
 
-            backchannel.send(edn.kwmap({
-                "id": module.get(edn.Keyword("id")),
-                "result": edn.Keyword("ok"),
-                "filename": module.get(edn.Keyword("filename"))
-            }))
+            backchannel.send(
+                edn.kwmap(
+                    {
+                        "id": module.get(edn.Keyword("id")),
+                        "result": edn.Keyword("ok"),
+                        "filename": module.get(edn.Keyword("filename")),
+                    }
+                )
+            )
 
         # TODO: Add test for no runtime
 
@@ -207,7 +223,9 @@ class BabashkaServer(PlainServer):
         self.recv()
         self.send("#'tutkain.backchannel/open")
         self.recv()
-        self.send("""#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]""")
+        self.send(
+            """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""
+        )
         self.recv()
         self.send("#'tutkain.repl/repl")
 
@@ -215,7 +233,9 @@ class BabashkaServer(PlainServer):
         self.recv()
 
         backchannel = Backchannel().start()
-        self.send(f"""{{:greeting "Clojure 1.11.1-SCI\\n", :host "localhost", :port {backchannel.port}}}""")
+        self.send(
+            f"""{{:greeting "Clojure 1.11.1-SCI\\n", :host "localhost", :port {backchannel.port}}}"""
+        )
         # Client connects to backchannel
         self.backchannel = backchannel.connection.result(timeout=5)
 
@@ -223,10 +243,14 @@ class BabashkaServer(PlainServer):
         for _ in range(6):
             module = edn.read(backchannel.recv())
 
-            backchannel.send(edn.kwmap({
-                "id": module.get(edn.Keyword("id")),
-                "result": edn.Keyword("ok"),
-                "filename": module.get(edn.Keyword("filename"))
-            }))
+            backchannel.send(
+                edn.kwmap(
+                    {
+                        "id": module.get(edn.Keyword("id")),
+                        "result": edn.Keyword("ok"),
+                        "filename": module.get(edn.Keyword("filename")),
+                    }
+                )
+            )
 
         return self.backchannel

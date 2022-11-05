@@ -11,7 +11,7 @@ def profile(func):
             retval = func(*args, **kwargs)
         finally:
             profiler.disable()
-            profiler.dump_stats('/tmp/tutkain.prof')
+            profiler.dump_stats("/tmp/tutkain.prof")
         return retval
 
     return inner

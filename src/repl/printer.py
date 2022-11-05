@@ -22,7 +22,11 @@ from .keywords import (
 
 
 def show_repl_panel(view):
-    if view and view.element() == "output:output" and settings.load().get("auto_show_output_panel", True):
+    if (
+        view
+        and view.element() == "output:output"
+        and settings.load().get("auto_show_output_panel", True)
+    ):
         views.show_output_panel(sublime.active_window())
 
 
@@ -33,7 +37,9 @@ def append_to_view(view, characters):
         view.set_read_only(False)
 
         if characters is not None:
-            view.run_command("append", {"characters": characters, "scroll_to_end": True})
+            view.run_command(
+                "append", {"characters": characters, "scroll_to_end": True}
+            )
 
         view.set_read_only(True)
         view.run_command("move_to", {"to": "eof"})
@@ -60,7 +66,7 @@ TAG_ICONS = {
     IN: "chevron-right",
     ERR: "chevron-left",
     RET: "chevron-left",
-    TAP: "double-chevron-left"
+    TAP: "double-chevron-left",
 }
 
 
@@ -92,7 +98,7 @@ def add_gutter_marks(view, client, item):
                 scope=TAG_SCOPES.get(tag, "source"),
                 icon=icon_path(tag),
                 # TODO: sublime.PERSISTENT?
-                flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE
+                flags=sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE,
             )
 
 
@@ -103,7 +109,9 @@ def print_loop(view, client, options={"gutter_marks": True}):
         while item := client.printq.get():
             if item.get(OUTPUT) == CLIPBOARD:
                 sublime.set_clipboard(item.get(STRING))
-                sublime.active_window().status_message("[Tutkain] Evaluation result copied to clipboard.")
+                sublime.active_window().status_message(
+                    "[Tutkain] Evaluation result copied to clipboard."
+                )
             elif item.get(OUTPUT) == INLINE:
                 window = view.window() or sublime.active_window()
 

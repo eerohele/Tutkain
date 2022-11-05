@@ -73,13 +73,16 @@ class Client(ABC):
             path = os.path.join(settings.source_root(), filename)
 
             with open(path, "rb") as file:
-                self.backchannel.send({
-                    "op": edn.Keyword("load-base64"),
-                    "path": path,
-                    "filename": filename,
-                    "blob": base64.encode(file.read()),
-                    "requires": requires
-                }, self.module_loaded)
+                self.backchannel.send(
+                    {
+                        "op": edn.Keyword("load-base64"),
+                        "path": path,
+                        "filename": filename,
+                        "blob": base64.encode(file.read()),
+                        "requires": requires,
+                    },
+                    self.module_loaded,
+                )
 
     @abstractmethod
     def handshake(self):
@@ -99,10 +102,12 @@ class Client(ABC):
         self.buffer = self.socket.makefile(mode="rw")
         log.debug({"event": "client/connect", "host": self.host, "port": self.port})
 
-        log.debug({
-            "event": "client/handshake",
-            "data": self.executor.submit(self.read_greeting).result(timeout=5)
-        })
+        log.debug(
+            {
+                "event": "client/handshake",
+                "data": self.executor.submit(self.read_greeting).result(timeout=5),
+            }
+        )
 
         return self
 
@@ -125,7 +130,9 @@ class Client(ABC):
         self.sendq = queue.Queue()
         self.printq = queue.Queue()
         self.executor = ThreadPoolExecutor(thread_name_prefix=f"{self.name}.{self.id}")
-        self.backchannel = types.SimpleNamespace(send=lambda *args, **kwargs: None, halt=lambda *args: None)
+        self.backchannel = types.SimpleNamespace(
+            send=lambda *args, **kwargs: None, halt=lambda *args: None
+        )
         self.options = options
         self.capabilities = set()
         self.lock = Lock()
@@ -143,7 +150,9 @@ class Client(ABC):
         self.socket.shutdown(socket.SHUT_RDWR)
         log.debug({"event": "thread/exit"})
 
-    def evaluate(self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}):
+    def evaluate(
+        self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}
+    ):
         """Given a string of Clojure code, send it for evaluation to the
         Clojure runtime this client is connected to.
 
@@ -156,8 +165,7 @@ class Client(ABC):
 
         if self.has_backchannel():
             self.backchannel.send(
-                self.eval_context_message(options),
-                lambda _: self.sendq.put(code)
+                self.eval_context_message(options), lambda _: self.sendq.put(code)
             )
         else:
             self.sendq.put(code)
@@ -177,10 +185,12 @@ class Client(ABC):
             log.error({"event": "error", "error": error})
         finally:
             self.print(
-                edn.kwmap({
-                    "tag": edn.Keyword("err"),
-                    "val": f"[Tutkain] Disconnected from {dialects.name(self.dialect)} runtime at {self.host}:{self.port}.\n"
-                })
+                edn.kwmap(
+                    {
+                        "tag": edn.Keyword("err"),
+                        "val": f"[Tutkain] Disconnected from {dialects.name(self.dialect)} runtime at {self.host}:{self.port}.\n",
+                    }
+                )
             )
 
             # Put a None into the queue to tell consumers to stop reading it.
@@ -201,7 +211,7 @@ class Client(ABC):
             "op": edn.Keyword("set-eval-context"),
             "file": options.get("file", "NO_SOURCE_FILE") or "NO_SOURCE_FILE",
             "line": options.get("line", 0) + 1,
-            "column": options.get("column", 0) + 1
+            "column": options.get("column", 0) + 1,
         }
 
         if ns := options.get("ns"):
@@ -233,17 +243,19 @@ class JVMClient(Client):
         "clojuredocs.clj": [],
         "analyzer.clj": [
             edn.Symbol("clojure.tools.reader"),
-            edn.Symbol("clojure.tools.analyzer.ast")
+            edn.Symbol("clojure.tools.analyzer.ast"),
         ],
         "analyzer/jvm.clj": [
             edn.Symbol("tutkain.analyzer"),
-            edn.Symbol("clojure.tools.analyzer.jvm")
-        ]
+            edn.Symbol("clojure.tools.analyzer.jvm"),
+        ],
     }
 
     def handshake(self):
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
-        self.write_line("""(clojure.main/repl :init (constantly nil) :prompt (constantly "") :need-prompt (constantly false))""")
+        self.write_line(
+            """(clojure.main/repl :init (constantly nil) :prompt (constantly "") :need-prompt (constantly false))"""
+        )
         self.write_line("(ns tutkain.bootstrap)")
         self.buffer.readline()
         self.write_line(BASE64_BLOB)
@@ -254,7 +266,9 @@ class JVMClient(Client):
 
             with open(path, "rb") as file:
                 blob = base64.encode(file.read())
-                self.write_line(f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")""")
+                self.write_line(
+                    f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")"""
+                )
 
             self.buffer.readline()
 
@@ -262,37 +276,52 @@ class JVMClient(Client):
         backchannel_opts = self.options.get("backchannel", {})
         backchannel_port = backchannel_opts.get("port", 0)
         backchannel_bind_address = backchannel_opts.get("bind_address", "localhost")
-        self.write_line(f"""(try (tutkain.repl/repl {{:init `{init} :port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))""")
+        self.write_line(
+            f"""(try (tutkain.repl/repl {{:init `{init} :port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))"""
+        )
         line = self.buffer.readline()
 
-        if not line.startswith('{'):
-            self.print(edn.kwmap({
-                "tag": edn.Keyword("err"),
-                "val": "Couldn't connect to Clojure REPL.\n"
-            }))
+        if not line.startswith("{"):
+            self.print(
+                edn.kwmap(
+                    {
+                        "tag": edn.Keyword("err"),
+                        "val": "Couldn't connect to Clojure REPL.\n",
+                    }
+                )
+            )
 
-            self.print(edn.kwmap({
-                "tag": edn.Keyword("err"),
-                "val": line + "\n"
-            }))
+            self.print(edn.kwmap({"tag": edn.Keyword("err"), "val": line + "\n"}))
 
-            self.print(edn.kwmap({
-                "tag": edn.Keyword("err"),
-                "val": self.connection_err_msg
-            }))
+            self.print(
+                edn.kwmap({"tag": edn.Keyword("err"), "val": self.connection_err_msg})
+            )
         else:
             ret = edn.read(line)
 
-            if (host := ret.get(edn.Keyword("host"))) and (port := ret.get(edn.Keyword("port"))):
-                self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
-                self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": ret.get(edn.Keyword("greeting"))}))
+            if (host := ret.get(edn.Keyword("host"))) and (
+                port := ret.get(edn.Keyword("port"))
+            ):
+                self.backchannel = backchannel.Client(self.print).connect(
+                    self.id, host, port
+                )
+                self.print(
+                    edn.kwmap(
+                        {
+                            "tag": edn.Keyword("out"),
+                            "val": ret.get(edn.Keyword("greeting")),
+                        }
+                    )
+                )
             else:
                 self.print(ret)
 
         self.load_modules()
 
     def __init__(self, host, port, options={}):
-        super().__init__(host, port, "tutkain.clojure.client", edn.Keyword("clj"), options=options)
+        super().__init__(
+            host, port, "tutkain.clojure.client", edn.Keyword("clj"), options=options
+        )
 
     def connect(self):
         super().connect()
@@ -318,20 +347,22 @@ class JSClient(Client):
         "shadow.clj": [],
         "analyzer.clj": [
             edn.Symbol("clojure.tools.reader"),
-            edn.Symbol("clojure.tools.analyzer.ast")
+            edn.Symbol("clojure.tools.analyzer.ast"),
         ],
-        "analyzer/js.clj": [
-            edn.Symbol("tutkain.analyzer")
-        ]
+        "analyzer/js.clj": [edn.Symbol("tutkain.analyzer")],
     }
 
     def __init__(self, host, port, options={}):
-        super().__init__(host, port, "tutkain.cljs.client", edn.Keyword("cljs"), options=options)
+        super().__init__(
+            host, port, "tutkain.cljs.client", edn.Keyword("cljs"), options=options
+        )
 
     def connect(self):
         super().connect()
         # Start a promptless REPL so that we don't need to keep sinking the prompt.
-        self.write_line('(clojure.main/repl :init (constantly nil) :prompt (constantly "") :need-prompt (constantly false))')
+        self.write_line(
+            '(clojure.main/repl :init (constantly nil) :prompt (constantly "") :need-prompt (constantly false))'
+        )
         self.write_line("""(sort (shadow.cljs.devtools.api/get-build-ids))""")
         build_id_options = edn.read_line(self.buffer)
 
@@ -341,7 +372,7 @@ class JSClient(Client):
             self.executor.submit(
                 self.options.get("prompt_for_build_id"),
                 build_id_options,
-                lambda index: self.handshake(build_id_options[index])
+                lambda index: self.handshake(build_id_options[index]),
             )
 
         return self
@@ -352,17 +383,26 @@ class JSClient(Client):
         self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
-        for filename in ["format.cljc", "backchannel.cljc", "base64.cljc", "shadow.clj"]:
+        for filename in [
+            "format.cljc",
+            "backchannel.cljc",
+            "base64.cljc",
+            "shadow.clj",
+        ]:
             path = self.source_path(filename)
 
             with open(path, "rb") as file:
                 blob = base64.encode(file.read())
-                self.write_line(f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")""")
+                self.write_line(
+                    f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")"""
+                )
 
             self.buffer.readline()
 
         backchannel_port = self.options.get("backchannel", {}).get("port", 0)
-        self.write_line(f"""(tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}})""")
+        self.write_line(
+            f"""(tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}})"""
+        )
 
         ret = edn.read_line(self.buffer)
 
@@ -371,7 +411,9 @@ class JSClient(Client):
         else:
             host = ret.get(edn.Keyword("host"))
             port = ret.get(edn.Keyword("port"))
-            self.backchannel = backchannel.Client(self.print).connect(self.id, host, port)
+            self.backchannel = backchannel.Client(self.print).connect(
+                self.id, host, port
+            )
             greeting = ret.get(edn.Keyword("greeting"))
             self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": greeting}))
 
@@ -389,11 +431,13 @@ class BabashkaClient(JVMClient):
         "completions.cljc": [],
         "load_blob.cljc": [],
         "test.cljc": [],
-        "query.cljc": []
+        "query.cljc": [],
     }
 
     def __init__(self, host, port, options={}):
-        super(JVMClient, self).__init__(host, port, "tutkain.bb.client", edn.Keyword("bb"), options=options)
+        super(JVMClient, self).__init__(
+            host, port, "tutkain.bb.client", edn.Keyword("bb"), options=options
+        )
 
 
 def set_layout(window):
@@ -436,7 +480,14 @@ def start(view, client):
         if view.element() is None:
             set_layout(window)
 
-        views.configure(view, client.dialect, client.id, client.host, client.port, settings.load().get("repl_view_settings", {}))
+        views.configure(
+            view,
+            client.dialect,
+            client.id,
+            client.host,
+            client.port,
+            settings.load().get("repl_view_settings", {}),
+        )
 
         if not client.has_backchannel() and len(state.get_connections()) == 1:
             view.assign_syntax("Plain Text.tmLanguage")
@@ -454,17 +505,23 @@ def start(view, client):
         return client
     except TimeoutError:
         view.close()
-        sublime.error_message(cleandoc("""
+        sublime.error_message(
+            cleandoc(
+                """
             Timed out trying to connect to socket REPL server.
 
             Are you trying to connect to an nREPL server? Tutkain no longer supports nREPL.
 
             See https://tutkain.flowthing.me/#starting-a-socket-repl for more information.
-            """))
+            """
+            )
+        )
 
 
 def start_printer(client, view, options={}):
-    print_loop = Thread(daemon=True, target=printer.print_loop, args=(view, client, options))
+    print_loop = Thread(
+        daemon=True, target=printer.print_loop, args=(view, client, options)
+    )
     print_loop.name = f"tutkain.{client.id}.print_loop"
     print_loop.start()
     return print_loop
@@ -489,7 +546,7 @@ def make_quick_panel_item(connection):
         output = "panel"
 
     now = datetime.datetime.now()
-    delta = (now - connection.client.since)
+    delta = now - connection.client.since
     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
     annotation = f"{dialects.name(connection.client.dialect)} · {output.capitalize()} · Uptime {delta}"
     trigger = f"{connection.client.host}:{connection.client.port}"
@@ -497,7 +554,12 @@ def make_quick_panel_item(connection):
 
 
 def stop(window):
-    if connections := list(filter(lambda this: this.window.id() == window.id(), state.get_connections().values())):
+    if connections := list(
+        filter(
+            lambda this: this.window.id() == window.id(),
+            state.get_connections().values(),
+        )
+    ):
         progress.stop()
 
         if len(connections) == 1:
@@ -505,8 +567,9 @@ def stop(window):
         else:
             window.show_quick_panel(
                 list(map(make_quick_panel_item, connections)),
-                lambda index: index != -1 and on_select_disconnect_connection(connections[index]),
-                placeholder="Choose the connection to close"
+                lambda index: index != -1
+                and on_select_disconnect_connection(connections[index]),
+                placeholder="Choose the connection to close",
             )
     # Close phantom views resulting from the REPL server dying
     elif vs := filter(lambda view: views.get_client_id(view), window.views()):
@@ -522,5 +585,8 @@ def backchannel_options(project_data, dialect, backchannel=True):
 
     return {
         **(settings.backchannel_options(dialect, backchannel) or {}),
-        **(project_data or {}).get("tutkain", {}).get(dialect_name_lower, {}).get("backchannel", {})
+        **(project_data or {})
+        .get("tutkain", {})
+        .get(dialect_name_lower, {})
+        .get("backchannel", {}),
     }

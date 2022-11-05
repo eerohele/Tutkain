@@ -38,28 +38,39 @@ def refresh_cache(window, callback=lambda: None):
                 output[symbol] = {}
 
                 if examples := var.get("examples"):
-                    output[symbol][edn.Keyword("examples")] = list(map(lambda example: example.get("body"), examples))
+                    output[symbol][edn.Keyword("examples")] = list(
+                        map(lambda example: example.get("body"), examples)
+                    )
 
                 if see_alsos := var.get("see-alsos"):
-                    output[symbol][edn.Keyword("see-alsos")] = list(map(see_also_symbol, see_alsos))
+                    output[symbol][edn.Keyword("see-alsos")] = list(
+                        map(see_also_symbol, see_alsos)
+                    )
 
             edn.write1(file, output)
 
         window.status_message("Finished downloading ClojureDocs data.")
         callback()
     except urllib.error.URLError as error:
-        sublime.error_message(f"[Tutkain] Error trying to fetch ClojureDocs examples from {EXAMPLE_URI}:\n\n {repr(error)}\n\nAre you connected to the internet?")
+        sublime.error_message(
+            f"[Tutkain] Error trying to fetch ClojureDocs examples from {EXAMPLE_URI}:\n\n {repr(error)}\n\nAre you connected to the internet?"
+        )
     except OSError as error:
-        sublime.error_message(f"[Tutkain] Error trying to save ClojureDocs examples into {EXAMPLE_SOURCE_PATH}:\n {repr(error)}")
+        sublime.error_message(
+            f"[Tutkain] Error trying to save ClojureDocs examples into {EXAMPLE_SOURCE_PATH}:\n {repr(error)}"
+        )
 
 
 def send_message(window, client, ns, sym):
-    client.backchannel.send({
-        "op": edn.Keyword("examples"),
-        "source-path": EXAMPLE_SOURCE_PATH,
-        "ns": ns,
-        "sym": sym
-    }, lambda response: handler(window, client, response))
+    client.backchannel.send(
+        {
+            "op": edn.Keyword("examples"),
+            "source-path": EXAMPLE_SOURCE_PATH,
+            "ns": ns,
+            "sym": sym,
+        },
+        lambda response: handler(window, client, response),
+    )
 
 
 def handler(window, client, response):
@@ -75,7 +86,7 @@ def handler(window, client, response):
                 file.write(f";; ClojureDocs examples for {symbol}")
 
                 for example in examples:
-                    file.write("\n\n"+ example)
+                    file.write("\n\n" + example)
 
             if see_alsos:
                 if examples:
@@ -97,9 +108,13 @@ def show(view):
         point = view.sel()[0].begin()
 
         if dialects.for_point(view, point) != edn.Keyword("clj"):
-            view.window().status_message("⚠ ClojureDocs examples are only available for Clojure.")
+            view.window().status_message(
+                "⚠ ClojureDocs examples are only available for Clojure."
+            )
         else:
-            ns = edn.Symbol(namespace.name(view) or namespace.default(edn.Keyword("clj")))
+            ns = edn.Symbol(
+                namespace.name(view) or namespace.default(edn.Keyword("clj"))
+            )
 
             if region := selectors.expand_by_selector(view, point, "meta.symbol"):
                 sym = edn.Symbol(view.substr(region))
@@ -110,10 +125,12 @@ def show(view):
                     "",
                     lambda sym: send_message(window, client, ns, edn.Symbol(sym)),
                     lambda _: None,
-                    lambda: None
+                    lambda: None,
                 )
 
-                input_panel.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
+                input_panel.assign_syntax(
+                    "Packages/Tutkain/Clojure (Tutkain).sublime-syntax"
+                )
                 input_panel.settings().set("auto_complete", True)
     else:
         view.window().status_message("⚠ Not connected to a Clojure REPL.")
@@ -122,8 +139,7 @@ def show(view):
 def show_examples(view):
     if not os.path.exists(EXAMPLE_SOURCE_PATH):
         sublime.set_timeout_async(
-            lambda: refresh_cache(view.window(), lambda: show(view)),
-            0
+            lambda: refresh_cache(view.window(), lambda: show(view)), 0
         )
     else:
         show(view)

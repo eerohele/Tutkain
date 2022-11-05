@@ -27,7 +27,7 @@ class Connection:
 __state = State(
     connections=defaultdict(dict),
     active_connection=defaultdict(dict),
-    gutter_markers=defaultdict(dict)
+    gutter_markers=defaultdict(dict),
 )
 
 
@@ -43,7 +43,7 @@ MARKER_TAGS = {
     edn.Keyword("ret"),
     edn.Keyword("in"),
     edn.Keyword("err"),
-    edn.Keyword("tap")
+    edn.Keyword("tap"),
 }
 
 
@@ -73,22 +73,41 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
         remaining_connections = list(__state["connections"].values())
 
         if get_active_connection(window, connection.client.dialect) == connection:
-            __state["active_connection"][connection.window.id()].pop(connection.client.dialect)
+            __state["active_connection"][connection.window.id()].pop(
+                connection.client.dialect
+            )
 
         # Destroy tap panel if this is the only remaining connection for
         # this window.
-        if not list(filter(lambda this: this.window.id() == connection.window.id(), remaining_connections)):
-            connection.window.destroy_output_panel(repl.views.tap_panel_name(connection.view))
+        if not list(
+            filter(
+                lambda this: this.window.id() == connection.window.id(),
+                remaining_connections,
+            )
+        ):
+            connection.window.destroy_output_panel(
+                repl.views.tap_panel_name(connection.view)
+            )
 
         # Destroy output panel if this is the only remaining connection that
         # uses the panel.
-        if not list(filter(lambda this: this.view.element() == "output:output", remaining_connections)):
+        if not list(
+            filter(
+                lambda this: this.view.element() == "output:output",
+                remaining_connections,
+            )
+        ):
             # TODO: Never destroy the panel, just clear it instead?
             connection.window.destroy_output_panel(repl.views.output_panel_name())
 
         # Clear test markers if this is the only remaining connection for
         # this dialect.
-        if not list(filter(lambda this: this.dialect == connection.client.dialect, remaining_connections)):
+        if not list(
+            filter(
+                lambda this: this.dialect == connection.client.dialect,
+                remaining_connections,
+            )
+        ):
             if view := connection.window.active_view():
                 if dialects.for_view(view) == connection.client.dialect:
                     view.run_command("tutkain_clear_test_markers")
@@ -98,7 +117,9 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
     connection.client.on_close = forget_connection
 
     __state["connections"][connection.client.id] = connection
-    __state["active_connection"][connection.window.id()][connection.client.dialect] = connection
+    __state["active_connection"][connection.window.id()][
+        connection.client.dialect
+    ] = connection
 
 
 def get_active_connection(window: Window, dialect: Dialect) -> Union[Connection, None]:
@@ -113,7 +134,9 @@ def get_client(window: Window, dialect: Dialect) -> Union[repl.Client, None]:
 
 def set_active_connection(window: Window, connection: Union[Connection, None]) -> None:
     if connection:
-        __state["active_connection"][window.id()][connection.client.dialect] = connection
+        __state["active_connection"][window.id()][
+            connection.client.dialect
+        ] = connection
 
 
 def get_active_output_view(window: Window) -> Union[View, None]:
@@ -121,7 +144,9 @@ def get_active_output_view(window: Window) -> Union[View, None]:
         return panel
 
     for group in range(window.num_groups() + 1):
-        if (view := window.active_view_in_group(group)) and repl.views.get_dialect(view):
+        if (view := window.active_view_in_group(group)) and repl.views.get_dialect(
+            view
+        ):
             return view
 
 
@@ -138,10 +163,11 @@ def focus_active_runtime_view(window: Window, dialect: Dialect) -> None:
 
 
 def on_activated(window, view):
-    if window and window.active_panel() != "input" and (
-        dialect := dialects.for_view(view)
-    ) and (
-        client := get_client(window, dialect)
+    if (
+        window
+        and window.active_panel() != "input"
+        and (dialect := dialects.for_view(view))
+        and (client := get_client(window, dialect))
     ):
         status.set_connection_status(view, client)
     else:

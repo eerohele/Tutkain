@@ -13,7 +13,11 @@ from zipfile import ZipFile
 from ...api import edn
 
 
-def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU):
+def goto(
+    window,
+    location,
+    flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU,
+):
     if location:
         resource = location["resource"]
         line = location["line"] + 1
@@ -42,11 +46,14 @@ def goto(window, location, flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIE
                     archive.extract(zipinfo, path.parent)
                     view = window.open_file(f"{path}:{line}:{column}", flags=flags)
 
-                    view.settings().set("tutkain_temp_file", {
-                        "path": temp_path,
-                        "descriptor": descriptor,
-                        "name": view_name
-                    })
+                    view.settings().set(
+                        "tutkain_temp_file",
+                        {
+                            "path": temp_path,
+                            "descriptor": descriptor,
+                            "name": view_name,
+                        },
+                    )
 
                     view.set_scratch(True)
                     view.set_read_only(True)
@@ -163,5 +170,6 @@ def show_popup(view, point, response):
                 content,
                 location=point,
                 max_width=1024,
-                on_navigate=lambda href: goto(window, location), flags=sublime.COOPERATE_WITH_AUTO_COMPLETE
+                on_navigate=lambda href: goto(window, location),
+                flags=sublime.COOPERATE_WITH_AUTO_COMPLETE,
             )

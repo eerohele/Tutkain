@@ -132,10 +132,14 @@ class TestForms(ViewTestCase):
         self.assertEquals(forms.find_previous(self.view, 7), Region(4, 5))
 
     def test_seek_backward(self):
-        is_function = lambda form: self.view.match_selector(form.begin(), "variable.function")
+        is_function = lambda form: self.view.match_selector(
+            form.begin(), "variable.function"
+        )
         self.set_view_content("""(map inc (range 10))""")
         self.assertTrue(forms.seek_backward(self.view, 0, is_function).empty())
         self.assertEquals(Region(1, 4), forms.seek_backward(self.view, 5, is_function))
-        self.assertEquals(Region(10, 15), forms.seek_backward(self.view, 16, is_function))
+        self.assertEquals(
+            Region(10, 15), forms.seek_backward(self.view, 16, is_function)
+        )
         self.assertEquals(Region(1, 4), forms.seek_backward(self.view, 19, is_function))
         self.assertTrue(forms.seek_backward(self.view, 20, is_function).empty())

@@ -15,11 +15,18 @@ def determine_indentation(view, open_bracket):
     region = view.find(r"\S", open_bracket.region.end())
     point = region.begin()
 
-    if view.match_selector(point, "meta.special-form | variable | keyword.declaration | keyword.control | storage.type | entity.name"):
+    if view.match_selector(
+        point,
+        "meta.special-form | variable | keyword.declaration | keyword.control | storage.type | entity.name",
+    ):
         return indentation + " "
     elif view.match_selector(point, "meta.statement.require | meta.statement.import"):
-        form = selectors.expand_by_selector(view, point, "meta.statement.require | meta.statement.import")
-        first_require = selectors.find(view, form.end(), "punctuation | meta.reader-form")
+        form = selectors.expand_by_selector(
+            view, point, "meta.statement.require | meta.statement.import"
+        )
+        first_require = selectors.find(
+            view, form.end(), "punctuation | meta.reader-form"
+        )
 
         if line.contains(first_require):
             return indentation + (" " * (form.size() + 1))
@@ -149,7 +156,9 @@ def indent_region(view, edit, region, prune=False):
                     replacee = Region(begin, end)
 
             open_bracket = sexp.find_open(view, replacee.begin())
-            if replacer := get_indented_string(view, open_bracket, replacee, prune=prune):
+            if replacer := get_indented_string(
+                view, open_bracket, replacee, prune=prune
+            ):
                 view.replace(edit, replacee, replacer)
                 new_lines.append(view.full_line(replacee.begin()))
                 restore_cursors(view)
@@ -201,7 +210,7 @@ def hard_wrap_string(view, edit, region, width):
     point = region.begin()
 
     if region.empty():
-        region = selectors.expand_by_selector(view, point, 'string')
+        region = selectors.expand_by_selector(view, point, "string")
 
     indent = leading_spaces(view, region.begin())
 
@@ -210,8 +219,10 @@ def hard_wrap_string(view, edit, region, width):
 
     paragraphs = map(
         lambda string: "\n".join(string),
-        [wrap_text(normalize_whitespace(paragraph), width, indent)
-        for paragraph in text.split("\n\n")]
+        [
+            wrap_text(normalize_whitespace(paragraph), width, indent)
+            for paragraph in text.split("\n\n")
+        ],
     )
 
     view.replace(edit, region, f"\n\n{indent}".join(paragraphs))
@@ -225,15 +236,21 @@ def hard_wrap_comment(view, edit, region, width):
         current_line = line = view.line(point)
 
         # Seek the line where the comment begins.
-        while (point := line.begin() - 1) and view.substr(point) != "\x00" and view.match_selector(line.end(), 'comment'):
+        while (
+            (point := line.begin() - 1)
+            and view.substr(point) != "\x00"
+            and view.match_selector(line.end(), "comment")
+        ):
             line = view.line(point)
 
         # The beginning of the line is the beginning of the view, and the
         # line has a comment.
-        if view.substr(line.begin() - 1) == "\x00" and view.match_selector(line.end(), 'comment'):
+        if view.substr(line.begin() - 1) == "\x00" and view.match_selector(
+            line.end(), "comment"
+        ):
             # Find the first point on the line with a non-comment character
             # if exists, else the beginning of the line.
-            non_comment_point = selectors.find(view, line.begin(), 'meta.reader-form')
+            non_comment_point = selectors.find(view, line.begin(), "meta.reader-form")
 
             if non_comment_point is not None:
                 begin = non_comment_point + 1
@@ -244,7 +261,11 @@ def hard_wrap_comment(view, edit, region, width):
 
         line = current_line
 
-        while (point := line.end()) and view.substr(point) != "\x00" and view.match_selector(point, 'comment'):
+        while (
+            (point := line.end())
+            and view.substr(point) != "\x00"
+            and view.match_selector(point, "comment")
+        ):
             line = view.line(point + 1)
 
         if view.substr(line.end()) == "\x00":
@@ -256,12 +277,13 @@ def hard_wrap_comment(view, edit, region, width):
 
     new_lines = []
 
-    text = ''.join(
+    text = "".join(
         map(
             lambda pair: view.substr(pair[0]),
-            filter(lambda pair: view.match_selector(pair[0].begin(), '-punctuation'),
-                view.extract_tokens_with_scopes(region)
-            )
+            filter(
+                lambda pair: view.match_selector(pair[0].begin(), "-punctuation"),
+                view.extract_tokens_with_scopes(region),
+            ),
         )
     )
 
@@ -270,7 +292,9 @@ def hard_wrap_comment(view, edit, region, width):
 
     for paragraph in paragraphs:
         paragraph = " ".join(paragraph.split())
-        new_paragraphs = textwrap.wrap(paragraph, width=width - 4 - len(indent), subsequent_indent=indent)
+        new_paragraphs = textwrap.wrap(
+            paragraph, width=width - 4 - len(indent), subsequent_indent=indent
+        )
         new_paragraphs = map(lambda paragraph: paragraph.lstrip(), new_paragraphs)
         new_line = f"{indent};; " + (f"\n{indent};; ".join(new_paragraphs))
         new_lines.append(new_line)
@@ -281,7 +305,7 @@ def hard_wrap_comment(view, edit, region, width):
 # TODO: Don't break if the first non-whitespace char is a hyphen
 def hard_wrap(view, edit, width):
     for region in view.sel():
-        if view.match_selector(region.begin(), 'string'):
+        if view.match_selector(region.begin(), "string"):
             hard_wrap_string(view, edit, region, width)
-        elif view.match_selector(region.begin(), 'comment'):
+        elif view.match_selector(region.begin(), "comment"):
             hard_wrap_comment(view, edit, region, width)
