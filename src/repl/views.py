@@ -1,8 +1,9 @@
-from ...api import edn
-from .. import dialects
+from typing import Union
 
 from sublime import View, active_window
-from typing import Union
+
+from ...api import edn
+from .. import dialects
 
 REPL_VIEW_DEFAULT_SETTINGS = {
     "is_widget": True,

@@ -1,12 +1,7 @@
 import sublime
 
-from . import base64
-from . import forms
-from . import namespace
-from . import sexp
-from . import progress
 from ..api import edn
-
+from . import base64, forms, namespace, progress, sexp
 
 RESULTS_SETTINGS_KEY = "tutkain_clojure_test_results"
 

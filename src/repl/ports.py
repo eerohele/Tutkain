@@ -1,8 +1,10 @@
 import os
+from typing import Callable
+
 from sublime import Window
+
 from ...api import edn
 from .. import dialects
-from typing import Callable
 
 
 def read_port(path):

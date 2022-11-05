@@ -1,7 +1,8 @@
-import sublime
-import re
 import html
+import re
 from inspect import cleandoc
+
+import sublime
 
 
 def format(form):

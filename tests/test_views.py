@@ -1,8 +1,9 @@
+from unittest import TestCase
+
 import sublime
 
 from Tutkain.api import edn
 from Tutkain.src.repl import views
-from unittest import TestCase
 
 
 class TestConfigure(TestCase):

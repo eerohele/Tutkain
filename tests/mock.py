@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod
 import io
 import queue
 import socket
+from abc import ABC, abstractmethod
 from concurrent import futures
 
 from Tutkain.api import edn

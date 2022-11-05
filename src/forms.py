@@ -1,7 +1,8 @@
 import re
-from . import sexp
-from . import selectors
-from sublime import CLASS_WORD_START, CLASS_WORD_END, Region
+
+from sublime import CLASS_WORD_END, CLASS_WORD_START, Region
+
+from . import selectors, sexp
 
 
 def head_word(view, point):

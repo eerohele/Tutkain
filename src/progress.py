@@ -1,6 +1,5 @@
 import sublime
 
-
 bar = None
 
 

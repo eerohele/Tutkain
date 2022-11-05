@@ -1,16 +1,15 @@
-import sublime
 import os
 import queue
-import unittest
-import unittesting
 import tempfile
 import time
+import unittest
+
+import sublime
+import unittesting
 
 from Tutkain.api import edn
-from Tutkain.src import repl
+from Tutkain.src import base64, repl, test
 from Tutkain.src.repl import formatter
-from Tutkain.src import base64
-from Tutkain.src import test
 
 from .mock import JvmBackchannelServer, JvmServer
 from .util import PackageTestCase

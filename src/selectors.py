@@ -1,7 +1,7 @@
-import sublime
-from sublime import Region, View
 from typing import Union
 
+import sublime
+from sublime import Region, View
 
 SEXP_DELIMITERS = "punctuation.section.parens | punctuation.section.brackets | punctuation.section.braces | punctuation.definition.string"
 SEXP_BEGIN = "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin | punctuation.definition.string.begin"

@@ -1,10 +1,8 @@
 import re
-from sublime import Region, CLASS_WORD_START, CLASS_WORD_END
 
-from . import forms
-from . import indent
-from . import selectors
-from . import sexp
+from sublime import CLASS_WORD_END, CLASS_WORD_START, Region
+
+from . import forms, indent, selectors, sexp
 
 
 def iterate(view):

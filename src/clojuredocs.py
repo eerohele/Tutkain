@@ -1,15 +1,11 @@
 import json
 import os
-import sublime
 import urllib
 
-from ..api import edn
-from . import dialects
-from . import namespace
-from . import selectors
-from . import state
-from . import temp
+import sublime
 
+from ..api import edn
+from . import dialects, namespace, selectors, state, temp
 
 EXAMPLE_SOURCE_PATH = os.path.join(sublime.cache_path(), "Tutkain", "clojuredocs.edn")
 EXAMPLE_URI = "https://clojuredocs.org/clojuredocs-export.json"

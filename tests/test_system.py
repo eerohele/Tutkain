@@ -1,17 +1,16 @@
-from .mock import JsBackchannelServer, JvmBackchannelServer, JvmServer
-from Tutkain.api import edn
-from Tutkain.src import repl
-from Tutkain.src import settings
-from Tutkain.src import state
-
-from concurrent import futures
-
-import sublime
 import sys
 import textwrap
 import types
-import unittesting
 import unittest
+from concurrent import futures
+
+import sublime
+import unittesting
+
+from Tutkain.api import edn
+from Tutkain.src import repl, settings, state
+
+from .mock import JsBackchannelServer, JvmBackchannelServer, JvmServer
 
 
 class TestCase(unittesting.DeferrableTestCase):

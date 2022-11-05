@@ -1,8 +1,9 @@
 import inspect
 from dataclasses import dataclass
-from . import selectors
+
 from sublime import CLASS_WORD_START, Region, View
 
+from . import selectors
 
 OPEN = {"(": ")", "[": "]", "{": "}"}
 CLOSE = {")": "(", "]": "[", "}": "{"}

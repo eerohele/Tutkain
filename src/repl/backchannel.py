@@ -1,9 +1,8 @@
 import itertools
 import socket
-
 from queue import Queue
+from threading import Lock, Thread
 from typing import IO
-from threading import Thread, Lock
 
 from ...api import edn
 from ..log import log

@@ -1,18 +1,16 @@
-from ..log import log
-from .. import state
-from .. import settings
-from .. import inline
-from . import views
 import sublime
 
+from .. import inline, settings, state
+from ..log import log
+from . import views
 from .keywords import (
     CLIPBOARD,
     ERR,
     IN,
     INLINE,
     OUTPUT,
-    RET,
     POINT,
+    RET,
     STRING,
     TAG,
     TAP,

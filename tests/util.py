@@ -1,10 +1,9 @@
-import sublime
 import socket
-
 from concurrent import futures
 from threading import Event, Thread
-
 from unittest import TestCase
+
+import sublime
 from unittesting import DeferrableTestCase
 
 from Tutkain.api import edn

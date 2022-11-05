@@ -1,11 +1,11 @@
 import math
 import re
 import textwrap
+from itertools import groupby
+
 from sublime import Region
 
-from itertools import groupby
-from . import selectors
-from . import sexp
+from . import selectors, sexp
 
 
 def determine_indentation(view, open_bracket):

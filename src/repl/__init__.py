@@ -1,30 +1,23 @@
-from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
-from inspect import cleandoc
 import datetime
 import io
-import queue
 import os
 import pathlib
 import posixpath
+import queue
 import socket
-import sublime
 import types
 import uuid
+from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
+from inspect import cleandoc
 from threading import Lock, Thread
 
-from . import backchannel
+import sublime
+
 from ...api import edn
+from .. import base64, dialects, progress, settings, state, status
 from ..log import log
-from .. import base64
-from .. import dialects
-from .. import progress
-from .. import settings
-from .. import state
-from .. import status
-from . import formatter
-from . import printer
-from . import views
+from . import backchannel, formatter, printer, views
 
 
 def read_until_prompt(socket: socket.SocketType):

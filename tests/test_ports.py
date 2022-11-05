@@ -1,9 +1,9 @@
+from unittest import TestCase
+
 import sublime
 
 from Tutkain.api import edn
 from Tutkain.src.repl import ports
-
-from unittest import TestCase
 
 
 class TestPorts(TestCase):

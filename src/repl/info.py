@@ -1,14 +1,14 @@
 import html
 import inspect
 import os
-import re
-import sublime
-import tempfile
 import pathlib
-
+import re
+import tempfile
 from urllib.parse import urlparse
 from urllib.request import url2pathname
 from zipfile import ZipFile
+
+import sublime
 
 from ...api import edn
 

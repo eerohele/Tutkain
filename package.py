@@ -1,6 +1,5 @@
 import sys
 
-
 # Ensure all Python modules are reloaded when Package Control updates the
 # package.
 for module in list(

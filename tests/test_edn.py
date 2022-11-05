@@ -1,8 +1,10 @@
 """Unit tests for the EDN module."""
 
 from unittest import TestCase
+
 from Tutkain.api import edn
-from .util import start_client, stop_client, start_server
+
+from .util import start_client, start_server, stop_client
 
 
 class TestEdn(TestCase):

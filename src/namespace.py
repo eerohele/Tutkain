@@ -1,5 +1,5 @@
-from . import sexp
 from ..api import edn
+from . import sexp
 
 
 def find_regions(view):

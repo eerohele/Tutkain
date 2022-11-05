@@ -1,8 +1,8 @@
-from functools import partial
 import json
 import os
-import sublime
+from functools import partial
 
+import sublime
 from sublime_plugin import (
     EventListener,
     ListInputHandler,
@@ -12,33 +12,28 @@ from sublime_plugin import (
     WindowCommand,
 )
 
-from . import base64
-from . import clojuredocs
-from . import dialects
-from . import selectors
-from . import sexp
-from . import state
-from . import forms
-from . import indent
-from . import inline
-from . import paredit
-from . import progress
-from . import namespace
-from . import temp
-from . import test
-from . import repl
-from . import completions
-from . import settings
-from .repl import info
-from .repl import query
-from .repl import history
-from .repl import ports
-
-
-from .log import start_logging, stop_logging
-
-
 from ..api import edn
+from . import (
+    base64,
+    clojuredocs,
+    completions,
+    dialects,
+    forms,
+    indent,
+    inline,
+    namespace,
+    paredit,
+    progress,
+    repl,
+    selectors,
+    settings,
+    sexp,
+    state,
+    temp,
+    test,
+)
+from .log import start_logging, stop_logging
+from .repl import history, info, ports, query
 
 
 def make_color_scheme(cache_dir):

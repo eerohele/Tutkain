@@ -7,9 +7,8 @@ The tricky parts are ported from Clojure's EdnReader.java.
 
 For more information on EDN, see https://github.com/edn-format/edn."""
 
-from dataclasses import dataclass
 import io
-
+from dataclasses import dataclass
 
 # Types
 

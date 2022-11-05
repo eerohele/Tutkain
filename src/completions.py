@@ -1,10 +1,7 @@
 import sublime
-from . import state
-from . import dialects
-from . import selectors
-from . import namespace
-from ..api import edn
 
+from ..api import edn
+from . import dialects, namespace, selectors, state
 
 KINDS = {
     "function": sublime.KIND_FUNCTION,

@@ -1,4 +1,5 @@
 from itertools import groupby
+
 import sublime
 
 MAX_HISTORY_ITEMS = 100

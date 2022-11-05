@@ -1,14 +1,4 @@
-from .keywords import (
-    CLIPBOARD,
-    ERR,
-    OUT,
-    OUTPUT,
-    RET,
-    STRING,
-    TAG,
-    VAL,
-    VIEW,
-)
+from .keywords import CLIPBOARD, ERR, OUT, OUTPUT, RET, STRING, TAG, VAL, VIEW
 
 
 # Print invisible Unicode characters (U+2063) around stdout and

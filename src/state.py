@@ -1,12 +1,11 @@
 from collections import defaultdict, deque
-from sublime import View, Window
-from typing import Union, TypedDict, Dict
 from dataclasses import dataclass
-from . import repl
-from . import dialects
-from . import status
-from ..api import edn
+from typing import Dict, TypedDict, Union
 
+from sublime import View, Window
+
+from ..api import edn
+from . import dialects, repl, status
 
 WindowId = int
 ViewId = int
