@@ -1849,7 +1849,7 @@ class TutkainRemoveNamespaceMappingCommand(TextCommand):
             client.backchannel.send(
                 {
                     "op": edn.Keyword("intern-mappings"),
-                    "ns": edn.Symbol(namespace.name(self.view)),
+                    "ns": edn.Symbol(namespace.name_or_default(self.view, dialect)),
                     "dialect": dialect,
                 },
                 lambda response: self.handler(client, dialect, response),
