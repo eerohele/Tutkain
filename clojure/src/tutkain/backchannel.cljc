@@ -98,8 +98,8 @@
   (AtomicInteger.))
 
 (defn accept
-  [{:keys [bindings eventual-send-fn eval-context xform-in xform-out]
-    :or {xform-in identity xform-out identity}}]
+  [{:keys [add-tap? bindings eventual-send-fn eval-context xform-in xform-out]
+    :or {add-tap? false xform-in identity xform-out identity}}]
   (let [out *out*
         lock (Object.)
         out-fn (fn [message]
@@ -110,7 +110,7 @@
                      (.flush out))))
         tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})]
     (deliver eventual-send-fn out-fn)
-    (add-tap tapfn)
+    (when add-tap? (add-tap tapfn))
     (with-bindings bindings
       (try
         (binding [*out* (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
@@ -166,8 +166,8 @@
   Other options are subject to change.
 
   Returns a Backchannel instance."
-  [{:keys [bind-address port bindings xform-in xform-out]
-      :or {bind-address "localhost" port 0 xform-in identity xform-out identity}}]
+  [{:keys [add-tap? bind-address port bindings xform-in xform-out]
+      :or {add-tap? false bind-address "localhost" port 0 xform-in identity xform-out identity}}]
   (let [eval-context (atom {})
         eventual-send-fn (promise)
         server-name (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter))
@@ -176,7 +176,8 @@
                                 :port port
                                 :name server-name
                                 :accept `accept
-                                :args [{:bindings (select-keys bindings [#'*e #'*1 #'*2 #'*3 #'*warn-on-reflection*])
+                                :args [{:add-tap? add-tap?
+                                        :bindings (select-keys bindings [#'*e #'*1 #'*2 #'*3 #'*warn-on-reflection*])
                                         :eval-context eval-context
                                         :eventual-send-fn eventual-send-fn
                                         :xform-in #(xform-in %)
