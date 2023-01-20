@@ -29,7 +29,8 @@
     (server/start-server
       {:name server-name
        :port 0
-       :accept `repl/repl})))
+       :accept `repl/repl
+       :args [{:add-tap? true}]})))
 
 (def repl (socket/client :host "localhost" :port (.getLocalPort server)))
 (xr/on-exit #((:stop repl)))
