@@ -6,7 +6,16 @@
 (comment
   (server/start!)
   (shadow/watch :browser)
-  (shadow/watch :node-script)
+
+  (do
+    (server/start!)
+    (shadow/watch :node-script)
+
+    (->
+      (ProcessBuilder. (into-array String ["node" "out/script.js"]))
+      (.inheritIO)
+      (.start)))
+
   (server/stop!)
   :cljs/quit
   )
