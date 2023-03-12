@@ -3,7 +3,7 @@
  :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.11.60"}}
                   :extra-paths ["dev/cljs"]}
 
-           :shadow-cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.19.9"}}
+           :shadow-cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.22.0"}}
                          :extra-paths ["dev/shadow"]}
 
            :figwheel {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.18"}}
@@ -11,9 +11,9 @@
 
            :dev {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}
                               org.clojure/test.check {:mvn/version "1.1.1"}
-                              org.clojure/tools.analyzer.jvm {:mvn/version "1.2.2"}
+                              org.clojure/tools.analyzer.jvm {:mvn/version "1.2.3"}
                               com.cognitect/transcriptor {:mvn/version "0.1.5"}
-                              com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.0.0"}
+                              com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.0.3"}
                               criterium/criterium {:mvn/version "0.4.6"}
                               me.flowthing/shiv {:git/url "https://gist.github.com/eerohele/8611d1a98bd2d5e8ddda14d8394d720a"
                                                  :sha "1fcde34f51c9c69710eb75c268eed1f88fa27b05"}}
