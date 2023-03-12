@@ -11,7 +11,7 @@ from Tutkain.api import edn
 from Tutkain.src import base64, repl, test
 from Tutkain.src.repl import formatter
 
-from .mock import JvmBackchannelServer, JvmServer
+from .mock import JvmBackchannelServer, JvmRpcServer, JvmServer
 from .util import PackageTestCase
 
 
@@ -23,8 +23,13 @@ def input(val):
     return edn.kwmap({"tag": edn.Keyword("in"), "val": val})
 
 
-def ret(val):
-    return edn.kwmap({"tag": edn.Keyword("ret"), "val": val})
+def ret(val, id=None):
+    response = edn.kwmap({"tag": edn.Keyword("ret"), "val": val})
+
+    if id is not None:
+        response[edn.Keyword("id")] = id
+
+    return response
 
 
 class TestJVMClient(PackageTestCase):
@@ -33,7 +38,7 @@ class TestJVMClient(PackageTestCase):
         super().setUpClass()
         self.window = sublime.active_window()
         server = JvmBackchannelServer().start()
-        self.client = repl.JVMClient(server.host, server.port)
+        self.client = repl.JVMClient(server.host, server.port, "repl")
         self.output_view = repl.views.get_or_create_view(self.window, "view")
         repl.start(self.output_view, self.client)
         self.server = server.connection.result(timeout=5)
@@ -747,51 +752,36 @@ class TestJVMClient(PackageTestCase):
             "tutkain_evaluate", {"scope": "outermost", "output": "clipboard"}
         )
         self.assertEquals(input("(inc 1)\n"), self.get_print())
-        # Client sends eval context over backchannel
-        eval_context = edn.read(self.server.backchannel.recv())
 
+        eval_op = edn.read(self.server.backchannel.recv())
+        id = eval_op[edn.Keyword("id")]
+
+        # Client sends eval op over backchannel
         self.assertEquals(
             edn.kwmap(
                 {
-                    "op": edn.Keyword("set-eval-context"),
+                    "op": edn.Keyword("eval"),
+                    "dialect": edn.Keyword("clj"),
+                    "ns": edn.Symbol("user"),
                     "file": "NO_SOURCE_FILE",
+                    "code": "(inc 1)",
                     "line": 1,
                     "column": 1,
-                    "response": edn.kwmap({"output": edn.Keyword("clipboard")}),
+                    "id": id,
                 }
             ),
-            select_keys(
-                eval_context,
-                [
-                    edn.Keyword("op"),
-                    edn.Keyword("file"),
-                    edn.Keyword("line"),
-                    edn.Keyword("column"),
-                    edn.Keyword("response"),
-                ],
-            ),
+            eval_op,
         )
 
-        # Backchannel sends eval context response
-        self.server.backchannel.send(
-            edn.kwmap(
-                {"id": eval_context.get(edn.Keyword("id")), "result": edn.Keyword("ok")}
-            )
-        )
-
-        # Client sends code string over eval channel
-        self.assertEquals("(inc 1)\n", self.server.recv())
-
-        # Server sends response over backchannel
         response = edn.kwmap(
             {
-                "output": edn.Keyword("clipboard"),
+                "id": id,
                 "tag": edn.Keyword("ret"),
-                "string": "2",
                 "val": "2\n",
             }
         )
 
+        # Backchannel sends eval op response
         self.server.backchannel.send(response)
 
         self.assertEquals(response, self.get_print())
@@ -801,66 +791,39 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("(inc 1)")
         self.set_selections((0, 0))
         self.view.run_command(
-            "tutkain_evaluate", {"scope": "outermost", "inline_result": True}
+            "tutkain_evaluate", {"scope": "outermost", "output": "inline"}
         )
         self.assertEquals(input("(inc 1)\n"), self.get_print())
 
-        # Client sends eval context over backchannel
-        eval_context = edn.read(self.server.backchannel.recv())
+        eval_op = edn.read(self.server.backchannel.recv())
+        id = eval_op[edn.Keyword("id")]
 
+        # Client sends eval op over backchannel
         self.assertEquals(
             edn.kwmap(
                 {
-                    "op": edn.Keyword("set-eval-context"),
+                    "op": edn.Keyword("eval"),
+                    "dialect": edn.Keyword("clj"),
+                    "ns": edn.Symbol("user"),
                     "file": "NO_SOURCE_FILE",
+                    "code": "(inc 1)",
                     "line": 1,
                     "column": 1,
-                    "response": edn.kwmap(
-                        {
-                            "point": 7,
-                            "output": edn.Keyword("inline"),
-                            "view-id": self.view.id(),
-                        }
-                    ),
+                    "id": id,
                 }
             ),
-            select_keys(
-                eval_context,
-                [
-                    edn.Keyword("op"),
-                    edn.Keyword("file"),
-                    edn.Keyword("line"),
-                    edn.Keyword("column"),
-                    edn.Keyword("response"),
-                ],
-            ),
+            eval_op,
         )
 
-        # Backchannel sends eval context response
-        self.server.backchannel.send(
-            edn.kwmap(
-                {"id": eval_context.get(edn.Keyword("id")), "result": edn.Keyword("ok")}
-            )
-        )
-
-        # Client sends code string over eval channel
-        self.assertEquals("(inc 1)\n", self.server.recv())
-
-        view_id = eval_context.get(edn.Keyword("response")).get(edn.Keyword("view-id"))
-
-        # Server sends response over backchannel
         response = edn.kwmap(
             {
+                "id": id,
                 "tag": edn.Keyword("ret"),
-                "val": "2",
-                "output": eval_context.get(edn.Keyword("response")).get(
-                    edn.Keyword("output")
-                ),
-                "view-id": view_id,
-                "point": 7,
+                "val": "2\n",
             }
         )
 
+        # Backchannel sends eval op response
         self.server.backchannel.send(response)
 
         self.assertEquals(response, self.get_print())
@@ -870,66 +833,39 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("(inc 1)")
         self.set_selections((7, 7))
         self.view.run_command(
-            "tutkain_evaluate", {"code": "(inc 1)", "inline_result": True}
+            "tutkain_evaluate", {"code": "(inc 1)", "output": "inline"}
         )
         self.assertEquals(input("(inc 1)\n"), self.get_print())
 
-        # Client sends eval context over backchannel
-        eval_context = edn.read(self.server.backchannel.recv())
+        eval_op = edn.read(self.server.backchannel.recv())
+        id = eval_op[edn.Keyword("id")]
 
+        # Client sends eval op over backchannel
         self.assertEquals(
             edn.kwmap(
                 {
-                    "op": edn.Keyword("set-eval-context"),
+                    "op": edn.Keyword("eval"),
+                    "dialect": edn.Keyword("clj"),
+                    "ns": edn.Symbol("user"),
                     "file": "NO_SOURCE_FILE",
+                    "code": "(inc 1)",
                     "line": 1,
-                    "column": 1,
-                    "response": edn.kwmap(
-                        {
-                            "point": 7,
-                            "output": edn.Keyword("inline"),
-                            "view-id": self.view.id(),
-                        }
-                    ),
+                    "column": 8,
+                    "id": id,
                 }
             ),
-            select_keys(
-                eval_context,
-                [
-                    edn.Keyword("op"),
-                    edn.Keyword("file"),
-                    edn.Keyword("line"),
-                    edn.Keyword("column"),
-                    edn.Keyword("response"),
-                ],
-            ),
+            eval_op,
         )
 
-        # Backchannel sends eval context response
-        self.server.backchannel.send(
-            edn.kwmap(
-                {"id": eval_context.get(edn.Keyword("id")), "result": edn.Keyword("ok")}
-            )
-        )
-
-        # Client sends code string over eval channel
-        self.assertEquals("(inc 1)\n", self.server.recv())
-
-        view_id = eval_context.get(edn.Keyword("response")).get(edn.Keyword("view-id"))
-
-        # Server sends response over backchannel
         response = edn.kwmap(
             {
+                "id": id,
                 "tag": edn.Keyword("ret"),
-                "val": "2",
-                "output": eval_context.get(edn.Keyword("response")).get(
-                    edn.Keyword("output")
-                ),
-                "view-id": view_id,
-                "point": 7,
+                "val": "2\n",
             }
         )
 
+        # Backchannel sends eval op response
         self.server.backchannel.send(response)
 
         self.assertEquals(response, self.get_print())
@@ -972,6 +908,105 @@ class TestJVMClient(PackageTestCase):
         self.server.send("2")
         self.assertEquals(ret("2\n"), self.get_print())
 
+    # @unittest.SkipTest
+    def test_eval_innermost_rpc(self):
+        file = os.path.join(tempfile.gettempdir(), "my.clj")
+        self.view.retarget(file)
+
+        self.set_view_content("(ns foo.bar) (map inc (range 10))")
+        self.set_selections((22, 22))
+        self.view.run_command("tutkain_evaluate", {"scope": "innermost", "mode": "rpc"})
+        self.assertEquals(input("(range 10)\n"), self.get_print())
+
+        eval_op = edn.read(self.server.backchannel.recv())
+        id = eval_op[edn.Keyword("id")]
+
+        self.assertEquals(
+            edn.kwmap(
+                {
+                    "op": edn.Keyword("eval"),
+                    "dialect": edn.Keyword("clj"),
+                    "ns": edn.Symbol("foo.bar"),
+                    "file": file,
+                    "code": "(range 10)",
+                    "line": 1,
+                    "column": 23,
+                    "id": id,
+                }
+            ),
+            eval_op,
+        )
+
+        response = edn.kwmap(
+            {
+                "id": id,
+                "tag": edn.Keyword("ret"),
+                "val": "(0 1 2 3 4 5 6 7 8 9)\n",
+            }
+        )
+
+        self.server.backchannel.send(response)
+        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
+
+
+class TestJvmRpcClient(PackageTestCase):
+    @classmethod
+    def setUpClass(self):
+        super().setUpClass()
+        self.window = sublime.active_window()
+        server = JvmRpcServer().start()
+        self.client = repl.JVMClient(server.host, server.port, "rpc")
+        self.output_view = repl.views.get_or_create_view(self.window, "view")
+        repl.start(self.output_view, self.client)
+        self.server = server.connection.result(timeout=5)
+        self.client.printq.get(timeout=5)
+
+        self.addClassCleanup(repl.stop, self.window)
+        self.addClassCleanup(self.server.stop)
+
+    def get_print(self):
+        return self.client.printq.get(timeout=5)
+
+    # @unittest.SkipTest
+    def test_eval_innermost(self):
+        file = os.path.join(tempfile.gettempdir(), "my.clj")
+        self.view.retarget(file)
+
+        self.set_view_content("(ns foo.bar) (map inc (range 10))")
+        self.set_selections((22, 22))
+        self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
+        self.assertEquals(input("(range 10)\n"), self.get_print())
+
+        eval_op = edn.read(self.server.recv())
+        id = eval_op[edn.Keyword("id")]
+
+        self.assertEquals(
+            edn.kwmap(
+                {
+                    "op": edn.Keyword("eval"),
+                    "dialect": edn.Keyword("clj"),
+                    "ns": edn.Symbol("foo.bar"),
+                    "file": file,
+                    "code": "(range 10)",
+                    "line": 1,
+                    "column": 23,
+                    "id": id,
+                }
+            ),
+            eval_op,
+        )
+
+        response = edn.kwmap(
+            {
+                "id": id,
+                "tag": edn.Keyword("ret"),
+                "val": "(0 1 2 3 4 5 6 7 8 9)\n",
+            }
+        )
+
+        self.server.send(response)
+        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
+
 
 class TestNoBackchannelJVMClient(PackageTestCase):
     @classmethod
@@ -981,7 +1016,10 @@ class TestNoBackchannelJVMClient(PackageTestCase):
         self.window = sublime.active_window()
         server = JvmServer().start()
         self.client = repl.JVMClient(
-            server.host, server.port, options={"backchannel": {"enabled": False}}
+            server.host,
+            server.port,
+            "repl",
+            options={"backchannel": {"enabled": False}},
         )
         self.output_view = repl.views.get_or_create_view(self.window, "view")
         repl.start(self.output_view, self.client)

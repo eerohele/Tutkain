@@ -67,7 +67,9 @@
   [ns file vars]
   (let [results (atom {:fail [] :pass [] :error []})
         var-meta (atom nil)]
-    (binding [test/report (fn [event*]
+    (binding [*print-length* nil
+              *print-level* nil
+              test/report (fn [event*]
                             (let [{:keys [type] :as event} (cond-> event* (seq file) (assoc :file file))]
                               ;; TODO: Could use a multimethod here instead.
                               (case type
@@ -104,7 +106,7 @@
     @results))
 
 (defmethod handle :test
-  [{:keys [eval-lock ns code file vars] :as message}]
+  [{:keys [eval-lock ns code file vars thread-bindings] :as message}]
   (try
     (let [filename (some-> file File. .getName)
           ns-sym (or (some-> ns symbol) 'user)]
@@ -112,6 +114,7 @@
       (locking eval-lock (read-base64 code file filename))
       (respond-to message (run-tests ns-sym file vars)))
     (catch Throwable ex
+      (swap! thread-bindings assoc #'*e ex)
       (respond-to message {:tag :err
                            :val (Throwable->str ex)
                            :exception true}))))

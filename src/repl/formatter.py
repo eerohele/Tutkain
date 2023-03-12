@@ -1,4 +1,10 @@
-from .keywords import CLIPBOARD, ERR, OUT, OUTPUT, RET, STRING, TAG, VAL, VIEW
+from .keywords import (
+    ERR,
+    OUT,
+    RET,
+    TAG,
+    VAL,
+)
 
 
 # Print invisible Unicode characters (U+2063) around stdout and
@@ -26,8 +32,5 @@ def format(item):
             item[VAL] = out_string(val)
         elif tag == ERR:
             item[VAL] = err_string(val)
-
-        if item.get(OUTPUT, VIEW) == CLIPBOARD:
-            item[STRING] = val[:-1] if val[-1] == "\n" else val
 
         return item

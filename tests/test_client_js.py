@@ -4,16 +4,12 @@ from Tutkain.api import edn
 from Tutkain.src import repl
 from Tutkain.src.repl import formatter
 
-from .mock import JsBackchannelServer
+from .mock import JsServer
 from .util import PackageTestCase
 
 
 def input(val):
     return edn.kwmap({"tag": edn.Keyword("in"), "val": val})
-
-
-def ret(val):
-    return edn.kwmap({"tag": edn.Keyword("ret"), "val": val})
 
 
 class TestJSClient(PackageTestCase):
@@ -25,7 +21,7 @@ class TestJSClient(PackageTestCase):
         super().setUpClass()
 
         self.window = sublime.active_window()
-        server = JsBackchannelServer().start()
+        server = JsServer().start()
         self.client = repl.JSClient(
             server.host, server.port, options={"build_id": edn.Keyword("app")}
         )
@@ -35,7 +31,6 @@ class TestJSClient(PackageTestCase):
         self.client.printq.get(timeout=5)
 
         self.addClassCleanup(repl.stop, self.window)
-        self.addClassCleanup(self.server.backchannel.stop)
         self.addClassCleanup(self.server.stop)
 
     def setUp(self):
@@ -46,7 +41,19 @@ class TestJSClient(PackageTestCase):
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.assertEquals(input("(range 10)\n"), self.get_print())
-        self.eval_context(column=10, ns=edn.Symbol("cljs.user"))
-        self.assertEquals("(range 10)\n", self.server.recv())
-        self.server.send("(0 1 2 3 4 5 6 7 8 9)")
-        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
+        self.assertEquals(
+            """{:op :eval :dialect :cljs :code "(range 10)" :file "NO_SOURCE_FILE" :ns cljs.user :line 1 :column 10 :id 9}\n""",
+            self.server.recv(),
+        )
+        self.server.send(
+            edn.kwmap(
+                {"id": 9, "tag": edn.Keyword("ret"), "val": "(0 1 2 3 4 5 6 7 8 9)\n"}
+            )
+        )
+
+        self.assertEquals(
+            edn.kwmap(
+                {"id": 9, "tag": edn.Keyword("ret"), "val": "(0 1 2 3 4 5 6 7 8 9)\n"}
+            ),
+            self.get_print(),
+        )

@@ -147,7 +147,7 @@ class PackageTestCase(DeferrableTestCase):
         message = edn.kwmap(
             {
                 "id": id,
-                "op": edn.Keyword("set-eval-context"),
+                "op": edn.Keyword("set-thread-bindings"),
                 "file": file,
                 "ns": ns,
                 "line": line,

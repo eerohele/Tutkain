@@ -99,16 +99,6 @@ def plugin_unloaded():
     preferences.clear_on_change("Tutkain")
 
 
-def evaluate(view, client, code, point=0, options={}):
-    line, column = view.rowcol(point)
-    options["line"] = line
-    options["column"] = column
-
-    # Don't try evaluating empty string
-    if code := indent.reindent(code, column):
-        client.evaluate(code, options)
-
-
 class TemporaryFileEventListener(ViewEventListener):
     @classmethod
     def is_applicable(_, settings):
@@ -187,8 +177,6 @@ class TutkainEvaluateViewCommand(TextCommand):
         self.view.window().status_message(
             "tutkain_evaluate_view is deprecated; use tutkain_evaluate instead"
         )
-
-        self.view.run_command("tutkain_evaluate", {"scope": "view"})
 
 
 class TutkainRunTests(TextCommand):
@@ -366,37 +354,56 @@ def get_eval_region(view, region, scope="outermost", ignore={}):
 
 
 class TutkainEvaluateCommand(TextCommand):
-    def evaluate_view(self, client, code):
-        view = self.view
-        window = view.window()
+    def make_options(self, options, point, dialect):
+        if not options.get("file") and (file_name := self.view.file_name()):
+            options["file"] = file_name
 
-        def handler(response):
-            progress.stop()
-            window.status_message("✓ Evaluating view... done.")
+        if not options.get("file"):
+            options["file"] = "NO_SOURCE_FILE"
 
-            if edn.Keyword("exception") in response:
-                client.print(response)
-                window.status_message(
-                    "⚠ Could not evaluate view; see output view for more information."
-                )
+        if not options.get("ns"):
+            if settings.load().get("auto_switch_namespace", True):
+                if ns := namespace.name(self.view):
+                    options["ns"] = edn.Symbol(ns)
 
-        progress.start("Evaluating view...")
+        if not options.get("ns"):
+            options["ns"] = edn.Symbol(namespace.default(dialect))
 
-        client.backchannel.send(
-            {
-                "op": edn.Keyword("load"),
-                "code": base64.encode(code.encode("utf-8")),
-                "file": self.view.file_name(),
-            },
-            handler,
-        )
+        line, column = self.view.rowcol(point)
+
+        options["line"] = line + 1
+        options["column"] = column + 1
+
+        return options
+
+    def eval(self, client, code, handler=None, point=0, options={}):
+        opts = self.make_options(options, point, client.dialect)
+
+        if code := indent.reindent(code, opts.get("column", 1)):
+            client.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
+
+            mode = opts.get("mode")
+
+            if "mode" in opts:
+                del opts["mode"]
+
+            if mode == "rpc":
+                client.evaluate_rpc(code, handler, opts)
+            else:
+                client.evaluate_repl(code, opts)
+
+    def get_dialect(self, dialect, point):
+        if dialect is not None:
+            return edn.Keyword(dialect)
+        else:
+            return dialects.for_point(self.view, point) or edn.Keyword("clj")
 
     def noop(*args):
         pass
 
     def run(
         self,
-        edit,
+        _,
         scope="outermost",
         code="",
         ns=None,
@@ -405,6 +412,7 @@ class TutkainEvaluateCommand(TextCommand):
         inline_result=False,
         output="view",
         dialect=None,
+        mode=None,
     ):
         assert scope in {
             "input",
@@ -417,13 +425,12 @@ class TutkainEvaluateCommand(TextCommand):
         }
         assert output in {"view", "clipboard"}
 
-        point = self.view.sel()[0].begin()
-
-        if dialect is not None:
-            dialect = edn.Keyword(dialect)
+        if sel := self.view.sel():
+            current_region = sel[0]
         else:
-            dialect = dialects.for_point(self.view, point) or edn.Keyword("clj")
+            current_region = sublime.Region(0, 0)
 
+        dialect = self.get_dialect(dialect, current_region.begin())
         client = state.get_client(self.view.window(), dialect)
 
         if client is None:
@@ -431,60 +438,69 @@ class TutkainEvaluateCommand(TextCommand):
                 f"⚠ Not connected to a {dialects.name(dialect)} REPL."
             )
         else:
-            state.focus_active_runtime_view(self.view.window(), dialect)
+            if inline_result:
+                self.view.window().status_message(
+                    """inline_result is deprecated; use "output": "inline" instead"""
+                )
 
-            file_name = self.view.file_name()
-            options = {"file": file_name}
+                output = "inline"
 
-            if settings.load().get("auto_switch_namespace", True):
-                ns = ns or namespace.name_or_default(self.view, dialect)
-                options["ns"] = ns
+            # Force RPC evaluation mode if client is in RPC mode and for inline and clipboard outputs
+            if client.mode == "rpc" or output in {"inline", "clipboard"}:
+                options = {"mode": "rpc"}
+            else:
+                options = {"mode": mode or client.mode}
 
-            if output == "clipboard":
-                options["response"] = {"output": edn.Keyword("clipboard")}
+            if scope == "view":
+                syntax = self.view.syntax()
 
-            if scope == "mark" and (
-                mark := self.view.window().settings().get("tutkain_mark")
-            ):
-                options = {**options, **mark["options"]}
+                if syntax and syntax.scope not in {
+                    "source.clojure",
+                    "source.clojure.clojure-common",
+                    "source.clojure.babashka",
+                }:
+                    self.view.window().status_message(
+                        "Active view has incompatible syntax; can't evaluate."
+                    )
+                else:
+                    eval_region = sublime.Region(0, self.view.size())
 
-                if code := indent.reindent(mark["code"], options.get("column", 1)):
-                    client.evaluate(code, options)
+                    if not eval_region.empty():
+                        window = self.view.window()
 
-            elif scope == "up_to_point":
-                for region in self.view.sel():
-                    if innermost := sexp.innermost(self.view, region.end(), edge=False):
-                        region_up_to_point = sublime.Region(
-                            innermost.open.region.begin(), region.end()
-                        )
-                        code = self.view.substr(region_up_to_point) + self.view.substr(
-                            innermost.close.region
-                        )
-                        evaluate(self.view, client, code, region.end(), options=options)
-                    else:
-                        # Stop at the first point that has a non-Clojure scope
-                        # (presumably when within a Markdown code block), or
-                        # at 0 if not found.
-                        begin = max(
-                            (
-                                selectors.find(
-                                    self.view,
-                                    region.begin(),
-                                    "-source.clojure",
-                                    forward=False,
+                        def handler(response):
+                            progress.stop()
+                            window.status_message("✓ Evaluating view... done.")
+
+                            if edn.Keyword("exception") in response:
+                                client.print(response)
+                                window.status_message(
+                                    "⚠ Could not evaluate view; see output view for more information."
                                 )
-                                or 0
-                            )
-                            + 1,
-                            0,
+
+                        progress.start("Evaluating view...")
+
+                        code = self.view.substr(eval_region)
+
+                        client.send_op(
+                            {
+                                "op": edn.Keyword("load"),
+                                "code": base64.encode(code.encode("utf-8")),
+                                "file": self.view.file_name(),
+                            },
+                            handler,
                         )
-                        code = self.view.substr(sublime.Region(begin, region.end()))
-                        evaluate(self.view, client, code, region.end(), options=options)
 
             elif scope == "input":
 
                 def evaluate_input(client, code):
-                    evaluate(self.view, client, code + "\n", options=options)
+                    options["file"] = self.view.file_name()
+
+                    if settings.load().get("auto_switch_namespace", True):
+                        ns = namespace.name_or_default(self.view, dialect)
+                        options["ns"] = edn.Symbol(ns)
+
+                    self.eval(client, code, options=options)
                     history.update(self.view.window(), code)
 
                 view = self.view.window().show_input_panel(
@@ -508,71 +524,131 @@ class TutkainEvaluateCommand(TextCommand):
                 view.settings().set("tutkain_repl_input_panel", True)
                 view.settings().set("auto_complete", True)
                 view.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
-            elif code:
-                ns = ns or namespace.name_or_default(self.view, dialect)
-                variables = {"ns": ns}
 
-                if file_name:
-                    variables["file"] = file_name
-
-                for index, region in enumerate(self.view.sel()):
-                    if eval_region := get_eval_region(self.view, region, scope, ignore):
-                        variables[str(index)] = self.view.substr(eval_region)
-
-                code = sublime.expand_variables(code, variables)
-
-                if inline_result and (sel := self.view.sel()):
-                    options["response"] = {
-                        "output": edn.Keyword("inline"),
-                        "view-id": self.view.id(),
-                        "point": sel[0].end(),
-                    }
-
-                evaluate(self.view, client, code, options=options)
-            elif scope == "view":
-                syntax = self.view.syntax()
-
-                if syntax and syntax.scope not in {
-                    "source.clojure",
-                    "source.clojure.clojure-common",
-                    "source.clojure.babashka",
-                }:
-                    self.view.window().status_message(
-                        "Active view has incompatible syntax; can't evaluate."
-                    )
-                else:
-                    eval_region = sublime.Region(0, self.view.size())
-
-                    if not eval_region.empty():
-                        self.evaluate_view(client, self.view.substr(eval_region))
-            elif scope == "ns":
-                ns_forms = namespace.forms(self.view)
-
-                for form in ns_forms:
-                    code = self.view.substr(form)
-                    evaluate(
-                        self.view, client, code, point=form.begin(), options=options
-                    )
             else:
-                for region in self.view.sel():
-                    eval_region = get_eval_region(self.view, region, scope, ignore)
+                if output == "clipboard":
 
-                    if not eval_region.empty():
-                        if inline_result:
-                            options["response"] = {
-                                "output": edn.Keyword("inline"),
-                                "view-id": self.view.id(),
-                                "point": eval_region.end(),
-                            }
+                    def handler(item):
+                        val = item.get(edn.Keyword("val"))
+                        val = val[:-1] if val[-1] == "\n" else val
+                        sublime.set_clipboard(val)
+                        client.print(item)
 
-                        code = self.view.substr(eval_region)
-                        evaluate(
-                            self.view,
+                        sublime.active_window().status_message(
+                            "[Tutkain] Evaluation result copied to clipboard."
+                        )
+
+                    def evaluator(region, code, options):
+                        self.eval(
                             client,
                             code,
-                            eval_region.begin(),
+                            handler=handler,
+                            point=region.begin(),
                             options=options,
                         )
+
+                elif output == "inline":
+
+                    def handler(point, item):
+                        client.print(item)
+
+                        inline.clear(self.view)
+
+                        inline.show(
+                            self.view,
+                            point,
+                            item.get(edn.Keyword("val")),
+                        )
+
+                    def evaluator(region, code, options):
+                        self.eval(
+                            client,
+                            code,
+                            handler=lambda item: handler(region.end(), item),
+                            point=region.begin(),
+                            options=options,
+                        )
+
+                else:
+
+                    def evaluator(region, code, options):
+                        self.eval(client, code, point=region.begin(), options=options)
+
+                # FIXME: Support output with any scope
+                state.focus_active_runtime_view(self.view.window(), dialect)
+
+                if scope == "mark" and (
+                    mark := self.view.window().settings().get("tutkain_mark")
+                ):
+                    options = {**options, **mark["options"]}
+                    options["ns"] = edn.Symbol(options["ns"])
+                    region = options["region"]
+                    region = sublime.Region(region[0], region[1])
+                    del options["region"]
+                    evaluator(region, mark["code"], options)
+
+                elif scope == "up_to_point":
+                    for region in self.view.sel():
+                        if innermost := sexp.innermost(
+                            self.view, region.end(), edge=False
+                        ):
+                            region_up_to_point = sublime.Region(
+                                innermost.open.region.begin(), region.end()
+                            )
+                            code = self.view.substr(
+                                region_up_to_point
+                            ) + self.view.substr(innermost.close.region)
+
+                            self.eval(client, code, point=region.end(), options=options)
+                        else:
+                            # Stop at the first point that has a non-Clojure scope
+                            # (presumably when within a Markdown code block), or
+                            # at 0 if not found.
+                            begin = max(
+                                (
+                                    selectors.find(
+                                        self.view,
+                                        region.begin(),
+                                        "-source.clojure",
+                                        forward=False,
+                                    )
+                                    or 0
+                                )
+                                + 1,
+                                0,
+                            )
+                            code = self.view.substr(sublime.Region(begin, region.end()))
+                            self.eval(client, code, point=region.end(), options=options)
+
+                elif scope == "ns":
+                    ns_forms = namespace.forms(self.view)
+
+                    for region in ns_forms:
+                        code = self.view.substr(region)
+                        evaluator(region, code, options)
+                elif code:
+                    ns = ns or namespace.name_or_default(self.view, dialect)
+                    variables = {"ns": ns}
+                    options["ns"] = edn.Symbol(ns)
+
+                    if file_name := self.view.file_name():
+                        variables["file"] = file_name
+
+                    for index, region in enumerate(self.view.sel()):
+                        if eval_region := get_eval_region(
+                            self.view, region, scope, ignore
+                        ):
+                            variables[str(index)] = self.view.substr(eval_region)
+
+                    code = sublime.expand_variables(code, variables)
+                    evaluator(current_region, code, options)
+                else:
+                    for region in self.view.sel():
+                        eval_region = get_eval_region(self.view, region, scope, ignore)
+
+                        if not eval_region.empty():
+                            code = self.view.substr(eval_region)
+                            evaluator(eval_region, code, options)
 
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):
@@ -642,40 +718,45 @@ class TutkainConnectCommand(WindowCommand):
                 flags=sublime.MONOSPACE_FONT,
             )
 
-    def connect(self, dialect, host, port, view, output, backchannel, build_id, init):
+    def connect(
+        self, dialect, host, port, view, output, backchannel, build_id, init, mode
+    ):
         backchannel_options = repl.backchannel_options(
             self.window.project_data(), dialect, backchannel
         )
 
         if dialect == edn.Keyword("cljs"):
-            if not backchannel:
-                sublime.error_message(
-                    "[Tutkain]: The backchannel: false argument to tutkain_connect is currently not supported for ClojureScript."
-                )
-            else:
-                client = repl.JSClient(
-                    host,
-                    port,
-                    options={
-                        "build_id": build_id,
-                        "prompt_for_build_id": lambda ids, on_done: self.choose_build_id(
-                            view, ids, on_done
-                        ),
-                        "backchannel": backchannel_options,
-                    },
-                )
+            client = repl.JSClient(
+                host,
+                port,
+                options={
+                    "build_id": build_id,
+                    "prompt_for_build_id": lambda ids, on_done: self.choose_build_id(
+                        view, ids, on_done
+                    ),
+                },
+            )
 
             repl.start(view, client)
             repl.start_printer(client, view)
         elif dialect == edn.Keyword("bb"):
             client = repl.BabashkaClient(
-                host, port, options={"init": init, "backchannel": backchannel_options}
+                host,
+                port,
+                mode,
+                options={"init": init, "backchannel": backchannel_options},
             )
             repl.start(view, client)
             repl.start_printer(client, view)
         else:
             client = repl.JVMClient(
-                host, port, options={"init": init, "backchannel": backchannel_options}
+                host,
+                port,
+                mode,
+                options={
+                    "init": init,
+                    "backchannel": backchannel_options,
+                },
             )
 
             repl.start(view, client)
@@ -691,6 +772,7 @@ class TutkainConnectCommand(WindowCommand):
         backchannel=True,
         build_id=None,
         init=None,
+        mode="repl",
     ):
         active_view = self.window.active_view()
         output_view = repl.views.get_or_create_view(self.window, output, view_id)
@@ -707,6 +789,7 @@ class TutkainConnectCommand(WindowCommand):
                     backchannel,
                     edn.Keyword(build_id) if build_id else None,
                     init,
+                    mode,
                 )
             except ConnectionRefusedError:
                 output_view.close()
@@ -774,7 +857,7 @@ def lookup(view, form, handler):
         and (dialect := dialects.for_point(view, form.begin()))
         and (client := state.get_client(view.window(), dialect))
     ):
-        client.backchannel.send(
+        client.send_op(
             {
                 "op": edn.Keyword("lookup"),
                 "ident": view.substr(form),
@@ -1122,7 +1205,7 @@ class TutkainInterruptEvaluationCommand(WindowCommand):
             self.window.status_message("⚠ Not connected to a REPL.")
         else:
             state.focus_active_runtime_view(self.window, dialect)
-            client.backchannel.send({"op": edn.Keyword("interrupt")})
+            client.send_op({"op": edn.Keyword("interrupt")})
 
 
 class TutkainInsertNewlineCommand(TextCommand):
@@ -1493,7 +1576,7 @@ def fetch_locals(view, point, form, handler):
         context = view.substr(outermost.extent())
 
         if local := view.substr(form).strip():
-            client.backchannel.send(
+            client.send_op(
                 {
                     "op": edn.Keyword("locals"),
                     "dialect": dialect,
@@ -1543,7 +1626,7 @@ class TutkainSelectLocalsCommand(TextCommand):
 
 class TutkainAproposCommand(WindowCommand):
     def send_request(self, client, pattern):
-        client.backchannel.send(
+        client.send_op(
             {"op": edn.Keyword("apropos"), "pattern": pattern},
             handler=lambda response: query.handle_response(
                 self.window, completions.KINDS, response
@@ -1576,7 +1659,7 @@ class TutkainAproposCommand(WindowCommand):
 
 class TutkainDirCommand(TextCommand):
     def send_request(self, client, symbol):
-        client.backchannel.send(
+        client.send_op(
             {"op": edn.Keyword("dir"), "ns": namespace.name(self.view), "sym": symbol},
             lambda response: query.handle_response(
                 self.view.window(), completions.KINDS, response
@@ -1610,7 +1693,7 @@ class TutkainDirCommand(TextCommand):
                 ):
                     self.send_request(client, self.view.substr(symbol))
                 else:
-                    client.backchannel.send(
+                    client.send_op(
                         {
                             "op": edn.Keyword("all-namespaces"),
                             "ns": namespace.name(self.view),
@@ -1631,7 +1714,7 @@ class TutkainLoadedLibsCommand(TextCommand):
         dialect = dialects.for_view(self.view) or edn.Keyword("clj")
 
         if client := state.get_client(window, dialect):
-            client.backchannel.send(
+            client.send_op(
                 {"op": edn.Keyword("loaded-libs"), "dialect": dialect},
                 lambda response: query.handle_response(
                     window, completions.KINDS, response
@@ -1697,15 +1780,13 @@ class TutkainExploreStackTraceCommand(TextCommand):
 
     def run(self, _):
         if client := state.get_client(self.view.window(), edn.Keyword("clj")):
-            client.backchannel.send(
-                {"op": edn.Keyword("resolve-stacktrace")}, self.handler
-            )
+            client.send_op({"op": edn.Keyword("resolve-stacktrace")}, self.handler)
 
 
 class TutkainPromptCommand(WindowCommand):
     def on_done(self, client, code):
         if code:
-            client.evaluate(code, {"file": "NO_SOURCE_FILE"})
+            client.evaluate_rpc(code, options={"file": "NO_SOURCE_FILE"})
             history.update(self.window, code)
 
         self.prompt(client)
@@ -1816,6 +1897,7 @@ class TutkainMarkFormCommand(TextCommand):
                     {
                         "code": code,
                         "options": {
+                            "region": eval_region.to_tuple(),
                             "line": line,
                             "column": column,
                             "ns": ns,
@@ -1832,7 +1914,7 @@ class TutkainRemoveNamespaceMappingCommand(TextCommand):
         if index != -1:
             item = results[index]
 
-            client.backchannel.send(
+            client.send_op(
                 {
                     "op": edn.Keyword("remove-namespace-mapping"),
                     "ns": edn.Symbol(item[edn.Keyword("ns")]),
@@ -1857,7 +1939,7 @@ class TutkainRemoveNamespaceMappingCommand(TextCommand):
         dialect = dialects.for_view(self.view)
 
         if client := state.get_client(window, dialect):
-            client.backchannel.send(
+            client.send_op(
                 {
                     "op": edn.Keyword("intern-mappings"),
                     "ns": edn.Symbol(namespace.name_or_default(self.view, dialect)),
@@ -1876,7 +1958,7 @@ class TutkainRemoveNamespaceAliasCommand(TextCommand):
         if index != -1:
             item = results[index]
 
-            client.backchannel.send(
+            client.send_op(
                 {
                     "op": edn.Keyword("remove-namespace-alias"),
                     "ns": edn.Symbol(namespace.name(self.view)),
@@ -1901,7 +1983,7 @@ class TutkainRemoveNamespaceAliasCommand(TextCommand):
         dialect = dialects.for_view(self.view)
 
         if client := state.get_client(window, dialect):
-            client.backchannel.send(
+            client.send_op(
                 {
                     "op": edn.Keyword("alias-mappings"),
                     "ns": edn.Symbol(namespace.name(self.view)),
@@ -1918,7 +2000,7 @@ class TutkainRemoveNamespaceAliasCommand(TextCommand):
 class TutkainRemoveNamespaceCommand(TextCommand):
     def remove(self, client, dialect, results, index):
         if index != -1 and (item := results[index]):
-            client.backchannel.send(
+            client.send_op(
                 {
                     "op": edn.Keyword("remove-namespace"),
                     "ns": item[edn.Keyword("name")],
@@ -1942,7 +2024,7 @@ class TutkainRemoveNamespaceCommand(TextCommand):
         dialect = dialects.for_view(self.view) or edn.Keyword("clj")
 
         if client := state.get_client(window, dialect):
-            client.backchannel.send(
+            client.send_op(
                 {
                     "op": edn.Keyword("all-namespaces"),
                     "ns": namespace.name(self.view),

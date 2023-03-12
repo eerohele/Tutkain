@@ -63,14 +63,6 @@
     },
   },
 
-  "clojurescript": {
-    // The same backchannel settings as above, but for ClojureScript.
-    "backchannel": {
-      "port": 0,
-      "bind_address": "localhost"
-    },
-  },
-
   "babashka": {
     // The same backchannel settings as above, but for Babashka.
     "backchannel": {

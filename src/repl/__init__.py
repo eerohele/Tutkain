@@ -1,5 +1,6 @@
 import datetime
 import io
+import itertools
 import os
 import pathlib
 import posixpath
@@ -66,7 +67,7 @@ class Client(ABC):
             path = os.path.join(settings.source_root(), filename)
 
             with open(path, "rb") as file:
-                self.backchannel.send(
+                self.send_op(
                     {
                         "op": edn.Keyword("load-base64"),
                         "path": path,
@@ -113,7 +114,9 @@ class Client(ABC):
     def has_backchannel(self):
         return self.options.get("backchannel", {}).get("enabled", True)
 
-    def __init__(self, host, port, name, dialect, options={}):
+    def __init__(self, host, port, mode, name, dialect, options={}):
+        assert mode in {"repl", "rpc"}
+
         self.since = datetime.datetime.now()
         self.id = str(uuid.uuid4())
         self.host = host
@@ -126,11 +129,15 @@ class Client(ABC):
         self.backchannel = types.SimpleNamespace(
             send=lambda *args, **kwargs: None, halt=lambda *args: None
         )
+        self.mode = mode
         self.options = options
         self.capabilities = set()
         self.lock = Lock()
         self.ready = False
         self.on_close = lambda: None
+        self.message_id = itertools.count(1)
+        self.handlers = {}
+        self.default_handler = self.print
 
     def send_loop(self):
         """Start a loop that reads strings from `self.sendq` and sends them to
@@ -139,11 +146,11 @@ class Client(ABC):
             log.debug({"event": "client/send", "item": item})
             self.write_line(item)
 
-        self.write_line(":repl/quit")
+        self.write_line("{:op :quit}")
         self.socket.shutdown(socket.SHUT_RDWR)
         log.debug({"event": "thread/exit"})
 
-    def evaluate(
+    def evaluate_repl(
         self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}
     ):
         """Given a string of Clojure code, send it for evaluation to the
@@ -154,26 +161,95 @@ class Client(ABC):
                   associated with (default `"NO_SOURCE_FILE"`)
         - `line`: the line number the code is positioned at (default `0`)
         - `column`: the column number the code is positioned at (default `0`)"""
-        self.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
-
         if self.has_backchannel():
             self.backchannel.send(
-                self.eval_context_message(options), lambda _: self.sendq.put(code)
+                {"op": edn.Keyword("set-thread-bindings"), **options},
+                lambda _: self.sendq.put(code),
             )
         else:
             self.sendq.put(code)
 
+    def evaluate_rpc(
+        self,
+        code,
+        handler=None,
+        options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0},
+    ):
+        """Given a string of Clojure code, send it for evaluation to the
+        Clojure runtime this client is connected to.
+
+        Accepts an evaluation result handler function and and a map of options:
+        - `file`: the absolute path to the source file this evaluation is
+                  associated with (default `"NO_SOURCE_FILE"`)
+        - `line`: the line number the code is positioned at (default `0`)
+        - `column`: the column number the code is positioned at (default `0`)"""
+        self.send_op(
+            {
+                "op": edn.Keyword("eval"),
+                "dialect": self.dialect,
+                "code": code,
+                **options,
+            },
+            handler,
+        )
+
     def print(self, item):
         self.printq.put(formatter.format(item))
 
-    def recv_loop(self):
-        """Start a loop that reads evaluation responses from a socket and puts
-        them in a print queue."""
+    def recv(self):
+        if self.mode == "rpc":
+            return edn.read_line(self.buffer)
+        else:
+            return self.socket.recv(io.DEFAULT_BUFFER_SIZE).decode("utf-8")
+
+    def register_handler(self, id, handler):
+        with self.lock:
+            self.handlers[id] = handler
+
+    def handle(self, message):
+        """Given a message, call the handler function registered for the
+        message in this backchannel instance.
+
+        If there's no handler function for the message, call the default
+        handler function instead."""
         try:
-            while response := self.socket.recv(io.DEFAULT_BUFFER_SIZE):
-                item = response.decode("utf-8")
+            if isinstance(message, str):
+                self.print(message)
+            elif isinstance(message, dict):
+                id = message.get(edn.Keyword("id"))
+
+                try:
+                    with self.lock:
+                        handler = self.handlers.get(id, self.default_handler)
+
+                    handler.__call__(message)
+                except AttributeError as error:
+                    log.error({"event": "error", "message": message, "error": error})
+                finally:
+                    with self.lock:
+                        self.handlers.pop(id, None)
+        except AttributeError as error:
+            raise ValueError(f"Got invalid message: {message}")
+
+    def send_op(self, message, handler=None):
+        if self.mode == "repl" and self.has_backchannel():
+            self.backchannel.send(message, handler)
+        else:
+            message = edn.kwmap(message)
+            message_id = next(self.message_id)
+            message[edn.Keyword("id")] = message_id
+
+            if handler:
+                self.register_handler(message_id, handler)
+
+            edn.write_line(self.buffer, message)
+
+    def recv_loop(self):
+        """Start a loop that reads evaluation responses from a socket and calls the handler function on them."""
+        try:
+            while item := self.recv():
                 log.debug({"event": "client/recv", "item": item})
-                self.print(item)
+                self.handle(item)
         except OSError as error:
             log.error({"event": "error", "error": error})
         finally:
@@ -198,22 +274,6 @@ class Client(ABC):
                 log.debug({"event": "client/disconnect"})
             except OSError as error:
                 log.debug({"event": "error", "exception": error})
-
-    def eval_context_message(self, options):
-        message = {
-            "op": edn.Keyword("set-eval-context"),
-            "file": options.get("file", "NO_SOURCE_FILE") or "NO_SOURCE_FILE",
-            "line": options.get("line", 0) + 1,
-            "column": options.get("column", 0) + 1,
-        }
-
-        if ns := options.get("ns"):
-            message["ns"] = edn.Symbol(ns)
-
-        if response := options.get("response"):
-            message["response"] = edn.kwmap(response)
-
-        return message
 
     def halt(self):
         """Halt this client."""
@@ -267,60 +327,65 @@ class JVMClient(Client):
 
         init = self.options.get("init") or "tutkain.repl/default-init"
         add_tap = self.options.get("add_tap", False)
-        backchannel_opts = self.options.get("backchannel", {})
-        backchannel_port = backchannel_opts.get("port", 0)
-        backchannel_bind_address = backchannel_opts.get("bind_address", "localhost")
-        self.write_line(
-            f"""(try (tutkain.repl/repl {{:init `{init} :add-tap? {"true" if add_tap else "false"} :port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))"""
-        )
-        line = self.buffer.readline()
 
-        if not line.startswith("{"):
-            self.print(
-                edn.kwmap(
-                    {
-                        "tag": edn.Keyword("err"),
-                        "val": "Couldn't connect to Clojure REPL.\n",
-                    }
-                )
+        if self.mode == "repl":
+            backchannel_opts = self.options.get("backchannel", {})
+            backchannel_port = backchannel_opts.get("port", 0)
+            backchannel_bind_address = backchannel_opts.get("bind_address", "localhost")
+            self.write_line(
+                f"""(try (tutkain.repl/repl {{:init `{init} :add-tap? {"true" if add_tap else "false"} :port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))"""
             )
+            line = self.buffer.readline()
 
-            self.print(edn.kwmap({"tag": edn.Keyword("err"), "val": line + "\n"}))
-
-            self.print(
-                edn.kwmap({"tag": edn.Keyword("err"), "val": self.connection_err_msg})
-            )
-        else:
-            ret = edn.read(line)
-
-            if (host := ret.get(edn.Keyword("host"))) and (
-                port := ret.get(edn.Keyword("port"))
-            ):
-                self.backchannel = backchannel.Client(self.print).connect(
-                    self.id, host, port
-                )
+            if not line.startswith("{"):
                 self.print(
                     edn.kwmap(
                         {
-                            "tag": edn.Keyword("out"),
-                            "val": ret.get(edn.Keyword("greeting")),
+                            "tag": edn.Keyword("err"),
+                            "val": "Couldn't connect to Clojure REPL.\n",
                         }
                     )
                 )
+
+                self.print(edn.kwmap({"tag": edn.Keyword("err"), "val": line + "\n"}))
+
+                self.print(
+                    edn.kwmap(
+                        {"tag": edn.Keyword("err"), "val": self.connection_err_msg}
+                    )
+                )
             else:
-                self.print(ret)
+                ret = edn.read(line)
+
+                if (host := ret.get(edn.Keyword("host"))) and (
+                    port := ret.get(edn.Keyword("port"))
+                ):
+                    self.backchannel = backchannel.Client(self.print).connect(
+                        self.id, host, port
+                    )
+                else:
+                    self.print(ret)
+        else:
+            self.write_line(
+                f"""(tutkain.backchannel/rpc {{:init `{init} :add-tap? {"true" if add_tap else "false"}}})"""
+            )
 
         self.load_modules()
 
-    def __init__(self, host, port, options={}):
+    def __init__(self, host, port, mode, options={}):
         super().__init__(
-            host, port, "tutkain.clojure.client", edn.Keyword("clj"), options=options
+            host,
+            port,
+            mode,
+            "tutkain.clojure.client",
+            edn.Keyword("clj"),
+            options=options,
         )
 
     def connect(self):
         super().connect()
 
-        if self.has_backchannel():
+        if self.has_backchannel() or self.mode == "rpc":
             self.handshake()
 
         self.start_workers()
@@ -348,7 +413,12 @@ class JSClient(Client):
 
     def __init__(self, host, port, options={}):
         super().__init__(
-            host, port, "tutkain.cljs.client", edn.Keyword("cljs"), options=options
+            host,
+            port,
+            "rpc",
+            "tutkain.cljs.client",
+            edn.Keyword("cljs"),
+            options=options,
         )
 
     def connect(self):
@@ -370,6 +440,11 @@ class JSClient(Client):
             )
 
         return self
+
+    def evaluate(
+        self, code, options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0}
+    ):
+        self.evaluate_rpc(code, options)
 
     def handshake(self, build_id):
         self.write_line("(ns tutkain.bootstrap)")
@@ -393,27 +468,10 @@ class JSClient(Client):
 
             self.buffer.readline()
 
-        backchannel_port = self.options.get("backchannel", {}).get("port", 0)
-        self.write_line(
-            f"""(tutkain.shadow/repl {{:build-id {build_id} :port {backchannel_port}}})"""
-        )
+        self.write_line(f"""(tutkain.shadow/rpc {{:build-id {build_id}}})""")
 
-        ret = edn.read_line(self.buffer)
-
-        if not isinstance(ret, dict):
-            log.fatal({"event": "client/handshake-error", "ret": ret})
-        else:
-            host = ret.get(edn.Keyword("host"))
-            port = ret.get(edn.Keyword("port"))
-            self.backchannel = backchannel.Client(self.print).connect(
-                self.id, host, port
-            )
-            greeting = ret.get(edn.Keyword("greeting"))
-            self.print(edn.kwmap({"tag": edn.Keyword("out"), "val": greeting}))
-
-            self.load_modules()
-
-            self.start_workers()
+        self.load_modules()
+        self.start_workers()
 
 
 class BabashkaClient(JVMClient):
@@ -428,9 +486,9 @@ class BabashkaClient(JVMClient):
         "query.cljc": [],
     }
 
-    def __init__(self, host, port, options={}):
+    def __init__(self, host, port, mode, options={}):
         super(JVMClient, self).__init__(
-            host, port, "tutkain.bb.client", edn.Keyword("bb"), options=options
+            host, port, mode, "tutkain.bb.client", edn.Keyword("bb"), options=options
         )
 
 

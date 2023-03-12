@@ -5,8 +5,7 @@
    [tutkain.backchannel :as backchannel]
    [tutkain.format :as format])
   (:import
-   (java.io Writer)
-   (java.util.concurrent Executors TimeUnit ThreadPoolExecutor$CallerRunsPolicy)))
+   (java.io Writer)))
 
 (def ^:dynamic ^:experimental *print*
   "A function you can use as the :print arg of clojure.main/repl."
@@ -18,43 +17,18 @@
 
 (defn ^:private read-in-context
   "Given a tutkain.backchannel.Backchannel and a LineNumberingPushbackReader,
-  read a form from the reader in the context of the eval context thread
-  bindings and return the eval context with these keys added:
+  read a form from the reader in the context of the backchannel thread
+  bindings and return a map with these keys:
 
   - :form - The object read
-  - :string - The string read"
+  - :thread-bindings - The backchannel thread bindings"
   [backchannel ^clojure.lang.LineNumberingPushbackReader reader]
   (.unread reader (.read reader))
-  ;; If there's no new eval context immediately available, use the previous set
-  ;; of thread bindings.
-  ;;
-  ;; This way, if the user sends more than one form at once, we use the same
-  ;; eval context for each form instead of waiting for a new one after every
-  ;; form.
-  (let [eval-context (backchannel/eval-context backchannel)
-        [form string] (with-bindings (not-empty (:thread-bindings eval-context))
+  (let [thread-bindings (backchannel/thread-bindings backchannel)
+        [form _] (with-bindings (not-empty thread-bindings)
                         #?(:bb (read+string reader false ::EOF)
                            :clj (read+string {:eof ::EOF :read-cond :allow} reader)))]
-    (assoc eval-context :form form :string string)))
-
-(defn ^:private make-debouncer
-  [service]
-  (fn [f delay]
-    (let [task (atom nil)]
-      (fn [& args]
-        (some-> @task (.cancel false))
-        (reset! task
-          (.schedule service
-            (fn []
-              (apply f args)
-              (reset! task nil))
-            delay
-            TimeUnit/MILLISECONDS))))))
-
-(defn ^:private default-init
-  []
-  (in-ns 'user)
-  (apply require main/repl-requires))
+    {:thread-bindings thread-bindings :form form}))
 
 ;; Vendored in from clojure.main -- Babashka doesn't have this.
 (defn ^:private skip-whitespace
@@ -85,9 +59,10 @@
     clojure.main/repl"
   ([]
    (repl {}))
-  ([{:keys [init] :as opts}]
+  ([{:keys [init] :or {init `backchannel/default-init} :as opts}]
    (let [print-lock (Object.)
          eval-lock (Object.)
+         eval-future (atom nil)
          out *out*
          in *in*
          pretty-print (fn [message]
@@ -95,80 +70,55 @@
                                   pprint/*print-right-margin* 100]
                           (locking print-lock
                             (pprint/pprint message out))))
-         repl-thread (Thread/currentThread)
-         debounce-service (doto (Executors/newScheduledThreadPool 1)
-                            (.setRejectedExecutionHandler (ThreadPoolExecutor$CallerRunsPolicy.)))
-         debounce (make-debouncer debounce-service)]
+         repl-thread (Thread/currentThread)]
      (main/with-bindings
-       ((requiring-resolve (or init `default-init)))
+       (when-some [initf (or
+                           (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
+                           (requiring-resolve `default-init))]
+         (initf))
        (let [backchannel (backchannel/open
                            (assoc opts
                              :bindings (get-thread-bindings)
-                             :xform-in #(assoc % :eval-lock eval-lock :in in :repl-thread repl-thread)
-                             :xform-out #(dissoc % :in)))
-             ;; Prevent stdout/stderr from interleaving with eval results by
-             ;; binding *out* and *err* such that they write into auxiliary
-             ;; PrintWriters that send strings to client via backchannel, then
-             ;; debounce flush said auxiliary PrintWriters.
-             out-writer (PrintWriter-on #(backchannel/send-to-client backchannel {:tag :out :val %1}) nil)
-             err-writer (PrintWriter-on #(backchannel/send-to-client backchannel {:tag :err :val %1}) nil)
-             flush-out (debounce #(.flush out-writer) 50)
-             flush-err (debounce #(.flush err-writer) 50)
-             write-out (fn [string] (.write out-writer string) (flush-out))
-             write-err (fn [string] (.write err-writer string) (flush-err))]
-         (binding [*out* (PrintWriter-on write-out #(.close out-writer))
-                   *err* (PrintWriter-on write-err #(.close err-writer))
+                             :xform-in #(assoc % :eval-lock eval-lock :eval-future eval-future :in in :repl-thread repl-thread)
+                             :xform-out #(dissoc % :in)))]
+         (binding [*out* (PrintWriter-on #(backchannel/write-out backchannel %1) nil)
+                   *err* (PrintWriter-on #(backchannel/write-err backchannel %1) nil)
                    *print* pretty-print]
            (try
-             (pretty-print {:greeting (str "Clojure " (clojure-version) "\n")
-                            :host (backchannel/host backchannel)
-                            :port (backchannel/port backchannel)})
+             (pretty-print {:host (backchannel/host backchannel) :port (backchannel/port backchannel)})
              (loop []
                (when
                  (try
-                   (let [{:keys [thread-bindings response form string]} (read-in-context backchannel in)
+                   (let [{:keys [thread-bindings form]} (read-in-context backchannel in)
                          ;; For (read-line) support. See also:
                          ;;
                          ;; https://clojure.atlassian.net/browse/CLJ-2692
-                         _ (skip-whitespace in)
-                         backchannel-response? (#{:inline :clipboard} (:output response))]
+                         _ (skip-whitespace in)]
                      (with-bindings thread-bindings
                        (when-not (identical? form ::EOF)
                          (try
                            (let [ret (locking eval-lock (eval form))]
                              (.flush ^Writer *out*)
                              (.flush ^Writer *err*)
-                             (when-not (= :repl/quit ret)
+                             (when-not (#{{:op :quit} :repl/quit} ret)
                                (set! *3 *2)
                                (set! *2 *1)
                                (set! *1 ret)
-                               (if backchannel-response?
-                                 (backchannel/send-to-client backchannel
-                                   (assoc response :tag :ret :val (format/pp-str ret)))
-                                 (pretty-print ret))
+                               (pretty-print ret)
                                (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                                true))
                            (catch Throwable ex
                              (.flush ^Writer *out*)
                              (.flush ^Writer *err*)
                              (set! *e ex)
-                             (backchannel/send-to-client backchannel
-                               (merge response {:tag :err
-                                                :val (format/Throwable->str ex)
-                                                :ns (str *ns*)
-                                                :form string}))
+                             (backchannel/write-err backchannel (format/Throwable->str ex))
                              (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                              true)))))
                    (catch Throwable ex
                      (set! *e ex)
-                     (backchannel/send-to-client backchannel
-                       {:tag :ret
-                        :val (format/pp-str (assoc (Throwable->map ex) :phase :read-source))
-                        :ns (str *ns*)
-                        :exception true})
+                     (backchannel/write-err backchannel (format/Throwable->str ex))
                      (backchannel/update-thread-bindings backchannel (get-thread-bindings))
                      true))
                  (recur)))
              (finally
-               (.shutdown debounce-service)
                (backchannel/close backchannel)))))))))

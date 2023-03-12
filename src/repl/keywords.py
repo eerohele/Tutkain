@@ -8,6 +8,7 @@ PROMPT = edn.Keyword("prompt")
 RET = edn.Keyword("ret")
 VAL = edn.Keyword("val")
 TAP = edn.Keyword("tap")
+PRINT = edn.Keyword("print")
 
 OUTPUT = edn.Keyword("output")
 VIEW = edn.Keyword("view")

@@ -88,7 +88,7 @@ def get_completions(view, prefix, point):
 
             completion_list = sublime.CompletionList()
 
-            client.backchannel.send(
+            client.send_op(
                 {
                     "op": edn.Keyword("completions"),
                     "prefix": prefix,

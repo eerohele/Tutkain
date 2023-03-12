@@ -1,22 +1,9 @@
 import sublime
 
-from .. import inline, settings, state
+from .. import settings, state
 from ..log import log
 from . import views
-from .keywords import (
-    CLIPBOARD,
-    ERR,
-    IN,
-    INLINE,
-    OUTPUT,
-    POINT,
-    RET,
-    STRING,
-    TAG,
-    TAP,
-    VAL,
-    VIEW_ID,
-)
+from .keywords import ERR, RET, IN, TAG, TAP, VAL, PRINT
 
 
 def show_repl_panel(view):
@@ -105,18 +92,6 @@ def print_loop(view, client, options={"gutter_marks": True}):
         log.debug({"event": "thread/start"})
 
         while item := client.printq.get():
-            if item.get(OUTPUT) == CLIPBOARD:
-                sublime.set_clipboard(item.get(STRING))
-                sublime.active_window().status_message(
-                    "[Tutkain] Evaluation result copied to clipboard."
-                )
-            elif item.get(OUTPUT) == INLINE:
-                window = view.window() or sublime.active_window()
-
-                if target_view := views.find_by_id(window, item.get(VIEW_ID)):
-                    inline.clear(target_view)
-                    inline.show(target_view, item.get(POINT), item.get(VAL))
-
             print_item(view, item)
 
             if options.get("gutter_marks", True):

@@ -99,6 +99,5 @@
         (.getStackTrace ex)))))
 
 (defmethod handle :resolve-stacktrace
-  [{:keys [eval-context] :as message}]
-  (let [ex (get-in @eval-context [:thread-bindings #'*e])]
-    (respond-to message {:stacktrace (resolve-stacktrace ex)})))
+  [{:keys [thread-bindings] :as message}]
+  (respond-to message {:stacktrace (resolve-stacktrace (get @thread-bindings #'*e))}))

@@ -95,11 +95,12 @@ class JvmBackchannelServer(JvmServer):
         self.recv()
 
         backchannel = Backchannel().start()
-        self.send(
-            f"""{{:greeting "Clojure 1.11.0-alpha1\\n", :host "localhost", :port {backchannel.port}}}"""
-        )
+        self.send(f"""{{:host "localhost", :port {backchannel.port}}}""")
         # Client connects to backchannel
         self.backchannel = backchannel.connection.result(timeout=5)
+        backchannel.send(
+            edn.kwmap({"tag": edn.Keyword("out"), "val": "Clojure 1.11.0-alpha1\n"})
+        )
 
         # Client loads modules
         for _ in range(9):
@@ -118,12 +119,65 @@ class JvmBackchannelServer(JvmServer):
         return self.backchannel
 
 
+class JvmRpcServer(JvmServer):
+    def send(self, message):
+        edn.write_line(self.buffer, message)
+
+    def handshake(self):
+        # Client starts clojure.main/repl
+        self.recv()
+
+        # Client switches into the bootstrap namespace
+        self.recv()
+        self.send("nil")
+
+        # Client defines load-base64 function
+        self.recv()
+        self.send("#'tutkain.bootstrap/load-base64")
+
+        # Client loads modules
+        self.recv()
+        self.send("#'tutkain.format/pp-str")
+        self.recv()
+        self.send("#'tutkain.backchannel/open")
+        self.recv()
+        self.send(
+            """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""
+        )
+        self.recv()
+        self.send("#'tutkain.repl/repl")
+
+        self.recv()
+
+        # Client connects to backchannel
+        self.send(
+            edn.kwmap({"tag": edn.Keyword("out"), "val": "Clojure 1.11.0-alpha1\n"})
+        )
+
+        # Client loads modules
+        for _ in range(9):
+            module = edn.read(self.recv())
+
+            self.send(
+                edn.kwmap(
+                    {
+                        "id": module.get(edn.Keyword("id")),
+                        "result": edn.Keyword("ok"),
+                        "filename": module.get(edn.Keyword("filename")),
+                    }
+                )
+            )
+
+        return self
+
+
+# TODO: Rename to RPC
 class Backchannel(Server):
     def send(self, message):
         edn.write_line(self.buffer, message)
 
 
-class JsBackchannelServer(PlainServer):
+class JsServer(Backchannel):
     def write_greeting(self):
         self.buffer.write("shadow-cljs - REPL - see (help)\n")
         self.buffer.flush()
@@ -160,24 +214,19 @@ class JsBackchannelServer(PlainServer):
             """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""
         )
         self.recv()
-        self.send("#'tutkain.repl/repl")
+        self.send("#'tutkain.shadow/rpc")
 
         # Client starts REPL
         self.recv()
 
-        backchannel = Backchannel().start()
-
-        backchannel = Backchannel().start()
         self.send(
-            f"""{{:greeting "ClojureScript 1.10.844\\n" :host "localhost", :port {backchannel.port}}}"""
+            edn.kwmap({"tag": edn.Keyword("out"), "val": "ClojureScript 1.10.844\n"})
         )
-        # Client connects to backchannel
-        self.backchannel = backchannel.connection.result(timeout=5)
 
         for _ in range(8):
-            module = edn.read(backchannel.recv())
+            module = edn.read(self.recv())
 
-            backchannel.send(
+            self.send(
                 edn.kwmap(
                     {
                         "id": module.get(edn.Keyword("id")),
@@ -189,7 +238,7 @@ class JsBackchannelServer(PlainServer):
 
         # TODO: Add test for no runtime
 
-        return backchannel
+        return self
 
 
 class BabashkaServer(PlainServer):
@@ -233,11 +282,12 @@ class BabashkaServer(PlainServer):
         self.recv()
 
         backchannel = Backchannel().start()
-        self.send(
-            f"""{{:greeting "Clojure 1.11.1-SCI\\n", :host "localhost", :port {backchannel.port}}}"""
-        )
+        self.send(f"""{{:host "localhost", :port {backchannel.port}}}""")
         # Client connects to backchannel
-        self.backchannel = backchannel.connection.result(timeout=5)
+        self.backchannel = backchannel.connection.result(timeout=1)
+        backchannel.send(
+            edn.kwmap({"tag": edn.Keyword("out"), "val": "Clojure 1.11.1-SCI\n"})
+        )
 
         # Client loads modules
         for _ in range(6):

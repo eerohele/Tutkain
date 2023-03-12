@@ -253,7 +253,7 @@ def handle_test_response(view, client, response):
 def run_tests(view, client, test_vars):
     code = view.substr(sublime.Region(0, view.size()))
 
-    client.backchannel.send(
+    client.send_op(
         {
             "op": edn.Keyword("test"),
             "ns": namespace.name(view),

@@ -10,7 +10,7 @@ import unittesting
 from Tutkain.api import edn
 from Tutkain.src import repl, settings, state
 
-from .mock import JsBackchannelServer, JvmBackchannelServer, JvmServer
+from .mock import JsServer, JvmBackchannelServer, JvmServer
 
 
 class TestCase(unittesting.DeferrableTestCase):
@@ -73,7 +73,7 @@ class TestConnectDisconnect(TestCase):
         if not args.get("backchannel", True):
             server = JvmServer().start()
         elif dialect == "cljs":
-            server = JsBackchannelServer().start()
+            server = JsServer().start()
         else:
             server = JvmBackchannelServer().start()
 
@@ -98,7 +98,7 @@ class TestConnectDisconnect(TestCase):
         response = edn.kwmap(
             {
                 "id": id,
-                "op": edn.Keyword("set-eval-context"),
+                "op": edn.Keyword("set-thread-bindings"),
                 "file": file,
                 "ns": ns,
                 "line": line,
@@ -147,7 +147,7 @@ class TestConnectDisconnect(TestCase):
         yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(output_view, "ret")
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit\n", server.recv())
+        self.assertEquals("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -165,7 +165,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit\n", server.recv())
+        self.assertEquals("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -195,7 +195,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit\n", server.recv())
+        self.assertEquals("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -238,7 +238,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit\n", server.recv())
+        self.assertEquals("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -268,7 +268,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit\n", server.recv())
+        self.assertEquals("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -298,7 +298,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit\n", server.recv())
+        self.assertEquals("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -341,9 +341,14 @@ class TestConnectDisconnect(TestCase):
             self.set_selections(js_view, (0, 0))
 
             js_view.run_command("tutkain_evaluate")
-            self.eval_context(js_server.backchannel, ns=edn.Symbol("cljs.user"))
-            self.assertEquals("""(js/parseInt "42")\n""", js_server.recv())
-            js_server.send("42")
+
+            self.assertEquals(
+                """{:op :eval :dialect :cljs :code "(js/parseInt \\"42\\")" :file "NO_SOURCE_FILE" :ns cljs.user :line 1 :column 1 :id 9}\n""",
+                js_server.recv(),
+            )
+            js_server.send(
+                edn.kwmap({"id": 9, "tag": edn.Keyword("ret"), "val": "42\n"})
+            )
 
             yield lambda: self.equals(
                 """\u2063Clojure 1.11.0-alpha1\n\u2063(inc 1)\n2\n\u2063ClojureScript 1.10.844\n\u2063(js/parseInt "42")\n42\n""",
@@ -364,16 +369,15 @@ class TestConnectDisconnect(TestCase):
             yield unittesting.AWAIT_WORKER
             jvm_view.window().run_command("select")
             yield
-            self.assertEquals(":repl/quit\n", jvm_server.recv())
+            self.assertEquals("{:op :quit}\n", jvm_server.recv())
             self.disconnect(window)
             yield unittesting.AWAIT_WORKER
             jvm_view.window().run_command("select")
             yield
-            self.assertEquals(":repl/quit\n", js_server.recv())
+            self.assertEquals("{:op :quit}\n", js_server.recv())
             self.close_window(window)
             jvm_server.backchannel.stop()
             jvm_server.stop()
-            js_server.backchannel.stop()
             js_server.stop()
 
     # @unittest.SkipTest
@@ -435,7 +439,7 @@ class TestConnectDisconnect(TestCase):
             jvm_view_1.window().run_command("select")
             yield
 
-            self.assertEquals(":repl/quit\n", jvm_1_server.recv())
+            self.assertEquals("{:op :quit}\n", jvm_1_server.recv())
 
             self.set_view_content(jvm_view_2, "(inc 3)")
             self.set_selections(jvm_view_2, (0, 0))
@@ -471,7 +475,7 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             jvm_view_2.window().run_command("select")
-            self.assertEquals(":repl/quit\n", jvm_2_server.recv())
+            self.assertEquals("{:op :quit}\n", jvm_2_server.recv())
             self.close_window(window)
             jvm_1_server.stop()
             jvm_1_server.backchannel.stop()
@@ -517,9 +521,13 @@ class TestConnectDisconnect(TestCase):
             self.set_selections(js_view, (0, 0))
 
             js_view.run_command("tutkain_evaluate")
-            self.eval_context(js_server.backchannel, ns=edn.Symbol("cljs.user"))
-            self.assertEquals("""(js/parseInt "42")\n""", js_server.recv())
-            js_server.send("42")
+            self.assertEquals(
+                """{:op :eval :dialect :cljs :code "(js/parseInt \\"42\\")" :file "NO_SOURCE_FILE" :ns cljs.user :line 1 :column 1 :id 9}\n""",
+                js_server.recv(),
+            )
+            js_server.send(
+                edn.kwmap({"id": 9, "tag": edn.Keyword("ret"), "val": "42\n"})
+            )
             output_view = state.get_active_connection(window, edn.Keyword("cljs")).view
 
             yield lambda: self.equals(
@@ -542,7 +550,7 @@ class TestConnectDisconnect(TestCase):
             js_view.window().run_command("select")
             yield
 
-            self.assertEquals(":repl/quit\n", js_server.recv())
+            self.assertEquals("{:op :quit}\n", js_server.recv())
 
             self.set_view_content(jvm_view, "(inc 2)")
             self.set_selections(jvm_view, (0, 0))
@@ -570,11 +578,10 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             # Don't need to select because there's only one remaining runtime
-            self.assertEquals(":repl/quit\n", jvm_server.recv())
+            self.assertEquals("{:op :quit}\n", jvm_server.recv())
             self.close_window(window)
             jvm_server.backchannel.stop()
             jvm_server.stop()
-            js_server.backchannel.stop()
             js_server.stop()
 
     # @unittest.SkipTest
@@ -608,9 +615,15 @@ class TestConnectDisconnect(TestCase):
             self.set_selections(js_view, (0, 0))
 
             js_view.run_command("tutkain_evaluate")
-            self.eval_context(js_server.backchannel, ns=edn.Symbol("cljs.user"))
-            self.assertEquals("""(js/parseInt "42")\n""", js_server.recv())
-            js_server.send("42")
+
+            self.assertEquals(
+                """{:op :eval :dialect :cljs :code "(js/parseInt \\"42\\")" :file "NO_SOURCE_FILE" :ns cljs.user :line 1 :column 1 :id 9}\n""",
+                js_server.recv(),
+            )
+            js_server.send(
+                edn.kwmap({"id": 9, "tag": edn.Keyword("ret"), "val": "42\n"})
+            )
+
             output_view = state.get_active_connection(window, edn.Keyword("cljs")).view
 
             yield lambda: self.equals(
@@ -633,7 +646,7 @@ class TestConnectDisconnect(TestCase):
             js_view.window().run_command("select")
             yield
 
-            self.assertEquals(":repl/quit\n", js_server.recv())
+            self.assertEquals("{:op :quit}\n", js_server.recv())
 
             self.set_view_content(jvm_view, "(inc 2)")
             self.set_selections(jvm_view, (0, 0))
@@ -652,11 +665,10 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             # Don't need to select because there's only one remaining runtime
-            self.assertEquals(":repl/quit\n", jvm_server.recv())
+            self.assertEquals("{:op :quit}\n", jvm_server.recv())
             self.close_window(window)
             jvm_server.backchannel.stop()
             jvm_server.stop()
-            js_server.backchannel.stop()
             js_server.stop()
 
     # @unittest.SkipTest
@@ -689,6 +701,6 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals(":repl/quit\n", server.recv())
+        self.assertEquals("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.stop()

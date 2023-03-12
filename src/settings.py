@@ -15,14 +15,8 @@ def source_root():
 
 def backchannel_options(dialect, backchannel=True):
     if dialect == edn.Keyword("cljs"):
-        return {
-            "enabled": backchannel,
-            "port": load().get("clojurescript").get("backchannel").get("port"),
-            "bind_address": load()
-            .get("clojurescript")
-            .get("backchannel")
-            .get("bind_address", "localhost"),
-        }
+        # ClojureScript has no backchannel
+        return {}
     elif dialect == edn.Keyword("clj"):
         return {
             "enabled": backchannel,

@@ -11,7 +11,8 @@
 
 (def eval-lock (Object.))
 
-(def backchannel (backchannel/open {:port 1337 :xform-in #(assoc % :eval-lock eval-lock)}))
+(def backchannel
+  (backchannel/open {:port 1337 :xform-in #(assoc % :eval-lock eval-lock :eval-future (atom nil))}))
 
 (xr/on-exit #(backchannel/close backchannel))
 (def client (socket/client :host "localhost" :port (backchannel/port backchannel)))
@@ -24,6 +25,9 @@
 (defn recv
   []
   ((:recv client)))
+
+(:val (recv))
+(xr/check! (partial re-matches #"Clojure .+?\n"))
 
 (send {:op :echo})
 
@@ -67,10 +71,6 @@
 (recv)
 (xr/check! ::test-results)
 
-(backchannel/send-to-client backchannel {:tag :out :val "Hello, world!"})
-(recv)
-(xr/check! #{{:tag :out :val "Hello, world!"}})
-
 ;; Resolving a absolute path relative to classpath root
 
 (backchannel/relative-to-classpath-root nil)
@@ -86,3 +86,26 @@
   (.getAbsolutePath (io/as-file (io/resource "tutkain/backchannel.cljc"))))
 
 (xr/check! #{"tutkain/backchannel.cljc"})
+
+;; eval
+(send {:op :eval :code "(inc 1)"})
+(recv)
+(xr/check! #{{:tag :ret :val "2\n"}
+             {:tag :ret :val "2\r\n"}})
+
+(defn f [x] (/ 6 x))
+
+;; ns
+(send {:op :eval :code "(f 2)" :ns 'repl.backchannel})
+(recv)
+(xr/check! #{{:tag :ret, :val "3\n"}
+             {:tag :ret, :val "3\r\n"}})
+
+;; file, line, column
+(send {:op :eval :code "(f 0)" :ns 'repl.backchannel :file "/path/to/my.clj" :line 3 :column 4})
+(recv)
+
+;; stack trace
+(send {:op :eval :code "(Throwable->map *e)"})
+(->> (recv) :val read-string :trace (drop 4) first (take-last 2))
+(xr/check! #{'("my.clj" 3)})

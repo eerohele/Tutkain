@@ -58,7 +58,7 @@ def refresh_cache(window, callback=lambda: None):
 
 
 def send_message(window, client, ns, sym):
-    client.backchannel.send(
+    client.send_op(
         {
             "op": edn.Keyword("examples"),
             "source-path": EXAMPLE_SOURCE_PATH,
