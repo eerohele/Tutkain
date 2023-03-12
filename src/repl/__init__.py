@@ -58,8 +58,8 @@ class Client(ABC):
         self.buffer.flush()
 
     def module_loaded(self, response):
-        if response.get(edn.Keyword("result")) == edn.Keyword("ok"):
-            self.capabilities.add(response.get(edn.Keyword("filename")))
+        if response.get(edn.Keyword("tag")) == edn.Keyword("ret"):
+            self.capabilities.add(response.get(edn.Keyword("val")))
 
     def load_modules(self):
         for filename, requires in self.modules.items():

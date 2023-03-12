@@ -32,8 +32,8 @@
     (some->> requires (run! require))
     (try
       (read-base64 blob path filename)
-      (respond-to message {:filename filename :result :ok})
+      (respond-to message {:tag :ret :val filename})
       (catch #?(:bb clojure.lang.ExceptionInfo :clj clojure.lang.Compiler$CompilerException) ex
-        (respond-to message {:filename filename :result :fail :reason :compiler-ex :ex (Throwable->str ex)})))
+        (respond-to message {:tag :err :val (Throwable->str ex)})))
     (catch FileNotFoundException ex
-      (respond-to message {:filename filename :result :fail :reason :not-found :ex (Throwable->str ex)}))))
+      (respond-to message {:tag :err :val (Throwable->str ex)}))))
