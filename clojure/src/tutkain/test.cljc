@@ -4,7 +4,7 @@
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.walk :as walk]
-   [tutkain.format :refer [pp-str]]
+   [tutkain.format :refer [pp-str Throwable->str]]
    [tutkain.base64 :refer [read-base64]]
    [tutkain.backchannel :refer [handle respond-to]])
   (:import
@@ -112,7 +112,6 @@
       (locking eval-lock (read-base64 code file filename))
       (respond-to message (run-tests ns-sym file vars)))
     (catch Throwable ex
-      (respond-to message {:tag :ret
-                           :ns (str *ns*)
-                           :val (pp-str (assoc (Throwable->map ex) :phase :execution))
+      (respond-to message {:tag :err
+                           :val (Throwable->str ex)
                            :exception true}))))
