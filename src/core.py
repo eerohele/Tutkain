@@ -99,6 +99,10 @@ def plugin_unloaded():
     preferences.clear_on_change("Tutkain")
 
 
+def dissoc(d, ks):
+    return {k: d[k] for k in set(list(d.keys())) - ks}
+
+
 class TemporaryFileEventListener(ViewEventListener):
     @classmethod
     def is_applicable(_, settings):
@@ -383,9 +387,7 @@ class TutkainEvaluateCommand(TextCommand):
             client.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
 
             mode = opts.get("mode")
-
-            if "mode" in opts:
-                del opts["mode"]
+            opts = dissoc(opts, {"mode"})
 
             if mode == "rpc":
                 client.evaluate_rpc(code, handler, opts)
