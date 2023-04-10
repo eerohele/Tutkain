@@ -1,14 +1,14 @@
-import itertools
 import socket
 from queue import Queue
-from threading import Lock, Thread
+from threading import Thread
 from typing import IO
 
 from ...api import edn
 from ..log import log
+from . import edn_client
 
 
-class Client:
+class Client(edn_client.Client):
     """A backchannel client.
 
     Connects to a backchannel server to allow consumers to send messages to
@@ -18,11 +18,8 @@ class Client:
     def __init__(self, default_handler):
         """Given a default response message handler function, initialize a new
         backchannel client."""
-        self.default_handler = default_handler
+        super().__init__(default_handler)
         self.sendq = Queue()
-        self.handlers = {}
-        self.message_id = itertools.count(1)
-        self.lock = Lock()
 
     def send_loop(self, sock: socket.SocketType, buffer: IO):
         """Given a socket and a file object, start a loop that gets items from
@@ -79,44 +76,12 @@ class Client:
 
         return self
 
-    def register_handler(self, id, handler):
-        with self.lock:
-            self.handlers[id] = handler
-
     def send(self, message, handler=None):
         """Given a message (a dict) and, optionally, a handler function, put
         the message into the send queue of this backchannel client and register
         the handler to be called on the message response."""
-        message = edn.kwmap(message)
-        message_id = next(self.message_id)
-        message[edn.Keyword("id")] = message_id
-
-        if handler:
-            self.register_handler(message_id, handler)
-
+        message = self.register_handler(message, handler)
         self.sendq.put(message)
-
-    def handle(self, message):
-        """Given a message, call the handler function registered for the
-        message in this backchannel instance.
-
-        If there's no handler function for the message, call the default
-        handler function instead."""
-        try:
-            id = message.get(edn.Keyword("id"))
-
-            try:
-                with self.lock:
-                    handler = self.handlers.get(id, self.default_handler)
-
-                handler.__call__(message)
-            except AttributeError as error:
-                log.error({"event": "error", "message": message, "error": error})
-            finally:
-                with self.lock:
-                    self.handlers.pop(id, None)
-        except AttributeError as error:
-            raise ValueError(f"Got invalid message: {message}")
 
     def halt(self):
         """Halt this backchannel client."""

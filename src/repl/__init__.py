@@ -1,6 +1,5 @@
 import datetime
 import io
-import itertools
 import os
 import pathlib
 import posixpath
@@ -11,14 +10,14 @@ import uuid
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from inspect import cleandoc
-from threading import Lock, Thread
+from threading import Thread
 
 import sublime
 
 from ...api import edn
 from .. import base64, dialects, progress, settings, state, status
 from ..log import log
-from . import backchannel, formatter, printer, views
+from . import backchannel, formatter, printer, views, edn_client
 
 
 def read_until_prompt(socket: socket.SocketType):
@@ -35,7 +34,7 @@ def read_until_prompt(socket: socket.SocketType):
 BASE64_BLOB = """(def load-base64 (let [decoder (java.util.Base64/getDecoder)] #?(:bb (fn [blob _ _] (load-string (String. (.decode decoder blob) "UTF-8"))) :clj (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename))))))"""
 
 
-class Client(ABC):
+class Client(edn_client.Client):
     """A `Client` connects to a Clojure socket server, then sends over code
     that a) starts a custom REPL on top of the default REPL and b) starts a
     backchannel socket server. The `Client` then connects to the backchannel
@@ -117,6 +116,8 @@ class Client(ABC):
     def __init__(self, host, port, mode, name, dialect, options={}):
         assert mode in {"repl", "rpc"}
 
+        super().__init__(self.print)
+
         self.since = datetime.datetime.now()
         self.id = str(uuid.uuid4())
         self.host = host
@@ -132,12 +133,8 @@ class Client(ABC):
         self.mode = mode
         self.options = options
         self.capabilities = set()
-        self.lock = Lock()
         self.ready = False
         self.on_close = lambda: None
-        self.message_id = itertools.count(1)
-        self.handlers = {}
-        self.default_handler = self.print
 
     def send_loop(self):
         """Start a loop that reads strings from `self.sendq` and sends them to
@@ -202,46 +199,11 @@ class Client(ABC):
         else:
             return self.socket.recv(io.DEFAULT_BUFFER_SIZE).decode("utf-8")
 
-    def register_handler(self, id, handler):
-        with self.lock:
-            self.handlers[id] = handler
-
-    def handle(self, message):
-        """Given a message, call the handler function registered for the
-        message in this backchannel instance.
-
-        If there's no handler function for the message, call the default
-        handler function instead."""
-        try:
-            if isinstance(message, str):
-                self.print(message)
-            elif isinstance(message, dict):
-                id = message.get(edn.Keyword("id"))
-
-                try:
-                    with self.lock:
-                        handler = self.handlers.get(id, self.default_handler)
-
-                    handler.__call__(message)
-                except AttributeError as error:
-                    log.error({"event": "error", "message": message, "error": error})
-                finally:
-                    with self.lock:
-                        self.handlers.pop(id, None)
-        except AttributeError as error:
-            raise ValueError(f"Got invalid message: {message}")
-
     def send_op(self, message, handler=None):
         if self.mode == "repl" and self.has_backchannel():
             self.backchannel.send(message, handler)
         else:
-            message = edn.kwmap(message)
-            message_id = next(self.message_id)
-            message[edn.Keyword("id")] = message_id
-
-            if handler:
-                self.register_handler(message_id, handler)
-
+            message = self.register_handler(message, handler)
             edn.write_line(self.buffer, message)
 
     def recv_loop(self):
