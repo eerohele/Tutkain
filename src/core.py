@@ -772,8 +772,9 @@ class TutkainConnectCommand(WindowCommand):
         backchannel=True,
         build_id=None,
         init=None,
-        mode="repl",
+        mode=None,
     ):
+        mode = mode or settings.load().get("default_connection_mode")
         active_view = self.window.active_view()
         output_view = repl.views.get_or_create_view(self.window, output, view_id)
         dialect = edn.Keyword(dialect)

@@ -7,6 +7,63 @@
   // (user for Clojure, cljs.user for ClojureScript) if none.
   "auto_switch_namespace": true,
 
+  // The method of communication Tutkain uses when talking with the runtime it
+  // is connected to.
+  //
+  // This setting affects the Clojure and Babashka runtimes only. ClojureScript
+  // always uses the RPC mode.
+  //
+  // Valid options:
+  //
+  // - "repl": a Read-Eval-Print loop over a streaming socket connection. When
+  //   in REPL mode, Tutkain uses the initial connection for evaluating code
+  //   and opens a second connection to the runtime for everything else (e.g.
+  //   auto-completion, clojure.test integration, etc.).
+  //
+  //   Use the REPL mode if you want to use nested REPLs. Use the REPL mode if
+  //   support for printing large evaluation results is important to you.
+  //
+  // - "rpc": in the Remote Procedure Call (RPC) mode, Tutkain operates over a
+  //   single connection to the runtime. In the RPC mode, every message Tutkain
+  //   sends to and receives from the runtime is wrapped in an EDN envelope.
+  //
+  //   Use the RPC mode if you want Tutkain to operate over a single connection
+  //   (e.g. when establishing more than one connection to the runtime is
+  //   difficult or impossible).
+  //
+  //   You cannot use nested REPLs in the RPC mode.
+  //
+  // Note that certain evaluation outputs always use the RPC mode (e.g.
+  // clipboard, inline).
+  //
+  // You can override this setting by specifying the connection mode as an
+  // argument to the tutkain_connect command. For example:
+  //
+  //     {
+  //         "keys": ["ctrl+c", "ctrl+x"],
+  //         "command": "tutkain_connect",
+  //         "args": {"mode": "rpc", ...}
+  //     }
+  //
+  // In the REPL mode, you can also use the "mode" argument to tutkain_evaluate
+  // to switch between REPL and RPC modes. For example:
+  //
+  //     {
+  //         "keys": ["ctrl+c", "ctrl+c"],
+  //         "command": "tutkain_evaluate",
+  //         "args": {"mode": "rpc", ...}
+  //     },
+  //
+  // It is possible to turn a REPL interface into an RPC interface, but not the
+  // other way around. Therefore, if the connection uses the RPC mode,
+  // evaluations cannot use the REPL mode.
+  //
+  // By default, Tutkain uses the connection mode as the evaluation mode.
+  //
+  // If neither nested REPLs nor having a single connection is important to
+  // you, it likely does not matter much which connection mode you use.
+  "default_connection_mode": "repl",
+
   // Enable debug logging in Sublime Text console.
   "debug": false,
 
