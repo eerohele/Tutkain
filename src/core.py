@@ -423,7 +423,7 @@ class TutkainEvaluateCommand(TextCommand):
             "view",
             "up_to_point",
         }
-        assert output in {"view", "clipboard"}
+        assert output in {"view", "clipboard", "inline"}
 
         if sel := self.view.sel():
             current_region = sel[0]
