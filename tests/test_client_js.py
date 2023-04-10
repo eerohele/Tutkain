@@ -42,8 +42,19 @@ class TestJSClient(PackageTestCase):
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
         self.assertEquals(input("(range 10)\n"), self.get_print())
         self.assertEquals(
-            """{:op :eval :dialect :cljs :code "(range 10)" :file "NO_SOURCE_FILE" :ns cljs.user :line 1 :column 10 :id 9}\n""",
-            self.server.recv(),
+            edn.kwmap(
+                {
+                    "op": edn.Keyword("eval"),
+                    "dialect": edn.Keyword("cljs"),
+                    "ns": edn.Symbol("cljs.user"),
+                    "code": "(range 10)",
+                    "file": "NO_SOURCE_FILE",
+                    "line": 1,
+                    "column": 10,
+                    "id": 9,
+                }
+            ),
+            edn.read(self.server.recv()),
         )
         self.server.send(
             edn.kwmap(

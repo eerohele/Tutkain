@@ -343,8 +343,19 @@ class TestConnectDisconnect(TestCase):
             js_view.run_command("tutkain_evaluate")
 
             self.assertEquals(
-                """{:op :eval :dialect :cljs :code "(js/parseInt \\"42\\")" :file "NO_SOURCE_FILE" :ns cljs.user :line 1 :column 1 :id 9}\n""",
-                js_server.recv(),
+                edn.kwmap(
+                    {
+                        "op": edn.Keyword("eval"),
+                        "dialect": edn.Keyword("cljs"),
+                        "ns": edn.Symbol("cljs.user"),
+                        "code": """(js/parseInt "42")""",
+                        "file": "NO_SOURCE_FILE",
+                        "line": 1,
+                        "column": 1,
+                        "id": 9,
+                    }
+                ),
+                edn.read(js_server.recv()),
             )
             js_server.send(
                 edn.kwmap({"id": 9, "tag": edn.Keyword("ret"), "val": "42\n"})
@@ -522,8 +533,19 @@ class TestConnectDisconnect(TestCase):
 
             js_view.run_command("tutkain_evaluate")
             self.assertEquals(
-                """{:op :eval :dialect :cljs :code "(js/parseInt \\"42\\")" :file "NO_SOURCE_FILE" :ns cljs.user :line 1 :column 1 :id 9}\n""",
-                js_server.recv(),
+                edn.kwmap(
+                    {
+                        "op": edn.Keyword("eval"),
+                        "dialect": edn.Keyword("cljs"),
+                        "ns": edn.Symbol("cljs.user"),
+                        "code": """(js/parseInt "42")""",
+                        "file": "NO_SOURCE_FILE",
+                        "line": 1,
+                        "column": 1,
+                        "id": 9,
+                    }
+                ),
+                edn.read(js_server.recv()),
             )
             js_server.send(
                 edn.kwmap({"id": 9, "tag": edn.Keyword("ret"), "val": "42\n"})
@@ -617,8 +639,19 @@ class TestConnectDisconnect(TestCase):
             js_view.run_command("tutkain_evaluate")
 
             self.assertEquals(
-                """{:op :eval :dialect :cljs :code "(js/parseInt \\"42\\")" :file "NO_SOURCE_FILE" :ns cljs.user :line 1 :column 1 :id 9}\n""",
-                js_server.recv(),
+                edn.kwmap(
+                    {
+                        "op": edn.Keyword("eval"),
+                        "dialect": edn.Keyword("cljs"),
+                        "ns": edn.Symbol("cljs.user"),
+                        "code": """(js/parseInt "42")""",
+                        "file": "NO_SOURCE_FILE",
+                        "line": 1,
+                        "column": 1,
+                        "id": 9,
+                    }
+                ),
+                edn.read(js_server.recv()),
             )
             js_server.send(
                 edn.kwmap({"id": 9, "tag": edn.Keyword("ret"), "val": "42\n"})
