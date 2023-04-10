@@ -77,7 +77,7 @@ class TestConnectDisconnect(TestCase):
         else:
             server = JvmBackchannelServer().start()
 
-        default_args = {"host": server.host, "port": server.port}
+        default_args = {"host": server.host, "port": server.port, "mode": "repl"}
         window.run_command("tutkain_connect", {**default_args, **args})
         return server.connection.result(timeout=3)
 
