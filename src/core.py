@@ -357,6 +357,13 @@ def get_eval_region(view, region, scope="outermost", ignore={}):
     return without_discard_macro(view, eval_region)
 
 
+class TutkainReplaceRegionImplCommand(TextCommand):
+    def run(self, edit, region=None, string=None):
+        if region and string:
+            region = sublime.Region(region[0], region[1])
+            self.view.replace(edit, region, string)
+
+
 class TutkainEvaluateCommand(TextCommand):
     def make_options(self, options, point, dialect):
         if not options.get("file") and (file_name := self.view.file_name()):
@@ -412,7 +419,7 @@ class TutkainEvaluateCommand(TextCommand):
         ignore={"comment"},
         snippet=None,
         inline_result=False,
-        output="view",
+        output=None,
         dialect=None,
         mode=None,
     ):
@@ -425,7 +432,7 @@ class TutkainEvaluateCommand(TextCommand):
             "view",
             "up_to_point",
         }
-        assert output in {"view", "clipboard", "inline"}
+        assert output in {None, "selection", "clipboard", "inline"}
 
         if sel := self.view.sel():
             current_region = sel[0]
@@ -447,8 +454,8 @@ class TutkainEvaluateCommand(TextCommand):
 
                 output = "inline"
 
-            # Force RPC evaluation mode if client is in RPC mode and for inline and clipboard outputs
-            if client.mode == "rpc" or output in {"inline", "clipboard"}:
+            # Force RPC evaluation mode if client is in RPC mode and for inline, clipboard, and selection outputs
+            if client.mode == "rpc" or output in {"inline", "clipboard", "selection"}:
                 options = {"mode": "rpc"}
             else:
                 options = {"mode": mode or client.mode}
@@ -540,7 +547,7 @@ class TutkainEvaluateCommand(TextCommand):
                             "[Tutkain] Evaluation result copied to clipboard."
                         )
 
-                    def evaluator(region, code, options):
+                    def evaluator(region, code, options, sel=None):
                         self.eval(
                             client,
                             code,
@@ -562,7 +569,7 @@ class TutkainEvaluateCommand(TextCommand):
                             item.get(edn.Keyword("val")),
                         )
 
-                    def evaluator(region, code, options):
+                    def evaluator(region, code, options, sel=None):
                         self.eval(
                             client,
                             code,
@@ -571,9 +578,31 @@ class TutkainEvaluateCommand(TextCommand):
                             options=options,
                         )
 
+                elif output == "selection":
+
+                    def handler(region, item):
+                        val = item.get(edn.Keyword("val"))
+                        val = val[:-1] if val[-1] == "\n" else val
+
+                        self.view.run_command(
+                            "tutkain_replace_region_impl",
+                            {"region": region.to_tuple(), "string": val},
+                        )
+
+                        client.print(item)
+
+                    def evaluator(region, code, options, sel=None):
+                        self.eval(
+                            client,
+                            code,
+                            handler=lambda item: handler(sel, item),
+                            point=region.begin(),
+                            options=options,
+                        )
+
                 else:
 
-                    def evaluator(region, code, options):
+                    def evaluator(region, code, options, sel=None):
                         self.eval(client, code, point=region.begin(), options=options)
 
                 # FIXME: Support output with any scope
@@ -645,12 +674,22 @@ class TutkainEvaluateCommand(TextCommand):
                     code = sublime.expand_variables(code, variables)
                     evaluator(current_region, code, options)
                 else:
-                    for region in self.view.sel():
-                        eval_region = get_eval_region(self.view, region, scope, ignore)
+                    # With selection outputs, we have to handle the selections
+                    # in reverse to account for replacing multiple regions.
+                    #
+                    # Could probably reverse for every output type, but would
+                    # have to update all tests for that.
+                    if output == "selection":
+                        sels = reversed(self.view.sel())
+                    else:
+                        sels = self.view.sel()
+
+                    for sel in sels:
+                        eval_region = get_eval_region(self.view, sel, scope, ignore)
 
                         if not eval_region.empty():
                             code = self.view.substr(eval_region)
-                            evaluator(eval_region, code, options)
+                            evaluator(eval_region, code, options, sel=sel)
 
     def input(self, args):
         if any(map(lambda region: not region.empty(), self.view.sel())):
