@@ -51,7 +51,7 @@
 
 
   ;; apropos
-  (is (contains? (set (:results (send-op {:op :apropos :pattern "reduce"})))
+  (is (contains? (set (map #(select-keys % [:name :type :ns]) (:results (send-op {:op :apropos :pattern "reduce"}))))
         {:name 'areduce :type :macro :ns "clojure.core"}))
 
   ;; dir
