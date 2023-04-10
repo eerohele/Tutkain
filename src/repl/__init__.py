@@ -136,12 +136,18 @@ class Client(edn_client.Client):
         self.ready = False
         self.on_close = lambda: None
 
+    def send(self, message):
+        if isinstance(message, dict):
+            edn.write_line(self.buffer, message)
+        else:
+            self.write_line(message)
+
     def send_loop(self):
         """Start a loop that reads strings from `self.sendq` and sends them to
         the Clojure runtime this client is connected to for evaluation."""
         while item := self.sendq.get():
             log.debug({"event": "client/send", "item": item})
-            self.write_line(item)
+            self.send(item)
 
         self.write_line("{:op :quit}")
         self.socket.shutdown(socket.SHUT_RDWR)
@@ -180,15 +186,18 @@ class Client(edn_client.Client):
                   associated with (default `"NO_SOURCE_FILE"`)
         - `line`: the line number the code is positioned at (default `0`)
         - `column`: the column number the code is positioned at (default `0`)"""
-        self.send_op(
-            {
-                "op": edn.Keyword("eval"),
-                "dialect": self.dialect,
-                "code": code,
-                **options,
-            },
-            handler,
-        )
+        message = {
+            "op": edn.Keyword("eval"),
+            "dialect": self.dialect,
+            "code": code,
+            **options,
+        }
+
+        if self.mode == "repl" and self.has_backchannel():
+            self.backchannel.send(message, handler)
+        else:
+            message = self.register_handler(message, handler)
+            self.sendq.put(message)
 
     def print(self, item):
         self.printq.put(formatter.format(item))
@@ -204,7 +213,7 @@ class Client(edn_client.Client):
             self.backchannel.send(message, handler)
         else:
             message = self.register_handler(message, handler)
-            edn.write_line(self.buffer, message)
+            self.sendq.put(message)
 
     def recv_loop(self):
         """Start a loop that reads evaluation responses from a socket and calls the handler function on them."""
