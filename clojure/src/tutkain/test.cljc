@@ -99,7 +99,7 @@
                                 :summary (swap! results assoc :tag :ret :val (str (-> event (dissoc :file)) \newline))
                                 nil)))]
       (if (seq vars)
-        (binding [test/*report-counters* (#?(:bb atom :clj ref) test/*initial-report-counters*)]
+        (binding [test/*report-counters* (ref test/*initial-report-counters*)]
           (test/test-vars (map #(resolve (symbol (name ns) %)) vars))
           (swap! results assoc :tag :ret :val (str (assoc @test/*report-counters* :type :summary) \newline)))
         (test/run-tests ns)))

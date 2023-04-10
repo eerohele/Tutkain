@@ -437,7 +437,7 @@ class JSClient(Client):
 
 
 class BabashkaClient(JVMClient):
-    connection_err_msg = "NOTE: Tutkain requires Babashka v1.0.170 or newer.\n"
+    connection_err_msg = "NOTE: Tutkain requires Babashka v1.1.171 or newer.\n"
 
     modules = {
         "java.cljc": [],
