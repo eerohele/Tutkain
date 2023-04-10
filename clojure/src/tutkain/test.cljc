@@ -6,7 +6,7 @@
    [clojure.walk :as walk]
    [tutkain.format :refer [pp-str Throwable->str]]
    [tutkain.base64 :refer [read-base64]]
-   [tutkain.backchannel :refer [handle respond-to]])
+   [tutkain.rpc :refer [handle respond-to]])
   (:import
    (java.io File)))
 

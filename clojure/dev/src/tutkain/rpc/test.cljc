@@ -1,20 +1,20 @@
-(ns tutkain.backchannel.test
-  "Utilities for testing Tutkain's backchannel ops."
+(ns tutkain.rpc.test
+  "Utilities for testing Tutkain's RPC ops."
   (:require
    [clojure.edn :as edn]
-   [tutkain.backchannel :as backchannel])
+   [tutkain.rpc :as rpc])
   (:import
    (clojure.lang LineNumberingPushbackReader)
    (java.io StringReader)
    (java.util Base64)))
 
 (defn send-op
-  "Given a backchannel op, call the handler function on it and return the EDN
+  "Given an RPC op, call the handler function on it and return the EDN
   response."
   [op]
   (->
     (assoc op :out-fn prn)
-    backchannel/handle
+    rpc/handle
     with-out-str
     edn/read-string))
 

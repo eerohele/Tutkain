@@ -2,7 +2,7 @@
   (:require
    [clojure.edn :as edn]
    [cognitect.transcriptor :as xr]
-   [tutkain.backchannel :as backchannel]
+   [tutkain.rpc :as rpc]
    [tutkain.lookup :as lookup :refer [lookup]]
    [tutkain.lookup.specs :as specs]))
 
@@ -59,7 +59,7 @@
    :ident "mapcat"
    :ns "user"
    :out-fn prn}
-  backchannel/handle
+  rpc/handle
   with-out-str
   edn/read-string
   :info)

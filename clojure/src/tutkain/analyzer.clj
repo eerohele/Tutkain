@@ -3,7 +3,7 @@
    [clojure.tools.analyzer.ast :as analyzer.ast]
    [clojure.tools.reader :as reader]
    [clojure.tools.reader.reader-types :as readers]
-   [tutkain.backchannel :refer [handle]]))
+   [tutkain.rpc :refer [handle]]))
 
 #_(set! *warn-on-reflection* true)
 

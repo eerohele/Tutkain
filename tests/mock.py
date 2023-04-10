@@ -83,7 +83,7 @@ class JvmBackchannelServer(JvmServer):
         self.recv()
         self.send("#'tutkain.format/pp-str")
         self.recv()
-        self.send("#'tutkain.backchannel/open")
+        self.send("#'tutkain.rpc/open")
         self.recv()
         self.send(
             """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""
@@ -139,7 +139,7 @@ class JvmRpcServer(JvmServer):
         self.recv()
         self.send("#'tutkain.format/pp-str")
         self.recv()
-        self.send("#'tutkain.backchannel/open")
+        self.send("#'tutkain.rpc/open")
         self.recv()
         self.send(
             """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""
@@ -208,7 +208,7 @@ class JsServer(Backchannel):
         self.recv()
         self.send("#'tutkain.format/pp-str")
         self.recv()
-        self.send("#'tutkain.backchannel/open")
+        self.send("#'tutkain.rpc/open")
         self.recv()
         self.send(
             """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""
@@ -270,7 +270,7 @@ class BabashkaServer(PlainServer):
         self.recv()
         self.send("#'tutkain.format/pp-str")
         self.recv()
-        self.send("#'tutkain.backchannel/open")
+        self.send("#'tutkain.rpc/open")
         self.recv()
         self.send(
             """#object[clojure.lang.MultiFn 0x7fb5c837 "clojure.lang.MultiFn@7fb5c837"]"""

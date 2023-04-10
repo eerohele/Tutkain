@@ -8,7 +8,7 @@
    [clojure.test.check.generators :as gen]
    [clojure.test.check.properties :as prop]
    [cognitect.transcriptor :as xr]
-   [tutkain.backchannel :as backchannel]
+   [tutkain.rpc :as rpc]
    [tutkain.completions :as completions :refer [candidates]]
    [tutkain.completions.specs :as specs :refer [prefixed-candidates]]))
 
@@ -168,7 +168,7 @@
    :prefix "x"
    :ns "user"
    :out-fn prn}
-  backchannel/handle
+  rpc/handle
   with-out-str
   edn/read-string
   :completions)

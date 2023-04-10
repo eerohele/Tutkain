@@ -9,7 +9,7 @@
    [shadow.cljs.devtools.api :as shadow]
    [tutkain.analyzer :as analyzer]
    [tutkain.analyzer.js :as js]
-   [tutkain.backchannel.test :refer [send-op string->base64 string->reader]]
+   [tutkain.rpc.test :refer [send-op string->base64 string->reader]]
    [tutkain.cljs :as cljs]))
 
 (spec/def ::op

@@ -3,7 +3,7 @@
    [clojure.set :as set]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
-   [tutkain.backchannel.test :refer [send-op]]
+   [tutkain.rpc.test :refer [send-op]]
    [tutkain.lookup.specs :as specs]
    [tutkain.query]))
 

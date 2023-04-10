@@ -6,7 +6,7 @@
    [clojure.tools.reader :as reader]
    [tutkain.analyzer :as analyzer]
    [tutkain.base64 :refer [base64-reader]]
-   [tutkain.backchannel :refer [respond-to]]
+   [tutkain.rpc :refer [respond-to]]
    [tutkain.cljs :refer [compiler-env]]))
 
 (defn ^:private parse-namespace

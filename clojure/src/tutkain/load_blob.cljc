@@ -3,7 +3,7 @@
    [clojure.java.io :as io]
    [tutkain.format :as format :refer [pp-str]]
    [tutkain.base64 :refer [read-base64]]
-   [tutkain.backchannel :refer [handle relative-to-classpath-root respond-to]])
+   [tutkain.rpc :refer [handle relative-to-classpath-root respond-to]])
   (:import
    (java.io Writer)))
 

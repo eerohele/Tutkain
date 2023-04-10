@@ -4,18 +4,18 @@
    [clojure.java.io :as io]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
-   [tutkain.backchannel :as backchannel]
-   [tutkain.backchannel.test :refer [string->base64]]
+   [tutkain.rpc :as rpc]
+   [tutkain.rpc.test :refer [string->base64]]
    [tutkain.socket :as socket]
    [tutkain.test]))
 
 (def eval-lock (Object.))
 
 (def backchannel
-  (backchannel/open {:port 1337 :xform-in #(assoc % :eval-lock eval-lock :eval-future (atom nil))}))
+  (rpc/open {:port 1337 :xform-in #(assoc % :eval-lock eval-lock :eval-future (atom nil))}))
 
-(xr/on-exit #(backchannel/close backchannel))
-(def client (socket/client :host "localhost" :port (backchannel/port backchannel)))
+(xr/on-exit #(rpc/close backchannel))
+(def client (socket/client :host "localhost" :port (rpc/port backchannel)))
 (xr/on-exit #((:stop client)))
 
 (defn send
@@ -34,7 +34,7 @@
 (recv)
 (xr/check! #{{:op :echo}})
 
-(defmethod backchannel/handle :error
+(defmethod rpc/handle :error
   [_]
   (throw (ex-info "Boom!" {:data :data})))
 
@@ -73,19 +73,19 @@
 
 ;; Resolving a absolute path relative to classpath root
 
-(backchannel/relative-to-classpath-root nil)
+(rpc/relative-to-classpath-root nil)
 (xr/check! #{"NO_SOURCE_PATH"})
 
-(backchannel/relative-to-classpath-root "")
+(rpc/relative-to-classpath-root "")
 (xr/check! #{"NO_SOURCE_PATH"})
 
-(backchannel/relative-to-classpath-root "/does/not/exist.clj")
+(rpc/relative-to-classpath-root "/does/not/exist.clj")
 (xr/check! #{"/does/not/exist.clj"})
 
-(backchannel/relative-to-classpath-root
-  (.getAbsolutePath (io/as-file (io/resource "tutkain/backchannel.cljc"))))
+(rpc/relative-to-classpath-root
+  (.getAbsolutePath (io/as-file (io/resource "tutkain/rpc.cljc"))))
 
-(xr/check! #{"tutkain/backchannel.cljc"})
+(xr/check! #{"tutkain/rpc.cljc"})
 
 ;; eval
 (send {:op :eval :code "(inc 1)"})

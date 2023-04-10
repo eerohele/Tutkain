@@ -276,7 +276,7 @@ class JVMClient(Client):
         self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
-        for filename in ["format.cljc", "backchannel.cljc", "base64.cljc", "repl.cljc"]:
+        for filename in ["format.cljc", "rpc.cljc", "base64.cljc", "repl.cljc"]:
             path = self.source_path(filename)
 
             with open(path, "rb") as file:
@@ -329,7 +329,7 @@ class JVMClient(Client):
                     self.print(ret)
         else:
             self.write_line(
-                f"""(tutkain.backchannel/rpc {{:init `{init} :add-tap? {"true" if add_tap else "false"}}})"""
+                f"""(tutkain.rpc/rpc {{:init `{init} :add-tap? {"true" if add_tap else "false"}}})"""
             )
 
         self.load_modules()
@@ -416,7 +416,7 @@ class JSClient(Client):
 
         for filename in [
             "format.cljc",
-            "backchannel.cljc",
+            "rpc.cljc",
             "base64.cljc",
             "shadow.clj",
         ]:

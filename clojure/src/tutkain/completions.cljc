@@ -4,7 +4,7 @@
 
   Originally adapted from nrepl.util.completion."
   (:require
-   [tutkain.backchannel :refer [handle respond-to]]
+   [tutkain.rpc :refer [handle respond-to]]
    [tutkain.java :as java])
   (:import
    (java.util.jar JarFile)

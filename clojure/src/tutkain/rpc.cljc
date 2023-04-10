@@ -1,4 +1,4 @@
-(ns tutkain.backchannel
+(ns tutkain.rpc
   (:require
    [clojure.core.server :as server]
    [clojure.java.io :as io]
@@ -16,12 +16,12 @@
 (comment (set! *warn-on-reflection* true) ,,,)
 
 (defn respond-to
-  "Respond to a backchannel op message."
+  "Respond to a RPC op message."
   [{:keys [id out-fn]} response]
   (out-fn (cond-> response id (assoc :id id))))
 
 (defmulti handle
-  "Handle a backchannel op message.
+  "Handle a RPC op message.
 
   Dispatches on :op."
   :op)
@@ -244,7 +244,7 @@
             (some-> eval-service deref .shutdownNow)
             (remove-tap tapfn)))))))
 
-(defprotocol Backchannel
+(defprotocol RPC
   (thread-bindings [this])
   (update-thread-bindings [this thread-bindings])
   (host [this])
@@ -258,28 +258,27 @@
   (atom (select-keys bindings [#'*e #'*1 #'*2 #'*3 #'*warn-on-reflection*])))
 
 (defn open
-  "Open a backchannel that listens for editor tooling messages on a socket.
+  "Open an RPC server.
 
-  Editor tooling messages are EDN messages that look like nREPL ops. For
-  example:
+  RPC messages are EDN messages that look like nREPL ops. For example:
 
     {:op :load-base64 :blob \"...\" :file \"foo.clj\"}
 
-  To add a new op, implement the tutkain.backchannel/handle multimethod.
+  To add a new op, implement the tutkain.rpc/handle multimethod.
 
   Options:
-    :port         The TCP port the backchannel listens on.
+    :port         The TCP port the server listens on.
     :bind-address The TCP bind address.
 
   Other options are subject to change.
 
-  Returns a Backchannel instance."
+  Returns an RPC instance."
   [{:keys [add-tap? bind-address port bindings xform-in xform-out]
       :or {add-tap? false bind-address "localhost" port 0 xform-in identity xform-out identity}}]
   (let [thread-bindings (init-thread-bindings bindings)
         out-writer (promise)
         err-writer (promise)
-        server-name (format "tutkain/backchannel-%s" (.incrementAndGet thread-counter))
+        server-name (format "tutkain/rpc-%s" (.incrementAndGet thread-counter))
         ^ServerSocket socket (server/start-server
                                {:address bind-address
                                 :port port
@@ -291,7 +290,7 @@
                                         :eventual-err-writer err-writer
                                         :xform-in #(xform-in %)
                                         :xform-out #(xform-out %)}]})]
-    (reify Backchannel
+    (reify RPC
       (thread-bindings [_] @thread-bindings)
       (update-thread-bindings [_ bindings]
         (-update-thread-bindings thread-bindings bindings))

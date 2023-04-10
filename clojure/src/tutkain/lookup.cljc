@@ -3,7 +3,7 @@
    [clojure.java.io :as io]
    #?@(:bb [] :clj [[clojure.spec.alpha :as spec]])
    [tutkain.format :refer [pp-str]]
-   [tutkain.backchannel :refer [handle respond-to]]))
+   [tutkain.rpc :refer [handle respond-to]]))
 
 #_(set! *warn-on-reflection* true)
 

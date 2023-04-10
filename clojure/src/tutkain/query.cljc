@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [loaded-libs])
   (:require
    [clojure.core :as core]
-   [tutkain.backchannel :refer [handle respond-to]]
+   [tutkain.rpc :refer [handle respond-to]]
    [tutkain.lookup :as lookup]))
 
 (defn ^:private meta-with-type

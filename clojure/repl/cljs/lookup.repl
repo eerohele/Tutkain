@@ -4,7 +4,7 @@
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as server]
    [shadow.cljs.devtools.api :as shadow]
-   [tutkain.backchannel :as backchannel]
+   [tutkain.rpc :as rpc]
    [tutkain.lookup.specs :as specs]
    [tutkain.cljs :as cljs]))
 
@@ -42,7 +42,7 @@
    :ident "mapcat"
    :ns "cljs.user"
    :out-fn prn}
-  backchannel/handle
+  rpc/handle
   with-out-str
   edn/read-string
   :info)

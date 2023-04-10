@@ -2,7 +2,7 @@
   (:require
    [clojure.main :as main]
    [clojure.pprint :as pprint]
-   [tutkain.backchannel :as backchannel]
+   [tutkain.rpc :as rpc]
    [tutkain.format :as format])
   (:import
    (java.io Writer)))
@@ -16,7 +16,7 @@
   #?(:bb pr-str :clj main/repl-caught))
 
 (defn ^:private read-in-context
-  "Given a tutkain.backchannel.Backchannel and a LineNumberingPushbackReader,
+  "Given a tutkain.rpc.Backchannel and a LineNumberingPushbackReader,
   read a form from the reader in the context of the backchannel thread
   bindings and return a map with these keys:
 
@@ -24,7 +24,7 @@
   - :thread-bindings - The backchannel thread bindings"
   [backchannel ^clojure.lang.LineNumberingPushbackReader reader]
   (.unread reader (.read reader))
-  (let [thread-bindings (backchannel/thread-bindings backchannel)
+  (let [thread-bindings (rpc/thread-bindings backchannel)
         [form _] (with-bindings (not-empty thread-bindings)
                         #?(:bb (read+string reader false ::EOF)
                            :clj (read+string {:eof ::EOF :read-cond :allow} reader)))]
@@ -59,7 +59,7 @@
     clojure.main/repl"
   ([]
    (repl {}))
-  ([{:keys [init] :or {init `backchannel/default-init} :as opts}]
+  ([{:keys [init] :or {init `rpc/default-init} :as opts}]
    (let [print-lock (Object.)
          eval-lock (Object.)
          eval-future (atom nil)
@@ -76,16 +76,16 @@
                            (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
                            (requiring-resolve `default-init))]
          (initf))
-       (let [backchannel (backchannel/open
+       (let [backchannel (rpc/open
                            (assoc opts
                              :bindings (get-thread-bindings)
                              :xform-in #(assoc % :eval-lock eval-lock :eval-future eval-future :in in :repl-thread repl-thread)
                              :xform-out #(dissoc % :in)))]
-         (binding [*out* (PrintWriter-on #(backchannel/write-out backchannel %1) nil)
-                   *err* (PrintWriter-on #(backchannel/write-err backchannel %1) nil)
+         (binding [*out* (PrintWriter-on #(rpc/write-out backchannel %1) nil)
+                   *err* (PrintWriter-on #(rpc/write-err backchannel %1) nil)
                    *print* pretty-print]
            (try
-             (pretty-print {:host (backchannel/host backchannel) :port (backchannel/port backchannel)})
+             (pretty-print {:host (rpc/host backchannel) :port (rpc/port backchannel)})
              (loop []
                (when
                  (try
@@ -105,20 +105,20 @@
                                (set! *2 *1)
                                (set! *1 ret)
                                (pretty-print ret)
-                               (backchannel/update-thread-bindings backchannel (get-thread-bindings))
+                               (rpc/update-thread-bindings backchannel (get-thread-bindings))
                                true))
                            (catch Throwable ex
                              (.flush ^Writer *out*)
                              (.flush ^Writer *err*)
                              (set! *e ex)
-                             (backchannel/write-err backchannel (format/Throwable->str ex))
-                             (backchannel/update-thread-bindings backchannel (get-thread-bindings))
+                             (rpc/write-err backchannel (format/Throwable->str ex))
+                             (rpc/update-thread-bindings backchannel (get-thread-bindings))
                              true)))))
                    (catch Throwable ex
                      (set! *e ex)
-                     (backchannel/write-err backchannel (format/Throwable->str ex))
-                     (backchannel/update-thread-bindings backchannel (get-thread-bindings))
+                     (rpc/write-err backchannel (format/Throwable->str ex))
+                     (rpc/update-thread-bindings backchannel (get-thread-bindings))
                      true))
                  (recur)))
              (finally
-               (backchannel/close backchannel)))))))))
+               (rpc/close backchannel)))))))))

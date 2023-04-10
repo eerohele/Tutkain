@@ -3,7 +3,7 @@
    [clojure.java.io :as io]
    [clojure.main :as main]
    [clojure.repl :as repl]
-   [tutkain.backchannel :refer [handle respond-to]])
+   [tutkain.rpc :refer [handle respond-to]])
   (:import
    (java.net URL)))
 

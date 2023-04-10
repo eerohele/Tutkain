@@ -3,7 +3,7 @@
    [clojure.edn :as edn]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
-   [tutkain.backchannel.test :refer [send-op]]
+   [tutkain.rpc.test :refer [send-op]]
    [tutkain.clojuredocs :as clojuredocs])
   (:import (java.io File)))
 

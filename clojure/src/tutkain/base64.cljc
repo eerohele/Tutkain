@@ -1,6 +1,6 @@
 (ns tutkain.base64
   (:require
-   [tutkain.backchannel :refer [handle respond-to]]
+   [tutkain.rpc :refer [handle respond-to]]
    [tutkain.format :refer [Throwable->str]])
   (:import
    (clojure.lang LineNumberingPushbackReader)

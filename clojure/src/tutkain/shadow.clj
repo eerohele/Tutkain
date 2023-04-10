@@ -6,7 +6,7 @@
    [shadow.cljs.devtools.api :as api]
    [shadow.cljs.devtools.server.supervisor :as supervisor]
    [shadow.remote.relay.api :as relay]
-   [tutkain.backchannel :as backchannel :refer [respond-to]]
+   [tutkain.rpc :as rpc :refer [respond-to]]
    [tutkain.format :refer [pp-str]])
   (:import (java.net SocketException)))
 
@@ -32,7 +32,7 @@ For more information on connecting a JavaScript runtime, see:
 https://shadow-cljs.github.io/docs/UsersGuide.html#repl-troubleshooting.
 ")
 
-(defmethod backchannel/evaluate :cljs
+(defmethod rpc/evaluate :cljs
   [{:keys [to-relay runtime-id ret-chan ns code file line column]
     :or {file "NO_SOURCE_FILE" line 1 column 1}
     :as message}]
@@ -164,7 +164,7 @@ https://shadow-cljs.github.io/docs/UsersGuide.html#repl-troubleshooting.
   [{:keys [build-id] :as opts}]
   (when-some [ret (init build-id)]
     (let [{:keys [tag ret-chan runtime-id to-relay]} ret]
-      (backchannel/accept
+      (rpc/accept
         (assoc opts
           :greet? false
           :thread-bindings (atom {})

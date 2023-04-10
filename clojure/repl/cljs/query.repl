@@ -5,7 +5,7 @@
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as server]
    [shadow.cljs.devtools.api :as shadow]
-   [tutkain.backchannel.test :refer [send-op]]
+   [tutkain.rpc.test :refer [send-op]]
    [tutkain.lookup.specs :as specs]
    [tutkain.cljs :as cljs]
    [tutkain.query]))

@@ -3,8 +3,8 @@
    [clojure.edn :as edn]
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
-   [tutkain.backchannel :as backchannel]
-   [tutkain.backchannel.test :refer [string->base64]]
+   [tutkain.rpc :as rpc]
+   [tutkain.rpc.test :refer [string->base64]]
    [tutkain.load-blob])
   (:import
    (java.util.concurrent LinkedBlockingQueue TimeUnit)))
@@ -34,7 +34,7 @@
 
 (def thread-bindings (atom {}))
 
-(backchannel/handle
+(rpc/handle
   {:op :load
    :eval-lock (Object.)
    :thread-bindings thread-bindings
@@ -45,7 +45,7 @@
 (recv)
 (xr/check! ::ret)
 
-(backchannel/handle
+(rpc/handle
   {:op :load
    :eval-lock (Object.)
    :thread-bindings thread-bindings
@@ -58,7 +58,7 @@
 
 (reset! thread-bindings {})
 
-(backchannel/handle
+(rpc/handle
   {:op :load
    :eval-lock (Object.)
    :thread-bindings thread-bindings
@@ -79,7 +79,7 @@ ex
 
 (def sw (PrintWriter-on #(.put recvq {:tag :err :val %1}) nil))
 
-(backchannel/handle
+(rpc/handle
   {:op :load
    :eval-lock (Object.)
    :thread-bindings (atom {#'*err* sw #'*warn-on-reflection* true})

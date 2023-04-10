@@ -6,7 +6,7 @@
    [cognitect.transcriptor :as xr]
    [shadow.cljs.devtools.server :as server]
    [shadow.cljs.devtools.api :as shadow]
-   [tutkain.backchannel :as backchannel]
+   [tutkain.rpc :as rpc]
    [tutkain.completions.specs :as specs :refer [prefixed-candidates]]
    [tutkain.cljs :as cljs]))
 
@@ -97,7 +97,7 @@
    :prefix "random-u"
    :ns "cljs.user"
    :out-fn prn}
-  backchannel/handle
+  rpc/handle
   with-out-str
   edn/read-string
   :completions)

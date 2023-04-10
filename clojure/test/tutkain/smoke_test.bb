@@ -1,7 +1,7 @@
 (ns tutkain.smoke-test
   (:require [clojure.test :refer [deftest is]]
             [clojure.spec.alpha :as spec]
-            [tutkain.backchannel.test :refer [string->base64 send-op]]
+            [tutkain.rpc.test :refer [string->base64 send-op]]
             [tutkain.completions :as completions]
             [tutkain.completions.specs :as completions.specs]
             [tutkain.lookup :as lookup]
