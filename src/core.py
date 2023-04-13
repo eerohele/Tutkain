@@ -1944,16 +1944,15 @@ class TutkainMarkFormCommand(TextCommand):
                 point = eval_region.begin()
                 code = self.view.substr(eval_region)
                 line, column = self.view.rowcol(point)
+                dialect = dialects.for_view(self.view)
 
                 options = {
+                    "ns": namespace.name_or_default(self.view, dialect),
                     "region": eval_region.to_tuple(),
                     "line": line,
                     "column": column,
                     "file": self.view.file_name(),
                 }
-
-                if ns := namespace.name(self.view):
-                    options["ns"] = ns
 
                 self.view.window().settings().set(
                     "tutkain_mark",
