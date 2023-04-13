@@ -188,6 +188,10 @@ class TestExpandSelectionCommand(ViewTestCase):
         self.set_selections((46, 46))
         self.expand()
         self.assertEquals("#::foo{:bar 1}", self.selection(0))
+        self.set_view_content("#:foo {:bar 1}")
+        self.set_selections((0, 0))
+        self.expand()
+        self.assertEquals("#:foo {:bar 1}", self.selection(0))
 
     def test_list_head(self):
         self.set_view_content("(ns foo.bar)")
