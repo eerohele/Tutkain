@@ -390,7 +390,7 @@ class TutkainEvaluateCommand(TextCommand):
     def eval(self, client, code, handler=None, point=0, options={}):
         opts = self.make_options(options, point, client.dialect)
 
-        if code := indent.reindent(code, opts.get("column", 1)):
+        if code and (code := indent.reindent(code, opts.get("column", 1))):
             client.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
 
             mode = opts.get("mode")
