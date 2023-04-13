@@ -876,7 +876,7 @@ class TestParedit(ViewTestCase):
         self.set_view_content("{:foo \\x}")
         self.set_selections((6, 6))
         self.view.run_command("tutkain_paredit_forward_delete")
-        self.assertEquals("{:foo }", self.view_content())
+        self.assertEquals("{:foo x}", self.view_content())
         self.assertEquals([(6, 6)], self.selections())
 
         self.set_view_content("{:foo \\xx}")
@@ -884,6 +884,12 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_forward_delete")
         self.assertEquals("{:foo xx}", self.view_content())
         self.assertEquals([(6, 6)], self.selections())
+
+        self.set_view_content("\\return")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_paredit_forward_delete")
+        self.assertEquals("return", self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
 
     def test_raise_sexp(self):
         self.set_view_content("(def f (fn [] body))")
