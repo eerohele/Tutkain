@@ -435,7 +435,9 @@ def kill_form(view, edit, forward):
 
         if not region.empty():
             view.erase(edit, region)
-        elif selectors.ignore(view, point):
+        elif view.match_selector(
+            point, "string - punctuation.definition.string.begin | comment.line"
+        ):
             word = view.word(point)
 
             if word:
