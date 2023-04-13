@@ -419,6 +419,8 @@ class TutkainEvaluateCommand(TextCommand):
         output=None,
         dialect=None,
         mode=None,
+        # Undocumented and unsupported; for testing only, currently
+        auto_switch_namespace=None,
     ):
         assert scope in {
             "input",
@@ -444,6 +446,11 @@ class TutkainEvaluateCommand(TextCommand):
                 f"⚠ Not connected to a {dialects.name(dialect)} REPL."
             )
         else:
+            if auto_switch_namespace is None:
+                auto_switch_namespace = settings.load().get(
+                    "auto_switch_namespace", True
+                )
+
             if inline_result:
                 self.view.window().status_message(
                     """inline_result is deprecated; use "output": "inline" instead"""
@@ -502,7 +509,7 @@ class TutkainEvaluateCommand(TextCommand):
                 def evaluate_input(client, code):
                     options["file"] = self.view.file_name()
 
-                    if settings.load().get("auto_switch_namespace", True):
+                    if auto_switch_namespace:
                         if ns := namespace.name(self.view):
                             options["ns"] = edn.Symbol(ns)
 
@@ -664,7 +671,9 @@ class TutkainEvaluateCommand(TextCommand):
 
                     if ns:
                         variables["ns"] = ns
-                        options["ns"] = edn.Symbol(ns)
+
+                        if auto_switch_namespace:
+                            options["ns"] = edn.Symbol(ns)
 
                     if file_name := self.view.file_name():
                         variables["file"] = file_name

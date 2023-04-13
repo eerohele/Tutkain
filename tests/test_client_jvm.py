@@ -216,6 +216,17 @@ class TestJVMClient(PackageTestCase):
         )
 
     # @unittest.SkipTest
+    def test_eval_code_auto_switch_namespace(self):
+        self.view.run_command(
+            "tutkain_evaluate", {"code": "(+ 1 2 3)", "auto_switch_namespace": False}
+        )
+        self.assertEquals(input("(+ 1 2 3)\n"), self.get_print())
+        self.eval_context()
+        self.assertEquals("(+ 1 2 3)\n", self.server.recv())
+        self.server.send("""6""")
+        self.assertEquals(ret("""6\n"""), self.get_print())
+
+    # @unittest.SkipTest
     def test_file_variable(self):
         file = os.path.join(tempfile.gettempdir(), "my.clj")
         self.view.retarget(file)
