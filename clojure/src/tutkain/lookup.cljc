@@ -3,7 +3,7 @@
    [clojure.java.io :as io]
    #?@(:bb [] :clj [[clojure.spec.alpha :as spec]])
    [tutkain.format :refer [pp-str]]
-   [tutkain.rpc :refer [handle respond-to]]))
+   [tutkain.rpc :as rpc :refer [handle respond-to]]))
 
 #_(set! *warn-on-reflection* true)
 
@@ -97,7 +97,7 @@
 
   Otherwise, if it's a symbol, describe the var that symbol names."
   [ns ident]
-  (let [ns (or (some-> ns symbol find-ns) (the-ns 'user))
+  (let [ns (or ns (the-ns 'user))
         ident (binding [*ns* ns] (read-string ident))]
     (if (keyword? ident)
       #?(:bb {}
@@ -109,9 +109,9 @@
 (defmulti info :dialect)
 
 (defmethod info :default
-  [{:keys [ident ns] :as message}]
+  [{:keys [ident] :as message}]
   (try
-    (when-some [result (lookup ns ident)]
+    (when-some [result (lookup (rpc/namespace message) ident)]
       (respond-to message {:info result}))
     (catch Throwable ex
       (respond-to message {:ex (pp-str (Throwable->map ex))}))))

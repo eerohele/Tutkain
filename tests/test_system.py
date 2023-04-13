@@ -100,7 +100,6 @@ class TestConnectDisconnect(TestCase):
                 "id": id,
                 "op": edn.Keyword("set-thread-bindings"),
                 "file": file,
-                "ns": ns,
                 "line": line,
                 "column": column,
             }
@@ -347,7 +346,6 @@ class TestConnectDisconnect(TestCase):
                     {
                         "op": edn.Keyword("eval"),
                         "dialect": edn.Keyword("cljs"),
-                        "ns": edn.Symbol("cljs.user"),
                         "code": """(js/parseInt "42")""",
                         "file": "NO_SOURCE_FILE",
                         "line": 1,
@@ -537,7 +535,6 @@ class TestConnectDisconnect(TestCase):
                     {
                         "op": edn.Keyword("eval"),
                         "dialect": edn.Keyword("cljs"),
-                        "ns": edn.Symbol("cljs.user"),
                         "code": """(js/parseInt "42")""",
                         "file": "NO_SOURCE_FILE",
                         "line": 1,
@@ -643,7 +640,6 @@ class TestConnectDisconnect(TestCase):
                     {
                         "op": edn.Keyword("eval"),
                         "dialect": edn.Keyword("cljs"),
-                        "ns": edn.Symbol("cljs.user"),
                         "code": """(js/parseInt "42")""",
                         "file": "NO_SOURCE_FILE",
                         "line": 1,

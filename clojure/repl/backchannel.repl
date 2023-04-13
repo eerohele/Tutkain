@@ -26,6 +26,12 @@
   []
   ((:recv client)))
 
+(defn val?
+  [val]
+  (fn [ret]
+    (#{{:tag :ret :val (str val \newline)}
+       {:tag :ret :val (str val \return \newline)}} ret)))
+
 (:val (recv))
 (xr/check! (partial re-matches #"Clojure .+?\n"))
 
@@ -109,3 +115,10 @@
 (send {:op :eval :code "(Throwable->map *e)"})
 (->> (recv) :val read-string :trace (drop 4) first (take-last 2))
 (xr/check! #{'("my.clj" 3)})
+
+;; in-ns
+(send {:op :eval :code "(in-ns 'clojure.set)"})
+(recv)
+(send {:op :eval :code "(ns-name *ns*)"})
+(recv)
+(xr/check! (val? "clojure.set"))

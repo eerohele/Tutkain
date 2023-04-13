@@ -26,8 +26,12 @@
   (.unread reader (.read reader))
   (let [thread-bindings (rpc/thread-bindings backchannel)
         [form _] (with-bindings (not-empty thread-bindings)
-                        #?(:bb (read+string reader false ::EOF)
-                           :clj (read+string {:eof ::EOF :read-cond :allow} reader)))]
+                   #?(:bb (read+string reader false ::EOF)
+                      :clj (read+string {:eof ::EOF :read-cond :allow} reader)))]
+    ;; After picking up the thread bindings sent via the backchannel, clear
+    ;; them to signal to the REPL that it is OK to update them after
+    ;; evaluation.
+    (rpc/clear-thread-bindings backchannel)
     {:thread-bindings thread-bindings :form form}))
 
 ;; Vendored in from clojure.main -- Babashka doesn't have this.

@@ -762,7 +762,6 @@ class TestJVMClient(PackageTestCase):
                 {
                     "op": edn.Keyword("eval"),
                     "dialect": edn.Keyword("clj"),
-                    "ns": edn.Symbol("user"),
                     "file": "NO_SOURCE_FILE",
                     "code": "(inc 1)",
                     "line": 1,
@@ -804,7 +803,6 @@ class TestJVMClient(PackageTestCase):
                 {
                     "op": edn.Keyword("eval"),
                     "dialect": edn.Keyword("clj"),
-                    "ns": edn.Symbol("user"),
                     "file": "NO_SOURCE_FILE",
                     "code": "(inc 1)",
                     "line": 1,
@@ -846,7 +844,6 @@ class TestJVMClient(PackageTestCase):
                 {
                     "op": edn.Keyword("eval"),
                     "dialect": edn.Keyword("clj"),
-                    "ns": edn.Symbol("user"),
                     "file": "NO_SOURCE_FILE",
                     "code": "(inc 1)",
                     "line": 1,

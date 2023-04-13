@@ -46,7 +46,6 @@ class TestJSClient(PackageTestCase):
                 {
                     "op": edn.Keyword("eval"),
                     "dialect": edn.Keyword("cljs"),
-                    "ns": edn.Symbol("cljs.user"),
                     "code": "(range 10)",
                     "file": "NO_SOURCE_FILE",
                     "line": 1,

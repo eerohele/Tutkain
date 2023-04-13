@@ -1,4 +1,5 @@
 (ns tutkain.rpc
+  (:refer-clojure :exclude [namespace])
   (:require
    [clojure.core.server :as server]
    [clojure.java.io :as io]
@@ -34,6 +35,12 @@
   [message]
   (throw (ex-info "Unknown op" {:message message})))
 
+(defn namespace
+  "Given an RPC op message, return the clojure.lang.Namespace object the message
+  implies."
+  [{:keys [thread-bindings ns]}]
+  (or (some-> ns symbol find-ns) (some-> thread-bindings deref (get #'*ns*)) (the-ns 'user)))
+
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn set-column!
   [^LineNumberingPushbackReader reader column]
@@ -48,12 +55,11 @@
   Otherwise, create a new namespace named by the symbol and refer all public
   vars clojure.core into it."
   [ns-sym]
-  (if (nil? ns-sym)
-    (the-ns 'user)
+  (when ns-sym
     (or (find-ns ns-sym)
-    (let [new-ns (create-ns ns-sym)]
-      (binding [*ns* new-ns] (refer-clojure))
-      new-ns))))
+      (let [new-ns (create-ns ns-sym)]
+        (binding [*ns* new-ns] (refer-clojure))
+        new-ns))))
 
 (def ^:private classpath-root-paths
   (delay
@@ -83,7 +89,7 @@
 
 (defn ^:private make-thread-bindings
   [file ns]
-  (let [bindings (cond-> {#'*file* (relative-to-classpath-root file)} ns (assoc #'*ns* (find-or-create-ns ns)))]
+  (let [bindings (cond-> {#'*file* (relative-to-classpath-root file)} ns (assoc #'*ns* ns))]
     #?(:bb bindings
        :clj (assoc bindings #'*source-path* (or (some-> file io/file .getName) "NO_SOURCE_FILE")))))
 
@@ -92,7 +98,7 @@
     :or {line 0 column 0} :as message}]
   (.setLineNumber in (int line))
   (set-column! in (int column))
-  (swap! thread-bindings merge (make-thread-bindings file ns))
+  (swap! thread-bindings merge (make-thread-bindings file (find-or-create-ns ns)))
   (respond-to message {:result :ok}))
 
 (defn ^:private make-thread-factory
@@ -115,9 +121,8 @@
 (defmulti evaluate :dialect)
 
 (defn -update-thread-bindings
-  [thread-bindings bindings]
-  (swap! thread-bindings merge
-    (dissoc bindings #'*file* #?(:bb nil :clj #'*source-path*) #'*ns*)))
+  [thread-bindings new-bindings]
+  (swap! thread-bindings (fn [bindings] (if (nil? bindings) new-bindings bindings))))
 
 (defmethod evaluate :default
   [{:keys [eval-service eval-lock thread-bindings ns file line column code]
@@ -127,9 +132,9 @@
     (bound-fn []
       (locking eval-lock
         (with-bindings (merge
-                         {#'*e nil #'*1 nil #'*2 nil #'*3 nil}
+                         {#'*ns* (the-ns 'user) #'*e nil #'*1 nil #'*2 nil #'*3 nil}
                          @thread-bindings
-                         (make-thread-bindings file ns))
+                         (make-thread-bindings file (find-or-create-ns ns)))
           (try
             (with-open [reader (-> code StringReader. LineNumberingPushbackReader.)]
               (.setLineNumber reader (int line))
@@ -143,19 +148,19 @@
                       (set! *3 *2)
                       (set! *2 *1)
                       (set! *1 ret)
-                      (-update-thread-bindings thread-bindings (get-thread-bindings))
+                      (reset! thread-bindings (get-thread-bindings))
                       (respond-to message {:tag :ret :val (format/pp-str ret)}))
                     (catch Throwable ex
                       (.flush ^Writer *out*)
                       (.flush ^Writer *err*)
                       (set! *e ex)
-                      (-update-thread-bindings thread-bindings (get-thread-bindings))
+                      (reset! thread-bindings (get-thread-bindings))
                       (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
                 (take-while #(not= % ::EOF)
                   (repeatedly #(read {:read-cond :allow :eof ::EOF} reader)))))
             (catch Throwable ex
               (set! *e ex)
-              (-update-thread-bindings thread-bindings (get-thread-bindings))
+              (reset! thread-bindings (get-thread-bindings))
               (respond-to message {:tag :err :val (format/Throwable->str ex)}))))))))
 
 (defmethod handle :eval
@@ -247,6 +252,7 @@
 (defprotocol RPC
   (thread-bindings [this])
   (update-thread-bindings [this thread-bindings])
+  (clear-thread-bindings [this])
   (host [this])
   (port [this])
   (write-out [this x])
@@ -292,8 +298,20 @@
                                         :xform-out #(xform-out %)}]})]
     (reify RPC
       (thread-bindings [_] @thread-bindings)
-      (update-thread-bindings [_ bindings]
-        (-update-thread-bindings thread-bindings bindings))
+      (clear-thread-bindings [_]
+        (reset! thread-bindings nil))
+      (update-thread-bindings [_ new-bindings]
+        ;; Only set new thread bindings if there are no previously set thread
+        ;; bindings.
+        ;;
+        ;; Thread bindings are unset after a successful REPL read and thread
+        ;; binding determination to allow REPL to update the thread
+        ;; bindings after the evaluation.
+        ;;
+        ;; This way, if a new set of thread bindings arrives while a previous
+        ;; eval remains in progress, the REPL won't wipe the new bindings once
+        ;; the ongoing eval completes.
+        (swap! thread-bindings (fn [bindings] (if (nil? bindings) new-bindings bindings))))
       (host [_] (-> socket .getInetAddress .getHostName))
       (port [_] (.getLocalPort socket))
       (write-out [_ x] (@out-writer x))

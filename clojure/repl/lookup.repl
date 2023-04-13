@@ -11,33 +11,33 @@
             (map #(vector alias %) (map first (ns-publics ns))))
     (ns-aliases *ns*)))
 
-(map (fn [[alias sym]] (lookup "repl.lookup" (str alias "/" sym))) syms)
+(map (fn [[alias sym]] (lookup (find-ns 'repl.lookup) (str alias "/" sym))) syms)
 (xr/check! ::specs/infos)
 
-(map #(lookup "repl.lookup" (str %)) (map first (ns-refers *ns*)))
+(map #(lookup (find-ns 'repl.lookup) (str %)) (map first (ns-refers *ns*)))
 (xr/check! ::specs/infos)
 
-(map #(lookup "clojure.main" (str %)) (map first (ns-publics 'clojure.main)))
+(map #(lookup (find-ns 'clojure.main) (str %)) (map first (ns-publics 'clojure.main)))
 (xr/check! ::specs/infos)
 
-(lookup "clojure.core" "let")
+(lookup (find-ns 'clojure.core) "let")
 (xr/check! ::specs/info)
 
-(lookup "clojure.core" ":clojure.core.specs.alpha/binding-form")
+(lookup (find-ns 'clojure.core) ":clojure.core.specs.alpha/binding-form")
 (xr/check! ::specs/spec-info)
 
 (require '[clojure.core.specs.alpha :as core.specs])
-(lookup "repl.lookup" "::core.specs/local-name")
+(lookup (find-ns 'repl.lookup) "::core.specs/local-name")
 (xr/check! ::specs/spec-info)
 
 (require '[clojure.spec.alpha :as spec])
-(lookup "repl.lookup" "clojure.spec.alpha")
+(lookup (find-ns 'repl.lookup) "clojure.spec.alpha")
 (xr/check! ::specs/ns-info)
 
-(lookup "user" "def")
+(lookup (find-ns 'user) "def")
 (xr/check! ::specs/info)
 
-(lookup "nope" "mapcat")
+(lookup (find-ns 'nope) "mapcat")
 (xr/check! ::specs/info)
 
 (lookup/resolve-file nil)
@@ -70,8 +70,8 @@
   "protocol docstring"
   (my-method [this] "method docstring"))
 
-(lookup "repl.lookup" "MyProtocol")
+(lookup (find-ns 'repl.lookup) "MyProtocol")
 (xr/check! ::specs/protocol-info)
 
-(lookup "repl.lookup" "my-method")
+(lookup (find-ns 'repl.lookup) "my-method")
 (xr/check! ::specs/protocol-method-info)

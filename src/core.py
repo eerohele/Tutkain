@@ -377,9 +377,6 @@ class TutkainEvaluateCommand(TextCommand):
                 if ns := namespace.name(self.view):
                     options["ns"] = edn.Symbol(ns)
 
-        if not options.get("ns"):
-            options["ns"] = edn.Symbol(namespace.default(dialect))
-
         line, column = self.view.rowcol(point)
 
         options["line"] = line + 1
@@ -506,8 +503,8 @@ class TutkainEvaluateCommand(TextCommand):
                     options["file"] = self.view.file_name()
 
                     if settings.load().get("auto_switch_namespace", True):
-                        ns = namespace.name_or_default(self.view, dialect)
-                        options["ns"] = edn.Symbol(ns)
+                        if ns := namespace.name(self.view):
+                            options["ns"] = edn.Symbol(ns)
 
                     self.eval(client, code, options=options)
                     history.update(self.view.window(), code)
@@ -612,7 +609,10 @@ class TutkainEvaluateCommand(TextCommand):
                     mark := self.view.window().settings().get("tutkain_mark")
                 ):
                     options = {**options, **mark["options"]}
-                    options["ns"] = edn.Symbol(options["ns"])
+
+                    if "ns" in options:
+                        options["ns"] = edn.Symbol(options["ns"])
+
                     region = options["region"]
                     region = sublime.Region(region[0], region[1])
                     del options["region"]
@@ -658,9 +658,13 @@ class TutkainEvaluateCommand(TextCommand):
                         code = self.view.substr(region)
                         evaluator(region, code, options)
                 elif code:
-                    ns = ns or namespace.name_or_default(self.view, dialect)
-                    variables = {"ns": ns}
-                    options["ns"] = edn.Symbol(ns)
+                    variables = {}
+
+                    ns = ns or namespace.name(self.view)
+
+                    if ns:
+                        variables["ns"] = ns
+                        options["ns"] = edn.Symbol(ns)
 
                     if file_name := self.view.file_name():
                         variables["file"] = file_name
@@ -1930,22 +1934,21 @@ class TutkainMarkFormCommand(TextCommand):
             ):
                 point = eval_region.begin()
                 code = self.view.substr(eval_region)
-                dialect = dialects.for_point(self.view, point) or edn.Keyword("clj")
-                ns = namespace.name_or_default(self.view, dialect)
                 line, column = self.view.rowcol(point)
+
+                options = {
+                    "region": eval_region.to_tuple(),
+                    "line": line,
+                    "column": column,
+                    "file": self.view.file_name(),
+                }
+
+                if ns := namespace.name(self.view):
+                    options["ns"] = ns
 
                 self.view.window().settings().set(
                     "tutkain_mark",
-                    {
-                        "code": code,
-                        "options": {
-                            "region": eval_region.to_tuple(),
-                            "line": line,
-                            "column": column,
-                            "ns": ns,
-                            "file": self.view.file_name(),
-                        },
-                    },
+                    {"code": code, "options": options},
                 )
 
                 self.view.window().status_message("Form marked")

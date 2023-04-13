@@ -58,13 +58,13 @@ def refresh_cache(window, callback=lambda: None):
 
 
 def send_message(window, client, ns, sym):
+    op = {"op": edn.Keyword("examples"), "source-path": EXAMPLE_SOURCE_PATH, "sym": sym}
+
+    if ns:
+        op["ns"] = edn.Symbol(ns)
+
     client.send_op(
-        {
-            "op": edn.Keyword("examples"),
-            "source-path": EXAMPLE_SOURCE_PATH,
-            "ns": ns,
-            "sym": sym,
-        },
+        op,
         lambda response: handler(window, client, response),
     )
 
@@ -108,9 +108,7 @@ def show(view):
                 "⚠ ClojureDocs examples are only available for Clojure."
             )
         else:
-            ns = edn.Symbol(
-                namespace.name(view) or namespace.default(edn.Keyword("clj"))
-            )
+            ns = namespace.name(view)
 
             if region := selectors.expand_by_selector(view, point, "meta.symbol"):
                 sym = edn.Symbol(view.substr(region))
