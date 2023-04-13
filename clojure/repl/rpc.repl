@@ -99,6 +99,12 @@
 (xr/check! #{{:tag :ret :val "2\n"}
              {:tag :ret :val "2\r\n"}})
 
+;; *1
+(send {:op :eval :code "*1"})
+(recv)
+(xr/check! #{{:tag :ret :val "2\n"}
+             {:tag :ret :val "2\r\n"}})
+
 (defn f [x] (/ 6 x))
 
 ;; ns
