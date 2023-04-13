@@ -388,8 +388,9 @@
     (let [scope (symbol prefix-scope)
           candidates (if-let [class (java/resolve-class ns scope)]
                        (concat (static-member-candidates class) (field-candidates class))
-                       (when-let [ns (or (find-ns scope) (scope (ns-aliases ns)))]
-                         (ns-public-var-candidates ns)))]
+                       (concat
+                         (some-> scope find-ns ns-public-var-candidates)
+                         (some-> ns ns-aliases scope ns-public-var-candidates)))]
       (map (fn [candidate] (update candidate :candidate #(str scope "/" %))) candidates))))
 
 (defn candidate?
