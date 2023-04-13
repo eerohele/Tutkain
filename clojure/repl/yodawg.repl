@@ -58,14 +58,14 @@
 (xr/check! ::ret)
 
 ;; Smoke test
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(inc 1))
 (recv :repl)
 (xr/check! #{2})
 
 ;; Sending more than one form at once
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (xr/check! ::ret)
 (doto (:writer repl) (.write "(inc 1) (inc 2)\n") (.flush))
@@ -77,7 +77,7 @@
 ;; Check that (read-line) works
 ;;
 ;; https://clojure.atlassian.net/browse/CLJ-2692
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(read-line))
 (recv :repl)
@@ -87,7 +87,7 @@
 (xr/check! #{"1"})
 
 ;; Exceptions
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(/ 4 0))
 (recv :repl)
@@ -96,7 +96,7 @@
 (xr/check! ::ret) ;; err
 
 ;; flush after eval
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(print "foo"))
 (recv :repl)
@@ -105,7 +105,7 @@
 (xr/check! #{{:tag :out :val "foo"}})
 
 ;; flush after eval that throws
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(do (print "foo") (/ 4 0)))
 (recv :repl)
@@ -116,14 +116,14 @@
 (xr/check! (spec/or :out #{{:tag :out :val "foo"}} :err ::ret))
 
 ;; set ns before eval
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (xr/check! ::ret)
 (send :repl `(require '[clojure.set]))
 (recv :repl)
 (xr/check! nil?)
 ;; no ns => ns auto switch disabled
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl `(in-ns 'clojure.set))
 (recv :repl)
@@ -132,14 +132,14 @@
 (recv :repl)
 (xr/check! #{'clojure.set})
 ;; no ns => ns auto switch disabled
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(union #{1 2} #{2 3}))
 (recv :repl)
 (xr/check! set?)
 
 ;; create ns if it doesn't already exist
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :ns 'my.ns.one :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :ns 'my.ns.one :line 1 :column 1 :id 1})
 (recv :backchannel)
 (xr/check! ::ret)
 (send :repl '(ns-name *ns*))
@@ -148,7 +148,7 @@
 (recv :repl)
 (xr/check! #{'my.ns.one})
 
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(tap> {:foo :bar}))
 (recv :repl)
@@ -169,7 +169,7 @@
 (xr/check! #{"app.clj"})
 
 ;; interrupts
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(Thread/sleep Integer/MAX_VALUE))
 (send :backchannel {:op :interrupt})
@@ -177,11 +177,11 @@
 (xr/check! ::ret) ;; InterruptedException
 
 ;; *1 works
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(inc 1))
 (def ret (recv :repl))
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '*1)
 (recv :repl)
@@ -190,26 +190,26 @@
 ;; Switching namespace while previous eval is in progress
 
 ;; Create var in my.ns.one
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :ns 'my.ns.one :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :ns 'my.ns.one :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(def f1 1))
 (recv :repl)
 
 ;; Create var in baz.quux
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :ns 'my.ns.two :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :ns 'my.ns.two :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(def f2 2))
 (recv :repl)
 
 ;; Eval promise in my.ns.one
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :ns 'my.ns.one :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :ns 'my.ns.one :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '(def p (promise)))
 (recv :repl)
 (send :repl '(deref p))
 
 ;; While previous eval is in progress, eval f2 in my.ns.two
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :ns 'my.ns.two :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :ns 'my.ns.two :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl 'f2)
 (deliver my.ns.one/p :done)
@@ -286,7 +286,7 @@
 (:stacktrace *1)
 (xr/check! ::stacktrace)
 
-(send :backchannel {:op :set-thread-bindings :file "NO_SOURCE_FILE" :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl :repl/quit)
 
