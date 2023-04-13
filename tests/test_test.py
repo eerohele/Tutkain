@@ -18,6 +18,9 @@ class TestTest(ViewTestCase):
         self.assertAlwaysYields("(deftest foo)", "foo", current)
         self.assertAlwaysYields("(deftest foo ())", "foo", current)
         self.assertAlwaysYields("(deftest ^:foo bar)", "bar", current)
+        self.assertAlwaysYields(
+            "(deftest foo ;; bar\n  (is (= 2 (+ 1 1))))", "foo", current
+        )
 
         self.set_view_content("(doseq (deftest ^:foo bar))")
         self.assertEquals(None, test.current(self.view, 6))

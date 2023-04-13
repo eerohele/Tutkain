@@ -217,7 +217,7 @@ def innermost(view, start_point, edge=True):
     search, unless `edge=False`."""
     point = move_inside(view, start_point, edge)
 
-    if selectors.inside_comment(view, point - 1):
+    if selectors.inside_comment(view, start_point):
         return None
     elif selectors.inside_string(view, point):
         begin = selectors.find(

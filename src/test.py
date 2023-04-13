@@ -1,24 +1,32 @@
 import sublime
 
 from ..api import edn
-from . import base64, forms, namespace, progress, sexp
+from . import base64, forms, namespace, progress, sexp, selectors
 
 RESULTS_SETTINGS_KEY = "tutkain_clojure_test_results"
 
 
 def current(view, point):
-    for s in sexp.walk_outward(view, point, edge=True):
-        if (head := forms.find_next(view, s.open.region.end())) and (
-            view.match_selector(head.begin(), "meta.deftest.clojure")
-        ):
-            form = forms.seek_forward(
-                view,
-                head.end(),
-                lambda form: view.match_selector(form.begin(), "meta.test-var.clojure"),
-            )
+    if view.match_selector(point, "comment"):
+        point = selectors.find(
+            view, point, "-comment", forward=False, stop_at=sexp.BEGIN_SELECTORS
+        )
 
-            if form:
-                return view.substr(form)
+    if point is not None and point != -1:
+        for s in sexp.walk_outward(view, point, edge=True):
+            if (head := forms.find_next(view, s.open.region.end())) and (
+                view.match_selector(head.begin(), "meta.deftest.clojure")
+            ):
+                form = forms.seek_forward(
+                    view,
+                    head.end(),
+                    lambda form: view.match_selector(
+                        form.begin(), "meta.test-var.clojure"
+                    ),
+                )
+
+                if form:
+                    return view.substr(form)
 
 
 def add_annotation(response):
