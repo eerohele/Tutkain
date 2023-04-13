@@ -1,4 +1,4 @@
-(ns repl.backchannel
+(ns repl.rpc
   (:refer-clojure :exclude [send])
   (:require
    [clojure.java.io :as io]
@@ -102,13 +102,13 @@
 (defn f [x] (/ 6 x))
 
 ;; ns
-(send {:op :eval :code "(f 2)" :ns 'repl.backchannel})
+(send {:op :eval :code "(f 2)" :ns 'repl.rpc})
 (recv)
 (xr/check! #{{:tag :ret, :val "3\n"}
              {:tag :ret, :val "3\r\n"}})
 
 ;; file, line, column
-(send {:op :eval :code "(f 0)" :ns 'repl.backchannel :file "/path/to/my.clj" :line 3 :column 4})
+(send {:op :eval :code "(f 0)" :ns 'repl.rpc :file "/path/to/my.clj" :line 3 :column 4})
 (recv)
 
 ;; stack trace
