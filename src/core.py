@@ -1990,7 +1990,7 @@ class TutkainRemoveNamespaceMappingCommand(TextCommand):
 
     def run(self, _):
         window = self.view.window()
-        dialect = dialects.for_view(self.view)
+        dialect = dialects.for_view(self.view) or edn.Keyword("clj")
 
         if client := state.get_client(window, dialect):
             client.send_op(
