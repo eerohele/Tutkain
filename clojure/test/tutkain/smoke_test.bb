@@ -34,7 +34,7 @@
           :doc
           "Returns the result of applying concat to the result of applying map\n  to f and colls.  Thus function f should return a collection. Returns\n  a transducer when no collections are provided"
           :ns "clojure.core"}
-        (lookup/lookup "clojure.core" "mapcat")))
+        (lookup/lookup (find-ns 'clojure.core) "mapcat")))
 
   ;; test
   (is (= {:fail []
