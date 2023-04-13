@@ -378,13 +378,6 @@
 
 (comment (ns-class-candidates 'clojure.main),)
 
-(defn scoped?
-  "Given a string prefix, return true if it's scoped.
-
-  A prefix is scoped if it contains, but does not start with, a forward slash."
-  [^String prefix]
-  (and (not (.startsWith prefix "/")) (.contains prefix "/")))
-
 (defn scoped-candidates
   "Given a scoped string prefix (e.g. \"set/un\" for clojure.set/union) and an
   ns symbol, return auto-completion candidates that match the prefix.
@@ -462,7 +455,7 @@
       (.startsWith prefix ".")
       (candidates-for-prefix prefix (ns-java-method-candidates ns))
 
-      (scoped? prefix)
+      (and (not (.startsWith prefix "/")) (.contains prefix "/"))
       (candidates-for-prefix prefix (scoped-candidates prefix ns))
 
       (and (.contains prefix ".") (.contains prefix "$"))
