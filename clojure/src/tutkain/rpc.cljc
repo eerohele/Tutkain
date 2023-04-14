@@ -261,7 +261,7 @@
 
 (defn ^:private init-thread-bindings
   [bindings]
-  (atom (select-keys bindings [#'*e #'*1 #'*2 #'*3 #'*warn-on-reflection*])))
+  (atom (merge {#'*ns* (the-ns 'user)} (select-keys bindings [#'*e #'*1 #'*2 #'*3 #'*warn-on-reflection*]))))
 
 (defn open
   "Open an RPC server.
