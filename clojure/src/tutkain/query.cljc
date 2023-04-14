@@ -169,3 +169,11 @@
     (respond-to message {:tag :ret :val :ok})
     (catch Exception ex
       (respond-to message {:tag :err :val (.getMessage ex)}))))
+
+(defmethod handle :add-lib
+  [{:keys [lib] :as message}]
+  (try
+    (rapply clojure.repl.deps/add-lib lib)
+    (respond-to message {:tag :ret :val :ok})
+    (catch Exception ex
+      (respond-to message {:tag :err :val (.getMessage ex)}))))

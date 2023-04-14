@@ -135,4 +135,8 @@
         "caption": "Tutkain: Synchronize Dependencies",
         "command": "tutkain_synchronize_dependencies"
     },
+    {
+        "caption": "Tutkain: Add Lib",
+        "command": "tutkain_add_lib"
+    },
 ]

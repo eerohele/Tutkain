@@ -2125,3 +2125,41 @@ class TutkainSynchronizeDependenciesCommand(WindowCommand):
             self.window.status_message(
                 f"⚠ Not connected to a {dialects.name(dialect)} REPL."
             )
+
+
+class LibInputHandler(TextInputHandler):
+    def placeholder(self):
+        return "Lib"
+
+    def validate(self, text):
+        return len(text) > 0
+
+
+class TutkainAddLibCommand(WindowCommand):
+    def input(self, args):
+        return LibInputHandler()
+
+    def handler(self, lib, response):
+        progress.stop()
+
+        if response.get(edn.Keyword("tag")) == edn.Keyword("err"):
+            self.window.status_message("⚠ " + response.get(edn.Keyword("val")))
+        else:
+            self.window.status_message(
+                f"✓ Latest version of {lib} and its dependencies added into the runtime."
+            )
+
+    def run(self, lib):
+        dialect = edn.Keyword("clj")
+
+        if client := state.get_client(self.window, dialect):
+            progress.start(f"Adding latest version of {lib}...")
+
+            client.send_op(
+                {"op": edn.Keyword("add-lib"), "lib": edn.Symbol(lib)},
+                lambda response: self.handler(lib, response),
+            )
+        else:
+            self.window.status_message(
+                f"⚠ Not connected to a {dialects.name(dialect)} REPL."
+            )
