@@ -2099,3 +2099,29 @@ class TutkainHardWrapCommand(TextCommand):
             width = 80
 
         indent.hard_wrap(self.view, edit, width)
+
+
+class TutkainSynchronizeDependenciesCommand(WindowCommand):
+    def handler(self, response):
+        progress.stop()
+
+        if response.get(edn.Keyword("tag")) == edn.Keyword("err"):
+            self.window.status_message("⚠ " + response.get(edn.Keyword("val")))
+        else:
+            self.window.status_message("✓ Synchronizing deps... done.")
+
+    def run(self):
+        dialect = edn.Keyword("clj")
+
+        if client := state.get_client(self.window, dialect):
+            progress.start("Synchronizing deps...")
+
+            client.send_op(
+                {"op": edn.Keyword("sync-deps")},
+                # TODO: Add aliases support
+                lambda response: self.handler(response),
+            )
+        else:
+            self.window.status_message(
+                f"⚠ Not connected to a {dialects.name(dialect)} REPL."
+            )

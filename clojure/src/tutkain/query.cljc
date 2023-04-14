@@ -155,3 +155,17 @@
 (defmethod handle :remove-namespace
   [message]
   (remove-namespace message))
+
+(defmacro ^:private rapply
+  [sym & args]
+  `(if-some [f# (requiring-resolve '~sym)]
+     (f# ~@args)
+     (throw (ex-info "Can't resolve sym" {:sym '~sym}))))
+
+(defmethod handle :sync-deps
+  [message]
+  (try
+    (rapply clojure.repl.deps/sync-deps (select-keys message [:aliases]))
+    (respond-to message {:tag :ret :val :ok})
+    (catch Exception ex
+      (respond-to message {:tag :err :val (.getMessage ex)}))))

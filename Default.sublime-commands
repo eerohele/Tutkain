@@ -131,4 +131,8 @@
         "caption": "Tutkain: Hard Wrap",
         "command": "tutkain_hard_wrap"
     },
+    {
+        "caption": "Tutkain: Synchronize Dependencies",
+        "command": "tutkain_synchronize_dependencies"
+    },
 ]
