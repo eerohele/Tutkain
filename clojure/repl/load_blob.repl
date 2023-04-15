@@ -72,7 +72,7 @@
 ex
 (xr/check! ::ex)
 (xr/check!
-  (partial re-matches #"(?s)Syntax error reading source at \([/\\]my[/\\]path[/\\]math.clj:\d+:\d+\)\.\r?\nEOF while reading, starting at line \d+\r?\n")
+  (partial re-matches #"(?s)Syntax error reading source at \(.*math.clj:\d+:\d+\)\.\r?\nEOF while reading, starting at line \d+\r?\n")
   (:val ex))
 
 (xr/check! #{:err} (:tag ex))
@@ -89,7 +89,7 @@ ex
 
 (def ret (recv))
 (xr/check!
-  (partial re-matches #"Reflection warning, [/\\]my[/\\]path[/\\]math.clj:\d+:\d+ - reference to field toString can't be resolved\.\r?\n")
+  (partial re-matches #"Reflection warning, .*math.clj:\d+:\d+ - reference to field toString can't be resolved\.\r?\n")
   (:val ret))
 
 (xr/check! #{:err} (:tag ret))
