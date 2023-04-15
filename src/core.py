@@ -1,5 +1,6 @@
 import json
 import os
+import textwrap
 from functools import partial
 
 import sublime
@@ -2127,37 +2128,116 @@ class TutkainSynchronizeDependenciesCommand(WindowCommand):
             )
 
 
-class LibInputHandler(TextInputHandler):
+class LibQueryInputHandler(TextInputHandler):
     def placeholder(self):
-        return "Lib"
+        return "Search libs"
 
     def validate(self, text):
         return len(text) > 0
 
 
+class RepoInputHandler(ListInputHandler):
+    def placeholder(self):
+        return "Choose repository"
+
+    def list_items(self):
+        return [
+            sublime.ListInputItem(
+                "Clojars",
+                "clojars",
+                details="Clojars is an easy to use community repository for open source Clojure libraries.",
+            ),
+            sublime.ListInputItem(
+                "Maven Central",
+                "maven",
+                details="Discover Java packages, and publish your own.",
+            ),
+        ]
+
+    def next_input(self, args):
+        return LibQueryInputHandler()
+
+
 class TutkainAddLibCommand(WindowCommand):
     def input(self, args):
-        return LibInputHandler()
+        return RepoInputHandler()
 
-    def handler(self, lib, response):
+    def add_handler(self, group_id, artifact_id, version, response):
         progress.stop()
 
         if response.get(edn.Keyword("tag")) == edn.Keyword("err"):
             self.window.status_message("⚠ " + response.get(edn.Keyword("val")))
         else:
             self.window.status_message(
-                f"✓ Latest version of {lib} and its dependencies added into the runtime."
+                f"✓ {group_id}/{artifact_id} v{version} and its deps added into the runtime."
             )
 
-    def run(self, lib):
+    def choose_handler(self, client, result):
+        group_id = result.get(edn.Keyword("group-id"))
+        artifact_id = result.get(edn.Keyword("artifact-id"))
+        version = result.get(edn.Keyword("version"))
+
+        coords = {
+            edn.Symbol(artifact_id, group_id): {edn.Keyword("version", "mvn"): version}
+        }
+
+        progress.start(f"Adding {group_id}/{artifact_id} v{version}...")
+
+        client.send_op(
+            {"op": edn.Keyword("add-libs"), "lib-coords": coords},
+            lambda response: self.add_handler(group_id, artifact_id, version, response),
+        )
+
+    def find_handler(self, client, lib_query, response):
+        if response.get(edn.Keyword("tag")) == edn.Keyword("err"):
+            self.window.status_message("⚠ " + response.get(edn.Keyword("val")))
+        else:
+            results = response.get(edn.Keyword("results"), [])
+
+            if not results:
+                self.window.status_message(f"No results for {lib_query}.")
+            else:
+                items = []
+
+                for result in results:
+                    group_id = result.get(edn.Keyword("group-id"))
+                    artifact_id = result.get(edn.Keyword("artifact-id"))
+                    version = result.get(edn.Keyword("version"))
+                    description = result.get(edn.Keyword("description"))
+
+                    if description:
+                        description = textwrap.shorten(
+                            description, width=100, placeholder="…"
+                        )
+
+                    items.append(
+                        sublime.QuickPanelItem(
+                            f"{group_id}/{artifact_id}",
+                            annotation="v" + version,
+                            details=description or "",
+                        )
+                    )
+
+                if items:
+                    self.window.show_quick_panel(
+                        items,
+                        lambda index: None
+                        if index == -1
+                        else self.choose_handler(client, results[index]),
+                        placeholder="Choose lib",
+                    )
+
+    def run(self, repo, lib_query):
         dialect = edn.Keyword("clj")
 
         if client := state.get_client(self.window, dialect):
-            progress.start(f"Adding latest version of {lib}...")
-
             client.send_op(
-                {"op": edn.Keyword("add-lib"), "lib": edn.Symbol(lib)},
-                lambda response: self.handler(lib, response),
+                {
+                    "op": edn.Keyword("find-libs"),
+                    "repo": edn.Symbol(repo),
+                    "q": lib_query,
+                },
+                lambda response: self.find_handler(client, lib_query, response),
             )
         else:
             self.window.status_message(
