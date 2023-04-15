@@ -30,6 +30,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+        clojure-version: ['1.10.0', '1.11.1', '1.12.0-alpha2']
         java-version: ['11', '17']
         java-distribution: ['temurin', 'zulu', 'adopt']
 
@@ -78,13 +79,13 @@ jobs:
 
       - name: Run Clojure tests
         if: ${{ matrix.os != 'windows-latest' }}
-        run: clojure -J-Dclojure.main.report=stderr -X:dev:shadow-cljs user/-main
+        run: clojure -J-Dclojure.main.report=stderr -Sdeps '{org.clojure/clojure {:mvn/version "${{ runner.clojure-version }}"}}' -X:dev:shadow-cljs user/-main
         shell: bash
         working-directory: ./clojure
 
       - name: Run Clojure tests
         if: ${{ matrix.os == 'windows-latest' }}
-        run: clojure -J-Dclojure.main.report=stderr -X:dev:shadow-cljs user/-main
+        run: clojure -J-Dclojure.main.report=stderr -Sdeps '{org.clojure/clojure {:mvn/version "${{ runner.clojure-version }}"}}' -X:dev:shadow-cljs user/-main
         shell: powershell
         working-directory: ./clojure
 
