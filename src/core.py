@@ -2231,14 +2231,19 @@ class TutkainAddLibCommand(WindowCommand):
         dialect = edn.Keyword("clj")
 
         if client := state.get_client(self.window, dialect):
-            client.send_op(
-                {
-                    "op": edn.Keyword("find-libs"),
-                    "repo": edn.Symbol(repo),
-                    "q": lib_query,
-                },
-                lambda response: self.find_handler(client, lib_query, response),
-            )
+            if "deps.clj" in client.capabilities:
+                client.send_op(
+                    {
+                        "op": edn.Keyword("find-libs"),
+                        "repo": edn.Symbol(repo),
+                        "q": lib_query,
+                    },
+                    lambda response: self.find_handler(client, lib_query, response),
+                )
+            else:
+                self.window.status_message(
+                    f"⚠ Tutkain: Add Lib requires Clojure v1.12.0-alpha2 or newer."
+                )
         else:
             self.window.status_message(
                 f"⚠ Not connected to a {dialects.name(dialect)} REPL."
