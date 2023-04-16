@@ -2,6 +2,92 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.18.0 (alpha) - UNRELEASED
+
+- Add support for [operating over a single connection](https://tutkain.flowthing.me/#choosing-the-connection-mode).
+
+  Also see the `default_connection_mode` setting under **Tutkain: Edit Settings**.
+
+  **Note**: This change required a complete overhaul of the shadow-cljs support. All ClojureScript connections are now locked into the RPC connection mode. (ClojureScript does not benefit from the REPL mode, since it does not support nested REPLs.)
+
+- Add [**Tutkain: Add Lib** and **Tutkain: Synchronize Dependencies** commands](http://127.0.0.1:1111/#working-with-dependencies).
+
+  **Note**: These commands require Clojure v1.12.0-alpha2 or newer.
+
+- Add support for appending the evaluation output into the current view (via the `"output": "selection"` argument).
+
+  For example:
+
+  ```json
+  {
+    "keys": ["..."],
+    "command": "tutkain_evaluate",
+    "args": {"scope": "outermost", "output": "selection"},
+    "context": [
+      {
+        "key": "selector",
+        "operator": "equal",
+        "operand": "source.clojure"
+      }
+    ]
+  },
+  ```
+
+- Add the `tutkain.is_scratch_view` context.
+
+  This context allows key bindings to detect whether you're currently in a scratch view. For example, to define a key binding that loads the current file into the runtime and saves the file:
+
+  ```json
+  {
+      "keys": ["ctrl+c", "ctrl+k"],
+      "command": "chain",
+      "args": {
+          "commands": [
+              {"command": "tutkain_evaluate", "args": {"scope": "view"}},
+              {"command": "save", "args": {"async": true}}
+          ]
+      },
+      "context": [
+          {
+              "key": "selector",
+              "operator": "equal",
+              "operand": "source.clojure - source.clojure.clojurescript"
+          },
+          {
+              "key": "tutkain.is_scratch_view",
+              "operator": "equal",
+              "operand": false
+          },
+      ]
+  },
+  ```
+
+- Add the **Tutkain: Edit Settings** command
+
+- Fix ParEdit Forward Kill form for characters #112
+
+- Fix ParEdit Forward Delete for characters
+
+- Fix run test when caret is on comment #106
+
+- Fix expand selection for namespaced maps #105
+
+- Fix auto-completion in ns with homonym alias #107
+
+- Improve support for disabling namespace auto switching #108
+
+- **BREAKING** (Babashka): Tutkain's Babashka support now requires Babashka v1.1.171 or newer
+
+- Allow Babashka evaluations from files with the `.clj` extension #102
+
+- Show reflection warnings when evaluating the entire view (via **Tutkain: Evaluate** » **View**)
+
+- Set `*e` when evaluating the entire view throws an exception
+
+- Show a less overwhelming error when evaluating the entire view throws an exception
+
+- Fix **Tutkain: Remove Namespace Mapping** in views without a namespace declaration
+
 ## 0.17.0 (alpha) - 2022-10-31
 
 - BREAKING: Tutkain no longer supports Java 8.
