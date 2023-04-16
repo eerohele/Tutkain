@@ -11,7 +11,7 @@
    (java.nio.file LinkOption Files Paths Path)
    (java.io IOException StringReader Writer)
    (java.net ServerSocket SocketException URL)
-   (java.util.concurrent Executors ExecutorService FutureTask ScheduledExecutorService TimeUnit ThreadFactory ThreadPoolExecutor ThreadPoolExecutor$CallerRunsPolicy)
+   (java.util.concurrent Executors ExecutorService FutureTask TimeUnit ThreadFactory ThreadPoolExecutor ThreadPoolExecutor$CallerRunsPolicy)
    (java.util.concurrent.atomic AtomicInteger)))
 
 (comment (set! *warn-on-reflection* true) ,,,)
@@ -173,7 +173,7 @@
   (AtomicInteger.))
 
 (defn ^:private make-debouncer
-  [^ScheduledExecutorService service]
+  [service]
   (fn [f ^long delay]
     (let [task (atom nil)]
       (fn [& args]
