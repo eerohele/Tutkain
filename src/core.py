@@ -780,6 +780,8 @@ class TutkainConnectCommand(WindowCommand):
             self.window.project_data(), dialect, backchannel
         )
 
+        tap_panel = settings.load().get("tap_panel", False)
+
         if dialect == edn.Keyword("cljs"):
             client = repl.JSClient(
                 host,
@@ -789,6 +791,7 @@ class TutkainConnectCommand(WindowCommand):
                     "prompt_for_build_id": lambda ids, on_done: self.choose_build_id(
                         view, ids, on_done
                     ),
+                    "add_tap": tap_panel,
                 },
             )
 
@@ -799,8 +802,13 @@ class TutkainConnectCommand(WindowCommand):
                 host,
                 port,
                 mode,
-                options={"init": init, "backchannel": backchannel_options},
+                options={
+                    "init": init,
+                    "backchannel": backchannel_options,
+                    "add_tap": tap_panel,
+                },
             )
+
             repl.start(view, client)
             repl.start_printer(client, view)
         else:
@@ -811,6 +819,7 @@ class TutkainConnectCommand(WindowCommand):
                 options={
                     "init": init,
                     "backchannel": backchannel_options,
+                    "add_tap": tap_panel,
                 },
             )
 
