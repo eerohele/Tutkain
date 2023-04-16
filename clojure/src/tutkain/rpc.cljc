@@ -130,40 +130,40 @@
   [{:keys [eval-service eval-lock thread-bindings ns file line column code]
     :or {line 1 column 1}
     :as message}]
-  (let [^Runnable f (bound-fn []
-                      (locking eval-lock
-                        (with-bindings (merge
-                                         {#'*ns* (the-ns 'user) #'*e nil #'*1 nil #'*2 nil #'*3 nil}
-                                         @thread-bindings
-                                         (make-thread-bindings file (find-or-create-ns ns)))
-                          (try
-                            (with-open [reader (-> code StringReader. LineNumberingPushbackReader.)]
-                              (.setLineNumber reader (int line))
-                              (set-column! reader (int column))
-                              (run!
-                                (fn [form]
-                                  (try
-                                    (let [ret (eval form)]
-                                      (.flush ^Writer *out*)
-                                      (.flush ^Writer *err*)
-                                      (set! *3 *2)
-                                      (set! *2 *1)
-                                      (set! *1 ret)
-                                      (reset! thread-bindings (get-thread-bindings))
-                                      (respond-to message {:tag :ret :val (format/pp-str ret)}))
-                                    (catch Throwable ex
-                                      (.flush ^Writer *out*)
-                                      (.flush ^Writer *err*)
-                                      (set! *e ex)
-                                      (reset! thread-bindings (get-thread-bindings))
-                                      (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
-                                (take-while #(not= % ::EOF)
-                                  (repeatedly #(read {:read-cond :allow :eof ::EOF} reader)))))
-                            (catch Throwable ex
-                              (set! *e ex)
-                              (reset! thread-bindings (get-thread-bindings))
-                              (respond-to message {:tag :err :val (format/Throwable->str ex)}))))))]
-    (.submit ^ExecutorService @eval-service f)))
+  (.submit ^ExecutorService @eval-service
+    (bound-fn []
+      (locking eval-lock
+        (with-bindings (merge
+                         {#'*ns* (the-ns 'user) #'*e nil #'*1 nil #'*2 nil #'*3 nil}
+                         @thread-bindings
+                         (make-thread-bindings file (find-or-create-ns ns)))
+          (try
+            (with-open [reader (-> code StringReader. LineNumberingPushbackReader.)]
+              (.setLineNumber reader (int line))
+              (set-column! reader (int column))
+              (run!
+                (fn [form]
+                  (try
+                    (let [ret (eval form)]
+                      (.flush ^Writer *out*)
+                      (.flush ^Writer *err*)
+                      (set! *3 *2)
+                      (set! *2 *1)
+                      (set! *1 ret)
+                      (reset! thread-bindings (get-thread-bindings))
+                      (respond-to message {:tag :ret :val (format/pp-str ret)}))
+                    (catch Throwable ex
+                      (.flush ^Writer *out*)
+                      (.flush ^Writer *err*)
+                      (set! *e ex)
+                      (reset! thread-bindings (get-thread-bindings))
+                      (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
+                (take-while #(not= % ::EOF)
+                  (repeatedly #(read {:read-cond :allow :eof ::EOF} reader)))))
+            (catch Throwable ex
+              (set! *e ex)
+              (reset! thread-bindings (get-thread-bindings))
+              (respond-to message {:tag :err :val (format/Throwable->str ex)}))))))))
 
 (defmethod handle :eval
   [message]
@@ -180,9 +180,9 @@
         (some-> ^FutureTask @task (.cancel false))
         (reset! task
           (.schedule service
-            ^Runnable (fn []
-                        (apply f args)
-                        (reset! task nil))
+            (fn []
+              (apply f args)
+              (reset! task nil))
             delay
             TimeUnit/MILLISECONDS))))))
 
