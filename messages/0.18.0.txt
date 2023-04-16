@@ -1,0 +1,29 @@
+┌──────────────╼═══════════════════════════════════════════════╾──────────────┐
+╽       ___       ___       ___       ___       ___       ___       ___       ╽
+║      /\  \     /\__\     /\  \     /\__\     /\  \     /\  \     /\__\      ║
+║      \:\  \   /:/ _/_    \:\  \   /:/ _/_   /::\  \   _\:\  \   /:| _|_     ║
+║      /::\__\ /:/_/\__\   /::\__\ /::-"\__\ /::\:\__\ /\/::\__\ /::|/\__\    ║
+║     /:/\/__/ \:\/:/  /  /:/\/__/ \;:;-",-" \/\::/  / \::/\/__/ \/|::/  /    ║
+║     \/__/     \::/  /   \/__/     |:|  |     /:/  /   \:\__\     |:/  /     ║
+║                \/__/               \|__|     \/__/     \/__/     \/__/      ║
+╿                                                                             ╿
+└───────────────────┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄──────────────────┘
+
+Hey there! Tutkain has been updated.
+
+IMPORTANT: You **must** restart your runtime and Sublime Text before continuing
+to use Tutkain.
+
+IMPORTANT: If you're a Babashka user, either:
+
+- Update Babashka to v1.1.171 or newer to keep using Tutkain with Babashka.
+
+To see the changes in this version, see:
+
+  https://github.com/eerohele/Tutkain/blob/master/CHANGELOG.md
+
+If you encounter any problems, please file an issue on GitHub:
+
+  https://github.com/eerohele/Tutkain/issues
+
+Thanks!
