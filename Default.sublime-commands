@@ -1,5 +1,13 @@
 [
     {
+        "caption": "Tutkain: Edit Settings",
+        "command": "edit_settings",
+        "args": {
+            "base_file": "${packages}/Tutkain/Tutkain.sublime-settings",
+            "user_file": "${packages}/User/Tutkain.sublime-settings"
+        }
+    },
+    {
         "caption": "Tutkain: Edit Key Bindings",
         "command": "edit_settings",
         "args": {
