@@ -99,6 +99,19 @@ class TestJVMClient(PackageTestCase):
         self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
 
     # @unittest.SkipTest
+    def test_eval_outermost_ns_auto_switch_disabled(self):
+        self.set_view_content("(ns foo.bar) (inc 1)")
+        self.set_selections((14, 14))
+        self.view.run_command(
+            "tutkain_evaluate", {"scope": "outermost", "auto_switch_namespace": False}
+        )
+        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.eval_context(column=14, ns=None)
+        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.server.send("2")
+        self.assertEquals(ret("2\n"), self.get_print())
+
+    # @unittest.SkipTest
     def test_up_to_point(self):
         self.set_view_content("()")
         self.set_selections((1, 1))
@@ -221,7 +234,7 @@ class TestJVMClient(PackageTestCase):
             "tutkain_evaluate", {"code": "(+ 1 2 3)", "auto_switch_namespace": False}
         )
         self.assertEquals(input("(+ 1 2 3)\n"), self.get_print())
-        self.eval_context()
+        self.eval_context(ns=None)
         self.assertEquals("(+ 1 2 3)\n", self.server.recv())
         self.server.send("""6""")
         self.assertEquals(ret("""6\n"""), self.get_print())
@@ -774,6 +787,7 @@ class TestJVMClient(PackageTestCase):
                     "op": edn.Keyword("eval"),
                     "dialect": edn.Keyword("clj"),
                     "file": "NO_SOURCE_FILE",
+                    "ns": edn.Symbol("user"),
                     "code": "(inc 1)",
                     "line": 1,
                     "column": 1,
@@ -815,6 +829,7 @@ class TestJVMClient(PackageTestCase):
                     "op": edn.Keyword("eval"),
                     "dialect": edn.Keyword("clj"),
                     "file": "NO_SOURCE_FILE",
+                    "ns": edn.Symbol("user"),
                     "code": "(inc 1)",
                     "line": 1,
                     "column": 1,
@@ -856,6 +871,7 @@ class TestJVMClient(PackageTestCase):
                     "op": edn.Keyword("eval"),
                     "dialect": edn.Keyword("clj"),
                     "file": "NO_SOURCE_FILE",
+                    "ns": edn.Symbol("user"),
                     "code": "(inc 1)",
                     "line": 1,
                     "column": 8,
@@ -994,6 +1010,47 @@ class TestJvmRpcClient(PackageTestCase):
                     "op": edn.Keyword("eval"),
                     "dialect": edn.Keyword("clj"),
                     "ns": edn.Symbol("foo.bar"),
+                    "file": file,
+                    "code": "(range 10)",
+                    "line": 1,
+                    "column": 23,
+                    "id": id,
+                }
+            ),
+            eval_op,
+        )
+
+        response = edn.kwmap(
+            {
+                "id": id,
+                "tag": edn.Keyword("ret"),
+                "val": "(0 1 2 3 4 5 6 7 8 9)\n",
+            }
+        )
+
+        self.server.send(response)
+        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
+
+    # @unittest.SkipTest
+    def test_eval_innermost_ns_auto_switch_disabled(self):
+        file = os.path.join(tempfile.gettempdir(), "my.clj")
+        self.view.retarget(file)
+
+        self.set_view_content("(ns foo.bar) (map inc (range 10))")
+        self.set_selections((22, 22))
+        self.view.run_command(
+            "tutkain_evaluate", {"scope": "innermost", "auto_switch_namespace": False}
+        )
+        self.assertEquals(input("(range 10)\n"), self.get_print())
+
+        eval_op = edn.read(self.server.recv())
+        id = eval_op[edn.Keyword("id")]
+
+        self.assertEquals(
+            edn.kwmap(
+                {
+                    "op": edn.Keyword("eval"),
+                    "dialect": edn.Keyword("clj"),
                     "file": file,
                     "code": "(range 10)",
                     "line": 1,

@@ -137,7 +137,9 @@ class PackageTestCase(DeferrableTestCase):
         for begin, end in pairs:
             self.view.sel().add(sublime.Region(begin, end))
 
-    def eval_context(self, file="NO_SOURCE_FILE", ns=None, line=1, column=1):
+    def eval_context(
+        self, file="NO_SOURCE_FILE", ns=edn.Symbol("user"), line=1, column=1
+    ):
         actual = edn.read(self.server.backchannel.recv())
 
         id = actual.get(edn.Keyword("id"))

@@ -366,7 +366,7 @@ class TutkainReplaceRegionImplCommand(TextCommand):
 
 
 class TutkainEvaluateCommand(TextCommand):
-    def make_options(self, options, point, dialect):
+    def make_options(self, options, point, dialect, auto_switch_namespace):
         if not options.get("file") and (file_name := self.view.file_name()):
             options["file"] = file_name
 
@@ -374,9 +374,9 @@ class TutkainEvaluateCommand(TextCommand):
             options["file"] = "NO_SOURCE_FILE"
 
         if not options.get("ns"):
-            if settings.load().get("auto_switch_namespace", True):
-                if ns := namespace.name(self.view):
-                    options["ns"] = edn.Symbol(ns)
+            if auto_switch_namespace:
+                ns = namespace.name_or_default(self.view, dialect)
+                options["ns"] = edn.Symbol(ns)
 
         line, column = self.view.rowcol(point)
 
@@ -385,8 +385,16 @@ class TutkainEvaluateCommand(TextCommand):
 
         return options
 
-    def eval(self, client, code, handler=None, point=0, options={}):
-        opts = self.make_options(options, point, client.dialect)
+    def eval(
+        self,
+        client,
+        code,
+        auto_switch_namespace,
+        handler=None,
+        point=0,
+        options={},
+    ):
+        opts = self.make_options(options, point, client.dialect, auto_switch_namespace)
 
         if code and (code := indent.reindent(code, opts.get("column", 1))):
             client.print(edn.kwmap({"tag": edn.Keyword("in"), "val": code + "\n"}))
@@ -510,11 +518,12 @@ class TutkainEvaluateCommand(TextCommand):
                 def evaluate_input(client, code):
                     options["file"] = self.view.file_name()
 
-                    if auto_switch_namespace:
-                        if ns := namespace.name(self.view):
-                            options["ns"] = edn.Symbol(ns)
-
-                    self.eval(client, code, options=options)
+                    self.eval(
+                        client,
+                        code,
+                        auto_switch_namespace,
+                        options=options,
+                    )
                     history.update(self.view.window(), code)
 
                 view = self.view.window().show_input_panel(
@@ -556,6 +565,7 @@ class TutkainEvaluateCommand(TextCommand):
                         self.eval(
                             client,
                             code,
+                            auto_switch_namespace,
                             handler=handler,
                             point=region.begin(),
                             options=options,
@@ -578,6 +588,7 @@ class TutkainEvaluateCommand(TextCommand):
                         self.eval(
                             client,
                             code,
+                            auto_switch_namespace,
                             handler=lambda item: handler(region.end(), item),
                             point=region.begin(),
                             options=options,
@@ -600,6 +611,7 @@ class TutkainEvaluateCommand(TextCommand):
                         self.eval(
                             client,
                             code,
+                            auto_switch_namespace,
                             handler=lambda item: handler(sel, item),
                             point=region.begin(),
                             options=options,
@@ -608,7 +620,13 @@ class TutkainEvaluateCommand(TextCommand):
                 else:
 
                     def evaluator(region, code, options, sel=None):
-                        self.eval(client, code, point=region.begin(), options=options)
+                        self.eval(
+                            client,
+                            code,
+                            auto_switch_namespace,
+                            point=region.begin(),
+                            options=options,
+                        )
 
                 # FIXME: Support output with any scope
                 state.focus_active_runtime_view(self.view.window(), dialect)
@@ -638,7 +656,13 @@ class TutkainEvaluateCommand(TextCommand):
                                 region_up_to_point
                             ) + self.view.substr(innermost.close.region)
 
-                            self.eval(client, code, point=region.end(), options=options)
+                            self.eval(
+                                client,
+                                code,
+                                auto_switch_namespace,
+                                point=region.end(),
+                                options=options,
+                            )
                         else:
                             # Stop at the first point that has a non-Clojure scope
                             # (presumably when within a Markdown code block), or
@@ -657,7 +681,13 @@ class TutkainEvaluateCommand(TextCommand):
                                 0,
                             )
                             code = self.view.substr(sublime.Region(begin, region.end()))
-                            self.eval(client, code, point=region.end(), options=options)
+                            self.eval(
+                                client,
+                                code,
+                                auto_switch_namespace,
+                                point=region.end(),
+                                options=options,
+                            )
 
                 elif scope == "ns":
                     ns_forms = namespace.forms(self.view)
@@ -668,13 +698,14 @@ class TutkainEvaluateCommand(TextCommand):
                 elif code:
                     variables = {}
 
-                    ns = ns or namespace.name(self.view)
+                    if ns:
+                        options["ns"] = edn.Symbol(ns)
+                    elif auto_switch_namespace:
+                        ns = namespace.name_or_default(self.view, dialect)
+                        options["ns"] = edn.Symbol(ns)
 
                     if ns:
                         variables["ns"] = ns
-
-                        if auto_switch_namespace:
-                            options["ns"] = edn.Symbol(ns)
 
                     if file_name := self.view.file_name():
                         variables["file"] = file_name
