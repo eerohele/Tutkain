@@ -125,3 +125,11 @@
 (send {:op :eval :code "(ns-name *ns*)"})
 (recv)
 (xr/check! (val? "clojure.set"))
+
+;; interrupt
+(send {:op :eval :code "(Thread/sleep Integer/MAX_VALUE)"})
+(send {:op :interrupt})
+
+(def ret (recv))
+(:val ret)
+(xr/check! (partial re-matches #"(?s).*InterruptedException.*"))
