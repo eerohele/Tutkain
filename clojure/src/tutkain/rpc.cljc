@@ -11,7 +11,7 @@
    (java.nio.file LinkOption Files Paths Path)
    (java.io IOException StringReader Writer)
    (java.net ServerSocket SocketException URL)
-   (java.util.concurrent Executors TimeUnit ThreadFactory ThreadPoolExecutor$CallerRunsPolicy)
+   (java.util.concurrent Executors ExecutorService FutureTask ScheduledExecutorService TimeUnit ThreadFactory ThreadPoolExecutor ThreadPoolExecutor$CallerRunsPolicy)
    (java.util.concurrent.atomic AtomicInteger)))
 
 (comment (set! *warn-on-reflection* true) ,,,)
@@ -114,7 +114,9 @@
 
 (defmethod handle :interrupt
   [{:keys [eval-service ^Thread repl-thread]}]
-  (some-> eval-service deref .shutdownNow)
+  (when-some [^ExecutorService es (some-> eval-service deref)]
+    (.shutdownNow es))
+
   (when eval-service (reset! eval-service (make-eval-executor)))
   (some-> repl-thread .interrupt))
 
@@ -128,40 +130,40 @@
   [{:keys [eval-service eval-lock thread-bindings ns file line column code]
     :or {line 1 column 1}
     :as message}]
-  (.submit @eval-service
-    (bound-fn []
-      (locking eval-lock
-        (with-bindings (merge
-                         {#'*ns* (the-ns 'user) #'*e nil #'*1 nil #'*2 nil #'*3 nil}
-                         @thread-bindings
-                         (make-thread-bindings file (find-or-create-ns ns)))
-          (try
-            (with-open [reader (-> code StringReader. LineNumberingPushbackReader.)]
-              (.setLineNumber reader (int line))
-              (set-column! reader (int column))
-              (run!
-                (fn [form]
-                  (try
-                    (let [ret (eval form)]
-                      (.flush ^Writer *out*)
-                      (.flush ^Writer *err*)
-                      (set! *3 *2)
-                      (set! *2 *1)
-                      (set! *1 ret)
-                      (reset! thread-bindings (get-thread-bindings))
-                      (respond-to message {:tag :ret :val (format/pp-str ret)}))
-                    (catch Throwable ex
-                      (.flush ^Writer *out*)
-                      (.flush ^Writer *err*)
-                      (set! *e ex)
-                      (reset! thread-bindings (get-thread-bindings))
-                      (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
-                (take-while #(not= % ::EOF)
-                  (repeatedly #(read {:read-cond :allow :eof ::EOF} reader)))))
-            (catch Throwable ex
-              (set! *e ex)
-              (reset! thread-bindings (get-thread-bindings))
-              (respond-to message {:tag :err :val (format/Throwable->str ex)}))))))))
+  (let [^Runnable f (bound-fn []
+                      (locking eval-lock
+                        (with-bindings (merge
+                                         {#'*ns* (the-ns 'user) #'*e nil #'*1 nil #'*2 nil #'*3 nil}
+                                         @thread-bindings
+                                         (make-thread-bindings file (find-or-create-ns ns)))
+                          (try
+                            (with-open [reader (-> code StringReader. LineNumberingPushbackReader.)]
+                              (.setLineNumber reader (int line))
+                              (set-column! reader (int column))
+                              (run!
+                                (fn [form]
+                                  (try
+                                    (let [ret (eval form)]
+                                      (.flush ^Writer *out*)
+                                      (.flush ^Writer *err*)
+                                      (set! *3 *2)
+                                      (set! *2 *1)
+                                      (set! *1 ret)
+                                      (reset! thread-bindings (get-thread-bindings))
+                                      (respond-to message {:tag :ret :val (format/pp-str ret)}))
+                                    (catch Throwable ex
+                                      (.flush ^Writer *out*)
+                                      (.flush ^Writer *err*)
+                                      (set! *e ex)
+                                      (reset! thread-bindings (get-thread-bindings))
+                                      (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
+                                (take-while #(not= % ::EOF)
+                                  (repeatedly #(read {:read-cond :allow :eof ::EOF} reader)))))
+                            (catch Throwable ex
+                              (set! *e ex)
+                              (reset! thread-bindings (get-thread-bindings))
+                              (respond-to message {:tag :err :val (format/Throwable->str ex)}))))))]
+    (.submit ^ExecutorService @eval-service f)))
 
 (defmethod handle :eval
   [message]
@@ -171,16 +173,16 @@
   (AtomicInteger.))
 
 (defn ^:private make-debouncer
-  [service]
-  (fn [f delay]
+  [^ScheduledExecutorService service]
+  (fn [f ^long delay]
     (let [task (atom nil)]
       (fn [& args]
-        (some-> @task (.cancel false))
+        (some-> ^FutureTask @task (.cancel false))
         (reset! task
           (.schedule service
-            (fn []
-              (apply f args)
-              (reset! task nil))
+            ^Runnable (fn []
+                        (apply f args)
+                        (reset! task nil))
             delay
             TimeUnit/MILLISECONDS))))))
 
@@ -200,8 +202,8 @@
                      (.write out "\n")
                      (.flush out))))
         tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})
-        debounce-service (doto (Executors/newScheduledThreadPool 1 (make-thread-factory :name-suffix :debounce))
-                           (.setRejectedExecutionHandler (ThreadPoolExecutor$CallerRunsPolicy.)))
+        ^ExecutorService debounce-service (doto ^ThreadPoolExecutor (Executors/newScheduledThreadPool 1 (make-thread-factory :name-suffix :debounce))
+                                            (.setRejectedExecutionHandler (ThreadPoolExecutor$CallerRunsPolicy.)))
         eval-service (atom (make-eval-executor)) ; ClojureScript does not use this. Add option to disable?
         debounce (make-debouncer debounce-service)]
     (when add-tap? (add-tap tapfn))
@@ -209,8 +211,8 @@
           err-writer (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
           flush-out (debounce #(.flush out-writer) 50)
           flush-err (debounce #(.flush err-writer) 50)
-          write-out (fn [string] (.write out-writer string) (flush-out))
-          write-err (fn [string] (.write err-writer string) (flush-err))]
+          write-out (fn [^String string] (.write out-writer string) (flush-out))
+          write-err (fn [^String string] (.write err-writer string) (flush-err))]
       (deliver eventual-out-writer write-out)
       (deliver eventual-err-writer write-err)
       (with-bindings @thread-bindings
@@ -246,7 +248,10 @@
                 (when recur? (recur)))))
           (finally
             (some-> debounce-service .shutdownNow)
-            (some-> eval-service deref .shutdownNow)
+
+            (when-some [^ExecutorService es (some-> eval-service deref)]
+              (.shutdownNow es))
+
             (remove-tap tapfn)))))))
 
 (defprotocol RPC
