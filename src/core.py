@@ -131,17 +131,6 @@ class TemporaryFileEventListener(ViewEventListener):
             pass
 
 
-class IsScratchViewEventListener(ViewEventListener):
-    @classmethod
-    def is_applicable(self, _):
-        return True
-
-    def on_query_context(self, key, operator, operand, match_all):
-        return key == "tutkain.is_scratch_view" and self.view.is_scratch() == bool(
-            operand
-        )
-
-
 class TutkainClearOutputViewCommand(WindowCommand):
     def clear_view(self, view):
         if view:

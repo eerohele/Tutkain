@@ -33,35 +33,6 @@ All notable changes to this project will be documented in this file.
   },
   ```
 
-- Add the `tutkain.is_scratch_view` context.
-
-  This context allows key bindings to detect whether you're currently in a scratch view. For example, to define a key binding that loads the current file into the runtime and saves the file:
-
-  ```json
-  {
-      "keys": ["ctrl+c", "ctrl+k"],
-      "command": "chain",
-      "args": {
-          "commands": [
-              {"command": "tutkain_evaluate", "args": {"scope": "view"}},
-              {"command": "save", "args": {"async": true}}
-          ]
-      },
-      "context": [
-          {
-              "key": "selector",
-              "operator": "equal",
-              "operand": "source.clojure - source.clojure.clojurescript"
-          },
-          {
-              "key": "tutkain.is_scratch_view",
-              "operator": "equal",
-              "operand": false
-          },
-      ]
-  },
-  ```
-
 - Add the **Tutkain: Edit Settings** command
 
 - Fix ParEdit Forward Kill form for characters #112
