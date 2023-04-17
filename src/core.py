@@ -1811,6 +1811,48 @@ class TutkainLoadedLibsCommand(TextCommand):
             )
 
 
+class TutkainCopyRequireVectorToClipboardCommand(WindowCommand):
+    def on_done(self, results, index):
+        if ns := results[index].get(edn.Keyword("ns")):
+            ns = ns.name
+            alias = ns.rpartition(".")[-1]
+
+            if alias in {"core", "api"}:
+                alias = ns.rpartition(".")[-3]
+
+            if not alias:
+                alias = ns
+
+            v = f"[{ns} :as {alias}]"
+            sublime.set_clipboard(v)
+
+    def handle(self, client, response):
+        results = response.get(edn.Keyword("results"), [])
+
+        if results:
+            items = []
+
+            for result in results:
+                items.append(sublime.QuickPanelItem(result.get(edn.Keyword("ns")).name))
+
+            self.window.show_quick_panel(
+                items, lambda index: self.on_done(results, index)
+            )
+
+    def run(self):
+        dialect = edn.Keyword("clj")
+
+        if client := state.get_client(self.window, dialect):
+            client.send_op(
+                {"op": edn.Keyword("classpath-namespaces")},
+                lambda response: self.handle(client, response),
+            )
+        else:
+            self.window.status_message(
+                f"⚠ Not connected to a {dialects.name(dialect)} REPL."
+            )
+
+
 class TutkainNewScratchViewInNamespaceCommand(TextCommand):
     def run(self, _):
         view = self.view

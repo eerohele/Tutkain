@@ -2,8 +2,11 @@
   (:refer-clojure :exclude [loaded-libs])
   (:require
    [clojure.core :as core]
+   [clojure.string :as string]
+   [tutkain.completions :as completions]
    [tutkain.rpc :refer [handle respond-to]]
-   [tutkain.lookup :as lookup]))
+   [tutkain.lookup :as lookup])
+  (:import (java.io File)))
 
 (defn ^:private meta-with-type
   [var]
@@ -155,3 +158,26 @@
 (defmethod handle :remove-namespace
   [message]
   (remove-namespace message))
+
+(def classpath-namespaces
+  (delay
+    (->>
+      (eduction
+        (mapcat completions/path-files)
+        (filter #(or (string/ends-with? % ".clj") (string/ends-with? % ".cljc")))
+        (remove #(string/starts-with? % "META-INF"))
+        (map #(subs % 0 (.lastIndexOf ^String % ".")))
+        (map #(if (string/starts-with? % "/") (subs % 1) %))
+        (map #(string/replace % "/" "."))
+        (map #(string/replace % "_" "-"))
+        (map symbol)
+        (distinct)
+        (.split (System/getProperty "java.class.path") File/pathSeparator))
+      (sort)
+      (vec))))
+
+(comment (force classpath-namespaces) ,,,)
+
+(defmethod handle :classpath-namespaces
+  [message]
+  (respond-to message {:results (map (fn [ns] {:ns ns}) (force classpath-namespaces))}))
