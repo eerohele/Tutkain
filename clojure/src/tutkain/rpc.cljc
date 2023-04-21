@@ -108,16 +108,9 @@
       (doto (Thread. runnable (format "tutkain.rpc/%s" (name name-suffix)))
         (.setDaemon true)))))
 
-(defn ^:private make-eval-executor
-  []
-  (Executors/newSingleThreadExecutor (make-thread-factory :name-suffix :eval)))
-
 (defmethod handle :interrupt
-  [{:keys [eval-service ^Thread repl-thread]}]
-  (when-some [^ExecutorService es (some-> eval-service deref)]
-    (.shutdownNow es))
-
-  (when eval-service (reset! eval-service (make-eval-executor)))
+  [{:keys [eval-future ^Thread repl-thread]}]
+  (some-> eval-future deref (.cancel true))
   (some-> repl-thread .interrupt))
 
 (defmulti evaluate :dialect)
@@ -127,43 +120,44 @@
   (swap! thread-bindings (fn [bindings] (if (nil? bindings) new-bindings bindings))))
 
 (defmethod evaluate :default
-  [{:keys [eval-service eval-lock thread-bindings ns file line column code]
+  [{:keys [^ExecutorService eval-service eval-future eval-lock thread-bindings ns file line column code]
     :or {line 1 column 1}
     :as message}]
-  (.submit ^ExecutorService @eval-service
-    (bound-fn []
-      (locking eval-lock
-        (with-bindings (merge
-                         {#'*ns* (the-ns 'user) #'*e nil #'*1 nil #'*2 nil #'*3 nil}
-                         @thread-bindings
-                         (make-thread-bindings file (find-or-create-ns ns)))
-          (try
-            (with-open [reader (-> code StringReader. LineNumberingPushbackReader.)]
-              (.setLineNumber reader (int line))
-              (set-column! reader (int column))
-              (run!
-                (fn [form]
-                  (try
-                    (let [ret (eval form)]
-                      (.flush ^Writer *out*)
-                      (.flush ^Writer *err*)
-                      (set! *3 *2)
-                      (set! *2 *1)
-                      (set! *1 ret)
-                      (reset! thread-bindings (get-thread-bindings))
-                      (respond-to message {:tag :ret :val (format/pp-str ret)}))
-                    (catch Throwable ex
-                      (.flush ^Writer *out*)
-                      (.flush ^Writer *err*)
-                      (set! *e ex)
-                      (reset! thread-bindings (get-thread-bindings))
-                      (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
-                (take-while #(not= % ::EOF)
-                  (repeatedly #(read {:read-cond :allow :eof ::EOF} reader)))))
-            (catch Throwable ex
-              (set! *e ex)
-              (reset! thread-bindings (get-thread-bindings))
-              (respond-to message {:tag :err :val (format/Throwable->str ex)}))))))))
+  (reset! eval-future
+    (.submit eval-service
+      (bound-fn []
+        (locking eval-lock
+          (with-bindings (merge
+                           {#'*ns* (the-ns 'user) #'*e nil #'*1 nil #'*2 nil #'*3 nil}
+                           @thread-bindings
+                           (make-thread-bindings file (find-or-create-ns ns)))
+            (try
+              (with-open [reader (-> code StringReader. LineNumberingPushbackReader.)]
+                (.setLineNumber reader (int line))
+                (set-column! reader (int column))
+                (run!
+                  (fn [form]
+                    (try
+                      (let [ret (eval form)]
+                        (.flush ^Writer *out*)
+                        (.flush ^Writer *err*)
+                        (set! *3 *2)
+                        (set! *2 *1)
+                        (set! *1 ret)
+                        (reset! thread-bindings (get-thread-bindings))
+                        (respond-to message {:tag :ret :val (format/pp-str ret)}))
+                      (catch Throwable ex
+                        (.flush ^Writer *out*)
+                        (.flush ^Writer *err*)
+                        (set! *e ex)
+                        (reset! thread-bindings (get-thread-bindings))
+                        (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
+                  (take-while #(not= % ::EOF)
+                    (repeatedly #(read {:read-cond :allow :eof ::EOF} reader)))))
+              (catch Throwable ex
+                (set! *e ex)
+                (reset! thread-bindings (get-thread-bindings))
+                (respond-to message {:tag :err :val (format/Throwable->str ex)})))))))))
 
 (defmethod handle :eval
   [message]
@@ -204,7 +198,9 @@
         tapfn #(out-fn {:tag :tap :val (format/pp-str %1)})
         ^ExecutorService debounce-service (doto ^ThreadPoolExecutor (Executors/newScheduledThreadPool 1 (make-thread-factory :name-suffix :debounce))
                                             (.setRejectedExecutionHandler (ThreadPoolExecutor$CallerRunsPolicy.)))
-        eval-service (atom (make-eval-executor)) ; ClojureScript does not use this. Add option to disable?
+        ;;  ; ClojureScript does not use this. Add option to disable?
+        eval-service (Executors/newSingleThreadExecutor (make-thread-factory :name-suffix :eval))
+        eval-future (atom nil)
         debounce (make-debouncer debounce-service)]
     (when add-tap? (add-tap tapfn))
     (let [out-writer (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
@@ -228,6 +224,7 @@
                           false
                           (let [message (assoc (xform-in message)
                                           :eval-service eval-service
+                                          :eval-future eval-future
                                           :thread-bindings thread-bindings
                                           :out-fn out-fn)]
                             (try
@@ -248,10 +245,7 @@
                 (when recur? (recur)))))
           (finally
             (some-> debounce-service .shutdownNow)
-
-            (when-some [^ExecutorService es (some-> eval-service deref)]
-              (.shutdownNow es))
-
+            (.shutdownNow eval-service)
             (remove-tap tapfn)))))))
 
 (defprotocol RPC
