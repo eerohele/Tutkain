@@ -124,7 +124,7 @@
     :or {line 1 column 1}
     :as message}]
   (reset! eval-future
-    (.execute eval-service
+    (.submit eval-service
       (bound-fn []
         (locking eval-lock
           (with-bindings (merge
