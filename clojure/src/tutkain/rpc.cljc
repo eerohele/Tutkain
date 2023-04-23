@@ -172,13 +172,15 @@
   (fn [f ^long delay]
     (let [task (atom nil)]
       (fn [& args]
-        (swap! task
-          (fn [t]
-            (some-> ^FutureTask t (.cancel false))
-            (.schedule service
-              ^Callable (fn [] (apply f args))
-              delay
-              TimeUnit/MILLISECONDS)))))))
+        (some-> ^FutureTask @task (.cancel false))
+        (reset! task
+          (.schedule service
+            ^Callable
+            (fn []
+              (apply f args)
+              (reset! task nil))
+            delay
+            TimeUnit/MILLISECONDS))))))
 
 (defn accept
   [{:keys [add-tap? eventual-out-writer eventual-err-writer thread-bindings xform-in xform-out greet?]
