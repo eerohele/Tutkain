@@ -159,6 +159,48 @@
 (xr/check! #{{:tag :ret :val "[2 3]\n" :id 9}
              {:tag :ret :val "[2 3]\r\n" :id 9}}) ;; FIXME: separate rets?
 
+(send
+  {:op :eval
+   :dialect :cljs
+   :code "(println :foo)"
+   :id 10})
+
+(recv)
+(xr/check! #{{:tag :out :val ":foo"}})
+(recv)
+(xr/check! #{{:tag :out :val "\n"}})
+(recv)
+(xr/check! #{{:tag :ret :val "nil\n" :id 10}})
+
 (send {:op :quit})
 (recv)
 (xr/check! #{::socket/EOF})
+
+;; prints work after reconnecting
+
+(def repl2 (socket/client :host "localhost" :port (.getLocalPort server)))
+(xr/on-exit #((:stop repl2)))
+
+(defn send2
+  [message]
+  ((:send repl2) message))
+
+(send2
+  {:op :eval
+   :dialect :cljs
+   :code "(println :foo)"
+   :id 1})
+
+(defn recv2
+  []
+  ((:recv repl2)))
+
+(recv2)
+(xr/check! #{{:tag :out :val "ClojureScript 1.11.60\n"}})
+
+(recv2)
+(xr/check! #{{:tag :out :val ":foo"}})
+(recv2)
+(xr/check! #{{:tag :out :val "\n"}})
+(recv2)
+(xr/check! #{{:tag :ret :val "nil\n" :id 1}})

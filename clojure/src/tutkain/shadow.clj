@@ -97,23 +97,25 @@ https://shadow-cljs.github.io/docs/UsersGuide.html#repl-troubleshooting.
   [_]
   (prn {:tag :err :val no-runtime-err}))
 
-(defmethod handle ::notification
+(defmethod handle :notify
   [{:keys [runtime-id to-relay client-id event-op]}]
   ;; TODO: Make these status bar statuses instead?
   (case event-op
     :client-connect
     (do
-      (async/>!! to-relay {:op :request-notify :notify-op ::notification})
+      (async/>!! to-relay {:op :request-notify})
       (async/>!! to-relay {:op :runtime-print-sub :to client-id})
       (reset! runtime-id client-id)
       (prn {:tag :out :val "⚡ JavaScript runtime connected, ready to evaluate.\n"}))
 
     :client-disconnect
-    (prn {:tag :err :val no-runtime-err})
+    nil ; TODO?
 
     nil))
 
-(defmethod handle :welcome [_] _)
+(defmethod handle :runtime-print-sub [_])
+(defmethod handle :welcome [_])
+(defmethod handle nil [_])
 
 (defmethod handle :default
   [message]
@@ -131,7 +133,8 @@ https://shadow-cljs.github.io/docs/UsersGuide.html#repl-troubleshooting.
             _ (async/<!! from-relay)
             _ (async/>!! to-relay {:op :hello :client-info {:build-id build-id :proc-id proc-id}})
             runtime-id (atom (or (:client-id clj-runtime) (some-> state-ref deref :default-runtime-id)))
-            _ (async/>!! to-relay {:op :request-notify :notify-op ::notification})
+            _ (async/>!! to-relay {:op :request-notify})
+            _ (async/>!! to-relay {:op :runtime-print-sub :to (some-> state-ref deref :default-runtime-id)})
             ctrl-chan (async/promise-chan)
             ret-chan (async/chan 1)
             tag (atom :ret)]
