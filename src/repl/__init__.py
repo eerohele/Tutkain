@@ -307,42 +307,30 @@ class JVMClient(Client):
             backchannel_port = backchannel_opts.get("port", 0)
             backchannel_bind_address = backchannel_opts.get("bind_address", "localhost")
             self.write_line(
-                f"""(try (tutkain.repl/repl {{:init `{init} :add-tap? {"true" if add_tap else "false"} :port {backchannel_port} :bind-address "{backchannel_bind_address}"}}) (catch Exception ex (.toString ex)))"""
+                f"""(tutkain.repl/repl {{:init `{init} :add-tap? {"true" if add_tap else "false"} :port {backchannel_port} :bind-address "{backchannel_bind_address}"}})"""
             )
             line = self.buffer.readline()
 
-            if not line.startswith("{"):
-                self.print(
-                    edn.kwmap(
-                        {
-                            "tag": edn.Keyword("err"),
-                            "val": "Couldn't connect to Clojure REPL.\n",
-                        }
-                    )
-                )
+            ret = edn.read(line)
 
-                self.print(edn.kwmap({"tag": edn.Keyword("err"), "val": line + "\n"}))
-
-                self.print(
-                    edn.kwmap(
-                        {"tag": edn.Keyword("err"), "val": self.connection_err_msg}
-                    )
+            if ret.get(edn.Keyword("tag")) == edn.Keyword("err"):
+                self.print(ret)
+            elif (host := ret.get(edn.Keyword("host"))) and (
+                port := ret.get(edn.Keyword("port"))
+            ):
+                self.backchannel = backchannel.Client(self.print).connect(
+                    self.id, host, port
                 )
             else:
-                ret = edn.read(line)
-
-                if (host := ret.get(edn.Keyword("host"))) and (
-                    port := ret.get(edn.Keyword("port"))
-                ):
-                    self.backchannel = backchannel.Client(self.print).connect(
-                        self.id, host, port
-                    )
-                else:
-                    self.print(ret)
+                self.print(ret)
         else:
             self.write_line(
                 f"""(tutkain.rpc/rpc {{:init `{init} :add-tap? {"true" if add_tap else "false"}}})"""
             )
+
+            line = self.buffer.readline()
+            ret = edn.read(line)
+            self.print(ret)
 
         self.load_modules()
 

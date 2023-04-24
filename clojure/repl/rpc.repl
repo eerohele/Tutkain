@@ -32,9 +32,6 @@
     (#{{:tag :ret :val (str val \newline)}
        {:tag :ret :val (str val \return \newline)}} ret)))
 
-(:val (recv))
-(xr/check! (partial re-matches #"Clojure .+?\n"))
-
 (send {:op :echo})
 
 (recv)

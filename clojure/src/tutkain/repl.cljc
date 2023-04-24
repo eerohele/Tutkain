@@ -64,65 +64,69 @@
   ([]
    (repl {}))
   ([{:keys [init] :or {init `rpc/default-init} :as opts}]
-   (let [print-lock (Object.)
-         eval-lock (Object.)
-         eval-future (atom nil)
-         out *out*
-         in *in*
-         pretty-print (fn [message]
-                        (binding [*print-readably* true
-                                  pprint/*print-right-margin* 100]
-                          (locking print-lock
-                            (pprint/pprint message out))))
-         repl-thread (Thread/currentThread)]
-     (main/with-bindings
-       (when-some [initf (or
-                           (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
-                           (requiring-resolve `default-init))]
-         (initf))
-       (let [backchannel (rpc/open
-                           (assoc opts
-                             :bindings (get-thread-bindings)
-                             :xform-in #(assoc % :eval-lock eval-lock :eval-future eval-future :in in :repl-thread repl-thread)
-                             :xform-out #(dissoc % :in)))]
-         (binding [*out* (PrintWriter-on #(rpc/write-out backchannel %1) nil)
-                   *err* (PrintWriter-on #(rpc/write-err backchannel %1) nil)
-                   *print* pretty-print]
-           (try
-             (pretty-print {:host (rpc/host backchannel) :port (rpc/port backchannel)})
-             (loop []
-               (when
-                 (try
-                   (let [{:keys [thread-bindings form]} (read-in-context backchannel in)
-                         ;; For (read-line) support. See also:
-                         ;;
-                         ;; https://clojure.atlassian.net/browse/CLJ-2692
-                         _ (skip-whitespace in)]
-                     (with-bindings thread-bindings
-                       (when-not (identical? form ::EOF)
-                         (try
-                           (let [ret (locking eval-lock (eval form))]
-                             (.flush ^Writer *out*)
-                             (.flush ^Writer *err*)
-                             (when-not (#{{:op :quit} :repl/quit} ret)
-                               (set! *3 *2)
-                               (set! *2 *1)
-                               (set! *1 ret)
-                               (pretty-print ret)
+   (try
+     (let [print-lock (Object.)
+           eval-lock (Object.)
+           eval-future (atom nil)
+           out *out*
+           in *in*
+           pretty-print (fn [message]
+                          (binding [*print-readably* true
+                                    pprint/*print-right-margin* 100]
+                            (locking print-lock
+                              (pprint/pprint message out))))
+           repl-thread (Thread/currentThread)]
+       (main/with-bindings
+         (when-some [initf (or
+                             (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
+                             (requiring-resolve `default-init))]
+           (initf))
+         (let [backchannel (rpc/open
+                             (assoc opts
+                               :bindings (get-thread-bindings)
+                               :xform-in #(assoc % :eval-lock eval-lock :eval-future eval-future :in in :repl-thread repl-thread)
+                               :xform-out #(dissoc % :in)))]
+           (binding [*out* (PrintWriter-on #(rpc/write-out backchannel %1) nil)
+                     *err* (PrintWriter-on #(rpc/write-err backchannel %1) nil)
+                     *print* pretty-print]
+             (try
+               (pretty-print {:host (rpc/host backchannel) :port (rpc/port backchannel)})
+               (println "Clojure" (clojure-version))
+               (loop []
+                 (when
+                   (try
+                     (let [{:keys [thread-bindings form]} (read-in-context backchannel in)
+                           ;; For (read-line) support. See also:
+                           ;;
+                           ;; https://clojure.atlassian.net/browse/CLJ-2692
+                           _ (skip-whitespace in)]
+                       (with-bindings thread-bindings
+                         (when-not (identical? form ::EOF)
+                           (try
+                             (let [ret (locking eval-lock (eval form))]
+                               (.flush ^Writer *out*)
+                               (.flush ^Writer *err*)
+                               (when-not (#{{:op :quit} :repl/quit} ret)
+                                 (set! *3 *2)
+                                 (set! *2 *1)
+                                 (set! *1 ret)
+                                 (pretty-print ret)
+                                 (rpc/update-thread-bindings backchannel (get-thread-bindings))
+                                 true))
+                             (catch Throwable ex
+                               (.flush ^Writer *out*)
+                               (.flush ^Writer *err*)
+                               (set! *e ex)
+                               (rpc/write-err backchannel (format/Throwable->str ex))
                                (rpc/update-thread-bindings backchannel (get-thread-bindings))
-                               true))
-                           (catch Throwable ex
-                             (.flush ^Writer *out*)
-                             (.flush ^Writer *err*)
-                             (set! *e ex)
-                             (rpc/write-err backchannel (format/Throwable->str ex))
-                             (rpc/update-thread-bindings backchannel (get-thread-bindings))
-                             true)))))
-                   (catch Throwable ex
-                     (set! *e ex)
-                     (rpc/write-err backchannel (format/Throwable->str ex))
-                     (rpc/update-thread-bindings backchannel (get-thread-bindings))
-                     true))
-                 (recur)))
-             (finally
-               (rpc/close backchannel)))))))))
+                               true)))))
+                     (catch Throwable ex
+                       (set! *e ex)
+                       (rpc/write-err backchannel (format/Throwable->str ex))
+                       (rpc/update-thread-bindings backchannel (get-thread-bindings))
+                       true))
+                   (recur)))
+               (finally
+                 (rpc/close backchannel)))))))
+     (catch Exception ex
+       {:tag :err :val (with-out-str ((requiring-resolve 'clojure.pprint/pprint) (Throwable->map ex)))}))))

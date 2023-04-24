@@ -183,8 +183,8 @@
             TimeUnit/MILLISECONDS))))))
 
 (defn accept
-  [{:keys [add-tap? eventual-out-writer eventual-err-writer thread-bindings xform-in xform-out greet?]
-    :or {add-tap? false xform-in identity xform-out identity greet? true}}]
+  [{:keys [add-tap? eventual-out-writer eventual-err-writer thread-bindings xform-in xform-out]
+    :or {add-tap? false xform-in identity xform-out identity}}]
   (let [out *out*
         lock (Object.)
         out-fn (fn [message]
@@ -217,7 +217,6 @@
         (try
           (binding [*out* (PrintWriter-on write-out #(.close out-writer))
                     *err* (PrintWriter-on write-err #(.close err-writer))]
-            (when greet? (out-fn {:tag :out :val (str "Clojure " (clojure-version) "\n")}))
             (loop []
               (let [recur?
                     (try
@@ -326,14 +325,18 @@
 
 (defn rpc
   [{:keys [init] :or {init `default-init} :as opts}]
-  (let [eval-lock (Object.)]
-    (when-some [initf (or
-                        (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
-                        (requiring-resolve `default-init))]
-      (initf))
-    (accept
-      (assoc opts
-        :xform-in #(assoc % :eval-lock eval-lock)
-        :thread-bindings (init-thread-bindings {})
-        :eventual-out-writer (promise)
-        :eventual-err-writer (promise)))))
+  (try
+    (let [eval-lock (Object.)]
+      (when-some [initf (or
+                          (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
+                          (requiring-resolve `default-init))]
+        (initf))
+      (prn {:tag :out :val (str "Clojure " (clojure-version) "\n")})
+      (accept
+        (assoc opts
+          :xform-in #(assoc % :eval-lock eval-lock)
+          :thread-bindings (init-thread-bindings {})
+          :eventual-out-writer (promise)
+          :eventual-err-writer (promise))))
+    (catch Exception ex
+      (prn {:tag :err :val (with-out-str ((requiring-resolve 'clojure.pprint/pprint) (Throwable->map ex)))}))))

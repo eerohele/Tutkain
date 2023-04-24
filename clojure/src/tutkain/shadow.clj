@@ -166,7 +166,6 @@ https://shadow-cljs.github.io/docs/UsersGuide.html#repl-troubleshooting.
     (let [{:keys [tag ret-chan runtime-id to-relay]} ret]
       (rpc/accept
         (assoc opts
-          :greet? false
           :thread-bindings (atom {})
           :eventual-out-writer (promise)
           :eventual-err-writer (promise)
