@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## 0.18.0 (alpha) - UNRELEASED
 
-- Add support for [operating over a single connection](https://tutkain.flowthing.me/#choosing-the-connection-mode).
+- Add support for [operating over a single connection](https://tutkain.flowthing.me/#choosing-connection-mode).
 
   Also see the `default_connection_mode` setting under **Tutkain: Edit Settings**.
 
@@ -14,9 +14,11 @@ All notable changes to this project will be documented in this file.
 
   **Note**: These commands require Clojure v1.12.0-alpha2 or newer.
 
+  **Note**: **Tutkain: Synchronize Dependencies** does not (yet) support aliases.
+
 - Add support for appending the evaluation output into the current view (via the `"output": "selection"` argument).
 
-  For example:
+  To use it, add a key binding like this:
 
   ```json
   {
