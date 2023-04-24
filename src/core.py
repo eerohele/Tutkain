@@ -2144,13 +2144,18 @@ class TutkainSynchronizeDependenciesCommand(WindowCommand):
         dialect = edn.Keyword("clj")
 
         if client := state.get_client(self.window, dialect):
-            progress.start("Synchronizing deps...")
+            if "deps.clj" in client.capabilities:
+                progress.start("Synchronizing deps...")
 
-            client.send_op(
-                {"op": edn.Keyword("sync-deps")},
-                # TODO: Add aliases support
-                lambda response: self.handler(response),
-            )
+                client.send_op(
+                    {"op": edn.Keyword("sync-deps")},
+                    # TODO: Add aliases support
+                    lambda response: self.handler(response),
+                )
+            else:
+                self.window.status_message(
+                    f"⚠ Tutkain: Synchronize Dependencies requires Clojure v1.12.0-alpha2 or newer."
+                )
         else:
             self.window.status_message(
                 f"⚠ Not connected to a {dialects.name(dialect)} REPL."
