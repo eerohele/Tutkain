@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
   **Note**: This change required a complete overhaul of the shadow-cljs support. All ClojureScript connections are now locked into the RPC connection mode. (ClojureScript does not benefit from the REPL mode, since it does not support nested REPLs.)
 
-- Add [**Tutkain: Add Lib** and **Tutkain: Synchronize Dependencies** commands](http://127.0.0.1:1111/#working-with-dependencies).
+- Add [**Tutkain: Add Lib** and **Tutkain: Synchronize Dependencies** commands](https://tutkain.flowthing.me/#working-with-dependencies).
 
   **Note**: These commands require Clojure v1.12.0-alpha2 or newer.
 
