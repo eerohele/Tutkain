@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.18.0 (alpha) - UNRELEASED
+## 0.18.0 (alpha) - 2023-04-25
 
 - Add support for [operating over a single connection](https://tutkain.flowthing.me/#choosing-connection-mode).
 
