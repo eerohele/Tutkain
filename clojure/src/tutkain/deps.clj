@@ -1,10 +1,14 @@
 (ns tutkain.deps
   (:require
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
    [clojure.repl.deps :as deps]
    [clojure.xml :as xml]
    [tutkain.rpc :refer [handle respond-to]])
-  (:import (java.net URI URLEncoder)
-           (java.net.http HttpClient HttpRequest HttpResponse$BodyHandlers)))
+  (:import (java.io PushbackReader)
+           (java.net URI URLEncoder)
+           (java.net.http HttpClient HttpClient$Redirect HttpRequest HttpResponse$BodyHandlers)
+           (java.util.zip GZIPInputStream)))
 
 (defmethod handle :sync-deps
   [message]
@@ -32,7 +36,7 @@
 
 (defn ^:private http-request
   [uri]
-  (let [http-client (HttpClient/newHttpClient)
+  (let [http-client (.. (HttpClient/newBuilder) (followRedirects HttpClient$Redirect/NORMAL) (build))
         body-handler (HttpResponse$BodyHandlers/ofInputStream)
         request-builder (HttpRequest/newBuilder)
         request (.. request-builder (uri uri) (build))
@@ -55,7 +59,7 @@
                         (map (fn [{:keys [description group_name jar_name version]}]
                                {:group-id group_name
                                 :artifact-id jar_name
-                                :version version
+                                :version {:mvn/version version}
                                 :description description})))
                       (some-> response xml/parse :content))]
         (respond-to message {:results results}))
@@ -73,8 +77,24 @@
                                      version (-> doc (nth 4) :content first)]
                                  {:group-id group-id
                                   :artifact-id artifact-id
-                                  :version version}))))
+                                  :version {:mvn/version version}}))))
                       (some-> response xml/parse :content second :content))]
+        (respond-to message {:results results}))
+
+      github
+      (let [uri (URI/create "https://github.com/phronmophobic/dewey/releases/latest/download/deps-libs.edn.gz")
+            response (http-request uri)
+            results (with-open [reader (-> response GZIPInputStream. io/reader PushbackReader.)]
+                      (into []
+                        (comp
+                          (map (fn [[_ {:keys [description lib url versions]}]]
+                                 {:group-id (some-> lib namespace)
+                                  :artifact-id (name lib)
+                                  :url url
+                                  :version (first versions)
+                                  :description description}))
+                          (filter :version))
+                        (sort-by key (edn/read reader))))]
         (respond-to message {:results results})))
     (catch Exception ex
       (respond-to message {:tag :err :val (or (.getMessage ex) "Unknown error")}))))

@@ -2186,9 +2186,17 @@ class RepoInputHandler(ListInputHandler):
                 "maven",
                 details="Discover Java packages, and publish your own.",
             ),
+            sublime.ListInputItem(
+                "GitHub",
+                "github",
+                details="An internet hosting service for software development and version control using Git.",
+            ),
         ]
 
     def next_input(self, args):
+        if args.get("repo") == "github":
+            return None
+
         return LibQueryInputHandler()
 
 
@@ -2209,11 +2217,11 @@ class TutkainAddLibCommand(WindowCommand):
     def choose_handler(self, client, result):
         group_id = result.get(edn.Keyword("group-id"))
         artifact_id = result.get(edn.Keyword("artifact-id"))
+        lib = edn.Symbol(artifact_id, group_id)
         version = result.get(edn.Keyword("version"))
+        url = result.get(edn.Keyword("url"))
 
-        coords = {
-            edn.Symbol(artifact_id, group_id): {edn.Keyword("version", "mvn"): version}
-        }
+        coords = {lib: version}
 
         progress.start(f"Adding {group_id}/{artifact_id} v{version}...")
 
@@ -2237,6 +2245,9 @@ class TutkainAddLibCommand(WindowCommand):
                     group_id = result.get(edn.Keyword("group-id"))
                     artifact_id = result.get(edn.Keyword("artifact-id"))
                     version = result.get(edn.Keyword("version"))
+                    mvn_version = version.get(edn.Keyword("version", "mvn"))
+                    git_tag = version.get(edn.Keyword("tag", "git"))
+                    version = mvn_version or git_tag
                     description = result.get(edn.Keyword("description"))
 
                     if description:
@@ -2261,7 +2272,7 @@ class TutkainAddLibCommand(WindowCommand):
                         placeholder="Choose lib",
                     )
 
-    def run(self, repo, lib_query):
+    def run(self, repo, lib_query=None):
         dialect = edn.Keyword("clj")
 
         if client := state.get_client(self.window, dialect):
