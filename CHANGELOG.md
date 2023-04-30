@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## 0.18.0 (alpha) - 2023-04-25
 
+- **BREAKING** (ClojureScript): Tutkain's Babashka support now requires shadow-cljs v2.22.10 or newer
+
 - Add support for [operating over a single connection](https://tutkain.flowthing.me/#choosing-connection-mode).
 
   Also see the `default_connection_mode` setting under **Tutkain: Edit Settings**.
