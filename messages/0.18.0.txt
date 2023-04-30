@@ -14,9 +14,11 @@ Hey there! Tutkain has been updated.
 IMPORTANT: You **must** restart your runtime and Sublime Text before continuing
 to use Tutkain.
 
-IMPORTANT: If you're a Babashka user, either:
+IMPORTANT: If you're a shadow-cljs user, you must update shadow-cljs to
+v2.22.10 or newer to keep using Tutkain with shadow-cljs.
 
-- Update Babashka to v1.1.171 or newer to keep using Tutkain with Babashka.
+IMPORTANT: If you're a Babashka user, you must update Babashka to v1.1.171 or
+newer to keep using Tutkain with Babashka.
 
 To see the changes in this version, see:
 
