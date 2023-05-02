@@ -3,7 +3,7 @@ import sublime
 from .. import settings, state
 from ..log import log
 from . import views
-from .keywords import ERR, RET, IN, TAG, TAP, VAL, PRINT
+from .keywords import ERR, RET, IN, TAG, TAP, VAL
 
 
 def show_repl_panel(view):

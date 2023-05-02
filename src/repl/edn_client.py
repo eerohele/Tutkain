@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 import itertools
 from threading import Lock
 
@@ -46,5 +46,5 @@ class Client(ABC):
                 finally:
                     with self.lock:
                         self.handlers.pop(id, None)
-        except AttributeError as error:
+        except AttributeError:
             raise ValueError(f"Got invalid message: {message}")

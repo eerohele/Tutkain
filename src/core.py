@@ -882,7 +882,7 @@ class TutkainConnectCommand(WindowCommand):
             finally:
                 self.window.focus_view(active_view)
         else:
-            self.window.status_message(f"⚠ No REPL port file found.")
+            self.window.status_message("⚠ No REPL port file found.")
 
     def input(self, args):
         if "dialect" in args and "host" in args and "port" in args:
@@ -1824,7 +1824,9 @@ class TutkainNewScratchViewInNamespaceCommand(TextCommand):
             name = "untitled.repl"
 
         ns = namespace.name_or_default(view, dialect)
-        writef = lambda file: file.write(f"(in-ns '{ns})\n\n")
+
+        def writef(file):
+            return file.write(f"(in-ns '{ns})\n\n")
 
         temp.open_file(window, name, extension, writef)
 
@@ -1905,11 +1907,11 @@ class TutkainToggleAutoSwitchNamespaceCommand(TextCommand):
 
         if s.get("auto_switch_namespace"):
             self.view.window().status_message(
-                f"[⏽] [Tutkain] Automatic namespace switching enabled."
+                "[⏽] [Tutkain] Automatic namespace switching enabled."
             )
         else:
             self.view.window().status_message(
-                f"[⭘] [Tutkain] Automatic namespace switching disabled."
+                "[⭘] [Tutkain] Automatic namespace switching disabled."
             )
 
 
@@ -2154,7 +2156,7 @@ class TutkainSynchronizeDependenciesCommand(WindowCommand):
                 )
             else:
                 self.window.status_message(
-                    f"⚠ Tutkain: Synchronize Dependencies requires Clojure v1.12.0-alpha2 or newer."
+                    "⚠ Tutkain: Synchronize Dependencies requires Clojure v1.12.0-alpha2 or newer."
                 )
         else:
             self.window.status_message(
@@ -2219,7 +2221,6 @@ class TutkainAddLibCommand(WindowCommand):
         artifact_id = result.get(edn.Keyword("artifact-id"))
         lib = edn.Symbol(artifact_id, group_id)
         version = result.get(edn.Keyword("version"))
-        url = result.get(edn.Keyword("url"))
 
         coords = {lib: version}
 
@@ -2287,7 +2288,7 @@ class TutkainAddLibCommand(WindowCommand):
                 )
             else:
                 self.window.status_message(
-                    f"⚠ Tutkain: Add Lib requires Clojure v1.12.0-alpha2 or newer."
+                    "⚠ Tutkain: Add Lib requires Clojure v1.12.0-alpha2 or newer."
                 )
         else:
             self.window.status_message(

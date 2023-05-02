@@ -7,7 +7,7 @@ import queue
 import socket
 import types
 import uuid
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from inspect import cleandoc
 from threading import Thread

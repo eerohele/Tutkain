@@ -1,4 +1,3 @@
-import unittest
 from inspect import cleandoc
 
 import sublime

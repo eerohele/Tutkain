@@ -1,7 +1,4 @@
 import sys
-import textwrap
-import types
-import unittest
 from concurrent import futures
 
 import sublime

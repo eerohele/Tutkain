@@ -2,7 +2,6 @@ import sublime
 
 from Tutkain.api import edn
 from Tutkain.src import repl
-from Tutkain.src.repl import formatter
 
 from .mock import BabashkaServer
 from .util import PackageTestCase

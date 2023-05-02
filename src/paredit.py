@@ -746,9 +746,6 @@ def join_sexps(view, edit):
 
             if next_form := forms.find_next(view, innermost.close.region.end()):
                 if view.match_selector(next_form.begin(), "string"):
-                    word_start_point = view.find_by_class(
-                        next_form.begin(), True, CLASS_WORD_START
-                    )
                     region = Region(
                         innermost.close.region.begin(), next_form.begin() + 1
                     )

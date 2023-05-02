@@ -1,6 +1,6 @@
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from typing import Dict, TypedDict, Union
+from typing import TypedDict, Union
 
 from sublime import View, Window
 

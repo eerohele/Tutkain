@@ -3,8 +3,6 @@ from typing import Union
 from sublime import View
 
 from ..api import edn
-from . import state
-from .repl import views
 
 DIALECT_NAMES = edn.kwmap(
     {
