@@ -1826,7 +1826,7 @@ class TutkainNewScratchViewInNamespaceCommand(TextCommand):
         ns = namespace.name_or_default(view, dialect)
         writef = lambda file: file.write(f"(in-ns '{ns})\n\n")
 
-        temp.open_file(window, file_name, extension, writef)
+        temp.open_file(window, name, extension, writef)
 
 
 class TutkainExploreStackTraceCommand(TextCommand):
