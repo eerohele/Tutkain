@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## UNRELEASED
+
+- Add GitHub provider for **Tutkain: Add Lib**
+
+- Improve [exception message printing](https://clojurians.slack.com/archives/C03S1KBA2/p1683142572115519)
+
 ## 0.18.0 (alpha) - 2023-04-25
 
 - **BREAKING** (ClojureScript): Tutkain's Babashka support now requires shadow-cljs v2.22.10 or newer
