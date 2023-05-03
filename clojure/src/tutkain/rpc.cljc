@@ -145,7 +145,12 @@
                                       (set! *2 *1)
                                       (set! *1 ret)
                                       (reset! thread-bindings (get-thread-bindings))
-                                      (respond-to message {:tag :ret :val (format/pp-str ret)}))
+                                      (respond-to message
+                                        {:tag :ret
+                                         :val (try
+                                                (format/pp-str ret)
+                                                (catch Throwable ex
+                                                  (format/Throwable->str (ex-info nil {:clojure.error/phase :print-eval-result} ex))))}))
                                     (catch Throwable ex
                                       (.flush ^Writer *out*)
                                       (.flush ^Writer *err*)
@@ -153,7 +158,10 @@
                                       (reset! thread-bindings (get-thread-bindings))
                                       (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
                                 (take-while #(not= % ::EOF)
-                                  (repeatedly #(read {:read-cond :allow :eof ::EOF} reader)))))
+                                  (repeatedly #(try
+                                                 (read {:read-cond :allow :eof ::EOF} reader)
+                                                 (catch Throwable ex
+                                                   (throw (ex-info nil {:clojure.error/phase :read-source} ex))))))))
                             (catch Throwable ex
                               (set! *e ex)
                               (reset! thread-bindings (get-thread-bindings))

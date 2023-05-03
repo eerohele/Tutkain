@@ -52,6 +52,12 @@
     :repl ((:send repl) message)
     :backchannel ((:send backchannel) message)))
 
+(defn send-str
+  [channel message]
+  (case channel
+    :repl ((:send-str repl) message)
+    :backchannel ((:send backchannel) message)))
+
 (def timeout? (partial = ::socket/timeout))
 
 (recv :backchannel) ; Clojure version
@@ -285,6 +291,19 @@
 
 (:stacktrace *1)
 (xr/check! ::stacktrace)
+
+;; exception printing
+(send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
+(recv :backchannel)
+(send-str :repl ":::5")
+(recv :backchannel)
+(:val *1)
+(xr/check! (partial re-matches #"(?s)Syntax error reading source at \(REPL:\d+:\d+\)\.\r?\nInvalid token: :::5\r?\n"))
+
+(send-str :repl "(deftype T [a]) (defmethod print-method T [_ w] (throw (Exception. \"boom\"))) (->T 1)")
+(recv :backchannel)
+(:val *1)
+(xr/check! (partial re-matches #"(?s)Error printing return value at .+? \(NO_SOURCE_FILE:\d+\)\.\r?\nboom\r?\n"))
 
 (send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})
 (recv :backchannel)

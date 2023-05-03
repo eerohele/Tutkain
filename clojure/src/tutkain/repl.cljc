@@ -26,8 +26,11 @@
   (.unread reader (.read reader))
   (let [thread-bindings (rpc/thread-bindings backchannel)
         [form _] (with-bindings (not-empty thread-bindings)
-                   #?(:bb (read+string reader false ::EOF)
-                      :clj (read+string {:eof ::EOF :read-cond :allow} reader)))]
+                   (try
+                     #?(:bb (read+string reader false ::EOF)
+                        :clj (read+string {:eof ::EOF :read-cond :allow} reader))
+                     (catch Throwable ex
+                       (throw (ex-info nil {:clojure.error/phase :read-source} ex)))))]
     ;; After picking up the thread bindings sent via the backchannel, clear
     ;; them to signal to the REPL that it is OK to update them after
     ;; evaluation.
@@ -110,7 +113,11 @@
                                  (set! *3 *2)
                                  (set! *2 *1)
                                  (set! *1 ret)
-                                 (pretty-print ret)
+                                 (try
+                                   (pretty-print ret)
+                                   (catch Throwable ex
+                                     (rpc/write-err backchannel
+                                       (format/Throwable->str (ex-info nil {:clojure.error/phase :print-eval-result} ex)))))
                                  (rpc/update-thread-bindings backchannel (get-thread-bindings))
                                  true))
                              (catch Throwable ex

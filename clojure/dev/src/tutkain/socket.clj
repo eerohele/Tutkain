@@ -14,6 +14,9 @@
      :send (fn [message]
              (.write writer (str (pr-str message) \newline))
              (.flush writer))
+     :send-str (fn [message]
+                 (.write writer (str message \newline))
+                 (.flush writer))
      :recv (fn []
              (try
                (binding [*default-data-reader-fn* tagged-literal]

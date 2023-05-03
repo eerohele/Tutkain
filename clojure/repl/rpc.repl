@@ -130,3 +130,16 @@
 (def ret (recv))
 (:val ret)
 (xr/check! (partial re-matches #"(?s).*InterruptedException.*"))
+
+;; exception printing
+(send {:op :eval :code ":::5"})
+(recv)
+(:val *1)
+(xr/check! (partial re-matches #"(?s)Syntax error reading source at \(REPL:\d+:\d+\)\.\r?\nInvalid token: :::5\r?\n"))
+
+(send {:op :eval :ns 'user :code "(deftype T [a]) (defmethod print-method T [_ w] (throw (Exception. \"boom\"))) (->T 1)"})
+(recv)
+(recv)
+(recv)
+(:val *1)
+(xr/check! (partial re-matches #"(?s)Error printing return value at .+? \(NO_SOURCE_FILE:\d+\)\.\r?\nboom\r?\n"))
