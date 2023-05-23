@@ -310,19 +310,23 @@ def forward_delete(view, edit):
             view.erase(edit, region)
         else:
             point = region.begin()
-            innermost = sexp.innermost(view, point, edge="forward")
 
             if view.match_selector(
                 point, "string & constant.character - invalid.illegal"
             ):
                 erase = selectors.expand_by_selector(view, point, "constant.character")
                 view.erase(edit, erase)
-            elif not innermost:
-                view.erase(edit, Region(point, point + 1))
-            elif innermost.is_empty() and innermost.contains(point):
-                view.erase(edit, innermost.extent())
-            elif view.match_selector(point, selectors.SEXP_DELIMITERS):
-                sel.append(point + 1)
+            elif view.match_selector(
+                point, "punctuation.section | punctuation.definition.string"
+            ):
+                innermost = sexp.innermost(view, point, edge="forward")
+
+                if not innermost:
+                    view.erase(edit, Region(point, point + 1))
+                elif innermost.is_empty() and innermost.contains(point):
+                    view.erase(edit, innermost.extent())
+                elif view.match_selector(point, selectors.SEXP_DELIMITERS):
+                    sel.append(point + 1)
             else:
                 view.erase(edit, Region(point, point + 1))
 
@@ -333,19 +337,23 @@ def backward_delete(view, edit):
             view.erase(edit, region)
         else:
             point = region.begin()
-            innermost = sexp.innermost(view, point, edge="backward")
 
             if view.match_selector(point - 1, "constant.character - invalid.illegal"):
                 erase = selectors.expand_by_selector(
                     view, point - 1, "constant.character"
                 )
                 view.erase(edit, erase)
-            elif not innermost:
-                view.erase(edit, Region(point - 1, point))
-            elif innermost.is_empty() and innermost.contains(point):
-                view.erase(edit, innermost.extent())
-            elif view.match_selector(point - 1, selectors.SEXP_DELIMITERS):
-                sel.append(point - 1)
+            elif view.match_selector(
+                point - 1, "punctuation.section | punctuation.definition.string"
+            ):
+                innermost = sexp.innermost(view, point, edge="backward")
+
+                if not innermost:
+                    view.erase(edit, Region(point - 1, point))
+                elif innermost.is_empty() and innermost.contains(point):
+                    view.erase(edit, innermost.extent())
+                elif view.match_selector(point - 1, selectors.SEXP_DELIMITERS):
+                    sel.append(point - 1)
             else:
                 view.erase(edit, Region(point - 1, point))
 
