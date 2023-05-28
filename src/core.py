@@ -501,42 +501,6 @@ class TutkainEvaluateCommand(TextCommand):
                             },
                             handler,
                         )
-
-            elif scope == "input":
-
-                def evaluate_input(client, code):
-                    options["file"] = self.view.file_name()
-
-                    self.eval(
-                        client,
-                        code,
-                        auto_switch_namespace,
-                        options=options,
-                    )
-                    history.update(self.view.window(), code)
-
-                view = self.view.window().show_input_panel(
-                    "Input: ",
-                    history.get(self.view.window()),
-                    lambda code: evaluate_input(client, code),
-                    self.noop,
-                    self.noop,
-                )
-
-                if snippet:
-                    if "$FORMS" in snippet:
-                        for index, region in enumerate(self.view.sel()):
-                            form = forms.find_adjacent(self.view, region.begin())
-                            snippet = snippet.replace(
-                                f"$FORMS[{index}]", self.view.substr(form)
-                            )
-
-                    view.run_command("insert_snippet", {"contents": snippet})
-
-                view.settings().set("tutkain_repl_input_panel", True)
-                view.settings().set("auto_complete", True)
-                view.assign_syntax("Packages/Tutkain/Clojure (Tutkain).sublime-syntax")
-
             else:
                 if output == "clipboard":
 
@@ -632,6 +596,37 @@ class TutkainEvaluateCommand(TextCommand):
                     region = sublime.Region(region[0], region[1])
                     del options["region"]
                     evaluator(region, mark["code"], options)
+
+                elif scope == "input":
+
+                    def evaluate_input(client, code):
+                        options["file"] = self.view.file_name()
+                        evaluator(sublime.Region(1, 1), code, options)
+                        history.update(self.view.window(), code)
+
+                    view = self.view.window().show_input_panel(
+                        "Input: ",
+                        history.get(self.view.window()),
+                        lambda code: evaluate_input(client, code),
+                        self.noop,
+                        self.noop,
+                    )
+
+                    if snippet:
+                        if "$FORMS" in snippet:
+                            for index, region in enumerate(self.view.sel()):
+                                form = forms.find_adjacent(self.view, region.begin())
+                                snippet = snippet.replace(
+                                    f"$FORMS[{index}]", self.view.substr(form)
+                                )
+
+                        view.run_command("insert_snippet", {"contents": snippet})
+
+                    view.settings().set("tutkain_repl_input_panel", True)
+                    view.settings().set("auto_complete", True)
+                    view.assign_syntax(
+                        "Packages/Tutkain/Clojure (Tutkain).sublime-syntax"
+                    )
 
                 elif scope == "up_to_point":
                     for region in self.view.sel():
