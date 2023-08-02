@@ -1653,25 +1653,26 @@ def fetch_locals(view, point, form, handler):
         line, column = view.rowcol(form.begin())
         end_column = column + form.size()
         start_line, start_column = view.rowcol(outermost.open.region.begin())
-        context = view.substr(outermost.extent())
+        if extent := outermost.extent():
+            if local := view.substr(form).strip():
+                context = view.substr(extent)
 
-        if local := view.substr(form).strip():
-            client.send_op(
-                {
-                    "op": edn.Keyword("locals"),
-                    "dialect": dialect,
-                    "file": view.file_name() or "NO_SOURCE_FILE",
-                    "ns": namespace.name(view),
-                    "context": base64.encode(context.encode("utf-8")),
-                    "form": local,
-                    "start-line": start_line + 1,
-                    "start-column": start_column + 1,
-                    "line": line + 1,
-                    "column": column + 1,
-                    "end-column": end_column + 1,
-                },
-                partial(handle_locals_response, view, handler),
-            )
+                client.send_op(
+                    {
+                        "op": edn.Keyword("locals"),
+                        "dialect": dialect,
+                        "file": view.file_name() or "NO_SOURCE_FILE",
+                        "ns": namespace.name(view),
+                        "context": base64.encode(context.encode("utf-8")),
+                        "form": local,
+                        "start-line": start_line + 1,
+                        "start-column": start_column + 1,
+                        "line": line + 1,
+                        "column": column + 1,
+                        "end-column": end_column + 1,
+                    },
+                    partial(handle_locals_response, view, handler),
+                )
 
 
 def positions_to_tuples(view, positions):
