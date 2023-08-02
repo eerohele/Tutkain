@@ -171,7 +171,8 @@
 (send :backchannel {:op :set-thread-bindings :file "/my/path/app.clj" :ns 'my.app :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '*e)
-(nth (->> (recv :repl) .form :trace (drop 2) first) 2)
+(recv :repl)
+(nth (->> *1 .form :trace (drop 2) first) 2)
 (xr/check! #{"app.clj"})
 
 ;; interrupts
