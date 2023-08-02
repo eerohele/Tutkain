@@ -2209,7 +2209,7 @@ class TutkainAddLibCommand(WindowCommand):
             self.window.status_message("⚠ " + response.get(edn.Keyword("val")))
         else:
             self.window.status_message(
-                f"✓ {group_id}/{artifact_id} v{version} and its deps added into the runtime."
+                f"✓ {group_id}/{artifact_id} {version} and its deps added into the runtime."
             )
 
     def choose_handler(self, client, result):
@@ -2220,7 +2220,7 @@ class TutkainAddLibCommand(WindowCommand):
 
         coords = {lib: version}
 
-        progress.start(f"Adding {group_id}/{artifact_id} v{version}...")
+        progress.start(f"Adding {group_id}/{artifact_id} {version}...")
 
         client.send_op(
             {"op": edn.Keyword("add-libs"), "lib-coords": coords},
