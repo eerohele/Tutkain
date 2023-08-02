@@ -163,12 +163,12 @@
 (xr/check! ::ret) ;; tap
 
 ;; source file path in exception stack trace
-(send :backchannel {:op :set-thread-bindings :file "/my/path/app.clj" :ns 'my.app :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :file "/my/path/app.clj" :ns 'user :line 1 :column 1 :id 1})
 (recv :backchannel)
 (xr/check! ::ret)
 (send :repl '(/ 4 0))
 (recv :backchannel)
-(send :backchannel {:op :set-thread-bindings :file "/my/path/app.clj" :ns 'my.app :line 1 :column 1 :id 1})
+(send :backchannel {:op :set-thread-bindings :file "/my/path/app.clj" :ns 'user :line 1 :column 1 :id 1})
 (recv :backchannel)
 (send :repl '*e)
 (recv :repl)
