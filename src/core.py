@@ -2035,14 +2035,14 @@ class TutkainRemoveNamespaceMappingCommand(TextCommand):
 
 
 class TutkainRemoveNamespaceAliasCommand(TextCommand):
-    def unmap(self, client, dialect, results, index):
+    def unmap(self, client, dialect, ns, results, index):
         if index != -1:
             item = results[index]
 
             client.send_op(
                 {
                     "op": edn.Keyword("remove-namespace-alias"),
-                    "ns": edn.Symbol(namespace.name(self.view)),
+                    "ns": ns,
                     "sym": item[edn.Keyword("name")],
                     "dialect": dialect,
                 },
@@ -2051,12 +2051,12 @@ class TutkainRemoveNamespaceAliasCommand(TextCommand):
                 ),
             )
 
-    def handler(self, client, dialect, response):
+    def handler(self, client, dialect, ns, response):
         results = response.get(edn.Keyword("results"), [])
         items = query.to_quick_panel_items(completions.KINDS, results)
 
         self.view.window().show_quick_panel(
-            items, lambda index: self.unmap(client, dialect, results, index)
+            items, lambda index: self.unmap(client, dialect, ns, results, index)
         )
 
     def run(self, _):
@@ -2064,13 +2064,15 @@ class TutkainRemoveNamespaceAliasCommand(TextCommand):
         dialect = dialects.for_view(self.view)
 
         if client := state.get_client(window, dialect):
+            ns = edn.Symbol(namespace.name_or_default(self.view, dialect))
+
             client.send_op(
                 {
                     "op": edn.Keyword("alias-mappings"),
-                    "ns": edn.Symbol(namespace.name(self.view)),
+                    "ns": ns,
                     "dialect": dialect,
                 },
-                lambda response: self.handler(client, dialect, response),
+                lambda response: self.handler(client, dialect, ns, response),
             )
         else:
             self.view.window().status_message(
