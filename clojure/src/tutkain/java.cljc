@@ -5,6 +5,7 @@
    [clojure.repl :as repl]
    [tutkain.rpc :refer [handle respond-to]])
   (:import
+   (java.io File)
    (java.net URL)))
 
 (def source-zip
@@ -13,7 +14,7 @@
       [(io/file (System/getProperty "tutkain.java.src.zip"))
        (io/file (System/getProperty "java.home") "lib/src.zip")
        (io/file (System/getProperty "java.home") "src.zip")]
-      (drop-while #(or (nil? %) (not (.exists %))))
+      (drop-while #(or (nil? %) (not (.exists ^File %))))
       (first))))
 
 (defn class-url->source-url
@@ -71,7 +72,7 @@
   [^Throwable ex]
   (when (instance? Throwable ex)
     (let [cl (.getContextClassLoader (Thread/currentThread))]
-      (map (fn [el]
+      (map (fn [^StackTraceElement el]
              (let [class-name (.getClassName el)
                    file-name (.getFileName el)
                    java? (.endsWith file-name ".java")

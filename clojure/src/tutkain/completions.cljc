@@ -29,7 +29,7 @@
   #?(:bb [] ; TODO
      :clj (let [field (.getDeclaredField clojure.lang.Keyword "table")]
             (.setAccessible field true)
-            (map keyword (.keySet (.get field nil))))))
+            (map keyword (.keySet ^HashMap (.get field nil))))))
 
 (comment (all-keywords),)
 
@@ -247,8 +247,8 @@
     (.endsWith path "/*")
     (sequence
       (comp
-        (filter #(.endsWith ^String (.getName %) ".jar"))
-        (mapcat #(-> % .getPath path-files)))
+        (filter #(.endsWith ^String (.getName ^File %) ".jar"))
+        (mapcat #(-> ^File % .getPath path-files)))
       (-> path File. .getParent File. .listFiles))
 
     (.endsWith path ".jar")
@@ -258,7 +258,7 @@
       (catch Exception _))
 
     :else
-    (map #(.replace ^String (.getPath %) path "") (-> path File. file-seq))))
+    (map #(.replace ^String (.getPath ^File %) path "") (-> path File. file-seq))))
 
 (defn ^:private non-base-classes
   "Return a sequence of the names of all non-base Java classes in the class
@@ -268,10 +268,10 @@
      :clj (eduction
             (mapcat path-files)
             (filter #(.endsWith ^String % ".class"))
-            (remove #(.startsWith % "META-INF/"))
+            (remove #(.startsWith ^String % "META-INF/"))
             (remove #(.contains ^String % "__"))
             (remove #(re-find #".+\$\d.*" %))
-            (map #(.. % (replace ".class" "") (replace "/" ".")))
+            (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
             (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
 (defn ^:private base-classes

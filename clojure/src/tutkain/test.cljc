@@ -44,12 +44,13 @@
 (defn- line-number
   [ns]
   (or
-    (some->>
-      (.getStackTrace (new java.lang.Throwable))
-      (drop-while #(not (str/starts-with? (.getClassName ^StackTraceElement %)
-                          (class-name-prefix ns))))
-      (first)
-      (.getLineNumber))
+    (when-some [^StackTraceElement stack-trace-element
+                (some->>
+                  (.getStackTrace (new java.lang.Throwable))
+                  (drop-while #(not (str/starts-with? (.getClassName ^StackTraceElement %)
+                                      (class-name-prefix ns))))
+                  (first))]
+      (.getLineNumber stack-trace-element))
     0))
 
 (defn- add-result
@@ -106,7 +107,7 @@
     @results))
 
 (defmethod handle :test
-  [{:keys [eval-lock ns code file vars thread-bindings] :as message}]
+  [{:keys [eval-lock ns code ^String file vars thread-bindings] :as message}]
   (try
     (let [filename (some-> file File. .getName)
           ns-sym (or (some-> ns symbol) 'user)]
