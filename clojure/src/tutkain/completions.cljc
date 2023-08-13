@@ -9,7 +9,6 @@
   (:import
    (java.io File)
    (java.lang.reflect Field Member Method Modifier)
-   (java.util.concurrent ConcurrentHashMap)
    (java.util.jar JarEntry JarFile)))
 
 (when (nil? (System/getProperty "apple.awt.UIElement"))
@@ -29,7 +28,7 @@
   #?(:bb [] ; TODO
      :clj (let [field (.getDeclaredField clojure.lang.Keyword "table")]
             (.setAccessible field true)
-            (map keyword (.keySet ^ConcurrentHashMap (.get field nil))))))
+            (map keyword (.keySet ^java.util.concurrent.ConcurrentHashMap (.get field nil))))))
 
 (comment (all-keywords),)
 
