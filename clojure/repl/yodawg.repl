@@ -221,9 +221,9 @@
 (send :repl 'f2)
 (deliver my.ns.one/p :done)
 (recv :repl)
-(xr/check! #{:done})
+(xr/check! #{:done 2})
 (recv :repl)
-(xr/check! #{2})
+(xr/check! #{2 :done})
 
 ;; Backchannel eval
 
