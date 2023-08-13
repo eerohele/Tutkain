@@ -7,10 +7,10 @@
    [tutkain.rpc :as rpc :refer [handle respond-to]]
    [tutkain.java :as java])
   (:import
-   (java.util.jar JarFile)
    (java.io File)
    (java.lang.reflect Field Member Method Modifier)
-   (java.util.jar JarEntry)))
+   (java.util HashMap)
+   (java.util.jar JarEntry JarFile)))
 
 (when (nil? (System/getProperty "apple.awt.UIElement"))
   (System/setProperty "apple.awt.UIElement" "true"))
