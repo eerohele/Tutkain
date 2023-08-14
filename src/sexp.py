@@ -36,7 +36,7 @@ ABSORB_SELECTOR = inspect.cleandoc(
     """keyword.operator.macro
 | punctuation.definition.keyword
 | punctuation.definition.comment
-| constant.other.keyword"""
+| (constant.other.keyword & meta.namespace)"""
 )
 
 

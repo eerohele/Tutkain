@@ -791,6 +791,24 @@ class TestParedit(ViewTestCase):
         self.assertEquals("{:foo \\x}", self.view_content())
         self.assertEquals([(8, 8)], self.selections())
 
+        self.set_view_content(":foo{}")
+        self.set_selections((5, 5))
+        self.view.run_command("tutkain_paredit_backward_delete")
+        self.assertEquals(":foo", self.view_content())
+        self.assertEquals([(4, 4)], self.selections())
+
+        self.set_view_content("#:foo{}")
+        self.set_selections((6, 6))
+        self.view.run_command("tutkain_paredit_backward_delete")
+        self.assertEquals("", self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content("#:foo {}")
+        self.set_selections((7, 7))
+        self.view.run_command("tutkain_paredit_backward_delete")
+        self.assertEquals("#:foo ", self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
+
     def test_forward_delete(self):
         self.set_view_content('("zot" quux)')
         self.set_selections((7, 7))
@@ -890,6 +908,24 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_forward_delete")
         self.assertEquals("return", self.view_content())
         self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content(":foo{}")
+        self.set_selections((5, 5))
+        self.view.run_command("tutkain_paredit_forward_delete")
+        self.assertEquals(":foo", self.view_content())
+        self.assertEquals([(4, 4)], self.selections())
+
+        self.set_view_content("#:foo{}")
+        self.set_selections((6, 6))
+        self.view.run_command("tutkain_paredit_forward_delete")
+        self.assertEquals("", self.view_content())
+        self.assertEquals([(0, 0)], self.selections())
+
+        self.set_view_content("#:foo {}")
+        self.set_selections((7, 7))
+        self.view.run_command("tutkain_paredit_forward_delete")
+        self.assertEquals("#:foo ", self.view_content())
+        self.assertEquals([(6, 6)], self.selections())
 
     def test_raise_sexp(self):
         self.set_view_content("(def f (fn [] body))")
