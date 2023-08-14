@@ -31,7 +31,7 @@ def read_until_prompt(socket: socket.SocketType):
     return bs
 
 
-BASE64_BLOB = """(intern (create-ns 'tutkain.repl) 'load-base64 (let [decoder (java.util.Base64/getDecoder)] #?(:bb (fn [blob _ _] (load-string (String. (.decode decoder blob) "UTF-8"))) :clj (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename))))))"""
+BASE64_BLOB = """(intern (create-ns 'tutkain.repl) 'load-base64 #?(:bb (fn [blob _ _] (load-string (String. (.decode (java.util.Base64/getDecoder) blob) "UTF-8"))) :clj (fn [blob file filename] (with-open [reader (-> (java.util.Base64/getDecoder) (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename)))))"""
 
 
 class Client(edn_client.Client):
