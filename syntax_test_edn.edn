@@ -483,3 +483,13 @@ string"
 ;    ^ -meta.mapping.key
 ;     ^^^^^^ meta.mapping.value.edn
 ;           ^ -meta.mapping
+
+; # Map namespace syntax
+
+  #:blah/blah{}
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn
+;   ^^^^ meta.namespace
+;       ^ punctuation.definition.constant.namespace
+;  ^^^^^^^^^^ constant.other.keyword.qualified.edn
+

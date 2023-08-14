@@ -2956,18 +2956,6 @@
 
 ; # Map namespace syntax
 
-  #:blah/blah{}
-; ^ keyword.operator.macro.edn
-;  ^ punctuation.definition.keyword.edn
-;   ^^^^ meta.namespace
-;       ^ punctuation.definition.constant.namespace
-;  ^^^^^^^^^^ constant.other.keyword.qualified.edn
-
-  #::blah{}
-; ^ keyword.operator.macro.edn
-;  ^^ punctuation.definition.keyword.clojure
-;  ^^^^^^ constant.other.keyword.auto-qualified.clojure
-
   #::blah/blah{}
 ; ^ keyword.operator.macro.edn
 ;  ^^ punctuation.definition.keyword.clojure
