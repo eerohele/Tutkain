@@ -71,13 +71,9 @@ class JvmBackchannelServer(JvmServer):
         # Client starts clojure.main/repl
         self.recv()
 
-        # Client switches into the bootstrap namespace
-        self.recv()
-        self.send("nil")
-
         # Client defines load-base64 function
         self.recv()
-        self.send("#'tutkain.bootstrap/load-base64")
+        self.send("#'tutkain.repl/load-base64")
 
         # Client loads modules
         self.recv()
@@ -127,13 +123,9 @@ class JvmRpcServer(JvmServer):
         # Client starts clojure.main/repl
         self.recv()
 
-        # Client switches into the bootstrap namespace
-        self.recv()
-        self.send("nil")
-
         # Client defines load-base64 function
         self.recv()
-        self.send("#'tutkain.bootstrap/load-base64")
+        self.send("#'tutkain.repl/load-base64")
 
         # Client loads modules
         self.recv()
@@ -196,13 +188,9 @@ class JsServer(Backchannel):
         # Server sends build ID list
         self.send("[:browser, :node-script, :npm]")
 
-        # Client switches into the bootstrap namespace
-        self.recv()
-        self.send("nil\n")
-
         # Client defines load-base64 function
         self.recv()
-        self.send("#'tutkain.bootstrap/load-base64\n")
+        self.send("#'tutkain.repl/load-base64\n")
 
         # Client loads modules
         self.recv()
@@ -258,13 +246,9 @@ class BabashkaServer(PlainServer):
         # Client starts clojure.main/repl
         self.recv()
 
-        # Client switches into the bootstrap namespace
-        self.recv()
-        self.send("nil")
-
         # Client defines load-base64 function
         self.recv()
-        self.send("#'tutkain.bootstrap/load-base64")
+        self.send("#'tutkain.repl/load-base64")
 
         # Client loads modules
         self.recv()

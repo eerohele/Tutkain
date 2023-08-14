@@ -31,7 +31,7 @@ def read_until_prompt(socket: socket.SocketType):
     return bs
 
 
-BASE64_BLOB = """(def load-base64 (let [decoder (java.util.Base64/getDecoder)] #?(:bb (fn [blob _ _] (load-string (String. (.decode decoder blob) "UTF-8"))) :clj (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename))))))"""
+BASE64_BLOB = """(intern (create-ns 'tutkain.repl) 'load-base64 (let [decoder (java.util.Base64/getDecoder)] #?(:bb (fn [blob _ _] (load-string (String. (.decode decoder blob) "UTF-8"))) :clj (fn [blob file filename] (with-open [reader (-> decoder (.decode blob) (java.io.ByteArrayInputStream.) (java.io.InputStreamReader.) (clojure.lang.LineNumberingPushbackReader.))] (clojure.lang.Compiler/load reader file filename))))))"""
 
 
 class Client(edn_client.Client):
@@ -283,8 +283,6 @@ class JVMClient(Client):
         self.write_line(
             """(clojure.main/repl :init (constantly nil) :prompt (constantly "") :need-prompt (constantly false))"""
         )
-        self.write_line("(ns tutkain.bootstrap)")
-        self.buffer.readline()
         self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
@@ -294,7 +292,7 @@ class JVMClient(Client):
             with open(path, "rb") as file:
                 blob = base64.encode(file.read())
                 self.write_line(
-                    f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")"""
+                    f"""(tutkain.repl/load-base64 "{blob}" "{path}" "{os.path.basename(path)}")"""
                 )
 
             self.buffer.readline()
@@ -409,8 +407,6 @@ class JSClient(Client):
         self.evaluate_rpc(code, options)
 
     def handshake(self, build_id):
-        self.write_line("(ns tutkain.bootstrap)")
-        self.buffer.readline()
         self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
@@ -425,7 +421,7 @@ class JSClient(Client):
             with open(path, "rb") as file:
                 blob = base64.encode(file.read())
                 self.write_line(
-                    f"""(load-base64 "{blob}" "{path}" "{os.path.basename(path)}")"""
+                    f"""(tutkain.repl/load-base64 "{blob}" "{path}" "{os.path.basename(path)}")"""
                 )
 
             self.buffer.readline()
