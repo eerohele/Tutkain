@@ -1058,6 +1058,12 @@
 ;  ^ punctuation.definition.keyword.edn
 ;  ^^^^ constant.other.keyword.unqualified.edn
 ;        ^ - meta
+;         ^ keyword.operator.macro.edn
+;          ^ constant.other.keyword.unqualified.edn punctuation.definition.keyword.edn
+;           ^^^ meta.namespace.edn
+;              ^^^^ invalid
+;                  ^ punctuation.section.braces.begin.edn - meta.namespace - invalid
+;                       ^ punctuation.section.braces.end.edn - meta.namespace - invalid
 ;                        ^ - meta
 ;                                      ^ - meta
 
@@ -2956,11 +2962,46 @@
 
 ; # Map namespace syntax
 
-  #::blah/blah{}
-; ^ keyword.operator.macro.edn
-;  ^^ punctuation.definition.keyword.clojure
-;        ^ punctuation.definition.constant.namespace
-;  ^^^^^^ constant.other.keyword.auto-qualified.clojure
+  #::foo
+; ^ keyword.operator.macro.clojure
+;  ^^ punctuation.definition.keyword.clojure - meta.namespace
+;    ^^^ meta.namespace.clojure
+;  ^^^^^ constant.other.keyword.auto-qualified.clojure
+
+  #::foo{}
+; ^ keyword.operator.macro.clojure
+;  ^^ punctuation.definition.keyword.clojure - meta.namespace
+;    ^^^ meta.namespace.clojure
+;  ^^^^^ constant.other.keyword.auto-qualified.clojure
+;       ^ punctuation.section.braces.begin.edn - constant
+;        ^ punctuation.section.braces.end.edn - constant
+
+  #::foo {}
+; ^ keyword.operator.macro.clojure
+;  ^^ punctuation.definition.keyword.clojure - meta.namespace
+;    ^^^ meta.namespace.clojure
+;  ^^^^^ constant.other.keyword.auto-qualified.clojure
+;       ^ - meta.namespace
+;        ^ punctuation.section.braces.begin.edn - constant
+;         ^ punctuation.section.braces.end.edn - constant
+
+  #::foo/{}
+; ^ keyword.operator.macro.clojure
+;  ^^ punctuation.definition.keyword.clojure - meta.namespace
+;    ^^^ meta.namespace.clojure
+;  ^^^^^ constant.other.keyword.auto-qualified.clojure
+;       ^ invalid.illegal.edn
+;        ^ punctuation.section.braces.begin.edn - illegal
+;         ^ punctuation.section.braces.end.edn - illegal
+
+  #::foo/bar{}
+; ^ keyword.operator.macro.clojure
+;  ^^ punctuation.definition.keyword.clojure - meta.namespace
+;    ^^^ meta.namespace.clojure
+;  ^^^^^ constant.other.keyword.auto-qualified.clojure
+;       ^^^^ invalid.illegal.edn
+;           ^ punctuation.section.braces.begin.edn - illegal
+;            ^ punctuation.section.braces.end.edn - illegal
 
 
 

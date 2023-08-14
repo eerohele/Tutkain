@@ -308,9 +308,19 @@ contexts:
               pop: 2
 
   qualified-map:
-    - match: '(#)(?=:)'
+    - match: '(#)((:)({{keyword_namespace}}))'
       captures:
           1: keyword.operator.macro.edn
+          2: constant.other.keyword.unqualified.edn
+          3: punctuation.definition.keyword.edn
+          4: meta.namespace.edn
+      push:
+        - match: '/{{symbol}}?'
+          scope: invalid.illegal.edn
+          pop: true
+        - match: ''
+          pop: true
+
 
   # S-expressions
 

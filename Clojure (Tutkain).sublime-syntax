@@ -65,6 +65,7 @@ contexts:
     - include: anonymous-function-literal
     - include: reader-conditional
     - include: tagged-element
+    - include: auto-qualified-map
     - include: qualified-map
 
   # Dispatch
@@ -113,6 +114,21 @@ contexts:
         - include: forms
         - match: ''
           pop: true
+
+  auto-qualified-map:
+    - match: '(#)((::)({{keyword_namespace}}))'
+      captures:
+          1: keyword.operator.macro.clojure
+          2: constant.other.keyword.auto-qualified.clojure
+          3: punctuation.definition.keyword.clojure
+          4: meta.namespace.clojure
+      push:
+        - match: '/{{symbol}}?'
+          scope: invalid.illegal.edn
+          pop: true
+        - match: ''
+          pop: true
+
 
   # S-expressions
 

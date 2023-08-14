@@ -486,10 +486,68 @@ string"
 
 ; # Map namespace syntax
 
-  #:blah/blah{}
+  #:foo
 ; ^ keyword.operator.macro.edn
-;  ^ punctuation.definition.keyword.edn
-;   ^^^^ meta.namespace
-;       ^ punctuation.definition.constant.namespace
-;  ^^^^^^^^^^ constant.other.keyword.qualified.edn
+;  ^ punctuation.definition.keyword.edn - meta.namespace
+;   ^^^ meta.namespace
+;  ^^^^ constant.other.keyword.unqualified.edn
 
+  #:foo{}
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn - meta.namespace
+;   ^^^ meta.namespace
+;      ^ punctuation.section.braces.begin.edn - meta.namespace
+;       ^ punctuation.section.braces.end.edn - meta.namespace
+;  ^^^^ constant.other.keyword.unqualified.edn
+
+  #:foo {}
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn - meta.namespace
+;   ^^^ meta.namespace
+;      ^ -meta.namespace
+;       ^
+;  ^^^^ constant.other.keyword.unqualified.edn
+;       ^ punctuation.section.braces.begin.edn
+;        ^ punctuation.section.braces.end.edn
+
+  #:foo,{}
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn - meta.namespace
+;   ^^^ meta.namespace
+;      ^ comment.punctuation.comma - meta.namespace
+;       ^ punctuation.section.braces.begin.edn
+;        ^ punctuation.section.braces.end.edn
+;  ^^^^ constant.other.keyword.unqualified.edn
+
+  #:foo/
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn - meta.namespace
+;   ^^^ meta.namespace
+;      ^ invalid.illegal.edn
+
+  #:foo/bar{}
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn - meta.namespace
+;   ^^^ meta.namespace
+;      ^^^^ invalid.illegal.edn
+;          ^ punctuation.section.braces.begin.edn
+;           ^ punctuation.section.braces.end.edn
+
+
+  #:foo/bar {}
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn - meta.namespace
+;   ^^^ meta.namespace
+;      ^^^^ invalid.illegal.edn
+;          ^ -invalid
+;           ^ punctuation.section.braces.begin.edn
+;            ^ punctuation.section.braces.end.edn
+
+  #:foo/bar,{}
+; ^ keyword.operator.macro.edn
+;  ^ punctuation.definition.keyword.edn - meta.namespace
+;   ^^^ meta.namespace
+;      ^^^^ invalid.illegal.edn
+;          ^ -invalid
+;           ^ punctuation.section.braces.begin.edn
+;            ^ punctuation.section.braces.end.edn
