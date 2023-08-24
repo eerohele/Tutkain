@@ -565,7 +565,7 @@ class TutkainEvaluateCommand(TextCommand):
                             client,
                             code,
                             auto_switch_namespace,
-                            handler=lambda item: handler(sel, item),
+                            handler=lambda item: handler(region, item),
                             point=region.begin(),
                             options=options,
                         )
