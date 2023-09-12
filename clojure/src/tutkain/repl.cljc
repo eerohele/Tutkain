@@ -16,7 +16,7 @@
   #?(:bb pr-str :clj main/repl-caught))
 
 (defn ^:private read-in-context
-  "Given a tutkain.rpc.Backchannel and a LineNumberingPushbackReader,
+  "Given a tutkain.rpc.RPC and a LineNumberingPushbackReader,
   read a form from the reader in the context of the backchannel thread
   bindings and return a map with these keys:
 
