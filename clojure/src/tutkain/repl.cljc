@@ -94,7 +94,7 @@
                      *print* pretty-print]
              (try
                (pretty-print {:host (rpc/host backchannel) :port (rpc/port backchannel)})
-               (println "Clojure" (clojure-version))
+               (println "Clojure" (clojure-version) "(Java" (str (Runtime/version) ")"))
                (loop []
                  (when
                    (try
