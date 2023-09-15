@@ -339,7 +339,7 @@
                           (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
                           (requiring-resolve `default-init))]
         (initf))
-      (prn {:tag :out :val (str "Clojure " (clojure-version) "\n")})
+      (prn {:tag :out :val (str "Clojure " (clojure-version) " (Java " (Runtime/version) ")" "\n")})
       (accept
         (assoc opts
           :xform-in #(assoc % :eval-lock eval-lock)
