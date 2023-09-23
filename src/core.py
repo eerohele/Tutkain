@@ -1130,12 +1130,13 @@ class TutkainEventListener(EventListener):
 
 
 class TutkainExpandSelectionImplCommand(TextCommand):
-    """Internal, do not use. Use the tutkain_expand_selection window command
-    instead."""
+    """Internal, do not use. Use the tutkain_expand_selection command instead."""
 
-    def run(self, _, region):
+    def run(self, _, region=None):
         region = sublime.Region(region[0], region[1])
+        self.expand(region)
 
+    def expand(self, region):
         if region == sublime.Region(0, self.view.size()):
             pass
         elif not region.empty() and self.view.match_selector(
@@ -1263,16 +1264,20 @@ class TutkainExpandSelectionImplCommand(TextCommand):
             self.view.run_command("expand_selection", {"to": "brackets"})
 
 
-class TutkainExpandSelectionCommand(WindowCommand):
-    def run(self):
-        view = self.window.active_view()
+class TutkainExpandSelectionCommand(TextCommand):
+    def run(self, _):
+        view = self.view
 
         for region in view.sel():
             if selectors.ignore(view, region.begin()):
                 view.run_command("expand_selection", {"to": "scope"})
             else:
-                view.run_command(
-                    "tutkain_expand_selection_impl", {"region": region.to_tuple()}
+                sublime.set_timeout(
+                    lambda: view.run_command(
+                        "tutkain_expand_selection_impl",
+                        {"region": region.to_tuple()},
+                    ),
+                    0,
                 )
 
 
