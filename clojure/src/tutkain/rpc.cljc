@@ -5,7 +5,8 @@
    [clojure.java.io :as io]
    [clojure.main :as main]
    [clojure.edn :as edn]
-   [tutkain.format :as format])
+   [tutkain.format :as format]
+   [tutkain.pprint :as pprint])
   (:import
    (clojure.lang LineNumberingPushbackReader RT)
    (java.nio.file LinkOption Files Paths Path)
@@ -347,4 +348,4 @@
           :eventual-out-writer (promise)
           :eventual-err-writer (promise))))
     (catch Exception ex
-      (prn {:tag :err :val (with-out-str ((requiring-resolve 'clojure.pprint/pprint) (Throwable->map ex)))}))))
+      (prn {:tag :err :val (with-out-str (pprint/pprint (Throwable->map ex)))}))))

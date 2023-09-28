@@ -286,7 +286,13 @@ class JVMClient(Client):
         self.write_line(BASE64_BLOB)
         self.buffer.readline()
 
-        for filename in ["format.cljc", "rpc.cljc", "base64.cljc", "repl.cljc"]:
+        for filename in [
+            "pprint.cljc",
+            "format.cljc",
+            "rpc.cljc",
+            "base64.cljc",
+            "repl.cljc",
+        ]:
             path = self.source_path(filename)
 
             with open(path, "rb") as file:
@@ -411,6 +417,7 @@ class JSClient(Client):
         self.buffer.readline()
 
         for filename in [
+            "pprint.cljc",
             "format.cljc",
             "rpc.cljc",
             "base64.cljc",

@@ -1,7 +1,7 @@
 (ns tutkain.repl
   (:require
    [clojure.main :as main]
-   [clojure.pprint :as pprint]
+   [tutkain.pprint :as pprint]
    [tutkain.rpc :as rpc]
    [tutkain.format :as format])
   (:import
@@ -74,10 +74,10 @@
            out *out*
            in *in*
            pretty-print (fn [message]
-                          (binding [*print-readably* true
-                                    pprint/*print-right-margin* 100]
+                          (binding [*print-readably* true]
                             (locking print-lock
-                              (pprint/pprint message out))))
+                              (pprint/pprint out message {:max-width 100})
+                              (.flush out))))
            repl-thread (Thread/currentThread)]
        (main/with-bindings
          (when-some [initf (or
@@ -136,4 +136,4 @@
                (finally
                  (rpc/close backchannel)))))))
      (catch Exception ex
-       {:tag :err :val (with-out-str ((requiring-resolve 'clojure.pprint/pprint) (Throwable->map ex)))}))))
+       {:tag :err :val (with-out-str (pprint/pprint (Throwable->map ex)))}))))

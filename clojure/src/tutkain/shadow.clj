@@ -1,13 +1,13 @@
 (ns tutkain.shadow
   (:require
    [clojure.core.async :as async]
-   [clojure.pprint :as pprint]
    [cljs.util :refer [*clojurescript-version*]]
    [shadow.cljs.devtools.api :as api]
    [shadow.cljs.devtools.server.supervisor :as supervisor]
    [shadow.remote.relay.api :as relay]
    [tutkain.rpc :as rpc :refer [respond-to]]
-   [tutkain.format :refer [pp-str]])
+   [tutkain.format :refer [pp-str]]
+   [tutkain.pprint :as pprint])
   (:import (java.net SocketException)))
 
 (defn print-result

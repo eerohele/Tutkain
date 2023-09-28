@@ -77,6 +77,8 @@ class JvmBackchannelServer(JvmServer):
 
         # Client loads modules
         self.recv()
+        self.send("#'tutkain.pprint/pprint")
+        self.recv()
         self.send("#'tutkain.format/pp-str")
         self.recv()
         self.send("#'tutkain.rpc/open")
@@ -128,6 +130,8 @@ class JvmRpcServer(JvmServer):
         self.send("#'tutkain.repl/load-base64")
 
         # Client loads modules
+        self.recv()
+        self.send("#'tutkain.pprint/pprint")
         self.recv()
         self.send("#'tutkain.format/pp-str")
         self.recv()
@@ -194,6 +198,8 @@ class JsServer(Backchannel):
 
         # Client loads modules
         self.recv()
+        self.send("#'tutkain.pprint/pprint")
+        self.recv()
         self.send("#'tutkain.format/pp-str")
         self.recv()
         self.send("#'tutkain.rpc/open")
@@ -251,6 +257,8 @@ class BabashkaServer(PlainServer):
         self.send("#'tutkain.repl/load-base64")
 
         # Client loads modules
+        self.recv()
+        self.send("#'tutkain.pprint/pprint")
         self.recv()
         self.send("#'tutkain.format/pp-str")
         self.recv()

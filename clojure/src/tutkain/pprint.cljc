@@ -1,0 +1,467 @@
+;; This namespace is a copy of me.flowthing.pp:
+;;
+;; https://github.com/eerohele/pp/blob/main/src/me/flowthing/pp.clj
+;;
+;; The tests for this namespace live in pp's repository.
+
+(ns tutkain.pprint
+  "A pretty-printer for Clojure data structures.
+
+  Based on the algorithm described in \"Pretty-Printing, Converting List
+  to Linear Structure\" by Ira Goldstein (Artificial Intelligence, Memo
+  No. 279 in Massachusetts Institute of Technology A.I. Laboratory,
+  February 1973)."
+  {:author "Eero Helenius"
+   :license "MIT"
+   :git/url "https://github.com/eerohele/pp.git"}
+  (:import (java.io StringWriter Writer)))
+
+(set! *warn-on-reflection* true)
+
+(defn ^:private strip-ns
+  "Given a (presumably qualified) ident, return an unqualified version
+  of the ident."
+  [x]
+  (cond
+    (keyword? x) (keyword nil (name x))
+    (symbol? x) (symbol nil (name x))))
+
+(defn ^:private extract-map-ns
+  "Given a map, iff the keys in the map are qualified idents that share
+  a namespace, return a tuple where the first item is the namespace
+  name (a string) and the second item is a copy of the original map
+  but with unqualified idents."
+  [m]
+  (when (seq m)
+    (loop [m m ns nil nm {}]
+      (if-some [[k v] (first m)]
+        (when (qualified-ident? k)
+          (let [k-ns (namespace k)]
+            (when (or (nil? ns) (= ns k-ns))
+              (recur (rest m) k-ns (assoc nm (strip-ns k) v)))))
+        [ns nm]))))
+
+(defn ^:private open-delim
+  "Return the opening delimiter (a string) of coll."
+  ^String [coll]
+  (cond
+    (map? coll) "{"
+    (vector? coll) "["
+    (set? coll) "#{"
+    :else "("))
+
+(defn ^:private close-delim
+  "Return the closing delimiter (a string) of coll."
+  ^String [coll]
+  (cond
+    (map? coll) "}"
+    (vector? coll) "]"
+    (set? coll) "}"
+    :else ")"))
+
+(defprotocol ^:private CountKeepingWriter
+  (^:private write [this s]
+    "Write a string into the underlying java.io.Writer.")
+
+  (^:private remaining [this]
+    "Return the number of characters available on the current line.")
+
+  (^:private nl [this]
+    "Write a newline into the underlying java.io.Writer.
+
+    Resets the number of characters allotted to the current line to
+    zero. Writing a string with a newline via the write method does
+    not."))
+
+(defn ^:private count-keeping-writer
+  "Wrap a java.io.Writer such that it becomes a CountKeepingWriter: a
+  writer that keeps count of the length of the strings written into
+  each line."
+  [^Writer writer max-width]
+  (let [c (volatile! 0)]
+    (reify CountKeepingWriter
+      (write [_ s]
+        (.write writer ^String s)
+        (vswap! c #(+ % (.length ^String s)))
+        nil)
+      (remaining [_]
+        (- max-width @c))
+      (nl [_]
+        (.write writer "\n")
+        (vreset! c 0)
+        nil))))
+
+(def ^:private reader-macros
+  {`quote "'" `deref "@" `var "#'" `unquote "~"})
+
+(defn ^:private reader-macro?
+  "Return true iff coll implies a reader macro.
+
+  That is, one of:
+
+    - (quote foo)
+    - (clojure.core/deref foo)
+    - (var foo)
+    - (unquote foo)"
+  [coll]
+  (and
+    (seq? coll)
+    (contains? reader-macros (first coll))))
+
+(defn ^:private open-delim+form
+  "Given a coll, return a tuple where the first item is the coll's
+  opening delimiter and the second item is the coll.
+
+  If *print-namespace-maps* is true, the coll is a map, and the map is
+  amenable to the map namespace syntax, the open delimiter includes
+  the map namespace prefix and the map keys are unqualified.
+
+  If the coll is a record, the open delimiter includes the record name
+  prefix."
+  [coll]
+  (if (record? coll)
+    [(str "#" (-> coll class .getName) "{") coll]
+    (let [[ns ns-map]
+          (when (and *print-namespace-maps* (map? coll))
+            (extract-map-ns coll))
+
+          coll (if ns ns-map coll)
+
+          o (if ns (str "#:" ns "{") (open-delim coll))]
+      [o coll])))
+
+(defn ^:private meets-print-level?
+  "Given a level (a long), return true if the level is the same as
+  *print-level*."
+  [level]
+  (and (int? *print-level*) (= level *print-level*)))
+
+(defprotocol ^:private Printable
+  (^:private -print [this writer opts]
+   "Given an object, a java.io.Writer, and an options map, write a
+   string representation of the object into the writer in linear style
+   (without regard to line length).
+
+   Options:
+
+     :level (long, default: 0)
+       The current nesting level."))
+
+(defn ^:private -print-coll
+  "Like -print, but only for built-in colls (lists, maps, vectors, and
+  sets)."
+  [coll ^Writer writer {:keys [level] :or {level 0} :as opts}]
+  (cond
+    (meets-print-level? level)
+    (.write writer "#")
+
+    (reader-macro? coll)
+    (do
+      (.write writer ^String (reader-macros (first coll)))
+      (print-method (second coll) writer))
+
+    :else
+    (let [[^String o form] (open-delim+form coll)]
+      (.write writer o)
+
+      (when (seq form)
+        (loop [form form index 0]
+          (if (= index *print-length*)
+            (.write writer "...")
+            (let [f (first form)
+                  n (next form)]
+              (-print f writer (update opts :level inc))
+              (when-not (empty? n)
+                (when (map-entry? f) (.write writer ","))
+                (.write writer " ")
+                (recur n (inc index)))))))
+
+      (.write writer (close-delim form)))))
+
+(extend-protocol Printable
+  nil
+  (-print [_ ^Writer writer _]
+    (.write writer "nil"))
+
+  clojure.lang.AMapEntry
+  (-print [this ^Writer writer {:keys [level] :as opts}]
+    (if (meets-print-level? level)
+      (.write writer "#")
+      (let [opts (update opts :level inc)]
+        (-print (key this) writer opts)
+        (.write writer " ")
+        (-print (val this) writer opts))))
+
+  clojure.lang.ISeq
+  (-print [this ^Writer writer opts]
+    (-print-coll this writer opts))
+
+  clojure.lang.IPersistentMap
+  (-print [this ^Writer writer opts]
+    (-print-coll this writer opts))
+
+  clojure.lang.IPersistentVector
+  (-print [this ^Writer writer opts]
+    (-print-coll this writer opts))
+
+  clojure.lang.IPersistentSet
+  (-print [this ^Writer writer opts]
+    (-print-coll this writer opts))
+
+  Object
+  (-print [this writer _]
+    (print-method this writer)))
+
+(defn ^:private print-linear
+  "Given one arg (a form), print the form into a string using the
+  default options.
+
+  Given two args (a form and an options map), print the form into a
+  string using the given options.
+
+  Given three args (a java.io.Writer, a form, and an options map), print
+  the form into the writer using the given options.
+
+  Options:
+
+    :level (long)
+      The current nesting level."
+  ([form]
+   (print-linear form nil))
+  (^String [form opts]
+   (with-open [writer (StringWriter.)]
+     (print-linear writer form opts)
+     (str writer)))
+  ([^Writer writer form opts]
+   (-print form writer opts)))
+
+(defn ^:private print-mode
+  "Given a CountKeepingWriter, a string representation of a form, and a
+  number of characters to reserve for closing delimiters, return a
+  keyword indicating a printing mode (:linear or :miser)."
+  [writer ^String s reserve-chars]
+  (if (<= (.length s) (- (remaining writer) reserve-chars))
+    :linear
+    :miser))
+
+(defn ^:private write-sep
+  "Given a CountKeepingWriter and a printing mode, print a separator (a
+  space or a newline) into the writer."
+  [writer mode]
+  (case mode
+    :miser (nl writer)
+    (write writer " ")))
+
+(defprotocol ^:private PrettyPrintable
+  (^:private -pprint [this writer opts]
+    "Given a form, a CountKeepingWriter, and an options map,
+    pretty-print the form into the writer.
+
+    Options:
+
+      :level (long)
+        The current nesting level. For example, in [[:a 1]], the outer
+        vector is nested at level 0, and the inner vector is nested at
+        level 1.
+
+      :indentation (String)
+        A string (of spaces) to use for indentation.
+
+      :reserve-chars (long)
+        The number of characters reserved for closing delimiters of
+        S-expressions above the current nesting level."))
+
+(defn ^:private -pprint-coll
+  "Like -pprint, but only for built-in colls (lists, maps, vectors, and
+  sets)."
+  [this writer {:keys [level indentation reserve-chars] :as opts}]
+  (cond
+    (meets-print-level? level)
+    (write writer "#")
+
+    (reader-macro? this)
+    (do
+      (write writer ^String (reader-macros (first this)))
+      (-pprint (second this) writer
+        (update opts :indentation
+          (fn [indentation] (str indentation " ")))))
+
+    :else
+    (let [s (print-linear this opts)
+
+          ;; If all keys in the map share a namespace and *print-
+          ;; namespace-maps* is true, print the map using map namespace
+          ;; syntax (e.g. #:a{:b 1} instead of {:a/b 1}). If the map is
+          ;; a record, print the map using the record syntax (e.g.
+          ;; #user.R{:x 1}).
+          [^String o form] (open-delim+form this)
+
+          ;; The indentation level is the indentation level of the
+          ;; parent S-expression plus a number of spaces equal to the
+          ;; length of the open delimiter (e.g. one for "(", two for
+          ;; "#{").
+          indentation (str indentation (.repeat " " (.length o)))
+
+          ;; If, after (possibly) reserving space for any closing
+          ;; delimiters of ancestor S-expressions, there's enough space
+          ;; to print the entire form in linear style on this line, do
+          ;; so.
+          ;;
+          ;; Otherwise, print the form in miser style.
+          mode (print-mode writer s reserve-chars)
+
+          opts (-> opts
+                 (assoc :indentation indentation)
+                 (update :level inc))]
+
+      ;; Print possible meta
+      (when (and *print-meta* *print-readably*)
+        (when-some [m (meta form)]
+          (when (seq m)
+            (write writer "^")
+            ;; As per https://github.com/clojure/clojure/blob/6975553804b0f8da9e196e6fb97838ea4e153564/src/clj/clojure/core_print.clj#L78-L80
+            (let [m (if (and (= (count m) 1) (:tag m)) (:tag m) m)]
+              (-pprint m writer opts))
+            (write-sep writer mode))))
+
+      ;; Print open delimiter
+      (write writer o)
+
+      ;; Print S-expression content
+      (if (= *print-length* 0)
+        (write writer "...")
+        (when (seq form)
+          (loop [form form index 0]
+            (if (= index *print-length*)
+              (do
+                (when (= mode :miser) (write writer indentation))
+                (write writer "..."))
+
+              (do
+                ;; In miser mode, prepend indentation to every form
+                ;; except the first one. We don't want to prepend
+                ;; indentation for the first form, because it
+                ;; immediately follows the open delimiter.
+                (when (and (= mode :miser) (pos? index))
+                  (write writer indentation))
+
+                (let [f (first form)
+                      n (next form)]
+                  (cond
+                    (empty? n)
+                    ;; This is the last child, so reserve an additional
+                    ;; slot for the closing delimiter of the parent
+                    ;; S-expression.
+                    (-pprint f writer (update opts :reserve-chars inc))
+
+                    (map-entry? f)
+                    (do
+                      ;; Reserve a slot for the comma trailing the
+                      ;; map entry.
+                      (-pprint f writer (assoc opts :reserve-chars 1))
+                      (write writer ",")
+                      (write-sep writer mode)
+                      (recur n (inc index)))
+
+                    :else
+                    (do
+                      (-pprint f writer (assoc opts :reserve-chars 0))
+                      (write-sep writer mode)
+                      (recur n (inc index))))))))))
+
+      ;; Print close delimiter
+      (write writer (close-delim form)))))
+
+(extend-protocol PrettyPrintable
+  nil
+  (-pprint [_ writer _]
+    (write writer "nil"))
+
+  ;; We have to special-case map entries because they normally print
+  ;; like vectors (e.g. [:a 1]), but we don't want to print those
+  ;; square brackets.
+  ;;
+  ;; Additionally, we want to keep the key and the value on the same
+  ;; line whenever we can.
+  clojure.lang.AMapEntry
+  (-pprint [this writer
+            {:keys [level indentation reserve-chars] :as opts}]
+    (if (meets-print-level? level)
+      (write writer "#")
+      (let [k (key this)
+            opts (update opts :level inc)]
+        (-pprint k writer opts)
+
+        (let [v (val this)
+              s (print-linear v opts)
+              ;; If, after writing the map entry key, there's enough
+              ;; space to write the val on the same line, do so.
+              ;; Otherwise, write indentation followed by val on the
+              ;; following line.
+              mode (print-mode writer s (inc reserve-chars))]
+          (write-sep writer mode)
+          (when (= :miser mode) (write writer indentation))
+          (-pprint v writer opts)))))
+
+  clojure.lang.ISeq
+  (-pprint [this writer opts]
+    (-pprint-coll this writer opts))
+
+  clojure.lang.IPersistentMap
+  (-pprint [this writer opts]
+    (-pprint-coll this writer opts))
+
+  clojure.lang.IPersistentVector
+  (-pprint [this writer opts]
+    (-pprint-coll this writer opts))
+
+  clojure.lang.IPersistentSet
+  (-pprint [this writer opts]
+    (-pprint-coll this writer opts))
+
+  clojure.lang.PersistentQueue
+  (-pprint [this writer opts]
+    (write writer "<-")
+    (-pprint
+      (or (seq this) '()) writer
+      (update opts :indentation #(str "  " %)))
+    (write writer "-<"))
+
+  Object
+  (-pprint [this writer opts]
+    (write writer (print-linear this opts))))
+
+(defn pprint
+  "Pretty-print an object.
+
+  Given one arg (an object), pretty-print the object into *out* using
+  the default options.
+
+  Given two args (a object and an options map), pretty-print the object
+  into *out* using the given options.
+
+  Given three args (a java.io.Writer, a object, and an options map),
+  pretty-print the object into the writer using the given options.
+
+  Options:
+
+    :max-width (long, default: 72)
+      Avoid printing anything beyond the column indicated by this
+      value."
+  ([x]
+   (pprint *out* x nil))
+  ([x opts]
+   (pprint *out* x opts))
+  ([writer x {:keys [max-width]
+              :or {max-width 72}
+              :as opts}]
+   (assert (or (nat-int? max-width) (= max-width ##Inf))
+     ":max-width must be a natural int or ##Inf")
+
+   (assert (instance? Writer writer)
+     "first arg to pprint must be a java.io.Writer")
+
+   (let [writer (count-keeping-writer writer max-width)]
+     (-pprint x writer
+       (assoc opts :level 0 :indentation "" :reserve-chars 0))
+     (nl writer))))
