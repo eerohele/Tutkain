@@ -25,17 +25,20 @@ def iterate(view):
 
 def move(view, forward, extend):
     for region, sel in iterate(view):
-        cover_region = region
-
-        if form := forms.find_adjacent(view, region.begin()):
-            cover_region = region.cover(form)
-
         if forward:
             point = region.end()
             form_to = forms.find_next(view, point)
         else:
             point = region.begin()
             form_to = forms.find_previous(view, point)
+
+        cover_region = region
+
+        if form := forms.find_adjacent(view, point):
+            if view.match_selector(
+                point - 1, "meta.reader-form"
+            ) and view.match_selector(point, "meta.reader-form"):
+                cover_region = region.cover(form)
 
         new_point = None
 

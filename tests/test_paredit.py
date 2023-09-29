@@ -102,6 +102,24 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_backward", {"extend": True})
         self.assertEquals([(1, 36)], self.selections())
 
+        # Issue #122
+        self.set_view_content('{:a () :b "c"}')
+        self.set_selections((6, 6))
+        self.view.run_command("tutkain_paredit_forward", {"extend": True})
+        self.assertEquals([(6, 9)], self.selections())
+        self.set_view_content('{:a (),:b "c"}')
+        self.set_selections((6, 6))
+        self.view.run_command("tutkain_paredit_forward", {"extend": True})
+        self.assertEquals([(6, 9)], self.selections())
+        self.set_view_content('{:a () :b "c"}')
+        self.set_selections((4, 4))
+        self.view.run_command("tutkain_paredit_backward", {"extend": True})
+        self.assertEquals([(1, 4)], self.selections())
+        self.set_view_content('{:a,() :b "c"}')
+        self.set_selections((4, 4))
+        self.view.run_command("tutkain_paredit_backward", {"extend": True})
+        self.assertEquals([(1, 4)], self.selections())
+
     def test_open_round(self):
         self.set_view_content("(a b c d)")
         self.set_selections((5, 5))
