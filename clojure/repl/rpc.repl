@@ -117,6 +117,8 @@
 (xr/check! #{'("my.clj" 3)})
 
 ;; in-ns
+(send {:op :eval :code "(require 'clojure.set)"})
+(recv)
 (send {:op :eval :code "(in-ns 'clojure.set)"})
 (recv)
 (send {:op :eval :code "(ns-name *ns*)"})
