@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## UNRELEASED
+## 0.19.0 (alpha) - 2023-10-03
 
 - Improve evaluation result printing performance very much
 
