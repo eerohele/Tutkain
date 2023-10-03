@@ -4,13 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
-- Add GitHub provider for **Tutkain: Add Lib**
+- Improve evaluation result printing performance very much
+
+- Show Java runtime version in greeting message
+
+- Support expand/shrink selection in REPL output panel #123
+
+- Add GitHub provider for **Tutkain: Add Lib** (with thanks to @phronmophobic!)
 
 - Improve [exception message printing](https://clojurians.slack.com/archives/C03S1KBA2/p1683142572115519)
 
 - Make `tutkain_paredit_forward_delete` and `tutkain_paredit_backward_delete` faster #119
 
+- Improve the behavior of `tutkain_paredit_forward_delete` and `tutkain_paredit_backward_delete` with map namespace syntax
+
+- Fix bad extend selection when using `tutkain_paredit_forward` or `tutkain_paredit_backward` with `"extend": true`
+
 - Fix `output` arg support for `tutkain_evaluate` with `"scope": "input"`
+
+- Fix `tutkain_remove_namespace_alias` when view contains no `ns` form
+
+- Improve map namespace syntax support
+
+- Fix bug when using `"output": "selection"` with `tutkain_evaluate` with a non-empty region selected
 
 ## 0.18.0 (alpha) - 2023-04-25
 
