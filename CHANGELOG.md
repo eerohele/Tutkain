@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.19.1 (alpha) - 2023-10-10
+
+- Fix ClojureScript evaluation result printing #125
+
 ## 0.19.0 (alpha) - 2023-10-03
 
 - Improve evaluation result printing performance very much
