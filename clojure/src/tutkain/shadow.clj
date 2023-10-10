@@ -6,20 +6,8 @@
    [shadow.cljs.devtools.server.supervisor :as supervisor]
    [shadow.remote.relay.api :as relay]
    [tutkain.rpc :as rpc :refer [respond-to]]
-   [tutkain.format :refer [pp-str]]
-   [tutkain.pprint :as pprint])
+   [tutkain.format :refer [pp-str]])
   (:import (java.net SocketException)))
-
-(defn print-result
-  [result]
-  (binding [*flush-on-newline* true
-            *default-data-reader-fn* tagged-literal
-            *read-eval* false]
-    (try
-      (pprint/pprint
-        (some-> result read-string))
-      (catch Throwable _
-        (println result)))))
 
 (def ^:private no-runtime-err
   "⋯ No JavaScript runtime connected to shadow-cljs process. ⋯
@@ -55,7 +43,19 @@ https://shadow-cljs.github.io/docs/UsersGuide.html#repl-troubleshooting.
 (defmethod handle :eval-result-ref
   [{:keys [tag to-relay from ref-oid]}]
   (reset! tag :ret)
-  (async/>!! to-relay {:op :obj-edn :to from :oid ref-oid}))
+  (async/>!! to-relay
+    {:op :obj-describe
+     :to from
+     :oid ref-oid
+     :request-op :pprint}))
+
+(defmethod handle :obj-summary
+  [{:keys [tag to-relay runtime-id oid]}]
+  (reset! tag :ret)
+  (async/>!! to-relay
+    {:op :obj-pprint
+     :to @runtime-id
+     :oid oid}))
 
 (defmethod handle :eval-runtime-error
   [{:keys [tag to-relay from ex-oid]}]
@@ -84,7 +84,7 @@ https://shadow-cljs.github.io/docs/UsersGuide.html#repl-troubleshooting.
        :val result})
     (async/>!! ret-chan
       {:tag :ret
-       :val (with-out-str (print-result result))})))
+       :val result})))
 
 (defmethod handle :runtime-print
   [{:keys [stream text]}]
