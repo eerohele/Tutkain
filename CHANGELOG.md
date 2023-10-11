@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.19.2 (alpha) - TBA
+
+- Fix **Tutkain: Add Lib** compatibility with Clojure 1.12.0-alpha4 (and newer)
+
 ## 0.19.1 (alpha) - 2023-10-10
 
 - Fix ClojureScript evaluation result printing #125
