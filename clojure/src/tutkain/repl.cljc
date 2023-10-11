@@ -63,8 +63,8 @@
   For compatibility with clojure.repl.deps when using a new enough version of
   Clojure."
   [& body]
-  `(if (resolve 'clojure.core/*repl*)
-     (binding [clojure.core/*repl* true]
+  `(if-some [v# (requiring-resolve 'clojure.core/*repl*)]
+     (with-bindings {v# true}
        (do ~@body))
      (do ~@body)))
 
