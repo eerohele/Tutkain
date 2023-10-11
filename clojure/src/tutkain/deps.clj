@@ -13,7 +13,7 @@
 (defmethod handle :sync-deps
   [message]
   (try
-    (deps/sync-deps (select-keys message [:aliases]))
+    (binding [*repl* true] (deps/sync-deps (select-keys message [:aliases])))
     (respond-to message {:tag :ret :val :ok})
     (catch Exception ex
       (respond-to message {:tag :err :val (.getMessage ex)}))))
@@ -21,7 +21,7 @@
 (defmethod handle :add-lib
   [{:keys [lib] :as message}]
   (try
-    (deps/add-lib lib)
+    (binding [*repl* true] (deps/add-lib lib))
     (respond-to message {:tag :ret :val :ok})
     (catch Exception ex
       (respond-to message {:tag :err :val (.getMessage ex)}))))
@@ -29,7 +29,7 @@
 (defmethod handle :add-libs
   [{:keys [lib-coords] :as message}]
   (try
-    (deps/add-libs lib-coords)
+    (binding [*repl* true] (deps/add-libs lib-coords))
     (respond-to message {:tag :ret :val :ok})
     (catch Exception ex
       (respond-to message {:tag :err :val (.getMessage ex)}))))
