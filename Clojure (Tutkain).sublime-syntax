@@ -540,8 +540,28 @@ contexts:
     - include: comment
     - include: list-end-2
     - include: discard
-    - match: '{{qualified_symbol}}'
-      scope: meta.reader-form.clojure meta.symbol.clojure entity.other.inherited-class.clojure
+    - include: constant
+    - include: metadata
+    - match: '(#\?@?)'
+      captures:
+        1: keyword.operator.macro.clojure
+      push:
+        - match: '\('
+          scope: punctuation.section.parens.begin.edn
+          push:
+          - meta_scope: meta.sexp.list.edn
+          - match: '\)'
+            scope: punctuation.section.parens.end.edn
+            pop: true
+          - include: constant
+          - include: comment
+          - include: keywords
+          - match: '{{symbol}}'
+            scope: entity.other.inherited-class.clojure meta.reader-form.clojure meta.symbol.clojure
+        - match: ''
+          pop: true
+    - match: '{{symbol}}'
+      scope: entity.other.inherited-class.clojure meta.reader-form.clojure meta.symbol.clojure
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       push:

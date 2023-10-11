@@ -2782,6 +2782,49 @@
 ;                                        ^^^^^^^^ comment.discard.edn
 ;                                                 ^^^^^^^^ comment.discard.edn
 
+  (extend-protocol Foo ^:foo nil)
+;                      ^ keyword.operator.macro.clojure
+;                       ^ punctuation.definition.keyword.edn
+;                       ^^^^ constant.other.keyword.unqualified.edn
+;                           ^ -constant.other.keyword
+;                            ^^^ constant.language.edn
+
+
+  (extend-protocol Foo #?)
+;                      ^^ keyword.operator.macro
+;                        ^ punctuation.section.parens.end.edn
+
+  (extend-protocol Foo
+    #?(:clj Bar :cljs Baz)
+;   ^^ keyword.operator.macro
+;     ^ punctuation.section.parens.begin
+;      ^ constant.other.keyword.unqualified punctuation.definition.keyword
+;       ^^^ constant.other.keyword.unqualified
+;          ^ -constant.other.keyword
+;           ^^^ entity.other.inherited-class.clojure meta.reader-form
+;               ^ constant.other.keyword.unqualified punctuation.definition.keyword
+;                ^^^^ constant.other.keyword.unqualified
+;                    ^ -constant.other.keyword
+;                     ^^^ entity.other.inherited-class.clojure meta.reader-form
+;                        ^ punctuation.section.parens.end.edn
+    (quux [this] ,,,))
+
+  (extend-protocol Foo
+    ; one
+;   ^^^^^^ comment.line.edn
+    #?(; two
+;      ^^^^^ comment.line.edn
+       :clj ^:m Bar :cljs Baz
+       ; three
+;      ^^^^^^^ comment.line.edn
+       )
+    ; four
+;   ^^^^^^ comment.line.edn
+    ,,,)
+
+  (extend-protocol Foo #?(nil))
+;                         ^^^ constant.language.edn
+
 ; # extend-type
 
   (extend-type String
