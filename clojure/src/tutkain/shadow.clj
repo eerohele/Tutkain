@@ -38,6 +38,13 @@ https://shadow-cljs.github.io/docs/UsersGuide.html#repl-troubleshooting.
                  :ns (or (some-> ns symbol) 'cljs.user)}}))
     (respond-to message {:tag :err :val no-runtime-err})))
 
+(defmethod rpc/handle :load
+  [message]
+  (respond-to message
+    {:exception true
+     :tag :err
+     :val "ERR: ClojureScript does not support loading the entire view."}))
+
 (defmulti handle :op)
 
 (defmethod handle :eval-result-ref
