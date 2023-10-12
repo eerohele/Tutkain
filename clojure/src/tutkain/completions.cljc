@@ -291,24 +291,16 @@
                             stream (.list module-reader)]
                   (iterator-seq (.iterator stream))))))))
 
-(def ^:private all-class-names
+(def ^:private all-class-candidates
   (future
-    (into (sorted-set)
-      (concat (non-base-classes) (base-classes)))))
-
-(defn ^:private top-level-class-names
-  []
-  (eduction
-    (remove #(.contains ^String % "$"))
-    (map annotate-class)
-    @all-class-names))
+    (map annotate-class
+      (into (sorted-set)
+        (concat (non-base-classes) (base-classes))))))
 
 (defn ^:private nested-class-names
   []
-  (eduction
-    (filter #(.contains ^String % "$"))
-    (map annotate-class)
-    @all-class-names))
+  (filter #(.contains ^String (:candidate %) "$")
+    @all-class-candidates))
 
 (def special-form-candidates
   "All Clojure special form candidates."
@@ -405,7 +397,7 @@
   [^String prefix {:keys [^String candidate]}]
   (.startsWith candidate prefix))
 
-(defn top-level-class-candidates
+(defn class-candidates
   [^String prefix]
   (eduction
     ;; The class candidate list is long and sorted, so instead of filtering
@@ -413,11 +405,11 @@
     ;; until the first class that's not a candidate.
     (drop-while (complement (partial candidate? prefix)))
     (take-while (partial candidate? prefix))
-    (top-level-class-names)))
+    @all-class-candidates))
 
 (comment
-  (seq (top-level-class-candidates "clojure.lang"))
-  (seq (top-level-class-candidates "java.time"))
+  (seq (class-candidates "clojure.lang"))
+  (seq (class-candidates "java.time"))
   ,)
 
 (defn nested-class-candidates
@@ -471,7 +463,7 @@
       (.contains prefix ".")
       (concat
         (candidates-for-prefix prefix (ns-candidates ns))
-        (top-level-class-candidates prefix))
+        (class-candidates prefix))
 
       :else
       (candidates-for-prefix prefix

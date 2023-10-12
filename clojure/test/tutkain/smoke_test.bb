@@ -19,13 +19,13 @@
   (is
     (spec/valid?
       (completions.specs/prefixed-candidates
-        (spec/coll-of ::completions.specs/top-level-class-completion :min-count 1) "java.time")
+        (spec/coll-of ::completions.specs/class-completion :min-count 1) "java.time")
       (completions/candidates "java.time" 'user)))
 
   (is
     (spec/valid?
       (completions.specs/prefixed-candidates
-        (spec/coll-of ::completions.specs/top-level-class-completion :min-count 1) "LocalDate")
+        (spec/coll-of ::completions.specs/class-completion :min-count 1) "LocalDate")
       (completions/candidates "LocalDate" 'tutkain.smoke-test)))
 
   ;; lookup

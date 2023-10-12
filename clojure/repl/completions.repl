@@ -76,7 +76,7 @@
                          {:candidate "java.util.Date" :type :class}}))
 
 (candidates "java." *ns*)
-(xr/check! (spec/coll-of ::specs/top-level-class-completion :min-count 1))
+(xr/check! (spec/coll-of ::specs/class-completion :min-count 1))
 
 ;; A prefix that starts with a Java class name and contains a forward slash
 ;; yields static method candidates from that class.
@@ -135,7 +135,14 @@
 (candidates "java.util.Date/" *ns*)
 (xr/check! (prefixed-candidates ::specs/completions "java.util.Date/"))
 
-;; A prefix that contains a dollar sign yields nested class candidates.
+;; A base Java class name prefix yields both top-level and nested class
+;; candidates.
+(set (candidates "java.util.Spliterator" *ns*))
+(xr/check!
+  (partial set/subset? #{{:candidate "java.util.Spliterator" :type :class}
+                         {:candidate "java.util.Spliterator$OfLong" :type :class}}))
+
+;; A prefix that contains a dollar sign only yields nested class candidates.
 (xr/check! ::specs/completions (candidates "java.util.Spliterator$" *ns*))
 (candidates "java.util.Spliterator$" *ns*)
 (xr/check! (spec/coll-of ::specs/nested-class-completion :kind sequential? :min-count 1))
