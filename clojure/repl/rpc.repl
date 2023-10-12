@@ -101,17 +101,17 @@
 (recv)
 (xr/check! (val? 2))
 
+;; *1
+(send {:op :eval :code "*1"})
+(recv)
+(xr/check! (val? 2))
+
 ;; print from within lazy seq
 (send {:op :eval :code "(map prn (range 1))"})
 (recv)
 (xr/check! (val? '(nil)))
 (recv)
 (xr/check! (out? "0"))
-
-;; *1
-(send {:op :eval :code "*1"})
-(recv)
-(xr/check! (val? 2))
 
 (defn f [x] (/ 6 x))
 
