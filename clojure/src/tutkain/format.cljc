@@ -10,5 +10,5 @@
      :clj (-> t Throwable->map main/ex-triage main/ex-str)))
 
 (defn pp-str
-   [x]
-   (with-out-str (pprint/pprint x {:max-width 100})))
+  [x]
+  (with-out-str (pprint/pprint x {:max-width 100})))
