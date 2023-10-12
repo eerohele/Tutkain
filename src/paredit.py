@@ -73,7 +73,9 @@ def open_bracket(view, edit, open_bracket):
         end = region.end() + 1
         view.insert(edit, begin, open_bracket)
 
-        if not selectors.ignore(view, begin):
+        if not selectors.ignore(view, begin) and not view.match_selector(
+            begin - 1, "constant.character"
+        ):
             view.insert(edit, end, close_bracket)
             new_end = end + 1
             sel.append(Region(begin + 1, begin + 1))

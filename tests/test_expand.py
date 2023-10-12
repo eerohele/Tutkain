@@ -542,3 +542,21 @@ class TestExpandSelectionCommand(unittesting.DeferrableTestCase):
         yield lambda: """{:a :b}""" == self.selection(0)
         self.expand()
         yield lambda: """#{{:a :b}}""" == self.selection(0)
+
+    def test_character(self):
+        self.set_view_content("""\\x""")
+
+        for i in range(0, 2):
+            self.set_selections((i, i))
+            self.expand()
+            yield lambda: """\\x""" == self.selection(0)
+            self.expand()
+            yield lambda: """\\x""" == self.selection(0)
+
+        for i in range(0, 7):
+            self.set_view_content("""\\return""")
+            self.set_selections((i, i))
+            self.expand()
+            yield lambda: """\\return""" == self.selection(0)
+            self.expand()
+            yield lambda: """\\return""" == self.selection(0)
