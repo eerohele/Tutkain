@@ -139,7 +139,10 @@
                               (run!
                                 (fn [form]
                                   (try
-                                    (let [ret (locking eval-lock (eval form))]
+                                    (let [ret (locking eval-lock (eval form))
+                                          ;; If ret is a lazy seq, force it to force prints
+                                          ;; from within the lazy seq (#124).
+                                          ret (cond-> ret (seq? ret) doall)]
                                       (.flush ^Writer *out*)
                                       (.flush ^Writer *err*)
                                       (set! *3 *2)

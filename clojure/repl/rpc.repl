@@ -32,6 +32,12 @@
     (#{{:tag :ret :val (str val \newline)}
        {:tag :ret :val (str val \return \newline)}} ret)))
 
+(defn out?
+  [val]
+  (fn [ret]
+    (#{{:tag :out :val (str val \newline)}
+       {:tag :out :val (str val \return \newline)}} ret)))
+
 (send {:op :echo})
 
 (recv)
@@ -94,6 +100,13 @@
 (send {:op :eval :code "(inc 1)"})
 (recv)
 (xr/check! (val? 2))
+
+;; print from within lazy seq
+(send {:op :eval :code "(map prn (range 1))"})
+(recv)
+(xr/check! (val? '(nil)))
+(recv)
+(xr/check! (out? "0"))
 
 ;; *1
 (send {:op :eval :code "*1"})
