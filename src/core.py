@@ -1849,6 +1849,11 @@ class TutkainExploreStackTraceCommand(TextCommand):
             items = []
 
             for element in elements:
+                native = element.get(edn.Keyword("native?"))
+
+                if native:
+                    continue
+
                 trigger = element.get(edn.Keyword("name"))
                 filename = element.get(edn.Keyword("file-name"))
                 line = element.get(edn.Keyword("line"))

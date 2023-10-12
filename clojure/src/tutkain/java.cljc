@@ -88,14 +88,8 @@
                   :name (if java?
                           (str (.getClassName el) "/" (.getMethodName el))
                           (repl/demunge class-name))
-                  ;; TODO: Why?
-                  ;;
-                  ;; {:file "jar:file:/Users/eerohe/.jabba/jdk/zulu@1.17.0-0/Contents/Home/lib/src.zip!/java.base/java/lang/Thread.java"
-                  ;;  :file-name "Thread.java"
-                  ;;  :column: 1
-                  ;;  :name: "java.lang.Thread/sleep"
-                  ;;  :line: -2}
-                  :line (max 0 (.getLineNumber el))}
+                  :native? (.isNativeMethod el)
+                  :line (.getLineNumber el)}
                  url (assoc :file (str url)))))
         (.getStackTrace ex)))))
 
