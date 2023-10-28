@@ -13,10 +13,31 @@ import sublime
 from ...api import edn
 
 
+goto_view = None
+
+
+def open_file(window, path, line, column, flags):
+    global goto_view
+
+    if goto_view is not None:
+        goto_view.retarget(f"{path}:{line}:{column}")
+        point = goto_view.text_point_utf8(line - 1, column - 1)
+        goto_view.show(point, keep_to_left=True, show_surrounds=True)
+
+        sel = goto_view.sel()
+        sel.clear()
+        sel.add(point)
+    else:
+        goto_view = window.open_file(f"{path}:{line}:{column}", flags=flags)
+        goto_view.settings().set("tutkain_goto_view", True)
+
+    return goto_view
+
+
 def goto(
     window,
     location,
-    flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU,
+    flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.ADD_TO_SELECTION,
 ):
     if location:
         resource = location["resource"]
@@ -24,7 +45,7 @@ def goto(
         column = location["column"] + 1
 
         if not resource.scheme or resource.scheme == "file" and resource.path:
-            view = window.open_file(f"{resource.path}:{line}:{column}", flags=flags)
+            view = open_file(window, resource.path, line, column, flags)
         elif resource.scheme == "jar" and "!" in resource.path:
             parts = resource.path.split("!")
             jar_url = urlparse(parts[0])
@@ -44,8 +65,7 @@ def goto(
                     path = pathlib.Path(temp_path)
                     zipinfo.filename = path.name
                     archive.extract(zipinfo, path.parent)
-                    view = window.open_file(f"{path}:{line}:{column}", flags=flags)
-
+                    view = open_file(window, path, line, column, flags)
                     view.settings().set(
                         "tutkain_temp_file",
                         {

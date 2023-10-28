@@ -1101,6 +1101,9 @@ class TutkainEventListener(EventListener):
             lookup(view, form, lambda response: info.show_popup(view, point, response))
 
     def on_close(self, view):
+        if view.settings().get("tutkain_goto_view"):
+            info.goto_view = None
+
         if view.settings().get("tutkain_repl_view_dialect"):
             window = sublime.active_window()
             num_groups = window.num_groups()
