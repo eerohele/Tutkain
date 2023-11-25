@@ -11,4 +11,4 @@
 
 (defn pp-str
   [x]
-  (with-out-str (pprint/pprint x {:max-width 100})))
+  (with-out-str (pprint/pprint x {:map-entry-separator "" :max-width 100})))

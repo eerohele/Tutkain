@@ -351,4 +351,4 @@
           :eventual-out-writer (promise)
           :eventual-err-writer (promise))))
     (catch Exception ex
-      (prn {:tag :err :val (with-out-str (pprint/pprint (Throwable->map ex) {:max-width 100}))}))))
+      (prn {:tag :err :val (with-out-str (pprint/pprint (Throwable->map ex) {:max-width 100 :map-entry-separator ""}))}))))
