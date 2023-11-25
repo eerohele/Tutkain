@@ -88,7 +88,7 @@
            pretty-print (fn [message]
                           (binding [*print-readably* true]
                             (locking print-lock
-                              (pprint/pprint out message {:max-width 100})
+                              (pprint/pprint out message {:map-entry-separator "" :max-width 100})
                               (.flush out))))
            repl-thread (Thread/currentThread)]
        (main/with-bindings
