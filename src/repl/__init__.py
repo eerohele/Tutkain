@@ -303,7 +303,7 @@ class JVMClient(Client):
 
             self.buffer.readline()
 
-        init = self.options.get("init") or "tutkain.repl/default-init"
+        init = self.options.get("init") or "tutkain.rpc/default-init"
         add_tap = self.options.get("add_tap", False)
 
         if self.mode == "repl":
