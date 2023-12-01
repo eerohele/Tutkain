@@ -1,6 +1,7 @@
 (ns tutkain.rpc
   (:refer-clojure :exclude [namespace])
   (:require
+   [clojure.core :as core]
    [clojure.core.server :as server]
    [clojure.java.io :as io]
    [clojure.main :as main]
@@ -10,7 +11,7 @@
   (:import
    (clojure.lang LineNumberingPushbackReader RT)
    (java.nio.file LinkOption Files Paths Path)
-   (java.io IOException StringReader Writer)
+   (java.io FileNotFoundException IOException StringReader Writer)
    (java.net ServerSocket SocketException URL)
    (java.util.concurrent Executors ExecutorService FutureTask ScheduledExecutorService TimeUnit ThreadFactory ThreadPoolExecutor ThreadPoolExecutor$CallerRunsPolicy)
    (java.util.concurrent.atomic AtomicInteger)))
@@ -110,11 +111,14 @@
         (.setDaemon true)))))
 
 (defmethod handle :interrupt
-  [{:keys [eval-future ^Thread repl-thread]}]
-  (when-some [^FutureTask f (some-> eval-future deref)]
-    (.cancel f true))
+  [{:keys [eval-future ^Thread repl-thread] :as message}]
+  (try
+    (when-some [^FutureTask f (some-> eval-future deref)]
+      (.cancel f true))
 
-  (some-> repl-thread .interrupt))
+    (some-> repl-thread .interrupt)
+    (catch InterruptedException _
+      (respond-to message {:tag :err :val "Interrupted."}))))
 
 (defmulti evaluate :dialect)
 
@@ -335,14 +339,29 @@
   (in-ns 'user)
   (apply require main/repl-requires))
 
+(defn resolve-and-apply
+  "Given two qualified symbols, if the first symbol resolves to a function,
+  reload the namespace that function lives in. If it doesn't, require the
+  function.
+
+  If the symbol does not resolve to a function after requiring, return the
+  function the second argument names."
+  [sym fallback-sym]
+  (assert (qualified-symbol? sym))
+
+  (let [initf (try
+                (if-some [s (resolve sym)]
+                  (do (some-> sym core/namespace symbol (require :reload)) s)
+                  (some-> sym requiring-resolve))
+                (catch FileNotFoundException _
+                  (requiring-resolve fallback-sym)))]
+    (initf)))
+
 (defn rpc
   [{:keys [init] :or {init `default-init} :as opts}]
   (try
     (let [eval-lock (Object.)]
-      (when-some [initf (or
-                          (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
-                          (requiring-resolve `default-init))]
-        (initf))
+      (resolve-and-apply init `default-init)
       (prn {:tag :out :val (str "Clojure " (clojure-version) " (Java " (Runtime/version) ")" "\n")})
       (accept
         (assoc opts

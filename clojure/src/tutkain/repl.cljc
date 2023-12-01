@@ -93,10 +93,7 @@
            repl-thread (Thread/currentThread)]
        (main/with-bindings
          (with-repl
-           (when-some [initf (or
-                               (try (requiring-resolve init) (catch java.io.FileNotFoundException _))
-                               (requiring-resolve `default-init))]
-             (initf))
+           (rpc/resolve-and-apply init `rpc/default-init)
            (let [backchannel (rpc/open
                                (assoc opts
                                  :bindings (get-thread-bindings)
