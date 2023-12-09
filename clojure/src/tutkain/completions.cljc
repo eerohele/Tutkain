@@ -213,19 +213,24 @@
 
 (comment (field-candidates java.lang.String) ,)
 
+(defn method-candidates
+  "Given a java.lang.Class instance, return all method candidates of that
+  class."
+  [^Class class]
+  (eduction
+    (map (fn [^Method method]
+           {:class (java/qualified-class-name class)
+            :candidate (.getName method)
+            :type (if (static? method) :static-method :method)
+            :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
+            :return-type (-> method .getReturnType java/qualified-class-name)}))
+    (.getMethods class)))
+
 (defn static-member-candidates
   "Given a java.lang.Class instance, return all static member candidates of
   that class."
   [^Class class]
-  (eduction
-    (filter static?)
-    (map (fn [^Method method]
-           {:class (java/qualified-class-name class)
-            :candidate (.getName method)
-            :type :static-method
-            :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
-            :return-type (-> method .getReturnType java/qualified-class-name)}))
-    (.getMethods class)))
+  (eduction (filter (comp #{:static-method} :type)) (method-candidates class)))
 
 (comment (static-member-candidates java.lang.String),)
 
@@ -451,8 +456,21 @@
       (.startsWith prefix ":")
       (candidates-for-prefix prefix (keyword-candidates (all-keywords)))
 
+      (and (.startsWith prefix ".") (.endsWith prefix "/"))
+      (sort-by :candidate
+        (map (fn [candidate]
+               (update candidate :candidate #(str prefix %)))
+          (method-candidates (java/resolve-class ns (symbol (subs prefix 1 (dec (.length prefix))))))))
+
       (.startsWith prefix ".")
-      (candidates-for-prefix prefix (ns-java-method-candidates ns))
+      (let [prefix-after-dot (subs prefix 1)]
+        (into
+          (sort-by :candidate
+            (eduction
+              (filter #(.startsWith ^String (:candidate %) prefix-after-dot))
+              (map (fn [candidate] (update candidate :candidate #(str "." % "/"))))
+              (concat (ns-class-candidates ns) (class-candidates prefix-after-dot))))
+          (candidates-for-prefix prefix (ns-java-method-candidates ns))))
 
       (scoped? prefix)
       (candidates-for-prefix prefix (scoped-candidates prefix ns))
@@ -480,6 +498,21 @@
   (time (dorun (candidates "m" 'clojure.core)))
   (time (dorun (candidates "java." *ns*)))
   (time (dorun (candidates "java" *ns*)))
+
+  (class-candidates "java.")
+
+  (candidates ".F" *ns*)
+  (candidates ".File/" *ns*)
+
+  (map .File/exists [(File. "a.txt") (File. "b.txt")])
+  (map .Thread/interrupt [(Thread.) (Thread.)])
+  (filter .Thread/enumerate [(Thread.)])
+
+  (method-candidates (java/resolve-class *ns* (symbol (subs prefix 1 (dec (.length prefix))))))
+
+  (ns-class-candidates *ns*)
+  (def prefix ".F")
+  (filter #(.startsWith ^String (:candidate %) (subs prefix 1)) (ns-class-candidates *ns*))
 
   (require '[clj-async-profiler.core :as prof])
   (prof/profile (dorun (candidates "java." *ns*)))
