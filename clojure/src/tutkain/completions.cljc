@@ -430,6 +430,21 @@
   [prefix candidates]
   (sort-by :candidate (filter #(candidate? prefix %) candidates)))
 
+(defn ^:private dot-prefix-candidates
+  [ns ^String prefix]
+  (let [prefix-after-dot (subs prefix 1)]
+    (concat
+      (map (fn [candidate] (update candidate :candidate #(str "." % "/")))
+        (cond-> (class-candidates prefix-after-dot)
+          (Character/isUpperCase (.charAt prefix-after-dot 0))
+          (concat (ns-class-candidates ns))))
+      (ns-java-method-candidates ns))))
+
+(comment
+  (dot-prefix-candidates *ns* ".F")
+  (dot-prefix-candidates *ns* ".java.io.F")
+  ,,,)
+
 (defn candidates
   "Given a string prefix and ns symbol, return auto-completion candidates for
   the string prefix.
@@ -463,14 +478,7 @@
           (method-candidates (java/resolve-class ns (symbol (subs prefix 1 (dec (.length prefix))))))))
 
       (.startsWith prefix ".")
-      (let [prefix-after-dot (subs prefix 1)]
-        (into
-          (sort-by :candidate
-            (eduction
-              (filter #(.startsWith ^String (:candidate %) prefix-after-dot))
-              (map (fn [candidate] (update candidate :candidate #(str "." % "/"))))
-              (concat (ns-class-candidates ns) (class-candidates prefix-after-dot))))
-          (candidates-for-prefix prefix (ns-java-method-candidates ns))))
+      (candidates-for-prefix prefix (dot-prefix-candidates ns prefix))
 
       (scoped? prefix)
       (candidates-for-prefix prefix (scoped-candidates prefix ns))
@@ -503,10 +511,15 @@
 
   (candidates ".F" *ns*)
   (candidates ".File/" *ns*)
+  (candidates ".java.io.F" *ns*)
+  (candidates ".scal" *ns*)
 
+  (run! .java.io.File/delete [(File. "a.txt") (File. "b.txt")])
   (map .File/exists [(File. "a.txt") (File. "b.txt")])
   (map .Thread/interrupt [(Thread.) (Thread.)])
   (filter .Thread/enumerate [(Thread.)])
+  (map #(.toUpperCase %) ["a"])
+  (map .String/toUpperCase ["a"])
 
   (method-candidates (java/resolve-class *ns* (symbol (subs prefix 1 (dec (.length prefix))))))
 
