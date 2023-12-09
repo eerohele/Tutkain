@@ -311,6 +311,15 @@ contexts:
         - include: list-end-2
         - include: main
 
+  symbol:
+    - match: '\.{{end}}'
+      scope: meta.reader-form.clojure meta.symbol.clojure meta.special-form.clojure meta.special-form.dot.clojure keyword.other.clojure
+    - match: '{{qualified_symbol}}'
+      scope: meta.reader-form.edn meta.symbol.edn
+      captures:
+        1: meta.namespace.edn
+        2: punctuation.accessor.edn
+
   require-list:
     - match: '\('
       scope: punctuation.section.parens.begin.edn
