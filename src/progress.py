@@ -5,9 +5,10 @@ bar = None
 
 # I straight up stole this progress bar from SublimeText/UnitTesting.
 class ProgressBar:
-    def __init__(self, label, width=10):
+    frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+
+    def __init__(self, label):
         self.label = label
-        self.width = width
 
     def start(self):
         self.done = False
@@ -17,14 +18,12 @@ class ProgressBar:
         sublime.status_message("")
         self.done = True
 
-    def update(self, status=0):
+    def update(self, frame=0):
         if self.done:
             return
-        status = status % (2 * self.width)
-        before = min(status, (2 * self.width) - status)
-        after = self.width - before
-        sublime.status_message("%s [%s=%s]" % (self.label, " " * before, " " * after))
-        sublime.set_timeout(lambda: self.update(status + 1), 100)
+
+        sublime.status_message(f"{self.frames[frame % len(self.frames)]} {self.label}")
+        sublime.set_timeout(lambda: self.update(frame + 1), 100)
 
 
 def start(message):
