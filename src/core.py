@@ -2180,6 +2180,13 @@ class LibQueryInputHandler(TextInputHandler):
         return len(text) > 0
 
 
+repos = {
+    "clojars": "Clojars",
+    "maven": "Maven Central",
+    "github": "GitHub",
+}
+
+
 class RepoInputHandler(ListInputHandler):
     def placeholder(self):
         return "Choose repository"
@@ -2240,6 +2247,8 @@ class TutkainAddLibCommand(WindowCommand):
         )
 
     def find_handler(self, client, lib_query, response):
+        progress.stop()
+
         if response.get(edn.Keyword("tag")) == edn.Keyword("err"):
             self.window.status_message("⚠ " + response.get(edn.Keyword("val")))
         else:
@@ -2286,6 +2295,9 @@ class TutkainAddLibCommand(WindowCommand):
 
         if client := state.get_client(self.window, dialect):
             if "deps.clj" in client.capabilities:
+                if lib_query is not None:
+                    progress.start(f"""Searching {repos[repo]} for "{lib_query}"...""")
+
                 client.send_op(
                     {
                         "op": edn.Keyword("find-libs"),
