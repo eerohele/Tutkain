@@ -1,0 +1,11 @@
+; SYNTAX TEST "Packages/Tutkain/REPL (Tutkain).sublime-syntax"
+
+  ⁣{:a 1}⁣
+; ^^^^^^ text.plain.repl
+
+  ⁣⁣Syntax error reading source at (REPL:1:1)⁣⁣
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ tutkain.repl.stderr
+
+  (foo
+  ⁣⁣Syntax error reading source at (REPL:1:1)⁣⁣
+; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ tutkain.repl.stderr

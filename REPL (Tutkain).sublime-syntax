@@ -6,10 +6,12 @@ scope: source.clojure.repl
 extends: Packages/Tutkain/Clojure (Tutkain).sublime-syntax
 
 contexts:
-  main:
-    - include: stray-brackets
+  prototype:
     - include: stderr
     - include: stdout
+
+  main:
+    - include: stray-brackets
     - include: forms
 
   stderr:
