@@ -175,7 +175,7 @@ class Client(edn_client.Client):
     def evaluate_rpc(
         self,
         code,
-        handler=None,
+        handler,
         options={"file": "NO_SOURCE_FILE", "line": 0, "column": 0},
     ):
         """Given a string of Clojure code, send it for evaluation to the

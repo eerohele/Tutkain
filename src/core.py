@@ -374,6 +374,16 @@ class TutkainEvaluateCommand(TextCommand):
 
         return options
 
+    def wrap_stop_progress(self, handler):
+        window = self.view.window()
+
+        def h(response):
+            handler(response)
+            progress.stop()
+            window.status_message("✓ Evaluating... done.")
+
+        return h
+
     def eval(
         self,
         client,
@@ -392,7 +402,9 @@ class TutkainEvaluateCommand(TextCommand):
             opts = dissoc(opts, {"mode"})
 
             if mode == "rpc":
-                client.evaluate_rpc(code, handler, opts)
+                progress.start("Evaluating...")
+                handler = handler or client.default_handler
+                client.evaluate_rpc(code, self.wrap_stop_progress(handler), opts)
             else:
                 client.evaluate_repl(code, opts)
 
