@@ -21,6 +21,10 @@ variables:
   exponent: (?:[eE]{{sign}}\d+)
 
 contexts:
+  prototype:
+    - include: comma
+    - include: comment
+
   main:
     - include: stray-brackets
     - include: forms
@@ -40,9 +44,6 @@ contexts:
 
     # S-expressions
     - include: sexp
-
-    # Comma
-    - include: comma
 
     # Symbols
     - include: symbol
@@ -71,6 +72,7 @@ contexts:
     - match: '"'
       scope: punctuation.definition.string.begin.edn
       push:
+      - meta_include_prototype: false
       - meta_scope: meta.reader-form.edn string.quoted.double.edn
       - match: '(\\)(u\h{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
         scope: constant.character.escape.edn
@@ -169,7 +171,6 @@ contexts:
 
   macro_characters:
     - include: character
-    - include: comment
     - include: dispatch
 
   character:
@@ -300,18 +301,15 @@ contexts:
         - match: \}
           scope: punctuation.section.braces.end.edn
           pop: true
-        - include: comma
-        - include: comment
         - match: '(?=[^\s,;])'
           push:
             - meta_content_scope: meta.mapping.key.edn
             - include: forms
             - match: ''
               set:
-                - include: comma
-                - include: comment
                 - match: '(?=[^\s,;])'
                   set:
+                    - meta_include_prototype: false
                     - meta_content_scope: meta.mapping.value.edn
                     - match: ','
                       scope: punctuation.comma.edn comment.punctuation.comma.edn

@@ -985,6 +985,18 @@
 ;                ^^^^ string.regexp
 ;                    ^  - string.regexp
 
+  #";,"
+;   ^^ string.regexp & -comment
+
+  #"(;,)"
+;    ^^ string.regexp & -comment
+
+  #"[;,]"
+;    ^^ string.regexp & -comment
+
+  #"\Q ;, \E"
+;      ^^ string.regexp & -comment
+
 ; ## Invalid
 
   # ""

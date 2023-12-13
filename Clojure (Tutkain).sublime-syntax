@@ -26,7 +26,6 @@ contexts:
   macro_characters:
     - include: quote
     - include: character
-    - include: comment
     - include: deref
     - include: metadata
     - include: dispatch
@@ -152,7 +151,6 @@ contexts:
     - meta_scope: meta.sexp.list.edn
     - include: list-end
     - include: metadata
-    - include: comment
     - include: special-forms
     - match: '(in-ns){{end}}'
       scope: meta.reader-form.clojure meta.symbol.clojure keyword.declaration.namespace.clojure
@@ -329,19 +327,16 @@ contexts:
       push:
         - include: list-end
         - include: metadata
-        - include: comment
         - include: symbol
         - include: keywords
 
   ns-tail:
     - include: list-end
-    - include: comment
     - include: metadata
     - match: '{{symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.namespace.clojure
       push:
         - include: list-end-3
-        - include: comment
         - include: metadata
         - include: map
         - include: reader-conditional
@@ -357,7 +352,6 @@ contexts:
             push:
               - include: list-end-2
               - include: metadata
-              - include: comment
               - include: vector
               - include: require-list
               - include: reader-conditional
@@ -371,7 +365,6 @@ contexts:
             push:
               - include: list-end-2
               - include: metadata
-              - include: comment
               - include: vector
               - include: require-list
               - include: reader-conditional
@@ -407,7 +400,6 @@ contexts:
         - include: main
 
   anonymous-fn-body:
-    - include: comment
     - include: string
     - include: map
     - include: fn-params-2
@@ -416,7 +408,6 @@ contexts:
       push:
         - meta_scope: meta.sexp.list.edn
         - include: list-end
-        - include: comment
         - include: metadata
         - match: '\['
           scope: punctuation.section.brackets.begin.edn
@@ -432,7 +423,6 @@ contexts:
   fn-arity:
     - meta_scope: meta.sexp.list.edn meta.function-body.clojure
     - include: list-end
-    - include: comment
     - include: metadata
     - match: '\['
       scope: punctuation.section.brackets.begin.edn
@@ -449,7 +439,6 @@ contexts:
   named-fn-body:
     - include: list-end-3
     # FIXME: This is stupid.
-    - include: comment
     - include: constant
     - include: string
     - include: reader-conditional
@@ -459,7 +448,6 @@ contexts:
     - include: numbers
     - include: keywords
     - include: symbolic
-    - include: comma
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       push: fn-arity
@@ -468,7 +456,6 @@ contexts:
   fn-tail:
     - include: list-end-2
     - include: metadata
-    - include: comment
     - include: quote
     - include: syntax-quote
     - match: '{{symbol}}'
@@ -486,7 +473,6 @@ contexts:
 
   defmethod-tail:
     - include: list-end-2
-    - include: comment
     - include: metadata
     - include: discard
     - match: '{{qualified_symbol}}'
@@ -504,7 +490,6 @@ contexts:
               - match: '\)'
                 scope: punctuation.section.parens.end.edn
                 pop: 4
-              - include: comment
               - include: metadata
               - include: reader-conditional
               - match: '\['
@@ -521,14 +506,12 @@ contexts:
                   - include: main
 
   proxy-tail:
-    - include: comment
     - include: metadata
     - include: list-end-2
     - match: '\['
       scope: punctuation.section.brackets.begin.edn
       push:
       - meta_scope: meta.sexp.vector.edn
-      - include: comment
       - include: metadata
       - match: '\]'
         scope: punctuation.section.brackets.end.edn
@@ -549,7 +532,6 @@ contexts:
     - include: class-specs
 
   class-specs:
-    - include: comment
     - include: list-end-2
     - include: discard
     - include: constant
@@ -566,7 +548,6 @@ contexts:
             scope: punctuation.section.parens.end.edn
             pop: true
           - include: constant
-          - include: comment
           - include: keywords
           - match: '{{symbol}}'
             scope: entity.other.inherited-class.clojure meta.reader-form.clojure meta.symbol.clojure
@@ -583,7 +564,6 @@ contexts:
           pop: true
         - include: constant
         - include: metadata
-        - include: comment
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
           push:
@@ -592,7 +572,6 @@ contexts:
             scope: punctuation.section.parens.begin.edn
             push:
               - include: list-end
-              - include: comment
               - include: metadata
               - match: '\['
                 scope: punctuation.section.brackets.begin.edn
@@ -618,14 +597,12 @@ contexts:
 
   classdef-tail:
     - include: metadata
-    - include: comment
     - include: discard
     - include: list-end-2
     - match: '{{symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.type.clojure
       push:
         - include: list-end-3
-        - include: comment
         - match: '\['
           scope: punctuation.section.brackets.begin.edn
           push:
@@ -640,14 +617,12 @@ contexts:
               - include: class-specs
 
   interface-specs:
-    - include: comment
     - include: string
     - match: '\('
       scope: punctuation.section.parens.begin.edn
       push:
         - meta_scope: meta.sexp.list.edn
         - include: list-end-2
-        - include: comment
         - include: metadata
         - match: '{{symbol}}'
           scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
@@ -698,7 +673,6 @@ contexts:
   deftest-tail:
     - include: list-end-2
     - include: metadata
-    - include: comment
     - match: '{{symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure meta.test-var.clojure
       push:
@@ -728,6 +702,7 @@ contexts:
     - match: '\\Q'
       scope: punctuation.section.quotation.begin.edn
       push:
+        - meta_include_prototype: false
         - meta_content_scope: constant.character.escape.regexp
         - match: '\\"'
         - match: '(?=")'
@@ -751,6 +726,7 @@ contexts:
         1: punctuation.section.brackets.begin.edn
         2: keyword.operator.negation.regexp.edn
       push:
+      - meta_include_prototype: false
       - match: '(?=")'
         pop:   true
       - match: '\]'
@@ -774,6 +750,7 @@ contexts:
         1: punctuation.section.parens.begin.edn
         2: keyword.operator.special.regexp.edn
       push:
+      - meta_include_prototype: false
       - match: '(?=")'
         pop:   true
       - match: '\)'
@@ -789,5 +766,6 @@ contexts:
       captures:
         1: keyword.operator.macro.edn
       push:
+      - meta_include_prototype: false
       - meta_scope: meta.reader-form.edn string.regexp.edn
       - include: regexp_group

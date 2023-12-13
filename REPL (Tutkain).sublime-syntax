@@ -9,6 +9,8 @@ contexts:
   prototype:
     - include: stderr
     - include: stdout
+    - include: comment
+    - include: comma
 
   main:
     - include: stray-brackets
