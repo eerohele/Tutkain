@@ -17,7 +17,6 @@ variables:
   keyword_namespace: '[^{{non_symbol_chars}}:/]*'
   keyword: '[[^{{non_symbol_chars}}:]|/][[^{{non_symbol_chars}}:]/:]*'
   constant: '(nil|true|false){{end}}'
-  regexp_name: '[a-zA-Z][a-zA-Z0-9]*'
   sign: '[-+]?'
   exponent: (?:[eE]{{sign}}\d+)
 
@@ -189,7 +188,6 @@ contexts:
 
   dispatch:
     - include: discard
-    - include: regexp
     - include: tagged-element
     - include: qualified-map
 
@@ -205,74 +203,6 @@ contexts:
         - include: forms
         - match: ''
           pop: true
-
-  regexp_quote:
-    - match: '\\Q'
-      scope: punctuation.section.quotation.begin.edn
-      push:
-        - meta_content_scope: constant.character.escape.regexp
-        - match: '\\"'
-        - match: '(?=")'
-          pop: true
-        - match: '\\E'
-          scope: punctuation.section.quotation.end.edn
-          pop: true
-
-  regexp_shared:
-    - match: '(\\)(\\|0[0-3]?[0-7]{1,2}|x\h{2}|u\h{4}|x\{1?\h{1,5}\}|\N\{[a-zA-Z0-9\- ]+\}|[tnrfae]|c[A-Z]|[dDhHsSvVwW]|p\{[a-zA-Z]+\}|b\{g\}|[bBAGZz]|[RX]|[0-9]+|k<{{regexp_name}}>|[^a-zA-Z0-9])|((\\).)'
-      scope: constant.character.escape.regexp
-      captures:
-          1: punctuation.definition.character.escape.begin.edn
-          3: invalid.illegal.escape.regexp.edn
-          4: punctuation.definition.character.escape.begin.edn
-    - match: '"'
-      scope: punctuation.definition.string.end.edn
-      pop: true
-    - match: '(\[)(\^)?(-)?'
-      captures:
-        1: punctuation.section.brackets.begin.edn
-        2: keyword.operator.negation.regexp.edn
-      push:
-      - match: '(?=")'
-        pop:   true
-      - match: '\]'
-        scope: punctuation.section.brackets.end.edn
-        pop: true
-      - match: '-(?!\])'
-        scope: keyword.operator.range.regexp.edn
-      - match: '&&'
-        scope: keyword.operator.intersection.regexp.edn
-      - include: regexp_shared
-    - match: '(?:[?*+]|\{\d+(?:,(?:\d+)?)?\})[?+]?'
-      scope: keyword.operator.quantifier.regexp.edn
-
-  regexp_group:
-    - include: regexp_quote
-    - include: regexp_shared
-    - match: '\|'
-      scope: keyword.operator.union.regexp.edn
-    - match: '(\()(\?(<{{regexp_name}}>|:|=|!|<=|<!|>|[idmsux]*(-[idmsux]+)?:|[idmsuxU]*(-[idmsuxU]+)?(?!:)))?'
-      captures:
-        1: punctuation.section.parens.begin.edn
-        2: keyword.operator.special.regexp.edn
-      push:
-      - match: '(?=")'
-        pop:   true
-      - match: '\)'
-        scope: punctuation.section.parens.end.edn
-        pop: true
-      - include: regexp_group
-    - match: '[\)]'
-      scope: invalid.illegal.stray-bracket-end.edn
-
-  regexp:
-    - match: '(#)"'
-      scope: punctuation.definition.string.begin.edn
-      captures:
-        1: keyword.operator.macro.edn
-      push:
-      - meta_scope: meta.reader-form.edn string.regexp.edn
-      - include: regexp_group
 
   tagged-element:
     - match: '((#\s*inst)\s*((")\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?("))|(#inst\s*"[^"]*")){{end}}'
