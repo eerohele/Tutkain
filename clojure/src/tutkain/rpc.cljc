@@ -173,7 +173,7 @@
                             (catch Throwable ex
                               (set! *e ex)
                               (reset! thread-bindings (get-thread-bindings))
-                              (respond-to message {:tag :err :val (format/Throwable->str ex)})))))]
+                              (respond-to message (merge (ex-data ex) {:tag :err :val (format/Throwable->str ex)}))))))]
       (.submit eval-service ^Callable f))))
 
 (defmethod handle :eval
