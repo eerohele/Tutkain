@@ -24,7 +24,7 @@
   #?(:bb (binding [*file* path]
            (load-string (String. (.decode base64-decoder blob) "UTF-8")))
      :clj (with-open [reader (base64-reader blob)]
-            (Compiler/load reader path filename))))
+            (clojure.lang.Compiler/load reader path filename))))
 
 (defmethod handle :load-base64
   [{:keys [blob path filename requires] :as message}]
