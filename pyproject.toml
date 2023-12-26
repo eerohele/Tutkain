@@ -1,3 +1,5 @@
 [tool.isort]
 profile = "black"
 
+[tools.pyright]
+pythonVersion = '3.8'
