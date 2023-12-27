@@ -16,15 +16,41 @@ from ...api import edn
 def goto(
     window,
     location,
-    flags=sublime.ENCODED_POSITION | sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU,
+    flags=sublime.ENCODED_POSITION,
 ):
     if location:
         resource = location["resource"]
         line = location["line"] + 1
         column = location["column"] + 1
 
-        if not resource.scheme or resource.scheme == "file" and resource.path:
-            view = window.open_file(f"{resource.path}:{line}:{column}", flags=flags)
+        active_view = window.active_view()
+
+        if (
+            resource.path
+            and active_view
+            # The active view is a view into a resource in a JAR file
+            and (
+                resource.path
+                == active_view.settings()
+                .get("tutkain_temp_file", {})
+                .get("resource_path")
+            )
+            # The active view is the same as the target view
+            or (
+                (file_name := active_view.file_name())
+                and os.path.realpath(resource.path) == os.path.realpath(file_name)
+            )
+        ):
+            point = active_view.text_point_utf8(line - 1, column - 1)
+
+            active_view.run_command("tutkain_goto_point_impl", {"point": point})
+        elif not resource.scheme or resource.scheme == "file" and resource.path:
+            view = window.open_file(
+                f"{resource.path}:{line}:{column}",
+                flags=sublime.ENCODED_POSITION
+                | sublime.SEMI_TRANSIENT
+                | sublime.REPLACE_MRU,
+            )
         elif resource.scheme == "jar" and "!" in resource.path:
             parts = resource.path.split("!")
             jar_url = urlparse(parts[0])
@@ -36,7 +62,6 @@ def goto(
                 path_after_bang = parts[1][1:] if parts[1].startswith("/") else parts[1]
                 archive = ZipFile(jar_path, "r")
                 zipinfo = archive.getinfo(path_after_bang)
-                view_name = jar_path + "!/" + path_after_bang
                 path = pathlib.Path(path_after_bang)
                 descriptor, temp_path = tempfile.mkstemp(path.suffix)
 
@@ -49,9 +74,10 @@ def goto(
                     view.settings().set(
                         "tutkain_temp_file",
                         {
+                            "resource_path": resource.path,
                             "path": temp_path,
                             "descriptor": descriptor,
-                            "name": view_name,
+                            "name": f"$CLASSPATH/{path_after_bang}",
                         },
                     )
 

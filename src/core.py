@@ -36,6 +36,8 @@ from . import (
 from .log import start_logging, stop_logging
 from .repl import history, info, ports, query
 
+import Default.history_list as history_list
+
 
 def make_color_scheme(cache_dir):
     """
@@ -1142,6 +1144,19 @@ class TutkainEventListener(EventListener):
             if command_name == "copy":
                 text = str(sublime.get_clipboard()).replace("\u2063", "")
                 sublime.set_clipboard(text)
+
+
+class TutkainGotoPointImplCommand(TextCommand):
+    def run(self, _, point):
+        view = self.view
+
+        view.show_at_center(point)
+        sel = view.sel()
+        sel.clear()
+        sel.add(point)
+
+        if jump_history := history_list.get_jump_history_for_view(view):
+            jump_history.push_selection(view)
 
 
 class TutkainExpandSelectionImplCommand(TextCommand):
