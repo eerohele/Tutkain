@@ -43,12 +43,16 @@
   [{:keys [thread-bindings ns]}]
   (or (some-> ns symbol find-ns) (some-> thread-bindings deref (get #'*ns*)) (the-ns 'user)))
 
+(defn set-line!
+  [^LineNumberingPushbackReader reader line]
+  (.setLineNumber reader (int line)))
+
 ;; Borrowed from https://github.com/nrepl/nrepl/blob/8223894f6c46a2afd71398517d9b8fe91cdf715d/src/clojure/nrepl/middleware/interruptible_eval.clj#L32-L40
 (defn set-column!
   [^LineNumberingPushbackReader reader column]
   #?(:bb nil
      :clj (when-let [^java.lang.reflect.Field field (.getDeclaredField LineNumberingPushbackReader "_columnNumber")]
-            (-> field (doto (.setAccessible true)) (.set reader column)))))
+            (-> field (doto (.setAccessible true)) (.set reader (int column))))))
 
 (defn ^:private find-or-create-ns
   "Given a namespace symbol, if the namespace named by the symbol already
@@ -98,8 +102,8 @@
 (defmethod handle :set-thread-bindings
   [{:keys [thread-bindings ^LineNumberingPushbackReader in ns file line column]
     :or {line 0 column 0} :as message}]
-  (.setLineNumber in (int line))
-  (set-column! in (int column))
+  (set-line! in line)
+  (set-column! in column)
   (swap! thread-bindings merge (make-thread-bindings file (find-or-create-ns ns)))
   (respond-to message {:result :ok}))
 
@@ -138,8 +142,8 @@
                                          (make-thread-bindings file (find-or-create-ns ns)))
                           (try
                             (with-open [reader (-> code StringReader. LineNumberingPushbackReader.)]
-                              (.setLineNumber reader (int line))
-                              (set-column! reader (int column))
+                              (set-line! reader line)
+                              (set-column! reader column)
                               (run!
                                 (fn [form]
                                   (try
