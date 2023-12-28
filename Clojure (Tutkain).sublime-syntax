@@ -30,6 +30,7 @@ contexts:
     - include: metadata
     - include: dispatch
     - include: syntax-quote
+    - include: unquote
 
   quote:
     - match: '(''){{whitespace}}'
@@ -99,7 +100,7 @@ contexts:
         - match: ''
           pop: true
 
-  syntax-quote:
+  unquote:
     - match: '(~@?){{whitespace}}'
       captures:
         1: keyword.operator.macro.clojure
@@ -108,6 +109,8 @@ contexts:
         - include: forms
         - match: ''
           pop: true
+
+  syntax-quote:
     - match: '(`){{whitespace}}'
       captures:
         1: keyword.operator.macro.clojure
@@ -458,6 +461,7 @@ contexts:
     - include: metadata
     - include: quote
     - include: syntax-quote
+    - include: unquote
     - match: '{{symbol}}'
       scope: meta.reader-form.clojure meta.symbol.clojure entity.name.function.clojure
       push: named-fn-body
