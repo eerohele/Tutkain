@@ -160,3 +160,121 @@
 (recv)
 (:val *1)
 (xr/check! (partial re-matches #"(?s)Error printing return value at .+? \(NO_SOURCE_FILE:\d+\)\.\r?\nboom\r?\n"))
+
+;; Namespace discovery
+(defn str->reader
+  [s]
+  (-> s java.io.StringReader. clojure.lang.LineNumberingPushbackReader.))
+
+;; ns
+(rpc/ns-binder (str->reader "(ns foo.bar)"))
+(xr/check! #{'(ns foo.bar)})
+
+(rpc/ns-binder (str->reader "(ns ^:private foo.bar)"))
+(xr/check! #{'(ns foo.bar)})
+
+(rpc/ns-binder (str->reader "(ns ^{:doc \"\" :author \"John Doe\"} foo.bar)"))
+(xr/check! #{'(ns foo.bar)})
+
+(rpc/ns-binder (str->reader "(ns)"))
+(xr/check! nil?)
+
+;; in-ns
+(rpc/ns-binder (str->reader "(in-ns 'foo.bar)"))
+(xr/check! #{'(in-ns 'foo.bar)})
+(rpc/ns-binder (str->reader "(in-ns)"))
+(xr/check! nil?)
+
+;; Syntax errors
+(rpc/ns-binder (str->reader "(ns foo.bar"))
+(xr/check! nil?)
+
+(rpc/ns-binder (str->reader "(ns 'foo.bar"))
+(xr/check! nil?)
+
+(rpc/ns-binder (str->reader "(in-ns 'foo.bar"))
+(xr/check! nil?)
+
+(rpc/ns-binder (str->reader "(in-ns foo.bar)"))
+(xr/check! nil?)
+
+(rpc/ns-binder (str->reader "(ns foo.bar) (baz/)"))
+(xr/check! #{'(ns foo.bar)})
+
+;; seek
+(rpc/ns-binder (str->reader "(ns foo.bar)\n(in-ns 'baz.quux)") :seek #{'ns})
+(xr/check! #{'(ns foo.bar)})
+
+(rpc/ns-binder (str->reader "(ns foo.bar)\n(in-ns 'baz.quux)") :seek #{'in-ns})
+(xr/check! #{'(in-ns 'baz.quux)})
+
+;; Multiple ns
+(rpc/ns-binder (str->reader "(ns foo.bar)\n(ns baz.quux)") :line 1 :column 1)
+(xr/check! nil?)
+
+(rpc/ns-binder (str->reader "(ns foo.bar)\n(ns baz.quux)") :line 1 :column 13)
+(xr/check! #{'(ns foo.bar)})
+
+(rpc/ns-binder (str->reader "(ns foo.bar)\n(ns baz.quux)") :line 2 :column 1)
+(xr/check! #{'(ns foo.bar)})
+
+(rpc/ns-binder (str->reader "(ns foo.bar)\n(ns baz.quux)") :line 2 :column 13)
+(xr/check! #{'(ns foo.bar)})
+
+(rpc/ns-binder (str->reader "(ns foo.bar)\n(ns baz.quux)") :line 2 :column 14)
+(xr/check! #{'(ns baz.quux)})
+
+;; Multiple in-ns
+(rpc/ns-binder (str->reader "(in-ns 'foo.bar)\n(in-ns 'baz.quux)") :line 1 :column 1)
+(xr/check! nil?)
+
+(rpc/ns-binder (str->reader "(in-ns 'foo.bar)\n(in-ns 'baz.quux)") :line 1 :column 17)
+(xr/check! #{'(in-ns 'foo.bar)})
+
+(rpc/ns-binder (str->reader "(in-ns 'foo.bar)\n(in-ns 'baz.quux)") :line 2 :column 1)
+(xr/check! #{'(in-ns 'foo.bar)})
+
+(rpc/ns-binder (str->reader "(in-ns 'foo.bar)\n(in-ns 'baz.quux)") :line 2 :column 17)
+(xr/check! #{'(in-ns 'foo.bar)})
+
+(rpc/ns-binder (str->reader "(in-ns 'foo.bar)\n(in-ns 'baz.quux)") :line 2 :column 18)
+(xr/check! #{'(in-ns 'baz.quux)})
+
+;; ns-form after other form
+
+(rpc/ns-binder (str->reader "(inc 1)\n(ns foo.bar)\n(inc 2)\n(ns baz.quux)") :line 1 :column 1)
+(xr/check! nil?)
+
+(rpc/ns-binder (str->reader "(inc 1)\n(ns foo.bar)\n(inc 2)\n(ns baz.quux)") :line 2 :column 13)
+(xr/check! #{'(ns foo.bar)})
+
+(rpc/ns-binder (str->reader "(inc 1)\n(ns foo.bar)\n(inc 2)\n(ns baz.quux)") :line 4 :column 14)
+(xr/check! #{'(ns baz.quux)})
+
+;; ns-sym
+
+(rpc/ns-sym '(in-ns 'foo.bar))
+(xr/check! #{'foo.bar})
+
+(rpc/ns-sym '(ns foo.bar))
+(xr/check! #{'foo.bar})
+
+(rpc/ns-sym '())
+(xr/check! nil?)
+
+(rpc/ns-sym '(ns ^:private foo.bar))
+(xr/check! #{'foo.bar})
+
+(rpc/ns-sym '(ns ^{:foo :bar} baz.quux))
+(xr/check! #{'baz.quux})
+
+;; context-ns
+
+(rpc/context-ns (string->base64 "") 1 1)
+(xr/check! #{'user})
+
+(rpc/context-ns (string->base64 "(ns foo.bar)") 1 1)
+(xr/check! #{'user}) ; I think this makes sense, but will it cause trouble?
+
+(rpc/context-ns (string->base64 "(ns foo.bar)") 1 13)
+(xr/check! #{'foo.bar})

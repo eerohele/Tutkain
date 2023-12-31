@@ -197,6 +197,81 @@
   [message]
   (evaluate message))
 
+(defn ns-binder
+  "Given a clojure.lang.LineNumberingPushbackReader and options, return the last
+  ns or in-ns form in the reader that immediately precedes the position the
+  line and column number options indicate.
+
+  Options:
+
+    :line (long, default: ##Inf)
+      The line number at which to halt the search.
+
+    :column (long, default: ##Inf)
+      The column number at which to halt the search.
+
+    :seek (set, default: #{'ns 'in-ns})
+      The symbols to seek for when determining whether a form affects the
+      current namespace."
+  [^LineNumberingPushbackReader reader
+   & {:keys [seek line column]
+      :or {line ##Inf column ##Inf seek #{'ns 'in-ns}}}]
+  (loop [forms []]
+    (let [form (try
+                 (read {:read-cond :allow :eof ::EOF} reader)
+                 ;; If read fails, return the last ns form we've found so far
+                 (catch RuntimeException _ ::EOF))]
+      (cond
+        ;; EOF
+        (identical? ::EOF form)
+        (peek forms)
+
+        ;; Line or column number of the ns form exceeds the given line/column
+        (or (> (.getLineNumber reader) line)
+          (and (= (.getLineNumber reader) line)
+            (> (.getColumnNumber reader) column)))
+        (peek forms)
+
+        (list? form)
+        (if-some [head (first form)]
+          (let [arg (second form)]
+            (cond
+              ;; ns form
+              (and (seek 'ns) (symbol? head) (= #'clojure.core/ns (resolve head)) (symbol? arg))
+              (recur (conj forms form))
+
+              ;; in-ns form
+              (and (seek 'in-ns) (symbol? head) (= #'clojure.core/in-ns (resolve head))
+                (seq? arg) (= 'quote (first arg)) (symbol? (second arg)))
+              (recur (conj forms form))
+
+              :else (recur forms)))
+          (recur forms))
+
+        ;; Keep looking
+        :else (recur forms)))))
+
+(defn ns-sym
+  "Given an S-expression whose head is either clojure.core/ns or
+  clojure.core/in-ns, return the name of the namespace (a symbol) in the
+  argument position of the form."
+  [form]
+  (let [f (first form)]
+    (cond
+      (= f 'ns) (second form)
+      (= f 'in-ns) (-> form second second))))
+
+(defn context-ns
+  "Given a Base64-encoded code string, a line number, and a column number,
+  determine the effective namespace in the position the line and column number
+  indicate."
+  [base64-str line column]
+  (with-open [reader (base64/base64-reader base64-str)]
+    (->
+      (ns-binder reader :line line :column column)
+      (ns-sym)
+      (or 'user))))
+
 (defonce ^:private ^AtomicInteger thread-counter
   (AtomicInteger.))
 
