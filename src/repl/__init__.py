@@ -289,8 +289,8 @@ class JVMClient(Client):
         for filename in [
             "pprint.cljc",
             "format.cljc",
-            "rpc.cljc",
             "base64.cljc",
+            "rpc.cljc",
             "repl.cljc",
         ]:
             path = self.source_path(filename)
@@ -419,8 +419,8 @@ class JSClient(Client):
         for filename in [
             "pprint.cljc",
             "format.cljc",
-            "rpc.cljc",
             "base64.cljc",
+            "rpc.cljc",
             "shadow.clj",
         ]:
             path = self.source_path(filename)
