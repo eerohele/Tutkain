@@ -6,6 +6,7 @@
    [clojure.java.io :as io]
    [clojure.main :as main]
    [clojure.edn :as edn]
+   [tutkain.base64 :as base64]
    [tutkain.format :as format]
    [tutkain.pprint :as pprint])
   (:import
@@ -32,6 +33,18 @@
 (defmethod handle :echo
   [message]
   (respond-to message {:op :echo}))
+
+(defmethod handle :load-base64
+  [{:keys [blob path filename requires] :as message}]
+  (try
+    (some->> requires (run! require))
+    (try
+      (base64/read-base64 blob path filename)
+      (respond-to message {:tag :ret :val filename})
+      (catch #?(:bb clojure.lang.ExceptionInfo :clj clojure.lang.Compiler$CompilerException) ex
+        (respond-to message {:tag :err :val (format/Throwable->str ex)})))
+    (catch FileNotFoundException ex
+      (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
 
 (defmethod handle :default
   [message]
