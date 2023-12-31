@@ -52,7 +52,7 @@
   {:op :locals
    :file "/path/to/my.clj"
    :ns "user"
-   :context (string->base64 "(defn f [x] (inc x))")
+   :enclosing-sexp (string->base64 "(defn f [x] (inc x))")
    :form "x"
    :start-line 1
    :start-column 1
@@ -72,7 +72,7 @@
    :file "/path/to/my.clj"
    :ns "user"
    ;; newline doesn't mess up :end-column
-   :context (string->base64 "(defn f [x] (doto x\n  inc))")
+   :enclosing-sexp (string->base64 "(defn f [x] (doto x\n  inc))")
    :form "x"
    :start-line 1
    :start-column 1
@@ -94,7 +94,7 @@
         {:op :locals
          :file "/path/to/my.clj"
          :ns "user"
-         :context (string->base64 "(defn f [{:keys [x y z]}] (+ x y z))")
+         :enclosing-sexp (string->base64 "(defn f [{:keys [x y z]}] (+ x y z))")
          :form form
          :start-line 1
          :start-column 1
@@ -127,7 +127,7 @@
   {:op :locals
    :file "/path/to/my.clj"
    :ns "user"
-   :context (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
+   :enclosing-sexp (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
    :form "x"
    :start-line 1
    :start-column 1
@@ -147,7 +147,7 @@
   {:op :locals
    :file "/path/to/my.clj"
    :ns "user"
-   :context (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
+   :enclosing-sexp (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
    :form "x"
    :start-line 1
    :start-column 1
@@ -168,7 +168,7 @@
   {:op :locals
    :file "/path/to/my.clj"
    :ns "user"
-   :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
+   :enclosing-sexp (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
    :form "baz"
    :start-line 1
    :start-column 1
@@ -188,7 +188,7 @@
   {:op :locals
    :file "/path/to/my.clj"
    :ns "user"
-   :context (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
+   :enclosing-sexp (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
    :form "bar/baz"
    :start-line 1
    :start-column 1
@@ -208,7 +208,7 @@
   {:op :locals
    :file "/path/to/my.clj"
    :ns "user"
-   :context (string->base64 "(defn f [x] (inc x))")
+   :enclosing-sexp (string->base64 "(defn f [x] (inc x))")
    :form 'x
    :start-line 1
    :start-column 1

@@ -38,7 +38,7 @@
       :xform uniquify)))
 
 (defmethod analyzer/locals :cljs
-  [{:keys [build-id context start-column start-line file ns] :as message}]
+  [{:keys [build-id enclosing-sexp start-column start-line file ns] :as message}]
   (try
     (env/with-compiler-env (compiler-env build-id)
       (analyzer.api/no-warn
@@ -52,7 +52,7 @@
                     reader/*data-readers* {}
                     reader/*default-data-reader-fn* (fn [_ val] val)
                     reader/resolve-symbol identity]
-            (with-open [reader (base64-reader context)]
+            (with-open [reader (base64-reader enclosing-sexp)]
               (let [nodes (analyze start-line start-column reader)
                     positions (analyzer/local-positions nodes (analyzer/position message))]
                 (respond-to message {:positions positions})))))))

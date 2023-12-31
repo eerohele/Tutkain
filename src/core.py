@@ -1690,7 +1690,7 @@ def fetch_locals(view, point, form, handler):
         start_line, start_column = view.rowcol(outermost.open.region.begin())
         if extent := outermost.extent():
             if local := view.substr(form).strip():
-                context = view.substr(extent)
+                enclosing_sexp = view.substr(extent)
 
                 client.send_op(
                     {
@@ -1698,7 +1698,7 @@ def fetch_locals(view, point, form, handler):
                         "dialect": dialect,
                         "file": view.file_name() or "NO_SOURCE_FILE",
                         "ns": namespace.name(view),
-                        "context": base64.encode(context.encode("utf-8")),
+                        "enclosing-sexp": base64.encode(enclosing_sexp.encode("utf-8")),
                         "form": local,
                         "start-line": start_line + 1,
                         "start-column": start_column + 1,
