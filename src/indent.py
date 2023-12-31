@@ -14,21 +14,22 @@ def determine_indentation(view, open_bracket):
     region = view.find(r"\S", open_bracket.region.end())
     point = region.begin()
 
-    if view.match_selector(
-        point,
-        "meta.special-form | variable | keyword.declaration | keyword.control | storage.type | entity.name",
-    ):
+    if view.match_selector(point, "variable"):
         return indentation + " "
-    elif view.match_selector(point, "meta.statement.require | meta.statement.import"):
+    elif view.match_selector(point, "constant.other.keyword.unqualified"):
         form = selectors.expand_by_selector(
-            view, point, "meta.statement.require | meta.statement.import"
-        )
-        first_require = selectors.find(
-            view, form.end(), "punctuation | meta.reader-form"
+            view, point, "constant.other.keyword.unqualified"
         )
 
-        if line.contains(first_require):
-            return indentation + (" " * (form.size() + 1))
+        if view.substr(form).strip() in {":require", ":import"}:
+            first_require = selectors.find(
+                view, form.end(), "punctuation | meta.reader-form"
+            )
+
+            if line.contains(first_require):
+                return indentation + (" " * (form.size() + 1))
+            else:
+                return indentation
         else:
             return indentation
     else:
