@@ -28,12 +28,12 @@
     :analyzer analyzer.jvm/analyze))
 
 (defmethod analyzer/locals :default
-  [{:keys [context file ns start-column start-line] :as message}]
+  [{:keys [enclosing-sexp file ns start-column start-line] :as message}]
   (try
     (binding [*file* file
               *ns* (parse-namespace ns)
               analyzer.jvm/run-passes analyzer-passes]
-      (with-open [reader (base64-reader context)]
+      (with-open [reader (base64-reader enclosing-sexp)]
         (let [nodes (analyze start-line start-column reader)
               positions (analyzer/local-positions nodes (analyzer/position message))]
           (respond-to message {:positions positions}))))
