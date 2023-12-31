@@ -123,6 +123,8 @@
 ;; file, line, column
 (send {:op :eval :code "(f 0)" :ns 'repl.rpc :file "/path/to/my.clj" :line 3 :column 4})
 (recv)
+(:val *1)
+(xr/check! (partial re-matches #"(?s).*ArithmeticException.*"))
 
 ;; stack trace
 (send {:op :eval :code "(Throwable->map *e)"})
