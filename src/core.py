@@ -1082,7 +1082,7 @@ def symbol_at_point(view, point):
     """Given a view and a point, return the Clojure symbol at the point."""
     if view.match_selector(
         point,
-        "meta.symbol - (meta.special-form | variable.function | keyword.declaration.function)",
+        "meta.symbol - (meta.special-form | variable.function)",
     ):
         return selectors.expand_by_selector(view, point, "meta.symbol")
 
