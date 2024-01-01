@@ -46,7 +46,8 @@
   send-op
   :results)
 
-(set (map :type *1))
+(xr/check! ::results)
+(set (map :type *2))
 (xr/check! (partial some #{:protocol}))
 
 ;; multimethods
@@ -74,6 +75,26 @@
 
 (xr/check! (spec/coll-of ::lib-results :min-count 1))
 
+(->
+  {:op :dir
+   :dialect :clj
+   :ns 'clojure.set
+   :sym 'union}
+  send-op
+  :results)
+
+(xr/check! ::results)
+
+(->
+  {:op :dir
+   :dialect :clj
+   :ns 'does.not.exist
+   :sym 'none}
+  send-op
+  :results)
+
+(xr/check! empty?)
+
 ;; intern-mappings
 
 (->
@@ -83,7 +104,7 @@
   send-op
   :results)
 
-(xr/check! nil?)
+(xr/check! empty?)
 
 (->
   {:op :intern-mappings

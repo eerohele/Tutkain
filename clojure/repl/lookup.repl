@@ -57,7 +57,7 @@
   {:op :lookup
    :dialect :clj
    :ident "mapcat"
-   :ns "user"
+   :ns 'user
    :out-fn prn}
   rpc/handle
   with-out-str

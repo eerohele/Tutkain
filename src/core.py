@@ -179,7 +179,7 @@ class TutkainEvaluateViewCommand(TextCommand):
         )
 
 
-class TutkainRunTests(TextCommand):
+class TutkainRunTestsCommand(TextCommand):
     def run(self, _, scope="ns"):
         dialect = dialects.for_view(self.view)
         window = self.view.window()
@@ -195,14 +195,9 @@ class TutkainRunTests(TextCommand):
             if client := state.get_client(window, dialect):
                 if outermost := sexp.outermost(self.view, point, ignore={"comment"}):
                     state.focus_active_runtime_view(window, dialect)
+                    code = self.view.substr(outermost.extent())
                     line, column = self.view.rowcol(outermost.open.region.begin())
-                    test.run(
-                        self.view,
-                        client,
-                        self.view.substr(outermost.extent()),
-                        line,
-                        column,
-                    )
+                    test.run(self.view, client, code, line, column)
 
     def input(self, args):
         if "scope" in args:

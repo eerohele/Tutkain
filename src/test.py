@@ -258,17 +258,15 @@ def handle_test_response(view, client, response):
         print_summary(view.window(), response)
 
 
-def run_tests(view, client, form, line, column):
-    code = view.substr(sublime.Region(0, view.size()))
-
+def run_tests(view, client, code, line, column):
     op = {
         "op": edn.Keyword("test"),
         "ctx": ctx.encoded(view),
         "file": view.file_name(),
     }
 
-    if form:
-        op["form"] = base64.encode(form.encode("utf-8"))
+    if code:
+        op["code"] = base64.encode(code.encode("utf-8"))
         op["line"] = line + 1
         op["column"] = column + 1
 
@@ -278,9 +276,9 @@ def run_tests(view, client, form, line, column):
     )
 
 
-def run(view, client, form, line=1, column=1):
+def run(view, client, code, line=1, column=1):
     if client is None:
         view.window().status_message("⚠ Not connected to a REPL.")
     else:
         progress.start("Running tests...")
-        run_tests(view, client, form, line, column)
+        run_tests(view, client, code, line, column)

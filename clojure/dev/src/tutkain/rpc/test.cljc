@@ -13,7 +13,7 @@
   response."
   [op]
   (->
-    (assoc op :out-fn prn)
+    (assoc op :out-fn (fn [x] (binding [*print-length* nil *print-level* nil] (prn x))))
     rpc/handle
     with-out-str
     edn/read-string))

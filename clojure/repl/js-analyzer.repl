@@ -76,7 +76,7 @@
    :dialect :cljs
    :build-id build-id
    :file "/path/to/my.cljs"
-   :ns "cljs.user"
+   :ns 'cljs.user
    :enclosing-sexp (string->base64 "(defn f [x] (inc x))")
    :form "x"
    :start-line 1
@@ -97,7 +97,7 @@
    :dialect :cljs
    :build-id build-id
    :file "/path/to/my.cljs"
-   :ns "cljs.user"
+   :ns 'cljs.user
    ;; newline doesn't mess up :end-column
    :enclosing-sexp (string->base64 "(defn f [x] (doto x\n  inc))")
    :form "x"
@@ -122,7 +122,7 @@
          :dialect :cljs
          :build-id build-id
          :file "/path/to/my.cljs"
-         :ns "cljs.user"
+         :ns 'cljs.user
          :enclosing-sexp (string->base64 "(defn f [{:keys [x y z]}] (+ x y z))")
          :form form
          :start-line 1
@@ -156,7 +156,7 @@
    :dialect :cljs
    :build-id build-id
    :file "/path/to/my.cljs"
-   :ns "cljs.user"
+   :ns 'cljs.user
    :enclosing-sexp (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
    :form "x"
    :start-line 1
@@ -178,7 +178,7 @@
    :dialect :cljs
    :build-id build-id
    :file "/path/to/my.cljs"
-   :ns "cljs.user"
+   :ns 'cljs.user
    :enclosing-sexp (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
    :form "x"
    :start-line 1
@@ -201,7 +201,7 @@
    :dialect :cljs
    :build-id build-id
    :file "/path/to/my.cljs"
-   :ns "cljs.user"
+   :ns 'cljs.user
    :enclosing-sexp (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
    :form "baz"
    :start-line 1
@@ -223,7 +223,7 @@
    :dialect :cljs
    :build-id build-id
    :file "/path/to/my.cljs"
-   :ns "cljs.user"
+   :ns 'cljs.user
    :enclosing-sexp (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
    :form "bar/baz"
    :start-line 1
@@ -245,7 +245,7 @@
    :dialect :cljs
    :build-id build-id
    :file "/path/to/my.cljs"
-   :ns "cljs.user"
+   :ns 'cljs.user
    :enclosing-sexp (string->base64 "(defn f [x] (inc x))")
    :form 'x
    :start-line 1
@@ -264,7 +264,7 @@
    :dialect :cljs
    :build-id build-id
    :file "/path/to/my.cljs"
-   :ns "my.browser.app"
+   :ns 'my.browser.app
    :enclosing-sexp (string->base64 "(defn f [x] (::other/keyword x))")
    :form 'x
    :start-line 1

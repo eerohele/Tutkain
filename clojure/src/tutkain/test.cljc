@@ -107,7 +107,7 @@
     @results))
 
 (defmethod handle :test
-  [{:keys [eval-lock ctx ns form ^String file thread-bindings line column] :as message
+  [{:keys [eval-lock ctx ns code ^String file thread-bindings line column] :as message
     :or {line 1 column 1}}]
   (try
     (let [filename (some-> file File. .getName)]
@@ -116,14 +116,13 @@
       (locking eval-lock
         (read-base64 ctx file filename))
 
-      (if form
-        (with-open [reader (base64/base64-reader form)]
+      (if code
+        (with-open [reader (base64/base64-reader code)]
           (rpc/set-line! reader line)
           (rpc/set-column! reader column)
           (binding [*ns* (find-ns ns)
                     *file* (rpc/relative-to-classpath-root file)]
-            (let [test-var (locking eval-lock
-                             (eval (read reader)))]
+            (let [test-var (locking eval-lock (eval (read reader)))]
               (respond-to message (run-tests ns file [test-var])))))
         (respond-to message (run-tests ns file []))))
     (catch Throwable ex

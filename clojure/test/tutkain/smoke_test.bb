@@ -45,10 +45,12 @@
         (send-op
           {:op :test
            :eval-lock (Object.)
-           :ns "foo.bar"
-           :code (string->base64 "(ns foo.bar (:require [clojure.test :refer [deftest is]])) (deftest baz (is (= 1 1)))")
-           :vars ["baz"]})))
-
+           :ns 'foo.bar
+           :thread-bindings (atom {})
+           :ctx (string->base64 "(ns foo.bar (:require [clojure.test :refer [deftest is]])) (deftest baz (is (= 1 1)))")
+           :code (string->base64 "(deftest baz (is (= 1 1)))")
+           :line 1
+           :column 60})))
 
   ;; apropos
   (is (contains? (set (map #(select-keys % [:name :type :ns]) (:results (send-op {:op :apropos :pattern "reduce"}))))

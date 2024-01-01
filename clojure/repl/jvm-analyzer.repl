@@ -51,7 +51,7 @@
 (->
   {:op :locals
    :file "/path/to/my.clj"
-   :ns "user"
+   :ns 'user
    :enclosing-sexp (string->base64 "(defn f [x] (inc x))")
    :form "x"
    :start-line 1
@@ -70,7 +70,7 @@
 (->
   {:op :locals
    :file "/path/to/my.clj"
-   :ns "user"
+   :ns 'user
    ;; newline doesn't mess up :end-column
    :enclosing-sexp (string->base64 "(defn f [x] (doto x\n  inc))")
    :form "x"
@@ -93,7 +93,7 @@
       (->
         {:op :locals
          :file "/path/to/my.clj"
-         :ns "user"
+         :ns 'user
          :enclosing-sexp (string->base64 "(defn f [{:keys [x y z]}] (+ x y z))")
          :form form
          :start-line 1
@@ -126,7 +126,7 @@
 (->
   {:op :locals
    :file "/path/to/my.clj"
-   :ns "user"
+   :ns 'user
    :enclosing-sexp (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
    :form "x"
    :start-line 1
@@ -146,7 +146,7 @@
 (->
   {:op :locals
    :file "/path/to/my.clj"
-   :ns "user"
+   :ns 'user
    :enclosing-sexp (string->base64 "(defn f [x] (let [x (+ x 1)] (+ x (let [x 2] (inc x)) x)))")
    :form "x"
    :start-line 1
@@ -167,7 +167,7 @@
 (->
   {:op :locals
    :file "/path/to/my.clj"
-   :ns "user"
+   :ns 'user
    :enclosing-sexp (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
    :form "baz"
    :start-line 1
@@ -187,7 +187,7 @@
 (->
   {:op :locals
    :file "/path/to/my.clj"
-   :ns "user"
+   :ns 'user
    :enclosing-sexp (string->base64 "(defn foo [{:keys [bar/baz]}] baz)")
    :form "bar/baz"
    :start-line 1
@@ -207,7 +207,7 @@
 (->
   {:op :locals
    :file "/path/to/my.clj"
-   :ns "user"
+   :ns 'user
    :enclosing-sexp (string->base64 "(defn f [x] (inc x))")
    :form 'x
    :start-line 1

@@ -48,17 +48,20 @@
 (spec/def ::error-result
   (spec/keys :req-un [::error ::tag ::val]))
 
+(def thread-bindings (atom {}))
+
 ;; when :vars is empty, run all tests in ns
 (send-op
   {:op :test
    :eval-lock (Object.)
-   :ns "my.app"
-   :code (string->base64 "
+   :ns 'my.app
+   :ctx (string->base64 "
            (ns my.app
              (:require [clojure.test :refer [deftest is]]))
 
            (deftest my-test
              (is (= 2 (+ 1 1))))")
+   :thread-bindings thread-bindings
    :vars []})
 
 (xr/check! ::passing-result)
@@ -66,37 +69,38 @@
 (send-op
   {:op :test
    :eval-lock (Object.)
-   :ns "my.app"
-   :code (string->base64 "
+   :ns 'my.app
+   :thread-bindings thread-bindings
+   :ctx (string->base64 "
            (ns my.app
              (:require [clojure.test :refer [deftest is]]))
 
            (deftest my-test
-             (is (= 3 (+ 1 1))))")
-   :vars []})
+             (is (= 3 (+ 1 1))))")})
 
 (xr/check! ::failing-result)
 
 (send-op
   {:op :test
    :eval-lock (Object.)
-   :ns "my.app"
-   :code (string->base64 "
+   :ns 'my.app
+   :thread-bindings thread-bindings
+   :ctx (string->base64 "
            (ns my.app
              (:require [clojure.test :refer [deftest is]]))
            (deftest my-test
-             (is (= ::impossible (/ 4 0))))")
-   :vars []})
+             (is (= ::impossible (/ 4 0))))")})
 
 (xr/check! ::error-result)
 
-;; when vars is not empty, only run the selected tests
+;; test under caret
 
 (send-op
   {:op :test
    :eval-lock (Object.)
-   :ns "my.app"
-   :code (string->base64 "
+   :ns 'my.app
+   :thread-bindings thread-bindings
+   :ctx (string->base64 "
            (ns my.app
              (:require [clojure.test :refer [deftest is]]))
 
@@ -105,15 +109,19 @@
 
            (deftest my-other-test
              (is (= 3 (+ 1 1))))")
-   :vars ["my-test"]})
+   :form (string->base64 "(deftest my-test
+  (is (= 2 (+ 1 1))))")
+   :line 4
+   :column 1})
 
 (xr/check! ::passing-result)
 
 (send-op
   {:op :test
    :eval-lock (Object.)
-   :ns "my.app"
-   :code (string->base64 "
+   :ns 'my.app
+   :thread-bindings thread-bindings
+   :ctx (string->base64 "
            (ns my.app
              (:require [clojure.test :refer [deftest is]]))
 
@@ -122,6 +130,9 @@
 
            (deftest my-other-test
              (is (= 3 (+ 1 1))))")
-   :vars ["my-other-test"]})
+   :code "(deftest my-other-test
+  (is (= 3 (+ 1 1))))"
+   :line 4
+   :column 1})
 
 (xr/check! ::failing-result)

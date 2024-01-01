@@ -34,14 +34,15 @@
 
 (defmethod handle :dir
   [{:keys [ns sym] :as message}]
-  (let [sym (symbol sym)]
+  (let [ns (or (some-> ns find-ns) 'user)
+        sym (symbol sym)]
     (when-some [sym-ns (or
                          ;; symbol naming ns
                          (some-> sym symbol find-ns)
                          ;; ns alias symbol
                          (get (ns-aliases ns) sym)
                          ;; non-ns symbol
-                         (symbol (namespace (symbol (ns-resolve ns sym)))))]
+                         (some-> ns (ns-resolve sym) symbol namespace symbol))]
       (let [vars (eduction
                    (map val)
                    (map meta-with-type)
@@ -80,7 +81,7 @@
                   (map val)
                   (map meta-with-type)
                   (map lookup/prep-meta)
-                  (ns-interns ns))]
+                  (some-> ns find-ns ns-interns))]
     (respond-to message {:results interns})))
 
 (defmethod handle :intern-mappings
