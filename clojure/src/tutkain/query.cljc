@@ -157,3 +157,25 @@
 (defmethod handle :remove-namespace
   [message]
   (remove-namespace message))
+
+(defmulti runtime-mappings :dialect)
+
+(defmethod runtime-mappings :clj
+  [{:keys [ns-pattern] :or {ns-pattern ".*"}}]
+  (let [re (re-pattern ns-pattern)]
+    (sort-by (juxt :ns :name)
+      (eduction
+        (comp
+          (mapcat (fn [ns]
+                    (let [ns-meta (-> ns ns-name lookup/ns-meta lookup/prep-meta)]
+                      (into [(assoc ns-meta :type :namespace)]
+                        (comp
+                          (map (fn [[_ var]] (->> var symbol (lookup/sym-meta ns))))
+                          (map (fn [m] (assoc (lookup/prep-meta m) :type :var))))
+                        (ns-interns ns)))))
+          (filter (fn [m] (some->> (or (:ns m) (name (:name m))) (re-matches re)))))
+        (all-ns)))))
+
+(defmethod handle :runtime-mappings
+  [message]
+  (respond-to message {:results (runtime-mappings message)}))

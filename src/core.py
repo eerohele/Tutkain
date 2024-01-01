@@ -1,4 +1,5 @@
 import json
+import re
 import os
 import textwrap
 from functools import partial
@@ -2356,5 +2357,79 @@ class TutkainAddLibCommand(WindowCommand):
                 )
         else:
             self.window.status_message(
+                f"⚠ Not connected to a {dialects.name(dialect)} REPL."
+            )
+
+
+class TutkainGotoSymbolInProjectCommand(TextCommand):
+    def is_visible(self):
+        return state.has_connections()
+
+    def run(self, _):
+        window = self.view.window()
+        dialect = dialects.for_view(self.view) or edn.Keyword("clj")
+
+        if client := state.get_client(window, dialect):
+            project_data = window.project_data()
+
+            # TODO: Extract and test
+            ns_pattern = project_data.get("tutkain", {}).get("ns_pattern")
+
+            if ns_pattern is None and (folders := project_data.get("folders")):
+                paths = list(
+                    map(
+                        lambda folder: re.sub(
+                            r"\s+", "-", os.path.basename(folder["path"]).lower()
+                        ),
+                        folders,
+                    )
+                )
+
+                ns_pattern = f"""^{','.join(paths)}\\..*"""
+
+            if ns_pattern is None:
+                ns_pattern = ".*"
+
+            op = {
+                "op": edn.Keyword("runtime-mappings"),
+                "ns-pattern": ns_pattern,
+                "dialect": dialect,
+            }
+
+            client.send_op(
+                op,
+                lambda response: query.handle_response(
+                    window, completions.KINDS, response
+                ),
+            )
+        else:
+            window.status_message(
+                f"⚠ Not connected to a {dialects.name(dialect)} REPL."
+            )
+
+
+class TutkainGotoSymbolCommand(TextCommand):
+    def is_visible(self):
+        return state.has_connections()
+
+    def run(self, _):
+        window = self.view.window()
+        dialect = dialects.for_view(self.view) or edn.Keyword("clj")
+
+        if client := state.get_client(window, dialect):
+            op = {
+                "op": edn.Keyword("intern-mappings"),
+                "ctx": ctx.encoded(self.view),
+                "dialect": dialect,
+            }
+
+            client.send_op(
+                op,
+                lambda response: query.handle_response(
+                    window, completions.KINDS, response
+                ),
+            )
+        else:
+            self.view.window().status_message(
                 f"⚠ Not connected to a {dialects.name(dialect)} REPL."
             )

@@ -147,4 +147,12 @@
         "caption": "Tutkain: Add Lib",
         "command": "tutkain_add_lib"
     },
+    {
+        "caption": "Tutkain: Goto Symbol in Project",
+        "command": "tutkain_goto_symbol_in_project"
+    },
+    {
+        "caption": "Tutkain: Goto Symbol",
+        "command": "tutkain_goto_symbol"
+    },
 ]
