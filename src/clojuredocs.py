@@ -5,7 +5,7 @@ import urllib
 import sublime
 
 from ..api import edn
-from . import dialects, namespace, selectors, state, temp
+from . import ctx, dialects, selectors, state, temp
 
 EXAMPLE_SOURCE_PATH = os.path.join(sublime.cache_path(), "Tutkain", "clojuredocs.edn")
 EXAMPLE_URI = "https://clojuredocs.org/clojuredocs-export.json"
@@ -57,11 +57,11 @@ def refresh_cache(window, callback=lambda: None):
         )
 
 
-def send_message(window, client, ns, sym):
+def send_message(window, client, context, sym):
     op = {"op": edn.Keyword("examples"), "source-path": EXAMPLE_SOURCE_PATH, "sym": sym}
 
-    if ns:
-        op["ns"] = edn.Symbol(ns)
+    if context:
+        op["ctx"] = context
 
     client.send_op(
         op,
@@ -102,22 +102,21 @@ def show(view):
 
     if client := state.get_client(window, edn.Keyword("clj")):
         point = view.sel()[0].begin()
+        context = ctx.encoded(view)
 
         if dialects.for_point(view, point) != edn.Keyword("clj"):
             view.window().status_message(
                 "⚠ ClojureDocs examples are only available for Clojure."
             )
         else:
-            ns = namespace.name(view)
-
             if region := selectors.expand_by_selector(view, point, "meta.symbol"):
                 sym = edn.Symbol(view.substr(region))
-                send_message(window, client, ns, sym)
+                send_message(window, client, context, sym)
             else:
                 input_panel = view.window().show_input_panel(
                     "Symbol: ",
                     "",
-                    lambda sym: send_message(window, client, ns, edn.Symbol(sym)),
+                    lambda sym: send_message(window, client, context, edn.Symbol(sym)),
                     lambda _: None,
                     lambda: None,
                 )

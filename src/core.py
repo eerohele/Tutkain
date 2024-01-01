@@ -16,13 +16,13 @@ from sublime_plugin import (
 from ..api import edn
 from . import (
     base64,
+    ctx,
     clojuredocs,
     completions,
     dialects,
     forms,
     indent,
     inline,
-    namespace,
     paredit,
     progress,
     repl,
@@ -186,16 +186,22 @@ class TutkainRunTests(TextCommand):
         if scope == "ns":
             client = state.get_client(window, dialect)
             state.focus_active_runtime_view(window, dialect)
-            test.run(self.view, client)
+            test.run(self.view, client, None)
         elif scope == "var":
             region = self.view.sel()[0]
             point = region.begin()
-            test_var = test.current(self.view, point)
 
-            if test_var:
-                client = state.get_client(window, dialect)
-                state.focus_active_runtime_view(window, dialect)
-                test.run(self.view, client, test_vars=[test_var])
+            if client := state.get_client(window, dialect):
+                if outermost := sexp.outermost(self.view, point, ignore={"comment"}):
+                    state.focus_active_runtime_view(window, dialect)
+                    line, column = self.view.rowcol(outermost.open.region.begin())
+                    test.run(
+                        self.view,
+                        client,
+                        self.view.substr(outermost.extent()),
+                        line,
+                        column,
+                    )
 
     def input(self, args):
         if "scope" in args:
@@ -367,10 +373,9 @@ class TutkainEvaluateCommand(TextCommand):
         if not options.get("file"):
             options["file"] = "NO_SOURCE_FILE"
 
-        if not options.get("ns"):
+        if not options.get("ctx"):
             if auto_switch_namespace:
-                ns = namespace.name_or_default(self.view, dialect)
-                options["ns"] = edn.Symbol(ns)
+                options["ctx"] = ctx.encoded(self.view)
 
         line, column = self.view.rowcol(point)
 
@@ -691,22 +696,22 @@ class TutkainEvaluateCommand(TextCommand):
                             )
 
                 elif scope == "ns":
-                    ns_forms = namespace.forms(self.view)
-
-                    for region in ns_forms:
-                        code = self.view.substr(region)
-                        evaluator(region, code, options)
+                    client.send_op(
+                        {
+                            "op": edn.Keyword("eval-ns"),
+                            "ctx": ctx.encoded(self.view),
+                            "file": self.view.file_name(),
+                        },
+                        client.print,
+                    )
                 elif code:
                     variables = {}
 
                     if ns:
-                        options["ns"] = edn.Symbol(ns)
-                    elif auto_switch_namespace:
-                        ns = namespace.name_or_default(self.view, dialect)
-                        options["ns"] = edn.Symbol(ns)
-
-                    if ns:
+                        options["ctx"] = base64.encode(f"(in-ns '{ns})")
                         variables["ns"] = ns
+                    elif auto_switch_namespace:
+                        options["ctx"] = ctx.encoded(self.view)
 
                     if file_name := self.view.file_name():
                         variables["file"] = file_name
@@ -958,7 +963,7 @@ def lookup(view, form, handler):
             {
                 "op": edn.Keyword("lookup"),
                 "ident": view.substr(form),
-                "ns": namespace.name(view),
+                "ctx": ctx.encoded(view),
                 "dialect": dialect,
             },
             handler,
@@ -1697,7 +1702,7 @@ def fetch_locals(view, point, form, handler):
                         "op": edn.Keyword("locals"),
                         "dialect": dialect,
                         "file": view.file_name() or "NO_SOURCE_FILE",
-                        "ns": namespace.name(view),
+                        "ctx": ctx.encoded(view),
                         "enclosing-sexp": base64.encode(enclosing_sexp.encode("utf-8")),
                         "form": local,
                         "start-line": start_line + 1,
@@ -1776,7 +1781,7 @@ class TutkainAproposCommand(WindowCommand):
 class TutkainDirCommand(TextCommand):
     def send_request(self, client, symbol):
         client.send_op(
-            {"op": edn.Keyword("dir"), "ns": namespace.name(self.view), "sym": symbol},
+            {"op": edn.Keyword("dir"), "ctx": ctx.encoded(self.view), "sym": symbol},
             lambda response: query.handle_response(
                 self.view.window(), completions.KINDS, response
             ),
@@ -1812,7 +1817,7 @@ class TutkainDirCommand(TextCommand):
                     client.send_op(
                         {
                             "op": edn.Keyword("all-namespaces"),
-                            "ns": namespace.name(self.view),
+                            "ctx": ctx.encoded(self.view),
                             "dialect": dialect,
                         },
                         lambda response: self.show_namespaces(client, response),
@@ -1843,23 +1848,34 @@ class TutkainLoadedLibsCommand(TextCommand):
 
 
 class TutkainNewScratchViewInNamespaceCommand(TextCommand):
-    def run(self, _):
-        view = self.view
-        window = view.window()
-        dialect = dialects.for_view(view)
-        extension = dialects.extension(dialect)
+    def handle(self, extension, response):
+        ns = response.get(edn.Keyword("ns"))
 
-        if file_name := view.file_name():
+        if file_name := self.view.file_name():
             name = os.path.splitext(file_name)[0] + ".repl"
         else:
             name = "untitled.repl"
 
-        ns = namespace.name_or_default(view, dialect)
-
         def writef(file):
-            return file.write(f"(in-ns '{ns})\n\n")
+            return file.write(f"(in-ns '{ns.name})\n\n")
 
-        temp.open_file(window, name, extension, writef)
+        temp.open_file(self.view.window(), name, extension, writef)
+
+        # TODO: Fix caret placement
+
+    def run(self, _):
+        dialect = dialects.for_view(self.view)
+        extension = dialects.extension(dialect)
+
+        if client := state.get_client(self.view.window(), edn.Keyword("clj")):
+            client.send_op(
+                {"op": edn.Keyword("ns"), "ctx": ctx.encoded(self.view)},
+                lambda response: self.handle(extension, response),
+            )
+        else:
+            self.view.window().status_message(
+                f"⚠ Not connected to a {dialects.name(dialect)} REPL."
+            )
 
 
 class TutkainExploreStackTraceCommand(TextCommand):
@@ -2015,7 +2031,7 @@ class TutkainMarkFormCommand(TextCommand):
                 dialect = dialects.for_view(self.view)
 
                 options = {
-                    "ns": namespace.name_or_default(self.view, dialect),
+                    "ctx": ctx.encoded(self.view),
                     "region": eval_region.to_tuple(),
                     "line": line,
                     "column": column,
@@ -2063,7 +2079,7 @@ class TutkainRemoveNamespaceMappingCommand(TextCommand):
             client.send_op(
                 {
                     "op": edn.Keyword("intern-mappings"),
-                    "ns": edn.Symbol(namespace.name_or_default(self.view, dialect)),
+                    "ctx": ctx.encoded(self.view),
                     "dialect": dialect,
                 },
                 lambda response: self.handler(client, dialect, response),
@@ -2104,12 +2120,10 @@ class TutkainRemoveNamespaceAliasCommand(TextCommand):
         dialect = dialects.for_view(self.view)
 
         if client := state.get_client(window, dialect):
-            ns = edn.Symbol(namespace.name_or_default(self.view, dialect))
-
             client.send_op(
                 {
                     "op": edn.Keyword("alias-mappings"),
-                    "ns": ns,
+                    "ctx": ctx.encoded(self.view),
                     "dialect": dialect,
                 },
                 lambda response: self.handler(client, dialect, ns, response),
@@ -2150,7 +2164,7 @@ class TutkainRemoveNamespaceCommand(TextCommand):
             client.send_op(
                 {
                     "op": edn.Keyword("all-namespaces"),
-                    "ns": namespace.name(self.view),
+                    "ctx": ctx.encoded(self.view),
                     "dialect": dialect,
                 },
                 lambda response: self.handler(client, dialect, response),

@@ -64,7 +64,8 @@
 
 ;; Backchannel has access to the same bindings as the REPL thread
 (send {:op :test
-       :ns "my.test"
+       :ctx (string->base64 "(ns my.test (:require [clojure.test :refer [deftest is]]))
+(deftest test-assert (is (true? *assert*)))")
        :file "/path/to/my/test.clj"
        :code (string->base64 "(ns my.test (:require [clojure.test :refer [deftest is]]))
 (deftest test-assert (is (true? *assert*)))")})
@@ -116,12 +117,12 @@
 (defn f [x] (/ 6 x))
 
 ;; ns
-(send {:op :eval :code "(f 2)" :ns 'repl.rpc})
+(send {:op :eval :code "(f 2)" :ctx (string->base64 "(ns repl.rpc)")})
 (recv)
 (xr/check! (val? 3))
 
 ;; file, line, column
-(send {:op :eval :code "(f 0)" :ns 'repl.rpc :file "/path/to/my.clj" :line 3 :column 4})
+(send {:op :eval :code "(f 0)" :ctx (string->base64 "(ns repl.rpc)") :file "/path/to/my.clj" :line 3 :column 4})
 (recv)
 (:val *1)
 (xr/check! (partial re-matches #"(?s).*ArithmeticException.*"))
@@ -154,7 +155,9 @@
 (:val *1)
 (xr/check! (partial re-matches #"(?s)Syntax error reading source at \(REPL:\d+:\d+\)\.\r?\nInvalid token: :::5\r?\n"))
 
-(send {:op :eval :ns 'user :code "(deftype T [a]) (defmethod print-method T [_ w] (throw (Exception. \"boom\"))) (->T 1)"})
+(send {:op :eval
+       :ctx (string->base64 "(ns user)")
+       :code "(deftype T [a]) (defmethod print-method T [_ w] (throw (Exception. \"boom\"))) (->T 1)"})
 (recv)
 (recv)
 (recv)

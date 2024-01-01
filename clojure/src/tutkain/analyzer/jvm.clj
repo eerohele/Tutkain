@@ -11,10 +11,6 @@
 (def ^:private analyzer-passes
   (passes/schedule #{#'source-info/source-info #'uniquify/uniquify-locals}))
 
-(defn ^:private parse-namespace
-  [ns]
-  (or (some-> ns symbol find-ns) (the-ns 'user)))
-
 (def reader-opts
   {:features #{:clj :t.a.jvm} :read-cond :allow})
 
@@ -31,7 +27,7 @@
   [{:keys [enclosing-sexp file ns start-column start-line] :as message}]
   (try
     (binding [*file* file
-              *ns* (parse-namespace ns)
+              *ns* ns
               analyzer.jvm/run-passes analyzer-passes]
       (with-open [reader (base64-reader enclosing-sexp)]
         (let [nodes (analyze start-line start-column reader)

@@ -1,7 +1,5 @@
 (ns tutkain.rpc
-  (:refer-clojure :exclude [namespace])
   (:require
-   [clojure.core :as core]
    [clojure.core.server :as server]
    [clojure.java.io :as io]
    [clojure.main :as main]
@@ -49,12 +47,6 @@
 (defmethod handle :default
   [message]
   (throw (ex-info "Unknown op" {:message message})))
-
-(defn namespace
-  "Given an RPC op message, return the clojure.lang.Namespace object the message
-  implies."
-  [{:keys [thread-bindings ns]}]
-  (or (some-> ns symbol find-ns) (some-> thread-bindings deref (get #'*ns*)) (the-ns 'user)))
 
 (defn set-line!
   [^LineNumberingPushbackReader reader line]
@@ -272,6 +264,21 @@
       (ns-sym)
       (or 'user))))
 
+(defmethod handle :eval-ns
+  [{:keys [eval-lock ctx file thread-bindings] :as message}]
+  (try
+    (let [retval (binding [*file* (relative-to-classpath-root file)]
+                   (with-open [reader (base64/base64-reader ctx)]
+                     (when-some [form (ns-binder reader :seek #{'ns})]
+                       (locking eval-lock
+                         (eval form)))))]
+      (respond-to message {:tag :ret :val (format/pp-str retval)}))
+    (catch Exception ex
+      (swap! thread-bindings assoc #'*e ex)
+      (respond-to message {:tag :err
+                           :val (format/Throwable->str ex)
+                           :exception true}))))
+
 (defonce ^:private ^AtomicInteger thread-counter
   (AtomicInteger.))
 
@@ -331,11 +338,18 @@
                       (let [message (edn/read {:eof ::EOF} *in*)]
                         (if (or (identical? ::EOF message) (= :quit (:op message)))
                           false
-                          (let [message (assoc (xform-in message)
-                                          :eval-service eval-service
-                                          :eval-future eval-future
-                                          :thread-bindings thread-bindings
-                                          :out-fn out-fn)]
+                          (let [message (cond->
+                                          (assoc (xform-in message)
+                                            :eval-service eval-service
+                                            :eval-future eval-future
+                                            :thread-bindings thread-bindings
+                                            :out-fn out-fn)
+                                          (string? (:ctx message))
+                                          (assoc :ns
+                                            (context-ns
+                                              (:ctx message)
+                                              (:line message ##Inf)
+                                              (:column message ##Inf))))]
                             (try
                               (handle message)
                               (.flush ^Writer *err*)
@@ -443,7 +457,7 @@
 
   (let [initf (try
                 (if-some [s (resolve sym)]
-                  (do (some-> sym core/namespace symbol (require :reload)) s)
+                  (do (some-> sym namespace symbol (require :reload)) s)
                   (some-> sym requiring-resolve))
                 (catch FileNotFoundException _
                   (requiring-resolve fallback-sym)))]

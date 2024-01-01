@@ -184,7 +184,7 @@
   {:op :completions
    :dialect :clj
    :prefix "x"
-   :ns "user"
+   :ns 'user
    :out-fn prn}
   rpc/handle
   with-out-str

@@ -5,8 +5,8 @@
    [clojure.test :as test]
    [clojure.walk :as walk]
    [tutkain.format :refer [pp-str Throwable->str]]
-   [tutkain.base64 :refer [read-base64]]
-   [tutkain.rpc :refer [handle respond-to]])
+   [tutkain.base64 :as base64 :refer [read-base64]]
+   [tutkain.rpc :as rpc :refer [handle respond-to]])
   (:import
    (java.io File)))
 
@@ -101,19 +101,31 @@
                                 nil)))]
       (if (seq vars)
         (binding [test/*report-counters* (ref test/*initial-report-counters*)]
-          (test/test-vars (map #(resolve (symbol (name ns) %)) vars))
+          (test/test-vars vars)
           (swap! results assoc :tag :ret :val (str (assoc @test/*report-counters* :type :summary) \newline)))
         (test/run-tests ns)))
     @results))
 
 (defmethod handle :test
-  [{:keys [eval-lock ns code ^String file vars thread-bindings] :as message}]
+  [{:keys [eval-lock ctx ns form ^String file thread-bindings line column] :as message
+    :or {line 1 column 1}}]
   (try
-    (let [filename (some-> file File. .getName)
-          ns-sym (or (some-> ns symbol) 'user)]
-      (clean-ns! (find-ns ns-sym))
-      (locking eval-lock (read-base64 code file filename))
-      (respond-to message (run-tests ns-sym file vars)))
+    (let [filename (some-> file File. .getName)]
+      (some-> ns find-ns clean-ns!)
+
+      (locking eval-lock
+        (read-base64 ctx file filename))
+
+      (if form
+        (with-open [reader (base64/base64-reader form)]
+          (rpc/set-line! reader line)
+          (rpc/set-column! reader column)
+          (binding [*ns* (find-ns ns)
+                    *file* (rpc/relative-to-classpath-root file)]
+            (let [test-var (locking eval-lock
+                             (eval (read reader)))]
+              (respond-to message (run-tests ns file [test-var])))))
+        (respond-to message (run-tests ns file []))))
     (catch Throwable ex
       (swap! thread-bindings assoc #'*e ex)
       (respond-to message {:tag :err

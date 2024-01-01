@@ -489,8 +489,8 @@
 (defmulti completions :dialect)
 
 (defmethod completions :default
-  [{:keys [prefix] :as message}]
-  (respond-to message {:completions (candidates prefix (rpc/namespace message))}))
+  [{:keys [ns prefix] :as message}]
+  (respond-to message {:completions (candidates prefix ns)}))
 
 (defmethod handle :completions
   [message]

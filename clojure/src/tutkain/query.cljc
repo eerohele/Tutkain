@@ -34,8 +34,7 @@
 
 (defmethod handle :dir
   [{:keys [ns sym] :as message}]
-  (let [sym (symbol sym)
-        ns (or (some-> ns symbol find-ns) (the-ns 'user))]
+  (let [sym (symbol sym)]
     (when-some [sym-ns (or
                          ;; symbol naming ns
                          (some-> sym symbol find-ns)
@@ -50,6 +49,10 @@
                    (ns-publics sym-ns))]
         (respond-to message {:symbol sym
                              :results (sort-by :name vars)})))))
+
+(defmethod handle :ns
+  [{:keys [ns] :as message}]
+  (respond-to message {:ns (or ns 'user)}))
 
 (defmulti loaded-libs :dialect)
 
@@ -73,13 +76,12 @@
 
 (defmethod intern-mappings :clj
   [{:keys [ns] :as message}]
-  (when-some [ns (some-> ns find-ns)]
-    (let [interns (eduction
-                    (map val)
-                    (map meta-with-type)
-                    (map lookup/prep-meta)
-                    (ns-interns ns))]
-      (respond-to message {:results interns}))))
+  (let [interns (eduction
+                  (map val)
+                  (map meta-with-type)
+                  (map lookup/prep-meta)
+                  (ns-interns ns))]
+    (respond-to message {:results interns})))
 
 (defmethod handle :intern-mappings
   [message]
@@ -90,7 +92,7 @@
 (defmethod remove-namespace-mapping :clj
   [{:keys [ns sym] :as message}]
   (try
-    (ns-unmap (some-> ns find-ns) sym)
+    (ns-unmap ns sym)
     (respond-to message {:result :ok :ns ns :sym sym})
     (catch Exception _
       (respond-to message {:result :nok}))))
@@ -119,7 +121,7 @@
 (defmethod remove-namespace-alias :clj
   [{:keys [ns sym] :as message}]
   (try
-    (ns-unalias (some-> ns find-ns) sym)
+    (ns-unalias ns sym)
     (respond-to message {:result :ok :ns ns :sym sym})
     (catch Exception _
       (respond-to message {:result :nok}))))

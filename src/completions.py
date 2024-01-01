@@ -1,7 +1,7 @@
 import sublime
 
 from ..api import edn
-from . import dialects, namespace, selectors, state
+from . import ctx, dialects, selectors, state
 
 KINDS = {
     "function": sublime.KIND_FUNCTION,
@@ -76,7 +76,7 @@ def get_completions(view, prefix, point):
         if (
             view.match_selector(
                 point,
-                "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | constant.other.keyword",
+                "source.clojure & (meta.symbol - entity.name) | constant.other.keyword",
             )
             and (dialect := dialects.for_point(view, point))
             and (client := state.get_client(view.window(), dialect))
@@ -92,7 +92,7 @@ def get_completions(view, prefix, point):
                 {
                     "op": edn.Keyword("completions"),
                     "prefix": prefix,
-                    "ns": namespace.name(view),
+                    "ctx": ctx.encoded(view),
                     "dialect": dialect,
                 },
                 handler=lambda response: (

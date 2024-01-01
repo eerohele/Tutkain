@@ -5,9 +5,9 @@
   (:import (java.io PushbackReader)))
 
 (defmethod handle :examples
-  [{:keys [source-path sym] :as message}]
+  [{:keys [source-path ns sym] :as message}]
   (respond-to message
-    (if-some [qualified-symbol (some-> (ns-resolve (rpc/namespace message) sym) symbol)]
+    (if-some [qualified-symbol (some-> (ns-resolve ns sym) symbol)]
       (with-open [reader (PushbackReader. (io/reader source-path))]
         (assoc (-> reader edn/read qualified-symbol) :symbol qualified-symbol))
       {:symbol sym})))

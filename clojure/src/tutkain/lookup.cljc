@@ -109,9 +109,9 @@
 (defmulti info :dialect)
 
 (defmethod info :default
-  [{:keys [ident] :as message}]
+  [{:keys [ns ident] :as message}]
   (try
-    (when-some [result (lookup (rpc/namespace message) ident)]
+    (when-some [result (lookup ns ident)]
       (respond-to message {:info result}))
     (catch Throwable ex
       (respond-to message {:ex (pp-str (Throwable->map ex))}))))
