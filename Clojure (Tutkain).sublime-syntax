@@ -174,6 +174,9 @@ contexts:
               pop: 2
         - include: metadata
         - match: '{{qualified_symbol}}'
+          captures:
+            1: meta.namespace.edn
+            2: punctuation.accessor.edn
           scope: meta.reader-form.clojure meta.symbol.clojure meta.function-call.clojure variable.function.clojure
           push:
             - match: '\)'
