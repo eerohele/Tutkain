@@ -2367,20 +2367,7 @@ class TutkainGotoSymbolInProjectCommand(TextCommand):
         if client := state.get_client(window, dialect):
             project_data = window.project_data()
 
-            # TODO: Extract and test
             ns_pattern = project_data.get("tutkain", {}).get("ns_pattern")
-
-            if ns_pattern is None and (folders := project_data.get("folders")):
-                paths = list(
-                    map(
-                        lambda folder: re.sub(
-                            r"\s+", "-", os.path.basename(folder["path"]).lower()
-                        ),
-                        folders,
-                    )
-                )
-
-                ns_pattern = f"""^{','.join(paths)}\\..*"""
 
             if ns_pattern is None:
                 ns_pattern = ".*"
