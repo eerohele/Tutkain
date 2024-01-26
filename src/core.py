@@ -111,9 +111,6 @@ class TemporaryFileEventListener(ViewEventListener):
     def is_applicable(_, settings):
         return settings.has("tutkain_temp_file")
 
-    def on_deactivated(self):
-        sublime.set_timeout_async(lambda: self.view.close(), 60000)
-
     def on_load_async(self):
         try:
             if temp_file := self.view.settings().get("tutkain_temp_file"):
