@@ -4,7 +4,7 @@
    [clojure.spec.alpha :as spec]
    [cognitect.transcriptor :as xr]
    [tutkain.rpc.test :refer [send-op]]
-   [tutkain.clojuredocs :as clojuredocs])
+   [tutkain.query :as query])
   (:import (java.io File)))
 
 (def source-path (File/createTempFile "clojuredocs" ".edn"))
@@ -15,7 +15,7 @@
   {:id 1
    :op :examples
    :source-path source-path
-   :ns 'tutkain.clojuredocs
+   :ns 'tutkain.query
    :sym 'mapcat})
 
 (xr/check! #{{:symbol 'clojure.core/mapcat
@@ -27,7 +27,7 @@
   {:id 1
    :op :examples
    :source-path source-path
-   :ns 'tutkain.clojuredocs
+   :ns 'tutkain.query
    :sym 'nope})
 
 (xr/check! #{{:symbol 'nope :id 1}})

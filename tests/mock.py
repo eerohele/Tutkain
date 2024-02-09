@@ -101,7 +101,7 @@ class JvmBackchannelServer(JvmServer):
         )
 
         # Client loads modules
-        for _ in range(10):
+        for _ in range(9):
             module = edn.read(backchannel.recv())
 
             backchannel.send(
@@ -151,7 +151,7 @@ class JvmRpcServer(JvmServer):
         )
 
         # Client loads modules
-        for _ in range(10):
+        for _ in range(9):
             module = edn.read(self.recv())
 
             self.send(

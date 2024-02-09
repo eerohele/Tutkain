@@ -267,7 +267,6 @@ class JVMClient(Client):
         "deps.clj": [
             edn.Symbol("clojure.repl.deps"),
         ],
-        "clojuredocs.clj": [],
         "analyzer.clj": [
             edn.Symbol("clojure.tools.reader"),
             edn.Symbol("clojure.tools.analyzer.ast"),
