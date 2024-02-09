@@ -404,7 +404,9 @@ def semicolon(view, edit):
     for region, sel in iterate(view):
         point = region.begin()
 
-        if selectors.ignore(view, point):
+        if selectors.ignore(view, point) or view.match_selector(
+            point - 1, "constant.character"
+        ):
             view.insert(edit, point, ";")
         else:
             innermost = sexp.innermost(view, point, edge=False)

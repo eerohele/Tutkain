@@ -1049,6 +1049,12 @@ class TestParedit(ViewTestCase):
         self.assertEquals("(a ;b\n)(c ;d\n)", self.view_content())
         self.assertEquals([(4, 4), (11, 11)], self.selections())
 
+        self.set_view_content("\\")
+        self.set_selections((1, 1))
+        self.view.run_command("tutkain_paredit_semicolon")
+        self.assertEquals("\\;", self.view_content())
+        self.assertEquals([(2, 2)], self.selections())
+
     def test_splice_sexp_killing_forward(self):
         self.set_view_content("(a (b c d) e) (f g (h i j) k)")
         self.set_selections((6, 6), (24, 24))
