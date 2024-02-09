@@ -79,8 +79,8 @@
    :column column
    :end-column end-column})
 
-(defmulti locals :dialect)
+(defmulti local-instances :dialect)
 
 (defmethod handle :locals
   [message]
-  (locals message))
+  (local-instances message))

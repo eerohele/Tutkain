@@ -37,7 +37,7 @@
       :analyzer #(cljs.analyzer/analyze env %)
       :xform uniquify)))
 
-(defmethod analyzer/locals :cljs
+(defmethod analyzer/local-instances :cljs
   [{:keys [build-id enclosing-sexp start-column start-line file ns] :as message}]
   (try
     (env/with-compiler-env (compiler-env build-id)

@@ -27,7 +27,7 @@
     :reader-opts reader-opts
     :analyzer analyzer.jvm/analyze))
 
-(defmethod analyzer/locals :default
+(defmethod analyzer/local-instances :default
   [{:keys [enclosing-sexp file ns start-column start-line] :as message}]
   (try
     (binding [*file* file
