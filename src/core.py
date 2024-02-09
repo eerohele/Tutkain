@@ -133,7 +133,23 @@ class TemporaryFileEventListener(ViewEventListener):
             pass
 
 
-class TutkainClearOutputViewCommand(WindowCommand):
+class ConnectedWindowCommand(WindowCommand):
+    def is_visible(self):
+        return state.has_connections()
+
+    def is_enabled(self):
+        return self.is_visible()
+
+
+class ConnectedTextCommand(TextCommand):
+    def is_visible(self):
+        return state.has_connections()
+
+    def is_enabled(self):
+        return self.is_visible()
+
+
+class TutkainClearOutputViewCommand(ConnectedWindowCommand):
     def clear_view(self, view):
         if view:
             view.set_read_only(False)
@@ -157,6 +173,9 @@ class TutkainClearOutputViewCommand(WindowCommand):
 
 
 class TutkainEvaluateFormCommand(TextCommand):
+    def is_visible(self):
+        return False
+
     def run(self, _, scope="outermost", ignore={"comment"}, inline_result=False):
         self.view.window().status_message(
             "tutkain_evaluate_form is deprecated; use tutkain_evaluate instead"
@@ -169,13 +188,16 @@ class TutkainEvaluateFormCommand(TextCommand):
 
 
 class TutkainEvaluateViewCommand(TextCommand):
+    def is_visible(self):
+        return False
+
     def run(self, _):
         self.view.window().status_message(
             "tutkain_evaluate_view is deprecated; use tutkain_evaluate instead"
         )
 
 
-class TutkainRunTests(TextCommand):
+class TutkainRunTests(ConnectedTextCommand):
     def run(self, _, scope="ns"):
         dialect = dialects.for_view(self.view)
         window = self.view.window()
@@ -220,6 +242,9 @@ class TestScopeInputHandler(ListInputHandler):
 
 
 class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
+    def is_visible(self):
+        return False
+
     def run(self, edit):
         self.view.window().status_message(
             "tutkain_run_tests_in_current_namespace is deprecated; use tutkain_run_tests instead"
@@ -228,6 +253,9 @@ class TutkainRunTestsInCurrentNamespaceCommand(TextCommand):
 
 
 class TutkainRunTestUnderCursorCommand(TextCommand):
+    def is_visible(self):
+        return False
+
     def run(self, edit):
         self.view.window().status_message(
             "tutkain_run_test_under_cursor is deprecated; use tutkain_run_tests instead"
@@ -313,6 +341,9 @@ class PortInputHandler(TextInputHandler):
 
 
 class TutkainEvaluateInputCommand(WindowCommand):
+    def is_visible(self):
+        return False
+
     def run(self):
         self.window.status_message(
             "tutkain_evaluate_input is deprecated; use tutkain_evaluate instead"
@@ -350,13 +381,16 @@ def get_eval_region(view, region, scope="outermost", ignore={}):
 
 
 class TutkainReplaceRegionImplCommand(TextCommand):
+    def is_visible(self):
+        return False
+
     def run(self, edit, region=None, string=None):
         if region and string:
             region = sublime.Region(region[0], region[1])
             self.view.replace(edit, region, string)
 
 
-class TutkainEvaluateCommand(TextCommand):
+class TutkainEvaluateCommand(ConnectedTextCommand):
     def make_options(self, options, point, dialect, auto_switch_namespace):
         if not options.get("file") and (file_name := self.view.file_name()):
             options["file"] = file_name
@@ -906,7 +940,7 @@ class TutkainConnectCommand(WindowCommand):
             return DialectInputHandler(self.window)
 
 
-class TutkainDisconnectCommand(WindowCommand):
+class TutkainDisconnectCommand(ConnectedWindowCommand):
     def run(self):
         repl.stop(self.window)
 
@@ -939,7 +973,7 @@ class TutkainNewScratchViewCommand(WindowCommand):
         )
 
 
-class TutkainShowPopupCommand(TextCommand):
+class TutkainShowPopupCommand(ConnectedTextCommand):
     def run(self, _, item={}):
         info.show_popup(self.view, -1, {edn.Keyword("info"): edn.kwmap(item)})
 
@@ -962,7 +996,7 @@ def lookup(view, form, handler):
         )
 
 
-class TutkainShowInformationCommand(TextCommand):
+class TutkainShowInformationCommand(ConnectedTextCommand):
     def handler(self, form, response):
         info.show_popup(self.view, form.begin(), response)
 
@@ -991,7 +1025,7 @@ class TutkainShowInformationCommand(TextCommand):
             lookup(self.view, form, lambda response: self.handler(form, response))
 
 
-class TutkainGotoDefinitionCommand(TextCommand):
+class TutkainGotoDefinitionCommand(ConnectedTextCommand):
     def handler(self, response):
         info.goto(
             self.view.window(), info.parse_location(response.get(edn.Keyword("info")))
@@ -1005,6 +1039,9 @@ class TutkainGotoDefinitionCommand(TextCommand):
 
 # DEPRECATED
 class TutkainShowSymbolInformationCommand(TextCommand):
+    def is_visible(self):
+        return False
+
     def handler(self, form, response):
         info.show_popup(self.view, form.begin(), response)
 
@@ -1023,6 +1060,9 @@ class TutkainShowSymbolInformationCommand(TextCommand):
 
 # DEPRECATED
 class TutkainGotoSymbolDefinitionCommand(TextCommand):
+    def is_visible(self):
+        return False
+
     def handler(self, response):
         info.goto(
             self.view.window(), info.parse_location(response.get(edn.Keyword("info")))
@@ -1144,6 +1184,9 @@ class TutkainEventListener(EventListener):
 
 
 class TutkainGotoPointImplCommand(TextCommand):
+    def is_visible(self):
+        return False
+
     def run(self, _, point):
         view = self.view
 
@@ -1158,6 +1201,9 @@ class TutkainGotoPointImplCommand(TextCommand):
 
 class TutkainExpandSelectionImplCommand(TextCommand):
     """Internal, do not use. Use the tutkain_expand_selection command instead."""
+
+    def is_visible(self):
+        return False
 
     def run(self, _, region=None):
         region = sublime.Region(region[0], region[1])
@@ -1308,7 +1354,7 @@ class TutkainExpandSelectionCommand(TextCommand):
                 )
 
 
-class TutkainInterruptEvaluationCommand(WindowCommand):
+class TutkainInterruptEvaluationCommand(ConnectedWindowCommand):
     def run(self):
         dialect = edn.Keyword("clj")
         client = state.get_client(self.window, dialect)
@@ -1641,7 +1687,7 @@ class TutkainShowUnsuccessfulTestsCommand(TextCommand):
             view.window().show_quick_panel(items, goto, on_highlight=goto)
 
 
-class TutkainChooseEvaluationDialectCommand(WindowCommand):
+class TutkainChooseEvaluationDialectCommand(ConnectedWindowCommand):
     dialects = [["clj", "Clojure"], ["cljs", "ClojureScript"], ["bb", "Babashka"]]
 
     def finish(self, index):
@@ -1661,6 +1707,9 @@ class TutkainChooseEvaluationDialectCommand(WindowCommand):
 
 class TutkainAddRegionsCommand(TextCommand):
     """Implementation detail; do not use."""
+
+    def is_visible(self):
+        return False
 
     def run(self, _, view_id, regions):
         if self.view.id() == view_id:
@@ -1722,7 +1771,7 @@ def positions_to_tuples(view, positions):
     return regions
 
 
-class TutkainSelectLocalsCommand(TextCommand):
+class TutkainSelectLocalsCommand(ConnectedTextCommand):
     def handler(self, regions):
         # TODO: Why?
         self.view.run_command(
@@ -1737,7 +1786,7 @@ class TutkainSelectLocalsCommand(TextCommand):
                 fetch_locals(self.view, point, symbol, self.handler)
 
 
-class TutkainAproposCommand(WindowCommand):
+class TutkainAproposCommand(ConnectedWindowCommand):
     def send_request(self, client, pattern):
         client.send_op(
             {"op": edn.Keyword("apropos"), "pattern": pattern},
@@ -1770,7 +1819,7 @@ class TutkainAproposCommand(WindowCommand):
             )
 
 
-class TutkainDirCommand(TextCommand):
+class TutkainDirCommand(ConnectedTextCommand):
     def send_request(self, client, symbol):
         client.send_op(
             {"op": edn.Keyword("dir"), "ns": namespace.name(self.view), "sym": symbol},
@@ -1821,7 +1870,7 @@ class TutkainDirCommand(TextCommand):
             )
 
 
-class TutkainLoadedLibsCommand(TextCommand):
+class TutkainLoadedLibsCommand(ConnectedTextCommand):
     def run(self, _):
         window = self.view.window()
         dialect = dialects.for_view(self.view) or edn.Keyword("clj")
@@ -1859,7 +1908,7 @@ class TutkainNewScratchViewInNamespaceCommand(TextCommand):
         temp.open_file(window, name, extension, writef)
 
 
-class TutkainExploreStackTraceCommand(TextCommand):
+class TutkainExploreStackTraceCommand(ConnectedTextCommand):
     def goto(self, elements, index):
         if index == -1 and (window := self.view.window()):
             window.focus_view(self.view)
@@ -1903,7 +1952,7 @@ class TutkainExploreStackTraceCommand(TextCommand):
             client.send_op({"op": edn.Keyword("resolve-stacktrace")}, self.handler)
 
 
-class TutkainPromptCommand(WindowCommand):
+class TutkainPromptCommand(ConnectedWindowCommand):
     def on_done(self, client, code):
         if code:
             client.evaluate_rpc(code, options={"file": "NO_SOURCE_FILE"})
@@ -1966,7 +2015,7 @@ class ClientIdInputHandler(ListInputHandler):
         return list(map(self.make_item, list(state.get_connections().values())))
 
 
-class TutkainChooseActiveRuntimeCommand(WindowCommand):
+class TutkainChooseActiveRuntimeCommand(ConnectedWindowCommand):
     def input(self, args):
         return ClientIdInputHandler()
 
@@ -1979,7 +2028,7 @@ class TutkainRefreshClojuredocsCacheCommand(WindowCommand):
         sublime.set_timeout_async(lambda: clojuredocs.refresh_cache(self.window), 0)
 
 
-class TutkainShowClojuredocsExamplesCommand(TextCommand):
+class TutkainShowClojuredocsExamplesCommand(ConnectedTextCommand):
     def run(self, _):
         clojuredocs.show_examples(self.view)
 
@@ -2027,7 +2076,7 @@ class TutkainMarkFormCommand(TextCommand):
                 self.view.window().status_message("Form marked")
 
 
-class TutkainRemoveNamespaceMappingCommand(TextCommand):
+class TutkainRemoveNamespaceMappingCommand(ConnectedTextCommand):
     def unmap(self, client, dialect, results, index):
         if index != -1:
             item = results[index]
@@ -2071,7 +2120,7 @@ class TutkainRemoveNamespaceMappingCommand(TextCommand):
             )
 
 
-class TutkainRemoveNamespaceAliasCommand(TextCommand):
+class TutkainRemoveNamespaceAliasCommand(ConnectedTextCommand):
     def unmap(self, client, dialect, ns, results, index):
         if index != -1:
             item = results[index]
@@ -2117,7 +2166,7 @@ class TutkainRemoveNamespaceAliasCommand(TextCommand):
             )
 
 
-class TutkainRemoveNamespaceCommand(TextCommand):
+class TutkainRemoveNamespaceCommand(ConnectedTextCommand):
     def remove(self, client, dialect, results, index):
         if index != -1 and (item := results[index]):
             client.send_op(
@@ -2168,7 +2217,7 @@ class TutkainHardWrapCommand(TextCommand):
         indent.hard_wrap(self.view, edit, width)
 
 
-class TutkainSynchronizeDependenciesCommand(WindowCommand):
+class TutkainSynchronizeDependenciesCommand(ConnectedWindowCommand):
     def handler(self, response):
         progress.stop()
 
@@ -2244,7 +2293,7 @@ class RepoInputHandler(ListInputHandler):
         return LibQueryInputHandler()
 
 
-class TutkainAddLibCommand(WindowCommand):
+class TutkainAddLibCommand(ConnectedWindowCommand):
     def input(self, args):
         return RepoInputHandler()
 

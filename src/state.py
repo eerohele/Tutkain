@@ -34,6 +34,10 @@ def get_connections():
     return __state["connections"]
 
 
+def has_connections():
+    return bool(get_connections())
+
+
 def get_connection_by_id(client_id: Union[str, None]) -> Union[Connection, None]:
     return get_connections().get(client_id)
 
