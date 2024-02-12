@@ -49,6 +49,29 @@
   [node]
   (or (:unique-name node) (:name node)))
 
+(defn local-symbols
+  "Given a line number, a column number, and a list of AST nodes, return all
+  local symbols in scope at the given line and column."
+  [line column nodes]
+  (eduction
+    (filter (comp #{:fn-method :let} :op))
+    (filter (fn [node]
+              (let [env (:env node)]
+                (and
+                  (<= (:line env) line (:end-line env))
+                  (>= column (:column env))
+                  (< column (:end-column env))))))
+    (keep (juxt :params :bindings))
+    cat
+    cat
+    (keep :form)
+    ;; Remove gensym params (e.g. p__11784).
+    ;;
+    ;;TODO: Is this the right way to do this?
+    (remove (fn [form] (re-matches #"\P{N}.*__\p{N}+" (name form))))
+    (distinct)
+    nodes))
+
 (defn index-by-position
   "Given a sequence of tools.analyzer AST nodes, filter nodes that represent a
   local or a binding symbol, and return a map where the key is the position of

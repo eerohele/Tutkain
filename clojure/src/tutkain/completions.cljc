@@ -9,10 +9,28 @@
   (:import
    (java.io File)
    (java.lang.reflect Field Member Method Modifier)
+   (java.util Comparator)
+   (java.util.concurrent ConcurrentSkipListSet)
    (java.util.jar JarEntry JarFile)))
 
 (when (nil? (System/getProperty "apple.awt.UIElement"))
   (System/setProperty "apple.awt.UIElement" "true"))
+
+(defn ^:private candidate-comparator
+  [x y]
+  (compare (:candidate x) (:candidate y)))
+
+(defn ^:private parallel-sorted
+  [^Comparator comparator & colls]
+  (let [sls (ConcurrentSkipListSet. comparator)
+        futs (volatile! [])]
+    (loop [colls colls]
+      (when-some [coll (first colls)]
+        (vswap! futs conj (future (.addAll sls (seq coll))))
+        (recur (rest colls))))
+
+    (run! deref @futs)
+    (seq sls)))
 
 (defn annotate-keyword
   [kw]
@@ -28,7 +46,8 @@
   #?(:bb [] ; TODO
      :clj (let [field (.getDeclaredField clojure.lang.Keyword "table")]
             (.setAccessible field true)
-            (map keyword (.keySet ^java.util.concurrent.ConcurrentHashMap (.get field nil))))))
+            (ConcurrentSkipListSet.
+              ^java.util.Collection (map keyword (.keySet ^java.util.concurrent.ConcurrentHashMap (.get field nil)))))))
 
 (comment (all-keywords),)
 
@@ -272,6 +291,7 @@
             (remove #(.contains ^String % "__"))
             (remove #(re-find #".+\$\d.*" %))
             (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
+            (map annotate-class)
             (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
 (defn ^:private base-classes
@@ -287,6 +307,7 @@
               ;; Only retain java.* and javax.* to limit memory consumption
               (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
               (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
+              (map annotate-class)
               (for [^java.lang.module.ModuleReference module-reference (.findAll module-finder)]
                 (with-open [module-reader (.open module-reference)
                             stream (.list module-reader)]
@@ -294,9 +315,8 @@
 
 (def ^:private all-class-candidates
   (future
-    (map annotate-class
-      (into (sorted-set)
-        (concat (non-base-classes) (base-classes))))))
+    (parallel-sorted candidate-comparator
+      (non-base-classes) (base-classes))))
 
 (defn ^:private nested-class-names
   []
@@ -489,9 +509,48 @@
 
 (defmulti completions :dialect)
 
+(defn annotate-local
+  [local]
+  {:candidate (name local) :type :local})
+
+(defmacro ^:private maybe-require-fn
+  "Given a symbol naming a function, resolve and return that function.
+
+  If the function is not found, return a function that always returns nil."
+  [sym]
+  `(or
+     (some->
+       (try
+         (requiring-resolve '~sym)
+         (catch clojure.lang.Compiler$CompilerException ex#))
+       deref)
+     (constantly nil)))
+
+(def ^:private local-symbols
+  (maybe-require-fn tutkain.analyzer.jvm/local-symbols))
+
+(defn completions*
+  [{:keys [ns prefix] :as message}]
+  (let [globals (candidates prefix ns)
+        locals (map annotate-local (local-symbols message))]
+    ;; TODO: locals first or intermingled with globals (via ConcurrentSkipListSet.addAll)?
+    (into locals globals)))
+
+(comment
+  (completions*
+    {:prefix "x"
+     :ns 'clojure.core
+     :enclosing-sexp ((requiring-resolve 'tutkain.rpc.test/string->base64) "(defn f [x] x)")
+     :file "NO_SOURCE_FILE"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 11})
+  ,,,)
+
 (defmethod completions :default
-  [{:keys [prefix] :as message}]
-  (respond-to message {:completions (candidates prefix (rpc/namespace message))}))
+  [message]
+  (respond-to message {:completions (completions* (update message :ns rpc/namespace))}))
 
 (defmethod handle :completions
   [message]

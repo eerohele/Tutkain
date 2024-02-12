@@ -120,6 +120,87 @@
   (jvm/analyze 1 1)
   analyzer/index-by-position)
 
+(jvm/analyze 1 1 (string->reader "(fn [x] x)"))
+
+(map
+  (fn [line column]
+    (->>
+      "(fn [x] x)"
+      string->reader
+      (jvm/analyze 1 1)
+      (analyzer/local-names line column)))
+  (repeat 1)
+  (range 12))
+
+(xr/check! (partial = '(() (x) (x) (x) (x) (x) (x) (x) (x) (x) (x) ())))
+
+(let [s "(defn f [x] (let [y 1 z 2] (+ x y)))"]
+  (map
+    (fn [line column]
+      (->>
+        s
+        string->reader
+        (jvm/analyze 1 1)
+        (analyzer/local-names line column)))
+    (repeat 1)
+    (range (+ (count s) 2))))
+
+(xr/check!
+  (partial = '(()
+               (x)
+               (x)
+               (x)
+               (x)
+               (x)
+               (x)
+               (x)
+               (x)
+               (x)
+               (x)
+               (x)
+               (x)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x y z)
+               (x)
+               ())))
+
+(let [s "(defn f [x]\n(let [y 1 z 2] (+ x y)))"]
+  (map
+    (fn [line column]
+      (->>
+        s
+        string->reader
+        (jvm/analyze 1 1)
+        (analyzer/local-names line column)))
+    (concat (repeat 10 1) (repeat 2))
+    ;; reset column count on line change
+    (range (+ (count s) 2))))
+
+(->>
+  (jvm/analyze 1 1 (string->reader "(defmethod print-method :unknown [x writer] x)"))
+  (analyzer/local-names 1 20))
+
 (xr/check!
   (spec/every-kv ::position simple-symbol? :min-count 5 :max-count 5))
 
