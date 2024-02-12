@@ -14,6 +14,7 @@ contexts:
     - include: auto_qualified_keyword
     - include: qualified_keyword
     - include: unqualified_keyword
+    - include: colon
 
   auto_qualified_keyword:
     - match: '(::)(?=[^:])({{keyword_namespace}})((/)({{keyword}})?)?'

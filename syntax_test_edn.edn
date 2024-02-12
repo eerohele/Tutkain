@@ -188,6 +188,9 @@ string"
 ;                                        ^ punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 ;                                     ^^^^ constant.other.keyword.qualified.edn
 ;; NOT KEYWORDS
+  :
+; ^ invalid.illegal.token
+
   ::kv :::kv
 ; ^^^^^^^^^^ -constant.other.keyword
 

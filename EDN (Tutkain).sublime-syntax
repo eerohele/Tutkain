@@ -152,6 +152,11 @@ contexts:
   keywords:
     - include: qualified_keyword
     - include: unqualified_keyword
+    - include: colon
+
+  colon:
+    - match: '(:){{end}}'
+      scope: invalid.illegal.token
 
   qualified_keyword:
     - match: '(:)([^{{non_symbol_chars}}:]*)(/)({{keyword}})?{{end}}'
