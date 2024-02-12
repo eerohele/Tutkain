@@ -244,10 +244,9 @@
   [^String path]
   (cond
     (.endsWith path "/*")
-    (sequence
-      (comp
-        (filter #(.endsWith ^String (.getName ^File %) ".jar"))
-        (mapcat #(-> ^File % .getPath path-files)))
+    (eduction
+      (filter #(.endsWith ^String (.getName ^File %) ".jar"))
+      (mapcat #(-> ^File % .getPath path-files))
       (-> path File. .getParent File. .listFiles))
 
     (.endsWith path ".jar")
