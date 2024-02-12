@@ -8,7 +8,7 @@
 #_(set! *warn-on-reflection* true)
 
 (defn analyze
-  "Read code from a reader and return a seq of ASTs nodes for the code.
+  "Read code from a reader and return a reducible of ASTs nodes for the code.
 
   Keyword arguments:
     :analyzer -- A fn that takes a form and returns an AST
