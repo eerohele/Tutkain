@@ -260,13 +260,6 @@ class JVMClient(Client):
     modules = {
         "java.cljc": [],
         "lookup.cljc": [],
-        "completions.cljc": [],
-        "load_blob.cljc": [],
-        "test.cljc": [],
-        "query.cljc": [],
-        "deps.clj": [
-            edn.Symbol("clojure.repl.deps"),
-        ],
         "analyzer.clj": [
             edn.Symbol("clojure.tools.reader"),
             edn.Symbol("clojure.tools.analyzer.ast"),
@@ -274,6 +267,13 @@ class JVMClient(Client):
         "analyzer/jvm.clj": [
             edn.Symbol("tutkain.analyzer"),
             edn.Symbol("clojure.tools.analyzer.jvm"),
+        ],
+        "completions.cljc": [],
+        "load_blob.cljc": [],
+        "test.cljc": [],
+        "query.cljc": [],
+        "deps.clj": [
+            edn.Symbol("clojure.repl.deps"),
         ],
     }
 
@@ -365,15 +365,15 @@ class JSClient(Client):
     modules = {
         "lookup.cljc": [],
         "java.cljc": [],
-        "completions.cljc": [],
-        "query.cljc": [],
-        "cljs.clj": [],
-        "shadow.clj": [],
         "analyzer.clj": [
             edn.Symbol("clojure.tools.reader"),
             edn.Symbol("clojure.tools.analyzer.ast"),
         ],
         "analyzer/js.clj": [edn.Symbol("tutkain.analyzer")],
+        "completions.cljc": [],
+        "query.cljc": [],
+        "cljs.clj": [],
+        "shadow.clj": [],
     }
 
     def __init__(self, host, port, options={}):
