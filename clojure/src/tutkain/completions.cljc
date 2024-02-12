@@ -36,12 +36,14 @@
   "Given a list of keywords and a map of ns alias to ns, return all qualified
   auto-resolved keyword candidates in all namespaces in that alias map."
   [keywords aliases]
-  (mapcat (fn [[ns-alias ns]]
-            (eduction
-              (filter #(= (namespace %) (str ns)))
-              (map #(str "::" ns-alias "/" (name %)))
-              (map annotate-keyword)
-              keywords))
+  (eduction
+    (map (fn [[ns-alias ns]]
+           (eduction
+             (filter #(= (namespace %) (str ns)))
+             (map #(str "::" ns-alias "/" (name %)))
+             (map annotate-keyword)
+             keywords)))
+    cat
     aliases))
 
 (comment (qualified-auto-resolved-keyword-candidates (all-keywords) (ns-aliases 'clojure.main)),)
@@ -170,7 +172,7 @@
 (defn namespaces
   "Return a sequence of symbols naming all namespaces loaded into the runtime."
   []
-  (map ns-name (all-ns)))
+  (eduction (map ns-name) (all-ns)))
 
 (comment (namespaces) ,,,)
 
