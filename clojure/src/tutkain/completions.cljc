@@ -530,22 +530,28 @@
 (def ^:private local-symbols
   (maybe-require-fn tutkain.analyzer.jvm/local-symbols))
 
+(def ^:private read-forms
+  (maybe-require-fn tutkain.analyzer/read-forms))
+
 (defn completions*
-  [{:keys [ns enclosing-sexp prefix] :as message}]
+  [{:keys [ns file start-line start-column enclosing-sexp prefix] :as message}]
   ;; TODO: contextuals first or intermingled with globals (via ConcurrentSkipListSet.addAll)?
-  (into
-    (mapv annotate-local (local-symbols message))
-    (candidates prefix ns))
-  #_(if (seq enclosing-sexp)
-      (with-open [reader (base64-reader enclosing-sexp)]
-        (condp = (some-> reader read first resolve)
-          #'clojure.core/ns (ns-candidates ns)
-          nil))
-      (into
-        (mapv annotate-local (local-symbols message))
-        (candidates prefix ns))))
+  (let [forms (when (seq enclosing-sexp)
+                (with-open [reader (binding [*file* file *ns* ns]
+                                     (base64-reader enclosing-sexp))]
+                  (read-forms
+                    reader
+                    {:features #{:clj :t.a.jvm} :read-cond :allow}
+                    start-line
+                    start-column)))]
+    (condp = (some-> forms ffirst resolve)
+      #'clojure.core/ns (ns-candidates ns)
+      (into (map annotate-local (local-symbols (assoc message :forms forms)))
+        (candidates prefix ns)))))
 
 (comment
+
+  (tutkain.analyzer.jvm/local-symbols {:file "" :ns (the-ns 'clojure.main)})
   (completions*
     {:prefix "java/"
      :ns 'tutkain.completions
@@ -563,6 +569,7 @@
      :start-column 1
      :line 1
      :column 11})
+
   (completions*
     {:prefix "x"
      :ns 'clojure.core
@@ -573,21 +580,26 @@
      :line 1
      :column 11})
 
-  (completions*
-    {:prefix "cl"
-     :ns 'clojure.core
-     :enclosing-sexp ((requiring-resolve 'tutkain.rpc.test/string->base64) "(ns foo.bar)")
-     :file "NO_SOURCE_FILE"
-     :start-line 1
-     :start-column 1
-     :line 1
-     :column 11})
+  (distinct
+    (map :type
+      (completions*
+        {:prefix "cl"
+         :ns 'clojure.core
+         :enclosing-sexp ((requiring-resolve 'tutkain.rpc.test/string->base64) "(ns foo.bar)")
+         :file "NO_SOURCE_FILE"
+         :start-line 1
+         :start-column 1
+         :line 1
+         :column 11})))
   ,,,)
 
 (defmethod completions :default
   [message]
-  (let [completions (completions* (assoc message :ns (rpc/namespace message)))]
-    (respond-to message {:completions completions})))
+  (try
+    (let [completions (completions* (assoc message :ns (rpc/namespace message)))]
+      (respond-to message {:completions completions}))
+    (catch Exception ex
+      (prn ex))))
 
 (defmethod handle :completions
   [message]

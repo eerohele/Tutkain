@@ -3,7 +3,6 @@
    [cljs.analyzer]
    [cljs.analyzer.api :as analyzer.api]
    [cljs.env :as env]
-   [clojure.tools.reader :as reader]
    [tutkain.analyzer :as analyzer]
    [tutkain.base64 :refer [base64-reader]]
    [tutkain.rpc :refer [respond-to]]
@@ -32,8 +31,7 @@
     (analyzer/analyze
       :start-line start-line
       :start-column start-column
-      :reader reader
-      :reader-opts {:read-cond :allow :features #{:cljs}}
+      :forms (read-forms reader start-line start-column)
       :analyzer #(cljs.analyzer/analyze env %)
       :xform uniquify)))
 

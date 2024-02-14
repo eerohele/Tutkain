@@ -7,27 +7,31 @@
 
 #_(set! *warn-on-reflection* true)
 
+(defn read-forms
+  [reader reader-opts start-line start-column]
+  (when (and (pos-int? start-line) (pos-int? start-column))
+    (into []
+      (take-while #(not (identical? ::EOF %)))
+      (repeatedly
+        #(reader/read (assoc reader-opts :eof ::EOF)
+           (readers/->IndexingPushbackReader
+             reader start-line start-column true nil 0 *file* false))))))
+
 (defn analyze
   "Read code from a reader and return a reducible of ASTs nodes for the code.
 
   Keyword arguments:
     :analyzer -- A fn that takes a form and returns an AST
-    :reader -- A LineNumberingPushbackReader to read from
-    :reader-opts -- A map of options to pass to clojure.tools.reader/read
-    :start-column -- The column number to set the reader to
-    :start-line -- The line number to set the reader to
+    :forms -- A list of forms to analyze
     :xform -- A transducer to transform resulting sequence of AST nodes (optional)"
-  [& {:keys [reader analyzer reader-opts start-line start-column xform]
+  [& {:keys [forms analyzer xform]
       :or {xform (map identity)}}]
   (eduction
     (take-while #(not (identical? ::EOF %)))
     (map analyzer)
     (mapcat analyzer.ast/nodes)
     xform
-    (repeatedly
-      #(reader/read (assoc reader-opts :eof ::EOF)
-         (readers/->IndexingPushbackReader
-           reader start-line start-column true nil 0 *file* false)))))
+    forms))
 
 (defn ^:private node-form
   [node]
