@@ -533,14 +533,36 @@
 (defn completions*
   [{:keys [ns enclosing-sexp prefix] :as message}]
   ;; TODO: contextuals first or intermingled with globals (via ConcurrentSkipListSet.addAll)?
-  (with-open [reader (base64-reader enclosing-sexp)]
-    (condp = (some-> reader read first resolve)
-      #'clojure.core/ns (ns-candidates ns)
+  (into
+    (mapv annotate-local (local-symbols message))
+    (candidates prefix ns))
+  #_(if (seq enclosing-sexp)
+      (with-open [reader (base64-reader enclosing-sexp)]
+        (condp = (some-> reader read first resolve)
+          #'clojure.core/ns (ns-candidates ns)
+          nil))
       (into
         (mapv annotate-local (local-symbols message))
-        (candidates prefix ns)))))
+        (candidates prefix ns))))
 
 (comment
+  (completions*
+    {:prefix "java/"
+     :ns 'tutkain.completions
+     :file "NO_SOURCE_FILE"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 11})
+
+  (completions*
+    {:prefix "jav"
+     :ns 'tutkain.completions
+     :file "NO_SOURCE_FILE"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 11})
   (completions*
     {:prefix "x"
      :ns 'clojure.core
@@ -564,7 +586,8 @@
 
 (defmethod completions :default
   [message]
-  (respond-to message {:completions (completions* (update message :ns rpc/namespace))}))
+  (let [completions (completions* (assoc message :ns (rpc/namespace message)))]
+    (respond-to message {:completions completions})))
 
 (defmethod handle :completions
   [message]

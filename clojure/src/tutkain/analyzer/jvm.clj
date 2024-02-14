@@ -49,8 +49,8 @@
       (try
         (let [nodes (binding [analyzer.jvm/run-passes (analyzer-passes :local-symbols)]
                       (with-open [reader (base64-reader enclosing-sexp)]
-                        (analyze start-line start-column reader)))]
-          (vec (analyzer/local-symbols line column nodes)))
+                        (vec (analyze start-line start-column reader))))]
+          (analyzer/local-symbols line column nodes))
         ;; Ignore syntax errors in enclosing-sexp.
         (catch IllegalArgumentException _
           nil)))))
