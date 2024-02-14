@@ -32,10 +32,10 @@
   [{:keys [enclosing-sexp file ns start-column start-line] :as message}]
   (try
     (binding [*file* file
-              *ns* (parse-namespace ns)
-              analyzer.jvm/run-passes (analyzer-passes :local-instances)]
+              *ns* (parse-namespace ns)]
       (with-open [reader (base64-reader enclosing-sexp)]
-        (let [nodes (analyze start-line start-column reader)
+        (let [nodes (binding [analyzer.jvm/run-passes (analyzer-passes :local-instances)]
+                      (analyze start-line start-column reader))
               positions (analyzer/local-positions nodes (analyzer/position message))]
           (respond-to message {:positions positions}))))
     (catch Throwable ex
@@ -43,14 +43,14 @@
 
 (defn local-symbols
   [{:keys [enclosing-sexp file ns start-line start-column line column]}]
-  (when (and (seq enclosing-sexp) (pos-int? start-column) (pos-int? start-line) (pos-int? line) (pos-int? column))
-    (let [nodes (binding [*file* file
-                          *ns* ns
-                          analyzer.jvm/run-passes (analyzer-passes :local-symbols)]
-                  (try
-                    (with-open [reader (base64-reader enclosing-sexp)]
-                      (vec (analyze start-line start-column reader)))
-                    ;; Ignore syntax errors in enclosing-sexp.
-                    (catch IllegalArgumentException _
-                      nil)))]
-      (analyzer/local-symbols line column nodes))))
+  (when (and enclosing-sexp (pos-int? start-column) (pos-int? start-line) (pos-int? line) (pos-int? column))
+    (binding [*file* file
+              *ns* ns]
+      (try
+        (let [nodes (binding [analyzer.jvm/run-passes (analyzer-passes :local-symbols)]
+                      (with-open [reader (base64-reader enclosing-sexp)]
+                        (analyze start-line start-column reader)))]
+          (vec (analyzer/local-symbols line column nodes)))
+        ;; Ignore syntax errors in enclosing-sexp.
+        (catch IllegalArgumentException _
+          nil)))))

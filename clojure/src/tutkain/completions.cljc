@@ -4,6 +4,7 @@
 
   Originally adapted from nrepl.util.completion."
   (:require
+   [tutkain.base64 :refer [base64-reader]]
    [tutkain.rpc :as rpc :refer [handle respond-to]]
    [tutkain.java :as java])
   (:import
@@ -530,17 +531,30 @@
   (maybe-require-fn tutkain.analyzer.jvm/local-symbols))
 
 (defn completions*
-  [{:keys [ns prefix] :as message}]
-  (let [globals (candidates prefix ns)
-        locals (map annotate-local (local-symbols message))]
-    ;; TODO: locals first or intermingled with globals (via ConcurrentSkipListSet.addAll)?
-    (into locals globals)))
+  [{:keys [ns enclosing-sexp prefix] :as message}]
+  ;; TODO: contextuals first or intermingled with globals (via ConcurrentSkipListSet.addAll)?
+  (with-open [reader (base64-reader enclosing-sexp)]
+    (condp = (some-> reader read first resolve)
+      #'clojure.core/ns (ns-candidates ns)
+      (into
+        (mapv annotate-local (local-symbols message))
+        (candidates prefix ns)))))
 
 (comment
   (completions*
     {:prefix "x"
      :ns 'clojure.core
      :enclosing-sexp ((requiring-resolve 'tutkain.rpc.test/string->base64) "(defn f [x] x)")
+     :file "NO_SOURCE_FILE"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 11})
+
+  (completions*
+    {:prefix "cl"
+     :ns 'clojure.core
+     :enclosing-sexp ((requiring-resolve 'tutkain.rpc.test/string->base64) "(ns foo.bar)")
      :file "NO_SOURCE_FILE"
      :start-line 1
      :start-column 1

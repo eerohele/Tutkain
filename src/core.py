@@ -2390,3 +2390,8 @@ class TutkainAddLibCommand(ConnectedWindowCommand):
             self.window.status_message(
                 f"⚠ Not connected to a {dialects.name(dialect)} REPL."
             )
+
+
+# class TutkainSpaceCommand(TextCommand):
+#     def run(self, edit):
+#         f
