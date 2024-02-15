@@ -12,7 +12,7 @@
   (:import
    (java.io File Reader)
    (java.lang.reflect Field Member Method Modifier)
-   (java.util Comparator TreeSet)
+   (java.util Comparator)
    (java.util.concurrent ConcurrentSkipListSet)
    (java.util.jar JarEntry JarFile)))
 
@@ -338,6 +338,11 @@
   (filter #(.contains ^String (:candidate %) "$")
     @all-class-candidates))
 
+(defn ^:private non-nested-class-candidates
+  []
+  (remove #(.contains ^String (:candidate %) "$")
+    @all-class-candidates))
+
 (def special-form-candidates
   "All Clojure special form candidates."
   [{:candidate "def" :ns "clojure.core" :type :special-form}
@@ -588,18 +593,48 @@
       (let [form (first forms)
             head (first form)]
         (case (some-> head resolve symbol)
-          'clojure.core/ns
+          clojure.core/ns
           (let [loc (find-loc form line column)]
             (case (some-> loc zip/leftmost zip/node)
-              :require (map (fn [candidate]
-                              ;; FIXME: :trigger vs :candidate (also on client)
-                              (assoc candidate :trigger (:candidate candidate) :candidate
-                                (str (:candidate candidate) " :as " (last (string/split (:candidate candidate) #"\.")))))
-                         (candidates-for-prefix prefix (ns-candidates)))
-              :import (case
-                        (candidates-for-prefix prefix (packages)))
-              (into (map annotate-local (local-symbols (assoc message :forms forms)))
-                (candidates prefix ns))))
+              :require
+              (map (fn [candidate]
+                     ;; FIXME: :trigger vs :candidate (also on client)
+                     (assoc candidate :trigger (:candidate candidate) :candidate
+                       (str (:candidate candidate) " :as " (format "${1:%s}" (last (string/split (:candidate candidate) #"\."))))))
+                (candidates-for-prefix prefix (ns-candidates)))
+
+              :import
+              (map
+                (fn [candidate]
+                  ;; FIXME: :trigger vs :candidate (also on client)
+                  (assoc candidate :trigger (:candidate candidate) :candidate
+                    (let [parts (string/split (:candidate candidate) #"\.")]
+                      (str (string/join \. (butlast parts)) " " (format "${1:%s}" (last parts))))))
+                (candidates-for-prefix prefix (non-nested-class-candidates)))
+
+              :refer-clojure
+              (ns-public-var-candidates 'clojure.core)
+
+              [{:trigger ":require" :candidate ":require [$0]" :type :keyword}
+               {:trigger ":import" :candidate ":import ($0)" :type :keyword}
+               {:trigger ":refer-clojure" :candidate ":refer-clojure :exclude [$0]" :type :keyword}]))
+
+          clojure.core/require
+          (map (fn [candidate]
+                 ;; FIXME: :trigger vs :candidate (also on client)
+                 (assoc candidate :trigger (:candidate candidate) :candidate
+                   (str (:candidate candidate) " :as " (format "${1:%s}" (last (string/split (:candidate candidate) #"\."))))))
+            (candidates-for-prefix prefix (ns-candidates)))
+
+          clojure.core/import
+          (map
+            (fn [candidate]
+              ;; FIXME: :trigger vs :candidate (also on client)
+              (assoc candidate :trigger (:candidate candidate) :candidate
+                (let [parts (string/split (:candidate candidate) #"\.")]
+                  (str (string/join \. (butlast parts)) " " (format "${1:%s}" (last parts))))))
+            (candidates-for-prefix prefix (non-nested-class-candidates)))
+
           (into (map annotate-local (local-symbols (assoc message :forms forms)))
             (candidates prefix ns)))))
     (catch Exception ex

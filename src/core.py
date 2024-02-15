@@ -1181,6 +1181,9 @@ class TutkainEventListener(EventListener):
             if command_name == "copy":
                 text = str(sublime.get_clipboard()).replace("\u2063", "")
                 sublime.set_clipboard(text)
+        # elif command_name == "commit_completion":
+        #     for sel in view.sel():
+        #         return completions.get_completions(view, "", sel.begin())
 
 
 class TutkainGotoPointImplCommand(TextCommand):

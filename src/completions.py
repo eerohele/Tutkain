@@ -9,7 +9,7 @@ KINDS = {
     "macro": (sublime.KIND_ID_FUNCTION, "m", "Macro"),
     "multimethod": (sublime.KIND_ID_FUNCTION, "u", "Multimethod"),
     "namespace": sublime.KIND_NAMESPACE,
-    "package": (sublime.KIND_ID_NAMESPACE, "p", "Package"),
+    # "package": (sublime.KIND_ID_NAMESPACE, "p", "Package"),
     "field": sublime.KIND_VARIABLE,
     "class": sublime.KIND_TYPE,
     "special-form": (sublime.KIND_ID_FUNCTION, "s", "Special form"),
@@ -44,9 +44,9 @@ def completion_item(item):
 
     if type == edn.Keyword("navigation"):
         candidate = candidate + "/"
-    elif type == edn.Keyword("package"):
-        # In imports
-        candidate = candidate + " "
+    # elif type == edn.Keyword("package"):
+    #     # In imports
+    #     candidate = candidate + " "
 
     arglists = item.get(edn.Keyword("arglists"), [])
     annotation = ""
@@ -61,6 +61,7 @@ def completion_item(item):
     return sublime.CompletionItem(
         trigger=trigger,
         completion=candidate,
+        completion_format=sublime.COMPLETION_FORMAT_SNIPPET,
         kind=kind,
         annotation=annotation,
         details=details,
