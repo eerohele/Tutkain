@@ -4,13 +4,15 @@
 
   Originally adapted from nrepl.util.completion."
   (:require
+   [clojure.string :as string]
+   [clojure.zip :as zip]
    [tutkain.base64 :refer [base64-reader]]
    [tutkain.rpc :as rpc :refer [handle respond-to]]
    [tutkain.java :as java])
   (:import
-   (java.io File)
+   (java.io File Reader)
    (java.lang.reflect Field Member Method Modifier)
-   (java.util Comparator)
+   (java.util Comparator TreeSet)
    (java.util.concurrent ConcurrentSkipListSet)
    (java.util.jar JarEntry JarFile)))
 
@@ -314,6 +316,18 @@
                             stream (.list module-reader)]
                   (iterator-seq (.iterator stream))))))))
 
+(defn packages
+  []
+  (eduction
+    (map #(.getName ^Package %))
+    (remove string/blank?)
+    (map
+      (fn [name]
+        {:candidate name :type :package}))
+    (Package/getPackages)))
+
+(comment (packages) ,,,)
+
 (def ^:private all-class-candidates
   (future
     (parallel-sorted candidate-comparator
@@ -350,15 +364,19 @@
 (defn ns-candidates
   "Given an ns symbol, return all namespace candidates that are available in
   the context of that namespace."
-  [ns]
-  (concat
-    (map (fn [ns]
-           (let [doc (some-> ns find-ns meta :doc)]
-             (cond-> (annotate-namespace (name ns)) doc (assoc :doc doc))))
-      (namespaces))
-    (map annotate-navigation (namespace-aliases ns))))
+  []
+  (map (fn [ns]
+         (let [doc (some-> ns find-ns meta :doc)]
+           (cond-> (annotate-namespace (name ns)) doc (assoc :doc doc))))
+    (sort (namespaces))))
 
-(comment (ns-candidates 'clojure.main),)
+(comment (ns-candidates) ,,,)
+
+(defn ns-alias-candidates
+  [ns]
+  (map annotate-navigation (namespace-aliases ns)))
+
+(comment (ns-alias-candidates 'clojure.main),)
 
 (defn ns-var-candidates
   "Given an ns symbol, return all vars that are available in the context of
@@ -484,13 +502,13 @@
 
       (.contains prefix ".")
       (concat
-        (candidates-for-prefix prefix (ns-candidates ns))
+        (candidates-for-prefix prefix (ns-candidates))
         (class-candidates prefix))
 
       :else
       (candidates-for-prefix prefix
         (concat special-form-candidates
-          (ns-candidates ns)
+          (ns-candidates)
           (ns-var-candidates ns)
           (ns-class-candidates ns))))))
 
@@ -533,74 +551,67 @@
 (def ^:private read-forms
   (maybe-require-fn tutkain.analyzer/read-forms))
 
+(defn ^:private find-loc
+  [form target-line target-column]
+  (let [loc (zip/seq-zip form)]
+    (loop [loc (zip/next loc) max-loc nil]
+      (if (zip/end? loc)
+        max-loc
+        (let [node (zip/node loc)
+              {:keys [line column end-column]
+               :or {line -1 column -1 end-column -1}} (meta node)]
+          (cond
+            (> line target-line)
+            max-loc
+
+            (> column target-column)
+            max-loc
+
+            (<= column target-column end-column)
+            (recur (zip/next loc) loc)
+
+            :else
+            (recur (zip/next loc) max-loc)))))))
+
 (defn completions*
-  [{:keys [ns file start-line start-column enclosing-sexp prefix] :as message}]
+  [{:keys [ns file start-line line start-column column enclosing-sexp prefix] :as message}]
   ;; TODO: contextuals first or intermingled with globals (via ConcurrentSkipListSet.addAll)?
-  (let [forms (when (seq enclosing-sexp)
-                (with-open [reader (binding [*file* file *ns* ns]
-                                     (base64-reader enclosing-sexp))]
-                  (read-forms
-                    reader
-                    {:features #{:clj :t.a.jvm} :read-cond :allow}
-                    start-line
-                    start-column)))]
-    (condp = (some-> forms ffirst resolve)
-      #'clojure.core/ns (ns-candidates ns)
-      (into (map annotate-local (local-symbols (assoc message :forms forms)))
-        (candidates prefix ns)))))
-
-(comment
-
-  (tutkain.analyzer.jvm/local-symbols {:file "" :ns (the-ns 'clojure.main)})
-  (completions*
-    {:prefix "java/"
-     :ns 'tutkain.completions
-     :file "NO_SOURCE_FILE"
-     :start-line 1
-     :start-column 1
-     :line 1
-     :column 11})
-
-  (completions*
-    {:prefix "jav"
-     :ns 'tutkain.completions
-     :file "NO_SOURCE_FILE"
-     :start-line 1
-     :start-column 1
-     :line 1
-     :column 11})
-
-  (completions*
-    {:prefix "x"
-     :ns 'clojure.core
-     :enclosing-sexp ((requiring-resolve 'tutkain.rpc.test/string->base64) "(defn f [x] x)")
-     :file "NO_SOURCE_FILE"
-     :start-line 1
-     :start-column 1
-     :line 1
-     :column 11})
-
-  (distinct
-    (map :type
-      (completions*
-        {:prefix "cl"
-         :ns 'clojure.core
-         :enclosing-sexp ((requiring-resolve 'tutkain.rpc.test/string->base64) "(ns foo.bar)")
-         :file "NO_SOURCE_FILE"
-         :start-line 1
-         :start-column 1
-         :line 1
-         :column 11})))
-  ,,,)
-
-(defmethod completions :default
-  [message]
   (try
-    (let [completions (completions* (assoc message :ns (rpc/namespace message)))]
-      (respond-to message {:completions completions}))
+    (let [forms (when (seq enclosing-sexp)
+                  (with-open [^Reader reader (binding [*file* file *ns* ns]
+                                               (base64-reader enclosing-sexp))]
+                    (read-forms
+                      reader
+                      {:features #{:clj :t.a.jvm} :read-cond :allow}
+                      start-line
+                      start-column)))]
+      (let [form (first forms)
+            head (first form)]
+        (case (some-> head resolve symbol)
+          'clojure.core/ns
+          (let [loc (find-loc form line column)]
+            (case (some-> loc zip/leftmost zip/node)
+              :require (map (fn [candidate]
+                              ;; FIXME: :trigger vs :candidate (also on client)
+                              (assoc candidate :trigger (:candidate candidate) :candidate
+                                (str (:candidate candidate) " :as " (last (string/split (:candidate candidate) #"\.")))))
+                         (candidates-for-prefix prefix (ns-candidates)))
+              :import (case
+                        (candidates-for-prefix prefix (packages)))
+              (into (map annotate-local (local-symbols (assoc message :forms forms)))
+                (candidates prefix ns))))
+          (into (map annotate-local (local-symbols (assoc message :forms forms)))
+            (candidates prefix ns)))))
     (catch Exception ex
       (prn ex))))
 
+(defmethod completions :default
+  [message]
+
+  (let [completions (completions* (assoc message :ns (rpc/namespace message)))]
+    (respond-to message {:completions completions})))
+
 (defmethod handle :completions
   [message]
+
   (completions message))

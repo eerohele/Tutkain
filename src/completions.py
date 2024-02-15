@@ -9,6 +9,7 @@ KINDS = {
     "macro": (sublime.KIND_ID_FUNCTION, "m", "Macro"),
     "multimethod": (sublime.KIND_ID_FUNCTION, "u", "Multimethod"),
     "namespace": sublime.KIND_NAMESPACE,
+    "package": (sublime.KIND_ID_NAMESPACE, "p", "Package"),
     "field": sublime.KIND_VARIABLE,
     "class": sublime.KIND_TYPE,
     "special-form": (sublime.KIND_ID_FUNCTION, "s", "Special form"),
@@ -39,10 +40,13 @@ def completion_item(item):
 
     type = item.get(edn.Keyword("type"))
     candidate = item.get(edn.Keyword("candidate"))
-    trigger = candidate + " "
+    trigger = item.get(edn.Keyword("trigger"), candidate + " ")
 
     if type == edn.Keyword("navigation"):
         candidate = candidate + "/"
+    elif type == edn.Keyword("package"):
+        # In imports
+        candidate = candidate + " "
 
     arglists = item.get(edn.Keyword("arglists"), [])
     annotation = ""
@@ -76,14 +80,15 @@ def enclosing_sexp_sans_prefix(view, expr, prefix):
 
 
 def handler(completion_list, response):
-    completion_list.set_completions(
-        map(
-            completion_item,
-            response.get(edn.Keyword("completions"), []),
-        ),
-        flags=sublime.AutoCompleteFlags.INHIBIT_WORD_COMPLETIONS
-        | sublime.AutoCompleteFlags.INHIBIT_REORDER,
-    )
+    if completions := response.get(edn.Keyword("completions"), []):
+        completion_list.set_completions(
+            map(
+                completion_item,
+                completions,
+            ),
+            flags=sublime.AutoCompleteFlags.INHIBIT_WORD_COMPLETIONS
+            | sublime.AutoCompleteFlags.INHIBIT_REORDER,
+        )
 
 
 def get_completions(view, prefix, point):
@@ -100,7 +105,7 @@ def get_completions(view, prefix, point):
         if (
             view.match_selector(
                 point,
-                "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | constant.other.keyword",
+                "source.clojure & (meta.symbol - meta.function.parameters) | constant.other.keyword",
             )
             and (dialect := dialects.for_point(view, point))
             and (client := state.get_client(view.window(), dialect))

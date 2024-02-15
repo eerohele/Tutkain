@@ -10,7 +10,7 @@
 (defn read-forms
   [reader reader-opts start-line start-column]
   (when (and (pos-int? start-line) (pos-int? start-column))
-    (into []
+    (into (list)
       (take-while #(not (identical? ::EOF %)))
       (repeatedly
         #(reader/read (assoc reader-opts :eof ::EOF)
@@ -26,11 +26,12 @@
     :xform -- A transducer to transform resulting sequence of AST nodes (optional)"
   [& {:keys [forms analyzer xform]
       :or {xform (map identity)}}]
-  (eduction
-    (take-while #(not (identical? ::EOF %)))
-    (map analyzer)
-    (mapcat analyzer.ast/nodes)
-    xform
+  (into []
+    (comp
+      (take-while #(not (identical? ::EOF %)))
+      (map analyzer)
+      (mapcat analyzer.ast/nodes)
+      xform)
     forms))
 
 (defn ^:private node-form
