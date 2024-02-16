@@ -3,7 +3,7 @@
    [clojure.spec.alpha :as spec]
    [clojure.test.check.generators :as gen]))
 
-(spec/def ::candidate string?)
+(spec/def ::trigger string?)
 
 (spec/def ::type
   #{:keyword
@@ -20,7 +20,7 @@
     :navigation})
 
 (spec/def ::completion
-  (spec/keys :req-un [::candidate ::type]))
+  (spec/keys :req-un [::trigger ::type]))
 
 (spec/def ::completions
   (spec/coll-of ::completion :kind sequential? :distinct true :min-count 1))
@@ -36,13 +36,13 @@
   (spec/coll-of ::symbol-completion :kind sequential? :min-count 1))
 
 (spec/def ::function-completion
-  (spec/keys :req-un [::candidate ::type ::arglists] :opt-un [::doc]))
+  (spec/keys :req-un [::trigger ::type ::arglists] :opt-un [::doc]))
 
 (spec/def ::function-completions
   (spec/coll-of ::function-completion :kind sequential? :min-count 1))
 
 (spec/def ::method-completion
-  (spec/keys :req-un [::candidate ::type ::return-type ::arglists]))
+  (spec/keys :req-un [::trigger ::type ::return-type ::arglists]))
 
 (spec/def ::method-completions
   (spec/coll-of ::method-completion :kind sequential? :min-count 1))
@@ -57,10 +57,10 @@
   #(= (:type %) :class))
 
 (spec/def ::nested-class-completion
-  (spec/and #(= (:type %) :class) #(.contains (:candidate %) "$")))
+  (spec/and #(= (:type %) :class) #(.contains (:trigger %) "$")))
 
 (defn prefixed-candidates
   [spec prefix]
   (spec/and spec
     (fn [candidates]
-      (every? #(.startsWith ^String (:candidate %) prefix) candidates))))
+      (every? #(.startsWith ^String (:trigger %) prefix) candidates))))

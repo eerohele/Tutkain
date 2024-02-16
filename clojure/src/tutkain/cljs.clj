@@ -108,7 +108,7 @@
 
 (defn ^:private annotate-var
   [{arglists :arglists doc :doc var-name :name :as v}]
-  (cond-> {:candidate (name var-name)
+  (cond-> {:trigger (name var-name)
            :type (var-type v)}
     (seq arglists) (assoc :arglists (format-arglists arglists))
     (seq doc) (assoc :doc doc)))
@@ -121,7 +121,7 @@
     (eduction
       (map val)
       (remove :private)
-      (map (fn [v] (update (annotate-var v) :candidate #(str alias "/" %))))
+      (map (fn [v] (update (annotate-var v) :trigger #(str alias "/" %))))
       (some->> (ns-alias->ns-sym env ns alias) (analyzer.api/ns-interns env)))))
 
 (defn ^:private core-candidates
@@ -189,7 +189,7 @@
 
                      :else
                      (concat (ns-var-candidates env ns) (core-candidates env) (ns-alias-candidates env ns)))]
-    (sort-by :candidate (filter #(completions/candidate? prefix %) candidates))))
+    (sort-by :trigger (filter #(completions/candidate? prefix %) candidates))))
 
 (defn ^:private parse-ns
   [ns]

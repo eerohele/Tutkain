@@ -32,31 +32,31 @@
 (xr/check! ::specs/completions)
 
 (set (cljs/ns-candidates (env)))
-(xr/check! #(set/subset? #{{:candidate "cljs.user" :type :namespace}
-                           {:candidate "cljs.pprint" :type :namespace}
-                           {:candidate "my.browser.app" :type :namespace}}
+(xr/check! #(set/subset? #{{:trigger "cljs.user" :type :namespace}
+                           {:trigger "cljs.pprint" :type :namespace}
+                           {:trigger "my.browser.app" :type :namespace}}
               %))
 
 (set (cljs/candidates (env) ":m" 'my.browser.app))
-(xr/check! #(set/subset? #{{:candidate ":my.browser.app" :type :navigation}
-                           {:candidate ":my.other" :type :navigation}} %))
+(xr/check! #(set/subset? #{{:trigger ":my.browser.app" :type :navigation}
+                           {:trigger ":my.other" :type :navigation}} %))
 
 (set (cljs/candidates (env) ":my.browser.app/" 'my.browser.app))
-(xr/check! #(set/subset? #{{:candidate ":my.browser.app/running" :type :keyword}
-                           {:candidate ":my.browser.app/stopped", :type :keyword}} %))
+(xr/check! #(set/subset? #{{:trigger ":my.browser.app/running" :type :keyword}
+                           {:trigger ":my.browser.app/stopped", :type :keyword}} %))
 
 (set (cljs/candidates (env) "::r" 'my.browser.app))
-(xr/check! #(set/subset? #{{:candidate "::running" :type :keyword}} %))
+(xr/check! #(set/subset? #{{:trigger "::running" :type :keyword}} %))
 
 (set (cljs/candidates (env) ":r" 'my.browser.app))
-(xr/check! #(set/subset? #{{:candidate ":require" :type :keyword}} %))
+(xr/check! #(set/subset? #{{:trigger ":require" :type :keyword}} %))
 
 ;; auto-resolved qualified keywords
 (set (cljs/candidates (env) "::other/" 'my.browser.app))
-(xr/check! #(set/subset? #{{:candidate "::other/keyword" :type :keyword}} %))
+(xr/check! #(set/subset? #{{:trigger "::other/keyword" :type :keyword}} %))
 
 (set (cljs/candidates (env) "::other/k" 'my.browser.app))
-(xr/check! #(set/subset? #{{:candidate "::other/keyword" :type :keyword}} %))
+(xr/check! #(set/subset? #{{:trigger "::other/keyword" :type :keyword}} %))
 
 (set (cljs/candidates (env) "::pprint" 'my.browser.app))
 (xr/check! empty?)
@@ -79,16 +79,16 @@
 
 ;; core macro
 (set (cljs/candidates (env) "unsa" 'my.browser.app))
-(xr/check! #(set/subset? #{{:candidate "unsafe-bit-and"
+(xr/check! #(set/subset? #{{:trigger "unsafe-bit-and"
                             :type :macro
                             :arglists '("[x y]" "[x y & more]")}} %))
 
 (set (cljs/candidates (env) "st" 'my.browser.app))
-(xr/check! #(set/subset? #{{:candidate "start" :type :function :arglists '("([])")}
-                           {:candidate "stop" :type :function :arglists '("([])")}} %))
+(xr/check! #(set/subset? #{{:trigger "start" :type :function :arglists '("([])")}
+                           {:trigger "stop" :type :function :arglists '("([])")}} %))
 
 (set (cljs/candidates (env) "write-t" 'cljs.pprint))
-(xr/check! #(set/subset? #{{:candidate "write-token" :type :multimethod}} %))
+(xr/check! #(set/subset? #{{:trigger "write-token" :type :multimethod}} %))
 
 (->
   {:op :completions

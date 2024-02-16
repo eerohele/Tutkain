@@ -16,11 +16,11 @@
 
 (defn annotate-keyword
   [kw]
-  {:candidate kw :type :keyword})
+  {:trigger kw :type :keyword})
 
 (defn annotate-navigation
   [candidate]
-  {:candidate (name candidate) :type :navigation})
+  {:trigger (name candidate) :type :navigation})
 
 (defn all-keywords
   "Return every interned keyword in the Clojure runtime."
@@ -196,7 +196,7 @@
     (mapcat #(.getMethods ^Class %))
     (map (fn [^Method method]
            {:class (-> method .getDeclaringClass java/qualified-class-name)
-            :candidate (str "." (.getName method))
+            :trigger (str "." (.getName method))
             :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
             :return-type (-> method .getReturnType java/qualified-class-name)
             :type :method}))
@@ -210,7 +210,7 @@
   [^Class class]
   (eduction
     (filter static?)
-    (map #(hash-map :candidate (.getName ^Field %) :type :field))
+    (map #(hash-map :trigger (.getName ^Field %) :type :field))
     (.getDeclaredFields class)))
 
 (comment (field-candidates java.lang.String) ,)
@@ -223,7 +223,7 @@
     (filter static?)
     (map (fn [^Method method]
            {:class (java/qualified-class-name class)
-            :candidate (.getName method)
+            :trigger (.getName method)
             :type :static-method
             :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
             :return-type (-> method .getReturnType java/qualified-class-name)}))
@@ -233,12 +233,12 @@
 
 (defn annotate-class
   [class-name]
-  {:candidate (name class-name) :type :class})
+  {:trigger (name class-name) :type :class})
 
 (defn annotate-var [var]
   (let [{macro :macro arglists :arglists var-name :name doc :doc} (meta var)
         type (cond macro :macro arglists :function :else :var)]
-    (cond-> {:candidate (name var-name) :type type}
+    (cond-> {:trigger (name var-name) :type type}
       doc (assoc :doc doc)
       arglists (assoc :arglists (map pr-str arglists)))))
 
@@ -300,31 +300,31 @@
 
 (defn ^:private nested-class-names
   []
-  (filter #(.contains ^String (:candidate %) "$")
+  (filter #(.contains ^String (:trigger %) "$")
     @all-class-candidates))
 
 (def special-form-candidates
   "All Clojure special form candidates."
-  [{:candidate "def" :ns "clojure.core" :type :special-form}
-   {:candidate "do" :ns "clojure.core" :type :special-form}
-   {:candidate "dot" :ns "clojure.core" :type :special-form}
-   {:candidate "fn" :ns "clojure.core" :type :special-form}
-   {:candidate "if" :ns "clojure.core" :type :special-form}
-   {:candidate "let" :ns "clojure.core" :type :special-form}
-   {:candidate "loop" :ns "clojure.core" :type :special-form}
-   {:candidate "monitor-enter" :ns "clojure.core" :type :special-form}
-   {:candidate "monitor-exit" :ns "clojure.core" :type :special-form}
-   {:candidate "new" :ns "clojure.core" :type :special-form}
-   {:candidate "quote" :ns "clojure.core" :type :special-form}
-   {:candidate "recur" :ns "clojure.core" :type :special-form}
-   {:candidate "set!" :ns "clojure.core" :type :special-form}
-   {:candidate "throw" :ns "clojure.core" :type :special-form}
-   {:candidate "try" :ns "clojure.core" :type :special-form}
-   {:candidate "var" :ns "clojure.core" :type :special-form}])
+  [{:trigger "def" :ns "clojure.core" :type :special-form}
+   {:trigger "do" :ns "clojure.core" :type :special-form}
+   {:trigger "dot" :ns "clojure.core" :type :special-form}
+   {:trigger "fn" :ns "clojure.core" :type :special-form}
+   {:trigger "if" :ns "clojure.core" :type :special-form}
+   {:trigger "let" :ns "clojure.core" :type :special-form}
+   {:trigger "loop" :ns "clojure.core" :type :special-form}
+   {:trigger "monitor-enter" :ns "clojure.core" :type :special-form}
+   {:trigger "monitor-exit" :ns "clojure.core" :type :special-form}
+   {:trigger "new" :ns "clojure.core" :type :special-form}
+   {:trigger "quote" :ns "clojure.core" :type :special-form}
+   {:trigger "recur" :ns "clojure.core" :type :special-form}
+   {:trigger "set!" :ns "clojure.core" :type :special-form}
+   {:trigger "throw" :ns "clojure.core" :type :special-form}
+   {:trigger "try" :ns "clojure.core" :type :special-form}
+   {:trigger "var" :ns "clojure.core" :type :special-form}])
 
 (defn annotate-namespace
   [ns]
-  {:candidate (name ns) :type :namespace})
+  {:trigger (name ns) :type :namespace})
 
 (defn ns-candidates
   "Given an ns symbol, return all namespace candidates that are available in
@@ -390,13 +390,13 @@
                        (concat
                          (some-> scope find-ns ns-public-var-candidates)
                          (some-> ns ns-aliases scope ns-public-var-candidates)))]
-      (map (fn [candidate] (update candidate :candidate #(str scope "/" %))) candidates))))
+      (map (fn [candidate] (update candidate :trigger #(str scope "/" %))) candidates))))
 
 (defn candidate?
-  "Given a string prefix and a candidate map, return true if the candidate
+  "Given a string prefix and a candidate map, return true if the trigger
   starts with the prefix."
-  [^String prefix {:keys [^String candidate]}]
-  (.startsWith candidate prefix))
+  [^String prefix {:keys [^String trigger]}]
+  (.startsWith trigger prefix))
 
 (defn class-candidates
   [^String prefix]
@@ -424,7 +424,7 @@
 
 (defn ^:private candidates-for-prefix
   [prefix candidates]
-  (sort-by :candidate (filter #(candidate? prefix %) candidates)))
+  (sort-by :trigger (filter #(candidate? prefix %) candidates)))
 
 (defn candidates
   "Given a string prefix and ns symbol, return auto-completion candidates for
