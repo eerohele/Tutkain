@@ -328,17 +328,21 @@
   {:trigger (name ns) :type :namespace})
 
 (defn ns-candidates
-  "Given an ns symbol, return all namespace candidates that are available in
-  the context of that namespace."
-  [ns]
-  (concat
-    (map (fn [ns]
-           (let [doc (some-> ns find-ns meta :doc)]
-             (cond-> (annotate-namespace (name ns)) doc (assoc :doc doc))))
-      (namespaces))
-    (map annotate-navigation (namespace-aliases ns))))
+  "Return all namespace candidates"
+  []
+  (map (fn [ns]
+         (let [doc (some-> ns find-ns meta :doc)]
+           (cond-> (annotate-namespace (name ns)) doc (assoc :doc doc))))
+    (sort (namespaces))))
 
-(comment (ns-candidates 'clojure.main),)
+(comment (ns-candidates) ,,,)
+
+(defn ns-alias-candidates
+  "Given an ns symbol, return all namespace aliases in the ns."
+  [ns]
+  (map annotate-navigation (namespace-aliases ns)))
+
+(comment (ns-alias-candidates 'clojure.main),)
 
 (defn ns-var-candidates
   "Given an ns symbol, return all vars that are available in the context of
@@ -464,13 +468,15 @@
 
       (.contains prefix ".")
       (concat
-        (candidates-for-prefix prefix (ns-candidates ns))
+        (candidates-for-prefix prefix (ns-candidates))
+        (candidates-for-prefix prefix (ns-alias-candidates ns))
         (class-candidates prefix))
 
       :else
       (candidates-for-prefix prefix
         (concat special-form-candidates
-          (ns-candidates ns)
+          (ns-candidates)
+          (ns-alias-candidates ns)
           (ns-var-candidates ns)
           (ns-class-candidates ns))))))
 
