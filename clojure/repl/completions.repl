@@ -8,7 +8,7 @@
    [clojure.test.check.generators :as gen]
    [clojure.test.check.properties :as prop]
    [cognitect.transcriptor :as xr]
-   [tutkain.rpc :as rpc]
+   [tutkain.rpc.test :refer [send-op]]
    [tutkain.completions :as completions :refer [candidates]]
    [tutkain.completions.specs :as specs :refer [prefixed-candidates]]))
 
@@ -184,11 +184,8 @@
   {:op :completions
    :dialect :clj
    :prefix "x"
-   :ns "user"
-   :out-fn prn}
-  rpc/handle
-  with-out-str
-  edn/read-string
+   :ns "user"}
+  send-op
   :completions)
 
 (xr/check! (prefixed-candidates ::specs/symbol-completions "x"))
