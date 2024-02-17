@@ -8,7 +8,7 @@
    [clojure.test.check.generators :as gen]
    [clojure.test.check.properties :as prop]
    [cognitect.transcriptor :as xr]
-   [tutkain.rpc.test :refer [send-op]]
+   [tutkain.rpc.test :refer [send-op string->base64]]
    [tutkain.completions :as completions :refer [candidates]]
    [tutkain.completions.specs :as specs :refer [prefixed-candidates]]))
 
@@ -189,3 +189,86 @@
   :completions)
 
 (xr/check! (prefixed-candidates ::specs/symbol-completions "x"))
+
+;; local completions
+
+(defn completions
+  [message]
+  (-> message send-op :completions set))
+
+;; local not yet in scope
+(completions
+  {:op :completions
+   :dialect :clj
+   :prefix "x"
+   :ns "user"
+   :enclosing-sexp (string->base64 "(let [x 1])")
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 7})
+
+(xr/check!
+  #(not (contains? % {:trigger "x" :type :local})))
+
+;; local in scope
+(completions
+  {:op :completions
+   :dialect :clj
+   :prefix "x"
+   :ns "user"
+   :enclosing-sexp (string->base64 "(let [x 1])")
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 8})
+
+(xr/check!
+  (partial set/subset? #{{:trigger "x" :type :local}}))
+
+;; local no longer in scope
+(completions
+  {:op :completions
+   :dialect :clj
+   :prefix "x"
+   :ns "user"
+   :enclosing-sexp (string->base64 "(let [x 1])")
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 12})
+
+(xr/check!
+  #(not (contains? % {:trigger "x" :type :local})))
+
+;; no line/column info
+(completions
+  {:op :completions
+   :dialect :clj
+   :prefix "x"
+   :ns "user"
+   :enclosing-sexp (string->base64 "(let [x 1])")})
+
+(xr/check!
+  #(not (contains? % {:trigger "x" :type :local})))
+
+(completions
+  {:op :completions
+   :dialect :clj
+   :prefix "x"
+   :ns "user"
+   :enclosing-sexp (string->base64 "(let [x 1])")
+   :start-line 1
+   :start-column 1})
+
+;; syntax error
+(send-op
+  {:op :completions
+   :dialect :clj
+   :prefix "x"
+   :ns "user"
+   :enclosing-sexp (string->base64 "(let [x 1]")
+   :start-line 1
+   :start-column 1})
+
+(xr/check! #{:err} (:tag *1))

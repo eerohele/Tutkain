@@ -17,7 +17,8 @@
                               org.clojure/tools.analyzer.jvm {:mvn/version "1.2.3"}
                               com.cognitect/transcriptor {:mvn/version "0.1.5"}
                               com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.0.3"}
-                              criterium/criterium {:mvn/version "0.4.6"}}
+                              criterium/criterium {:mvn/version "0.4.6"}
+                              lambdaisland/kaocha {:mvn/version "1.87.1366"}}
 
                  :extra-paths ["dev/src" "dev/test"]
                  :jvm-opts ["-Xmx1G" "-Djdk.attach.allowAttachSelf"]}}}

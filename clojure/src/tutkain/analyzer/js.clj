@@ -26,14 +26,16 @@
     (fn [node]
       (assoc node :unique-name (unique-name node)))))
 
+(def reader-opts
+  {:read-cond :allow :features #{:cljs}})
+
 (defn analyze
   [start-line start-column reader]
   (let [env (analyzer.api/empty-env)]
     (analyzer/analyze
       :start-line start-line
       :start-column start-column
-      :reader reader
-      :reader-opts {:read-cond :allow :features #{:cljs}}
+      :forms (analyzer/read-forms reader reader-opts start-line start-column)
       :analyzer #(cljs.analyzer/analyze env %)
       :xform uniquify)))
 

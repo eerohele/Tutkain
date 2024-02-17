@@ -79,15 +79,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gitlibs
 
-      - name: Run Clojure tests
+      - name: Run Clojure transcriptions
         if: ${{ matrix.os != 'windows-latest' }}
         run: clojure -J-Dclojure.main.report=stderr -Sdeps '{org.clojure/clojure {:mvn/version "${{ matrix.clojure-version }}"}}' -X:dev:shadow-cljs user/-main
         shell: bash
         working-directory: ./clojure
 
-      - name: Run Clojure tests
+      - name: Run Clojure unit tests
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: clojure -J-Dclojure.main.report=stderr -Sdeps '{org.clojure/clojure {:mvn/version "${{ matrix.clojure-version }}"}}' -M:dev -m kaocha.runner
+        shell: bash
+        working-directory: ./clojure
+
+      - name: Run Clojure transcriptions
         if: ${{ matrix.os == 'windows-latest' }}
         run: clojure -J-Dclojure.main.report=stderr -Sdeps '{org.clojure/clojure {:mvn/version "${{ matrix.clojure-version }}"}}' -X:dev:shadow-cljs user/-main
+        shell: powershell
+        working-directory: ./clojure
+
+      - name: Run Clojure unit tests
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: clojure -J-Dclojure.main.report=stderr -Sdeps '{org.clojure/clojure {:mvn/version "${{ matrix.clojure-version }}"}}' -M:dev -m kaocha.runner
         shell: powershell
         working-directory: ./clojure
 

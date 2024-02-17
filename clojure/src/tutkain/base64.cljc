@@ -17,8 +17,9 @@
     (LineNumberingPushbackReader.)))
 
 (defn read-base64
-  [blob path filename]
-  #?(:bb (binding [*file* path]
-           (load-string (String. (.decode base64-decoder blob) "UTF-8")))
-     :clj (with-open [reader (base64-reader blob)]
-            (clojure.lang.Compiler/load reader path filename))))
+  ([blob] (read-base64 blob "NO_SOURCE_FILE" "NO_SOURCE_PATH"))
+  ([blob path filename]
+   #?(:bb (binding [*file* path]
+            (load-string (String. (.decode base64-decoder blob) "UTF-8")))
+      :clj (with-open [reader (base64-reader blob)]
+             (clojure.lang.Compiler/load reader path filename)))))

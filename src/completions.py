@@ -1,7 +1,8 @@
 import sublime
 
 from ..api import edn
-from . import dialects, namespace, selectors, state
+from .log import log
+from . import base64, dialects, forms, namespace, selectors, sexp, state
 
 KINDS = {
     "function": sublime.KIND_FUNCTION,
@@ -17,6 +18,7 @@ KINDS = {
     "keyword": sublime.KIND_KEYWORD,
     "protocol": sublime.KIND_TYPE,
     "navigation": sublime.KIND_NAVIGATION,
+    "local": (sublime.KIND_ID_VARIABLE, "l", "Local"),
 }
 
 
@@ -54,13 +56,38 @@ def completion_item(item):
 
     kind = KINDS.get(type.name, sublime.KIND_AMBIGUOUS)
 
-    return sublime.CompletionItem(
+    item = sublime.CompletionItem(
         trigger=trigger,
         completion=completion,
         kind=kind,
         annotation=annotation,
         details=details,
     )
+
+    return item
+
+
+def enclosing_sexp_sans_prefix(view, expr, prefix):
+    """Given a view, an S-expression, and a prefix, return the S-expression
+    with the prefix removed.
+
+    The prefix is unlikely to resolve, so we must remove it from the
+    S-expression to be able to analyze it on the server.
+    """
+    before = sublime.Region(expr.open.region.begin(), prefix.begin())
+    after = sublime.Region(prefix.end(), expr.close.region.end())
+    return view.substr(before) + view.substr(after)
+
+
+def handler(completion_list, response, flags):
+    tag = response.get(edn.Keyword("tag"))
+
+    if tag is not None and tag == edn.Keyword("err"):
+        ex = response.get(edn.Keyword("val"))
+        log.debug({"event": "error", "exception": ex})
+    else:
+        completions = response.get(edn.Keyword("completions"), [])
+        completion_list.set_completions(map(completion_item, completions), flags=flags)
 
 
 def get_completions(view, prefix, point):
@@ -89,21 +116,35 @@ def get_completions(view, prefix, point):
 
             completion_list = sublime.CompletionList()
 
+            op = {
+                "op": edn.Keyword("completions"),
+                "prefix": prefix,
+                "ns": namespace.name(view),
+                "dialect": dialect,
+            }
+
+            if (outermost := sexp.outermost(view, point)) and (
+                "analyzer.clj" in client.capabilities
+            ):
+                code = enclosing_sexp_sans_prefix(view, outermost, scope)
+                start_line, start_column = view.rowcol(outermost.open.region.begin())
+                line, column = view.rowcol(point)
+                op["file"] = view.file_name() or "NO_SOURCE_FILE"
+                op["start-line"] = start_line + 1
+                op["start-column"] = start_column + 1
+                op["line"] = line + 1
+                op["column"] = column + 1
+                op["enclosing-sexp"] = base64.encode(code.encode("utf-8"))
+
+                flags = (
+                    sublime.AutoCompleteFlags.INHIBIT_WORD_COMPLETIONS
+                    | sublime.AutoCompleteFlags.INHIBIT_REORDER
+                )
+            else:
+                flags = sublime.AutoCompleteFlags.NONE
+
             client.send_op(
-                {
-                    "op": edn.Keyword("completions"),
-                    "prefix": prefix,
-                    "ns": namespace.name(view),
-                    "dialect": dialect,
-                },
-                handler=lambda response: (
-                    completion_list.set_completions(
-                        map(
-                            completion_item,
-                            response.get(edn.Keyword("completions"), []),
-                        )
-                    )
-                ),
+                op, handler=lambda response: handler(completion_list, response, flags)
             )
 
             return completion_list

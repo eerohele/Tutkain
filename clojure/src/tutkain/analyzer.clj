@@ -7,27 +7,32 @@
 
 #_(set! *warn-on-reflection* true)
 
+(defn read-forms
+  [reader reader-opts start-line start-column]
+  (when (and (nat-int? start-line) (nat-int? start-column))
+    (into []
+      (take-while #(not (identical? ::EOF %)))
+      (repeatedly
+        #(reader/read (assoc reader-opts :eof ::EOF)
+           (readers/->IndexingPushbackReader
+             reader start-line start-column true nil 0 *file* false))))))
+
 (defn analyze
   "Read code from a reader and return a reducible of ASTs nodes for the code.
 
   Keyword arguments:
     :analyzer -- A fn that takes a form and returns an AST
-    :reader -- A LineNumberingPushbackReader to read from
-    :reader-opts -- A map of options to pass to clojure.tools.reader/read
-    :start-column -- The column number to set the reader to
-    :start-line -- The line number to set the reader to
+    :forms -- A list of forms to analyze
     :xform -- A transducer to transform resulting sequence of AST nodes (optional)"
-  [& {:keys [reader analyzer reader-opts start-line start-column xform]
+  [& {:keys [forms analyzer xform]
       :or {xform (map identity)}}]
-  (eduction
-    (take-while #(not (identical? ::EOF %)))
-    (map analyzer)
-    (mapcat analyzer.ast/nodes)
-    xform
-    (repeatedly
-      #(reader/read (assoc reader-opts :eof ::EOF)
-         (readers/->IndexingPushbackReader
-           reader start-line start-column true nil 0 *file* false)))))
+  (into []
+    (comp
+      (take-while #(not (identical? ::EOF %)))
+      (map analyzer)
+      (mapcat analyzer.ast/nodes)
+      xform)
+    forms))
 
 (defn ^:private node-form
   [node]
@@ -48,6 +53,36 @@
 (defn ^:private node-unique-name
   [node]
   (or (:unique-name node) (:name node)))
+
+(defn local-symbols
+  "Given a line number, a column number, and a list of AST nodes, return all
+  local symbols in scope at the given line and column."
+  [line column nodes]
+  (eduction
+    (filter (comp #{:fn-method :let :loop} :op))
+    (filter (fn [node]
+              (let [env (:env node)]
+                (<= (:line env) line (:end-line env)))))
+    (remove (fn [node]
+              (let [env (:env node)]
+                (and
+                  (= line (:end-line env))
+                  (>= column (:end-column env))))))
+    (keep (juxt :params :bindings))
+    cat
+    cat
+    (remove (fn [node]
+              (let [env (:env node)]
+                (and
+                  (= line (:line env))
+                  (< column (:end-column env))))))
+    (keep :form)
+    ;; Remove gensym params (e.g. p__11784).
+    ;;
+    ;;TODO: Is this the right way to do this?
+    (remove (fn [form] (re-matches #"\P{N}.*__\p{N}+" (name form))))
+    (distinct)
+    nodes))
 
 (defn index-by-position
   "Given a sequence of tools.analyzer AST nodes, filter nodes that represent a

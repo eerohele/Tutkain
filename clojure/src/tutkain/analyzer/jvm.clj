@@ -8,8 +8,9 @@
    [tutkain.base64 :refer [base64-reader]]
    [tutkain.rpc :refer [respond-to]]))
 
-(def ^:private analyzer-passes
-  (passes/schedule #{#'source-info/source-info #'uniquify/uniquify-locals}))
+(def analyzer-passes
+  {:local-instances (passes/schedule #{#'source-info/source-info #'uniquify/uniquify-locals})
+   :local-symbols (passes/schedule #{#'source-info/source-info})})
 
 (defn ^:private parse-namespace
   [ns]
@@ -19,23 +20,30 @@
   {:features #{:clj :t.a.jvm} :read-cond :allow})
 
 (defn analyze
-  [start-line start-column reader]
+  [passes forms]
   (analyzer/analyze
-    :start-line start-line
-    :start-column start-column
-    :reader reader
-    :reader-opts reader-opts
-    :analyzer analyzer.jvm/analyze))
+    :forms forms
+    :analyzer (fn [form]
+                (binding [analyzer.jvm/run-passes (analyzer-passes passes)]
+                  (analyzer.jvm/analyze form)))))
 
 (defmethod analyzer/local-instances :default
   [{:keys [enclosing-sexp file ns start-column start-line] :as message}]
   (try
     (binding [*file* file
-              *ns* (parse-namespace ns)
-              analyzer.jvm/run-passes analyzer-passes]
-      (with-open [reader (base64-reader enclosing-sexp)]
-        (let [nodes (analyze start-line start-column reader)
-              positions (analyzer/local-positions nodes (analyzer/position message))]
-          (respond-to message {:positions positions}))))
+              *ns* (parse-namespace ns)]
+      (let [forms (with-open [reader (base64-reader enclosing-sexp)]
+                    (analyzer/read-forms reader reader-opts start-line start-column))
+            nodes (analyze :local-instances forms)
+            positions (analyzer/local-positions nodes (analyzer/position message))]
+        (respond-to message {:positions positions})))
     (catch Throwable ex
       (respond-to message {:tag :ret :debug true :val (pr-str (Throwable->map ex))}))))
+
+(defn local-symbols
+  [{:keys [forms file ns line column]}]
+  (when (and (seq forms) (nat-int? line) (nat-int? column))
+    (let [nodes (binding [*file* file
+                          *ns* ns]
+                  (analyze :local-symbols forms))]
+      (analyzer/local-symbols line column nodes))))

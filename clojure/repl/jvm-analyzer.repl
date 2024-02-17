@@ -35,14 +35,22 @@
                       ::column
                       ::end-column]))
 
+(defn read-forms
+  [reader line column]
+  (analyzer/read-forms reader jvm/reader-opts line column))
+
+(defn analyze
+  [line column reader]
+  (jvm/analyze :local-instances (read-forms reader line column)))
+
 ;; Analyze multiple forms
-(seq (jvm/analyze 0 0 (string->reader "1 2")))
+(seq (analyze 0 0 (string->reader "1 2")))
 
 (xr/check! (spec/coll-of ::node :min-count 2))
 
 ;; Line and column number
 (def nodes
-  (set (jvm/analyze 1 2 (string->reader "(def x 1)"))))
+  (set (analyze 1 2 (string->reader "(def x 1)"))))
 
 (xr/check! (spec/coll-of ::node) nodes)
 (xr/check! (partial set/subset? #{{:line 1 :column 2 :end-column 11}})
@@ -117,7 +125,7 @@
 (->>
   "(defn f [x] (+ x (let [x 2] (inc x)) x))"
   string->reader
-  (jvm/analyze 1 1)
+  (analyze 1 1)
   analyzer/index-by-position)
 
 (xr/check!

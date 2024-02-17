@@ -4,10 +4,11 @@
 
   Originally adapted from nrepl.util.completion."
   (:require
+   [tutkain.base64 :refer [base64-reader]]
    [tutkain.rpc :as rpc :refer [handle respond-to]]
    [tutkain.java :as java])
   (:import
-   (java.io File)
+   (java.io File Reader)
    (java.lang.reflect Field Member Method Modifier)
    (java.util.jar JarEntry JarFile)))
 
@@ -489,9 +490,55 @@
 
 (defmulti completions :dialect)
 
+(defn annotate-local
+  [local]
+  {:trigger (name local) :type :local})
+
+(defmacro ^:private maybe-require-fn
+  "Given a symbol naming a function, resolve and return that function.
+
+  If the function is not found, return a function that always returns nil."
+  [sym]
+  `(or
+     (some->
+       (try
+         (requiring-resolve '~sym)
+         (catch Exception ex#))
+       deref)
+     (constantly nil)))
+
+(def ^:private local-symbols
+  (maybe-require-fn tutkain.analyzer.jvm/local-symbols))
+
+(def ^:private read-forms
+  (maybe-require-fn tutkain.analyzer/read-forms))
+
+(defn local-completions
+  [{:keys [ns file start-line start-column enclosing-sexp prefix] :as message}]
+  (let [forms (when (seq enclosing-sexp)
+                (with-open [^Reader reader (binding [*file* file *ns* ns]
+                                             (base64-reader enclosing-sexp))]
+                  (read-forms
+                    reader
+                    {:features #{:clj :t.a.jvm} :read-cond :allow}
+                    start-line
+                    start-column)))]
+    (vec
+      (candidates-for-prefix prefix
+        (map annotate-local
+          (local-symbols (assoc message :forms forms)))))))
+
+(defn ^:private find-completions
+  [{:keys [ns prefix] :as message}]
+  (into (local-completions message) (candidates prefix ns)))
+
 (defmethod completions :default
-  [{:keys [prefix] :as message}]
-  (respond-to message {:completions (candidates prefix (rpc/namespace message))}))
+  [message]
+  (try
+    (let [completions (find-completions (assoc message :ns (rpc/namespace message)))]
+      (respond-to message {:completions completions}))
+    (catch Exception ex
+      (respond-to message {:tag :err :debug true :val (pr-str (Throwable->map ex))}))))
 
 (defmethod handle :completions
   [message]
