@@ -47,6 +47,12 @@
 (spec/def ::method-completions
   (spec/coll-of ::method-completion :kind sequential? :min-count 1))
 
+(spec/def ::ns-completion
+  (spec/and (spec/keys :req-un [::trigger ::type]) #(= (:type %) :namespace)))
+
+(spec/def ::ns-completions
+  (spec/coll-of ::ns-completion :kind sequential? :min-count 1))
+
 (spec/def ::prefix
   (spec/with-gen string? (constantly (gen/fmap str gen/symbol))))
 
@@ -55,6 +61,9 @@
 
 (spec/def ::class-completion
   #(= (:type %) :class))
+
+(spec/def ::class-completions
+  (spec/coll-of ::class-completion :kind sequential? :min-count 1))
 
 (spec/def ::nested-class-completion
   (spec/and #(= (:type %) :class) #(.contains (:trigger %) "$")))

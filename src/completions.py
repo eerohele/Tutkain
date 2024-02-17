@@ -22,6 +22,13 @@ KINDS = {
 }
 
 
+COMPLETION_FORMATS = {
+    "text": sublime.CompletionFormat.TEXT,
+    "snippet": sublime.CompletionFormat.SNIPPET,
+    "command": sublime.CompletionFormat.COMMAND,
+}
+
+
 def completion_item(item):
     details = ""
 
@@ -40,7 +47,7 @@ def completion_item(item):
 
     type = item.get(edn.Keyword("type"))
     trigger = item.get(edn.Keyword("trigger"))
-    completion = trigger
+    completion = item.get(edn.Keyword("completion"), trigger)
     trigger = trigger + " "
 
     if type == edn.Keyword("navigation"):
@@ -56,9 +63,18 @@ def completion_item(item):
 
     kind = KINDS.get(type.name, sublime.KIND_AMBIGUOUS)
 
+    completion_format = item.get(
+        edn.Keyword("completion-format"), edn.Keyword("text")
+    ).name
+
+    completion_format = COMPLETION_FORMATS.get(
+        completion_format, sublime.CompletionFormat.TEXT
+    )
+
     item = sublime.CompletionItem(
         trigger=trigger,
         completion=completion,
+        completion_format=completion_format,
         kind=kind,
         annotation=annotation,
         details=details,
@@ -91,6 +107,8 @@ def handler(completion_list, response, flags):
 
 
 def get_completions(view, prefix, point):
+    preceding_point = point - 1
+
     # The AC widget won't show up after typing a character that's in word_separators.
     #
     # Removing the forward slash from word_separators is a no go, though. Therefore,
@@ -103,14 +121,14 @@ def get_completions(view, prefix, point):
 
         if (
             view.match_selector(
-                point,
+                preceding_point,
                 "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | constant.other.keyword",
             )
-            and (dialect := dialects.for_point(view, point))
+            and (dialect := dialects.for_point(view, preceding_point))
             and (client := state.get_client(view.window(), dialect))
         ):
             if scope := selectors.expand_by_selector(
-                view, point, "meta.symbol | constant.other.keyword"
+                view, preceding_point, "meta.symbol | constant.other.keyword"
             ):
                 prefix = view.substr(scope)
 
@@ -133,7 +151,9 @@ def get_completions(view, prefix, point):
                 op["start-line"] = start_line + 1
                 op["start-column"] = start_column + 1
                 op["line"] = line + 1
-                op["column"] = column + 1
+                # Since we're removing the prefix from enclosing-sexp, we must
+                # subtract its length from the column, too.
+                op["column"] = column + 1 - len(prefix)
                 op["enclosing-sexp"] = base64.encode(code.encode("utf-8"))
 
                 flags = (

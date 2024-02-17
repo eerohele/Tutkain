@@ -1170,7 +1170,7 @@ class TutkainEventListener(EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         if settings.load().get("auto_complete"):
-            point = locations[0] - 1
+            point = locations[0]
             return completions.get_completions(view, prefix, point)
 
     def on_pre_close_project(self, window):

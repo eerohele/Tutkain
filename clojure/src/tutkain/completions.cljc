@@ -4,6 +4,8 @@
 
   Originally adapted from nrepl.util.completion."
   (:require
+   [clojure.string :as string]
+   [clojure.zip :as zip]
    [tutkain.base64 :refer [base64-reader]]
    [tutkain.rpc :as rpc :refer [handle respond-to]]
    [tutkain.java :as java])
@@ -520,7 +522,103 @@
   (maybe-require-fn tutkain.analyzer/read-forms))
 
 (defn local-completions
-  [{:keys [ns file start-line start-column enclosing-sexp prefix] :as message}]
+  [forms {:keys [prefix] :as message}]
+  (vec
+    (candidates-for-prefix prefix
+      (map annotate-local
+        (local-symbols (assoc message :forms forms))))))
+
+(defn find-loc
+  [form target-line target-column]
+  (let [root (zip/seq-zip form)]
+    (loop [loc root max-loc nil]
+      (let [node (zip/node loc)
+            {:keys [line column end-column]
+             :or {line -1 column -1 end-column -1}} (meta node)]
+        (cond
+          (zip/end? loc)
+          max-loc
+
+          (and (= line target-line) (<= column target-column end-column))
+          (recur (zip/next loc) loc)
+
+          :else
+          (recur (zip/next loc) max-loc))))))
+
+(defn require-completions
+  [loc prefix]
+  ;; When e.g. [clojure.set :refer []], suggest vars in clojure.set.
+  (let [node (some-> loc zip/node)]
+    (if (= :refer (second node))
+      (candidates-for-prefix prefix (ns-public-var-candidates (first node)))
+      (map (fn [{:keys [trigger] :as candidate}]
+             (case trigger
+               "clojure.test"
+               (assoc candidate
+                 :completion "clojure.test :refer ${5:[${1:deftest} ${2:is} ${3:use-fixtures}$4]}$0"
+                 :completion-format :snippet)
+
+               (let [parts (string/split trigger #"\.")
+                     snippet (format "${1:%s}" (last parts))
+                     completion (str trigger " ${2::as " snippet "}$0")]
+                 (assoc candidate :completion completion :completion-format :snippet))))
+        (candidates-for-prefix prefix (ns-candidates))))))
+
+(defn import-completions
+  [loc prefix]
+  (let [head (some-> loc zip/node first)]
+    (if (symbol? head)
+      (map (fn [candidate]
+             (update candidate :trigger (fn [trigger] (-> trigger (string/split #"\.") (last)))))
+        (class-candidates (str (name head) "." prefix)))
+      (map
+        (fn [{:keys [trigger] :as candidate}]
+          (let [parts (string/split trigger #"\.")
+                ;; Escape $ to avoid snippet interference
+                snippet (format "${1:%s}" (string/replace (last parts) "$" "\\$"))
+                package (string/join \. (butlast parts))
+                completion (str package " " snippet)]
+            (assoc candidate :completion completion :completion-format :snippet)))
+        (class-candidates prefix)))))
+
+(def ns-form-snippets
+  [{:type :keyword
+    :trigger ":require"
+    :completion-format :snippet
+    :completion ":require [$0]"}
+   {:type :keyword
+    :trigger ":import"
+    :completion-format :snippet
+    :completion ":import ($0)"}
+   {:type :keyword
+    :trigger ":refer-clojure"
+    :completion-format :snippet
+    :completion ":refer-clojure :exclude [$0]"}])
+
+(defn ns-form-completions
+  [form prefix line column]
+  (let [loc (find-loc form line column)
+        head (some-> loc zip/leftmost zip/node)]
+    (case head
+      :require (require-completions loc prefix)
+      :import (import-completions loc prefix)
+      :refer-clojure (ns-public-var-candidates 'clojure.core)
+      ns-form-snippets)))
+
+(defn context-completions
+  [form prefix line column]
+  (let [head (first form)
+        sym (some-> head resolve symbol)]
+    (case sym
+      clojure.core/ns (ns-form-completions form prefix line column)
+      clojure.core/require (let [loc (find-loc form line column)]
+                             (require-completions loc prefix))
+      clojure.core/import (let [loc (find-loc form line column)]
+                            (import-completions loc prefix))
+      [])))
+
+(defn ^:private find-completions
+  [{:keys [file ns prefix enclosing-sexp start-line start-column line column] :as message}]
   (let [forms (when (seq enclosing-sexp)
                 (with-open [^Reader reader (binding [*file* file *ns* ns]
                                              (base64-reader enclosing-sexp))]
@@ -529,14 +627,9 @@
                     {:features #{:clj :t.a.jvm} :read-cond :allow}
                     start-line
                     start-column)))]
-    (vec
-      (candidates-for-prefix prefix
-        (map annotate-local
-          (local-symbols (assoc message :forms forms)))))))
-
-(defn ^:private find-completions
-  [{:keys [ns prefix] :as message}]
-  (into (local-completions message) (candidates prefix ns)))
+    (or
+      (not-empty (context-completions (peek forms) prefix line column))
+      (into (local-completions forms message) (candidates prefix ns)))))
 
 (defmethod completions :default
   [message]

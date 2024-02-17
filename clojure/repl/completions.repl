@@ -272,3 +272,139 @@
    :start-column 1})
 
 (xr/check! #{:err} (:tag *1))
+
+;; ns form completions
+
+;; snippets
+
+(set
+  (completions
+    {:prefix ":"
+     :ns "user"
+     :enclosing-sexp "(ns foo.bar )"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 13}))
+
+(xr/check! (partial set/subset? completions/ns-form-snippets))
+
+;; require
+
+(completions
+  {:prefix "clojure."
+   :ns "user"
+   :enclosing-sexp "(ns foo.bar (:require []))"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 24})
+
+(xr/check! (prefixed-candidates ::specs/ns-completions "clojure."))
+
+(require '[clojure.main])
+(require '[clojure.test])
+
+(set
+  (map #(dissoc % :doc)
+    (completions
+      {:prefix "clojure."
+       :ns "user"
+       :enclosing-sexp "(ns foo.bar (:require []))"
+       :start-line 1
+       :start-column 1
+       :line 1
+       :column 24})))
+
+(xr/check!
+  (partial set/subset?
+    #{;; normal case
+      {:trigger "clojure.main"
+       :type :namespace
+       :completion "clojure.main ${2::as ${1:main}}$0"
+       :completion-format :snippet}
+      ;; special case
+      {:trigger "clojure.test"
+       :type :namespace
+       :completion "clojure.test :refer ${5:[${1:deftest} ${2:is} ${3:use-fixtures}$4]}$0"
+       :completion-format :snippet}}))
+
+;; :require :refer
+(->>
+  {:prefix "s"
+   :ns "user"
+   :enclosing-sexp "(ns foo.bar (:require [clojure.set :refer []]))"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 44}
+  (completions)
+  (map :trigger)
+  (set))
+
+(let [vs (set (filter #(.startsWith % "s") (map name (keys (ns-publics 'clojure.set)))))]
+  (xr/check! (partial = vs)))
+
+;; require
+(completions
+  {:prefix "clojure."
+   :ns "user"
+   :enclosing-sexp "(require '[])"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 12})
+
+(xr/check! (prefixed-candidates ::specs/ns-completions "clojure."))
+
+;; :import
+
+(completions
+  {:prefix "java.text.spi."
+   :ns "user"
+   :enclosing-sexp "(ns foo.bar (:import ()))"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 23})
+
+(xr/check! (prefixed-candidates ::specs/class-completions "java.text.spi."))
+
+;; :import: complete classes in package
+(set
+  (completions
+    {:prefix "B"
+     :ns "user"
+     :enclosing-sexp "(ns foo.bar (:import (java.text.spi )))"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 38}))
+
+(xr/check! (partial set/subset? #{{:trigger "BreakIteratorProvider" :type :class}}))
+
+;; import
+
+(completions
+  {:prefix "java.util."
+   :ns "user"
+   :enclosing-sexp "(import '())"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 11})
+
+(xr/check! (prefixed-candidates ::specs/class-completions "java.util."))
+
+(set
+  (completions
+    {:prefix "D"
+     :ns "user"
+     :enclosing-sexp "(import '(java.util ))"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 21}))
+
+(xr/check! (partial set/subset? #{{:trigger "Date" :type :class}
+                                  {:trigger "Deque" :type :class}}))
