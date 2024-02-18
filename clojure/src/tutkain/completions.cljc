@@ -275,6 +275,7 @@
             (remove #(.contains ^String % "__"))
             (remove #(re-find #".+\$\d.*" %))
             (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
+            (map annotate-class)
             (.split (System/getProperty "java.class.path") File/pathSeparator))))
 
 (defn ^:private base-classes
@@ -290,6 +291,7 @@
               ;; Only retain java.* and javax.* to limit memory consumption
               (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
               (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
+              (map annotate-class)
               (for [^java.lang.module.ModuleReference module-reference (.findAll module-finder)]
                 (with-open [module-reader (.open module-reference)
                             stream (.list module-reader)]
@@ -297,9 +299,8 @@
 
 (def ^:private all-class-candidates
   (future
-    (map annotate-class
-      (into (sorted-set)
-        (concat (non-base-classes) (base-classes))))))
+    (into (sorted-set)
+      (concat (non-base-classes) (base-classes)))))
 
 (defn ^:private nested-class-names
   []
