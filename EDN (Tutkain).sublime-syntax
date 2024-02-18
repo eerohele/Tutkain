@@ -32,20 +32,10 @@ contexts:
   # https://clojure.org/reference/reader
   forms:
     - include: constant
-
-    # Literals
     - include: literal
-
-    # Macro characters
     - include: macro_characters
-
-    # S-expressions
     - include: sexp
-
-    # Symbols
     - include: symbol
-
-    # Fallback?
     - include: fallback
 
   # Constants
