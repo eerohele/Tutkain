@@ -46,7 +46,7 @@ contexts:
     - include: symbol
 
     # Fallback?
-    - match: '[^\s,;\(\)\[\]{}\"`~@\^\\]+'
+    - include: fallback
 
   # Constants
 
@@ -345,3 +345,6 @@ contexts:
   stray-brackets:
     - match: '[\]\)\}]'
       scope: invalid.illegal.stray-bracket-end.edn
+
+  fallback:
+    - match: '[^\s,;\(\)\[\]{}\"`~@\^\\]+'
