@@ -1216,12 +1216,12 @@
   '(blah blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.function-call.clojure variable.function.clojure
+;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
 
   '(quote blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^^ keyword.other.clojure
+;   ^^^^^ meta.symbol - keyword.other.clojure
 
 ; ## Backquote
 
@@ -1242,14 +1242,14 @@
   `(blah ~blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.function-call.clojure variable.function.clojure
+;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^^- keyword.operator.macro.clojure
 
   `(blah ~100)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.function-call.clojure variable.function.clojure
+;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^ constant.numeric
 
@@ -1267,14 +1267,14 @@
   `(blah ~@blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.function-call.clojure variable.function.clojure
+;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
 ;        ^^ keyword.operator.macro.clojure
 ;          ^^^^- keyword.operator.macro.clojure
 
   `(blah ~@[10 20 30])
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.function-call.clojure variable.function.clojure
+;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
 ;        ^^ keyword.operator.macro.clojure
 ;          ^ punctuation.section.brackets.begin.edn
 ;           ^^ constant.numeric
@@ -3090,7 +3090,7 @@
 
   `(foo ~bar)
 ; ^ keyword.operator.macro.clojure
-;   ^^^ meta.function-call.clojure variable.function.clojure
+;   ^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
 ;       ^ keyword.operator.macro.clojure
 ;        ^^^ meta.symbol.edn - keyword
 
@@ -3104,6 +3104,106 @@
   #'foo.bar/baz
 ; ^^ keyword.operator.macro.clojure
 ;          ^ punctuation.accessor.edn
+
+
+; # Simple S-expressions
+
+  '(def x 1)
+; ^ keyword.operator.macro.clojure - meta.sexp
+;  ^ punctuation.section.parens.begin.edn
+;   ^^^ meta.symbol - keyword.declaration
+;       ^ meta.symbol.edn - entity
+;         ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;  ^^^^^^^^^ meta.sexp.list.edn
+;           ^ - meta.sexp.list.edn
+
+  '(foo (def x 1))
+; ^ keyword.operator.macro.clojure - meta.sexp
+;       ^ punctuation.section.parens.begin.edn
+;        ^^^ meta.symbol - keyword.declaration
+;            ^ meta.symbol.edn - entity
+;              ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;       ^^^^^^^^^ meta.sexp.list.edn
+
+  `(def x 1)
+; ^ keyword.operator.macro.clojure - meta.sexp
+;  ^ punctuation.section.parens.begin.edn
+;   ^^^ meta.symbol - keyword.declaration
+;       ^ meta.symbol.edn - entity
+;         ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;  ^^^^^^^^^ meta.sexp.list.edn
+;           ^ - meta.sexp.list.edn
+
+  `(foo (def x 1))
+; ^ keyword.operator.macro.clojure - meta.sexp
+;       ^ punctuation.section.parens.begin.edn
+;        ^^^ meta.symbol - keyword.declaration
+;            ^ meta.symbol.edn - entity
+;              ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;       ^^^^^^^^^ meta.sexp.list.edn
+
+  `(if true 1 2)
+; ^ keyword.operator.macro.clojure - meta.sexp
+;  ^ punctuation.section.parens.begin.edn
+;   ^^ meta.symbol - meta.special-form
+;      ^^^^ constant
+;           ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;             ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;  ^^^^^^^^^^^^^ meta.sexp.list.edn
+;              ^ punctuation.section.parens.end.edn
+
+  `([(if true 1 2)])
+; ^ keyword.operator.macro.clojure - meta.sexp
+;  ^ punctuation.section.parens.begin.edn
+;    ^ punctuation.section.parens.begin.edn
+;     ^^ meta.symbol - meta.special-form
+;        ^^^^ constant
+;             ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;               ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;    ^^^^^^^^^^^^^ meta.sexp.list.edn
+;   ^^^^^^^^^^^^^^^ meta.sexp.vector.edn
+;  ^^^^^^^^^^^^^^^^^ meta.sexp.list.edn
+;                ^ punctuation.section.parens.end.edn
+;                  ^ punctuation.section.parens.end.edn
+
+  `[(if true 1 2)]
+; ^ keyword.operator.macro.clojure - meta.sexp
+;  ^ punctuation.section.brackets.begin.edn
+;   ^ punctuation.section.parens.begin.edn
+;    ^^ meta.symbol - meta.special-form
+;       ^^^^ constant
+;            ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;              ^ meta.reader-form.edn constant.numeric.integer.decimal.edn
+;   ^^^^^^^^^^^^^ meta.sexp.list.edn
+;  ^^^^^^^^^^^^^^^ meta.sexp.vector.edn
+;               ^ punctuation.section.parens.end.edn
+;                ^ punctuation.section.brackets.end.edn
+
+  `{:a (if true 1 2) :b [(if false 2 1)]}
+; ^ keyword.operator.macro.clojure - meta.sexp
+;  ^ punctuation.section.braces.begin.edn
+;   ^^ meta.mapping.key.edn constant.other.keyword.unqualified.edn
+;     ^ - meta.mapping.key
+;      ^ punctuation.section.parens.begin.edn
+;       ^^ meta.symbol - meta.special-form
+;          ^^^^ constant.language.edn
+;               ^ constant.numeric.integer.decimal.edn
+;                 ^ constant.numeric.integer.decimal.edn
+;                  ^ punctuation.section.parens.end.edn
+;      ^^^^^^^^^^^^^ meta.mapping.value.edn
+;                   ^ - meta.mapping.value
+;                    ^^ meta.mapping.key.edn constant.other.keyword.unqualified.edn
+;                      ^ - meta.mapping.key
+;                       ^ punctuation.section.brackets.begin.edn
+;                        ^ punctuation.section.parens.begin.edn
+;                         ^^ meta.symbol - meta.special-form
+;                            ^^^^^ constant.language.edn
+;                                  ^ constant.numeric.integer.decimal.edn
+;                                    ^ constant.numeric.integer.decimal.edn
+;                                     ^ punctuation.section.parens.end.edn
+;                                      ^ punctuation.section.brackets.end.edn
+;                       ^^^^^^^^^^^^^^^^ meta.mapping.value.edn
+;                                       ^ punctuation.section.braces.end.edn - meta.mapping.value
 
 
 ; # Reader conditionals
