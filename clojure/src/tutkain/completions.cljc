@@ -290,7 +290,7 @@
               (remove #(re-find #".+\$\d.+\.class" %))
               ;; Only retain java.* and javax.* to limit memory consumption
               (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
-              (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.")))
+              (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.") (.startsWith ^String % "jdk.")))
               (map annotate-class)
               (for [^java.lang.module.ModuleReference module-reference (.findAll module-finder)]
                 (with-open [module-reader (.open module-reference)
