@@ -139,6 +139,7 @@ def get_completions(view, prefix, point):
                 "prefix": prefix,
                 "ns": namespace.name(view),
                 "dialect": dialect,
+                "max-completions": 100,
             }
 
             if (outermost := sexp.outermost(view, point)) and (
@@ -159,6 +160,7 @@ def get_completions(view, prefix, point):
                 flags = (
                     sublime.AutoCompleteFlags.INHIBIT_WORD_COMPLETIONS
                     | sublime.AutoCompleteFlags.INHIBIT_REORDER
+                    | sublime.AutoCompleteFlags.DYNAMIC_COMPLETIONS
                 )
             else:
                 flags = sublime.AutoCompleteFlags.NONE
