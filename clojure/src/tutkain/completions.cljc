@@ -12,10 +12,28 @@
   (:import
    (java.io File Reader)
    (java.lang.reflect Field Member Method Modifier)
+   (java.util Comparator)
+   (java.util.concurrent ConcurrentSkipListSet)
    (java.util.jar JarEntry JarFile)))
 
 (when (nil? (System/getProperty "apple.awt.UIElement"))
   (System/setProperty "apple.awt.UIElement" "true"))
+
+(defn ^:private trigger-comparator
+  [x y]
+  (compare (:trigger x) (:trigger y)))
+
+(defn ^:private parallel-sorted
+  [^Comparator comparator & colls]
+  (let [sls (ConcurrentSkipListSet. comparator)
+        futs (volatile! [])]
+    (loop [colls colls]
+      (when-some [coll (first colls)]
+        (vswap! futs conj (future (.addAll sls (seq coll))))
+        (recur (rest colls))))
+
+    (run! deref @futs)
+    (seq sls)))
 
 (defn annotate-keyword
   [kw]
@@ -299,8 +317,8 @@
 
 (def ^:private all-class-candidates
   (future
-    (into (sorted-set)
-      (concat (non-base-classes) (base-classes)))))
+    (parallel-sorted trigger-comparator
+      (non-base-classes) (base-classes))))
 
 (defn ^:private nested-class-names
   []
