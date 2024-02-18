@@ -34,10 +34,7 @@ contexts:
     - include: constant
 
     # Literals
-    - include: string
-    - include: numbers
-    - include: symbolic
-    - include: keywords
+    - include: literal
 
     # Macro characters
     - include: macro_characters
@@ -56,6 +53,14 @@ contexts:
   constant:
     - match: '{{constant}}'
       scope: meta.reader-form.edn constant.language.edn
+
+  # Literals
+
+  literal:
+    - include: string
+    - include: numbers
+    - include: symbolic
+    - include: keywords
 
   # Symbols
 
