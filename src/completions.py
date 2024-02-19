@@ -161,6 +161,22 @@ def get_completions(view, prefix, point):
                     sublime.AutoCompleteFlags.INHIBIT_WORD_COMPLETIONS
                     | sublime.AutoCompleteFlags.INHIBIT_REORDER
                     | sublime.AutoCompleteFlags.INHIBIT_EXPLICIT_COMPLETIONS
+                    # The downside with max-completions & dynamic completions
+                    # is that it decreases the power of ST's fuzzy matching.
+                    # For example, without these, if the user types "java",
+                    # they can then type e.g. "Executor" to get
+                    # "java.util.concurrent.ExecutorService".
+                    #
+                    # With dynamic completions, the user needs to type
+                    # "java.util.concurrent." to have Tutkain suggest
+                    # ExecutorService.
+                    #
+                    # The tradeoff is that with dynamic completions, we can
+                    # request only e.g. 100 completions at a time, which is
+                    # obviously much faster than requesting thousands of
+                    # completions and then filtering them.
+                    #
+                    # Could maybe make this configurable if someone asks.
                     | sublime.AutoCompleteFlags.DYNAMIC_COMPLETIONS
                 )
             else:
