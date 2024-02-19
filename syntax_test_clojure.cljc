@@ -889,7 +889,7 @@
 ;                                              ^^ constant.character.escape
 ;                                                 ^^ constant.character.escape
 ;                                                    ^^ constant.character.escape
-  #"\p{IsLatin} \p{L} \b \b{g} \B \A \G \Z \z \R \X \0 \99 \k<gr3> \( \} \""
+  #"\p{IsLatin} \p{L} \b \b{g} \B \A \G \Z \z \R \X \0 \99 \k<gr3> \( \} \" \P{N}"
 ;   ^^^^^^^^^^^ constant.character.escape
 ;               ^^^^^ constant.character.escape
 ;                     ^^ constant.character.escape
@@ -907,6 +907,7 @@
 ;                                                                  ^^ constant.character.escape
 ;                                                                     ^^ constant.character.escape
 ;                                                                        ^^ constant.character.escape
+;                                                                           ^^^^^ constant.character.escape
   #"\y \x \uABC \p{Is Latin} \k<1gr> "
 ;   ^^ invalid.illegal.escape.regexp
 ;      ^^ invalid.illegal.escape.regexp
