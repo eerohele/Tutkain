@@ -80,7 +80,7 @@
     ;; Remove gensym params (e.g. p__11784).
     ;;
     ;;TODO: Is this the right way to do this?
-    (remove (fn [form] (re-matches #"\P{N}.*__\p{N}+" (name form))))
+    (remove (fn [form] (re-matches #"\P{N}.*__\p{N}+.*" (name form))))
     (distinct)
     nodes))
 
