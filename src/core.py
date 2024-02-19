@@ -149,7 +149,7 @@ class ConnectedTextCommand(TextCommand):
         return self.is_visible()
 
 
-class TutkainClearOutputViewCommand(ConnectedWindowCommand):
+class TutkainClearOutputViewCommand(WindowCommand):
     def clear_view(self, view):
         if view:
             view.set_read_only(False)
