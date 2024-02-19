@@ -300,7 +300,7 @@
 
 (def ^:private all-class-candidates
   (future
-    (into (sorted-set)
+    (into (sorted-set-by (fn [x y] (compare (:trigger x) (:trigger y))))
       (concat (non-base-classes) (base-classes)))))
 
 (defn ^:private nested-class-names
