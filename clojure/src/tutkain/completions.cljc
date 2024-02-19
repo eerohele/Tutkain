@@ -282,7 +282,7 @@
   "Return a sequence of all java.* and javax.* classes in every Java module in
   the current JDK."
   []
-  #?(:bb (map (memfn getName) (babashka.classes/all-classes))
+  #?(:bb (map (fn [class] (annotate-class (.getName class))) (babashka.classes/all-classes))
      :clj (let [module-finder (java.lang.module.ModuleFinder/ofSystem)]
             (eduction
               cat
