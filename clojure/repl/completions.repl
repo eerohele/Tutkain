@@ -194,72 +194,71 @@
 
 (defn completions
   [message]
-  (-> message send-op :completions set))
+  (->
+    (update message :enclosing-sexp string->base64)
+    (assoc :op :completions :dialect :clj)
+    send-op
+    :completions))
 
 ;; local not yet in scope
-(completions
-  {:op :completions
-   :dialect :clj
-   :prefix "x"
-   :ns "user"
-   :enclosing-sexp (string->base64 "(let [x 1])")
-   :start-line 1
-   :start-column 1
-   :line 1
-   :column 7})
+(set
+  (completions
+    {:prefix "x"
+     :ns "user"
+     :enclosing-sexp "(let [x 1])"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 7}))
 
 (xr/check!
   #(not (contains? % {:trigger "x" :type :local})))
 
 ;; local in scope
-(completions
-  {:op :completions
-   :dialect :clj
-   :prefix "x"
-   :ns "user"
-   :enclosing-sexp (string->base64 "(let [x 1])")
-   :start-line 1
-   :start-column 1
-   :line 1
-   :column 8})
+(set
+  (completions
+    {:prefix "x"
+     :ns "user"
+     :enclosing-sexp "(let [x 1])"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 8}))
 
 (xr/check!
   (partial set/subset? #{{:trigger "x" :type :local}}))
 
 ;; local no longer in scope
-(completions
-  {:op :completions
-   :dialect :clj
-   :prefix "x"
-   :ns "user"
-   :enclosing-sexp (string->base64 "(let [x 1])")
-   :start-line 1
-   :start-column 1
-   :line 1
-   :column 12})
+(set
+  (completions
+    {:prefix "x"
+     :ns "user"
+     :enclosing-sexp "(let [x 1])"
+     :start-line 1
+     :start-column 1
+     :line 1
+     :column 12}))
 
 (xr/check!
   #(not (contains? % {:trigger "x" :type :local})))
 
 ;; no line/column info
-(completions
-  {:op :completions
-   :dialect :clj
-   :prefix "x"
-   :ns "user"
-   :enclosing-sexp (string->base64 "(let [x 1])")})
+(set
+  (completions
+    {:prefix "x"
+     :ns "user"
+     :enclosing-sexp "(let [x 1])"}))
 
 (xr/check!
   #(not (contains? % {:trigger "x" :type :local})))
 
-(completions
-  {:op :completions
-   :dialect :clj
-   :prefix "x"
-   :ns "user"
-   :enclosing-sexp (string->base64 "(let [x 1])")
-   :start-line 1
-   :start-column 1})
+(set
+  (completions
+    {:prefix "x"
+     :ns "user"
+     :enclosing-sexp "(let [x 1])"
+     :start-line 1
+     :start-column 1}))
 
 ;; syntax error
 (send-op
@@ -267,7 +266,7 @@
    :dialect :clj
    :prefix "x"
    :ns "user"
-   :enclosing-sexp (string->base64 "(let [x 1]")
+   :enclosing-sexp "(let [x 1]"
    :start-line 1
    :start-column 1})
 
