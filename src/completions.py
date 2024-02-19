@@ -160,6 +160,7 @@ def get_completions(view, prefix, point):
                 flags = (
                     sublime.AutoCompleteFlags.INHIBIT_WORD_COMPLETIONS
                     | sublime.AutoCompleteFlags.INHIBIT_REORDER
+                    | sublime.AutoCompleteFlags.INHIBIT_EXPLICIT_COMPLETIONS
                     | sublime.AutoCompleteFlags.DYNAMIC_COMPLETIONS
                 )
             else:
