@@ -70,10 +70,10 @@
 
 ;; A prefix that starts with a Java package name yields fully-qualified class
 ;; candidates from that package.
-(set (candidates "java.u" *ns*))
 (xr/check!
   (partial set/subset? #{{:trigger "java.util.ArrayList" :type :class}
-                         {:trigger "java.util.Date" :type :class}}))
+                         {:trigger "java.util.Date" :type :class}})
+  (set (candidates "java.u" *ns*)))
 
 (candidates "java." *ns*)
 (xr/check! (spec/coll-of ::specs/class-completion :min-count 1))
