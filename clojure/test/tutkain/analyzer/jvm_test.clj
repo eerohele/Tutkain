@@ -508,7 +508,6 @@
       [1 27 (x)]
       [1 28 (x)]
       [1 29 ()]]
-    "(loop [x 1] (recur (inc x)))"
-    ))
+    "(loop [x 1] (recur (inc x)))"))
 
 (comment (local-symbols-at-points "(fn [x])") ,,,)
