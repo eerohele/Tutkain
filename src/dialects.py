@@ -74,5 +74,9 @@ def for_view(view):
             return edn.Keyword("cljs")
         if syntax.scope == "source.clojure.babashka":
             return edn.Keyword("bb")
+        if syntax.scope == "source.clojure" and evaluation_dialect(view) == edn.Keyword(
+            "bb"
+        ):
+            return edn.Keyword("bb")
         if syntax.scope == "source.clojure":
             return edn.Keyword("clj")
