@@ -658,6 +658,7 @@ class TutkainEvaluateCommand(ConnectedTextCommand):
                     region = options["region"]
                     region = sublime.Region(region[0], region[1])
                     del options["region"]
+                    self.highlight_region(region)
                     evaluator(region, mark["code"], options)
 
                 elif scope == "input":
