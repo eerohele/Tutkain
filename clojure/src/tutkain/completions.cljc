@@ -614,12 +614,16 @@
 (defn ns-form-completions
   [form prefix line column]
   (let [loc (find-loc form line column)
+        node (some-> loc zip/node)
         head (some-> loc zip/leftmost zip/node)]
     (case head
       :require (require-completions loc prefix)
       :import (import-completions loc prefix)
       :refer-clojure (ns-public-var-candidates 'clojure.core)
-      ns-form-snippets)))
+      (case (first node)
+        :require (candidates-for-prefix prefix (ns-candidates))
+        :import (class-candidates prefix)
+        ns-form-snippets))))
 
 (defn context-completions
   [form prefix line column]

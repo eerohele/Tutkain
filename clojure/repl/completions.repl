@@ -451,3 +451,35 @@
    :column 12})
 
 (xr/check! empty?)
+
+;; :require without brackets
+
+(completions
+  {:prefix "c"
+   :ns "user"
+   :enclosing-sexp "(ns foo.bar (:require ))"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 23})
+
+(xr/check!
+  (spec/and
+    (prefixed-candidates ::specs/ns-completions "c")
+    (partial not-any? (comp #{:snippet} :completion-type))))
+
+;; import without parens
+
+(completions
+  {:prefix "j"
+   :ns "user"
+   :enclosing-sexp "(ns foo.bar (:import ))"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 22})
+
+(xr/check!
+  (spec/and
+    (prefixed-candidates ::specs/class-completions "j")
+    (partial not-any? (comp #{:snippet} :completion-type))))
