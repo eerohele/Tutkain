@@ -437,3 +437,17 @@
   (spec/and
     (prefixed-candidates ::specs/class-completions "j")
     (partial not-any? (comp #{:snippet} :completion-type))))
+
+(intern (the-ns 'user) 'NONE)
+
+;; do not propose non-context completions if there are no context completions
+(completions
+  {:prefix "NONE"
+   :ns "user"
+   :enclosing-sexp "(require '[])"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 12})
+
+(xr/check! empty?)

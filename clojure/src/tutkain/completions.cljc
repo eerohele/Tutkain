@@ -631,7 +631,7 @@
                              (require-completions loc prefix))
       clojure.core/import (let [loc (find-loc form line column)]
                             (import-completions loc prefix))
-      [])))
+      ::none)))
 
 (defn ^:private find-completions
   [{:keys [file ns prefix enclosing-sexp start-line start-column line column] :as message}]
@@ -643,9 +643,10 @@
                     {:features #{:clj :t.a.jvm} :read-cond :allow}
                     start-line
                     start-column)))]
-    (or
-      (not-empty (context-completions (peek forms) prefix line column))
-      (into (local-completions forms message) (candidates prefix ns)))))
+    (let [context-completions (context-completions (peek forms) prefix line column)]
+      (if (not (identical? ::none context-completions))
+        context-completions
+        (into (local-completions forms message) (candidates prefix ns))))))
 
 (defmethod completions :default
   [message]
