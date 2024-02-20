@@ -455,7 +455,11 @@ class TutkainEvaluateCommand(ConnectedTextCommand):
         pass
 
     def highlight_region(self, region):
-        if region and settings.load().get("highlight_evaluated_form", True):
+        if (
+            region
+            and (delay := settings.load().get("highlight_evaluated_form", 3000))
+            and delay > 0
+        ):
             id = "tutkain/eval-" + str(uuid.uuid4())
 
             self.view.add_regions(
@@ -466,7 +470,7 @@ class TutkainEvaluateCommand(ConnectedTextCommand):
                 sublime.RegionFlags.DRAW_NO_FILL,
             )
 
-            sublime.set_timeout_async(lambda: self.view.erase_regions(id), 3000)
+            sublime.set_timeout_async(lambda: self.view.erase_regions(id), delay)
 
     def run(
         self,

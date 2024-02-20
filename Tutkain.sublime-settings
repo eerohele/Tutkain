@@ -137,4 +137,10 @@
   // If you mainly use inline evaluation results, you might want to set this to
   // "false".
   "auto_show_output_panel": true,
+
+  // Upon evaluating a form, temporarily highlight the form for this duration
+  // (in milliseconds).
+  //
+  // To disable the highlighting of forms upon evaluation, set to 0.
+  "highlight_evaluated_form": 3000,
 }
