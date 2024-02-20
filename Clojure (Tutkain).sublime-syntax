@@ -53,7 +53,7 @@ contexts:
   quote:
     - match: '(''){{whitespace}}(?![\(\[\{])'
       captures:
-        1: keyword.operator.macro.clojure
+        1: keyword.operator.macro.clojure meta.quote.clojure
       push:
         - include: forms
         - match: ''

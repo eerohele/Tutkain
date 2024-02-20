@@ -407,3 +407,33 @@
 
 (xr/check! (partial set/subset? #{{:trigger "Date" :type :class}
                                   {:trigger "Deque" :type :class}}))
+
+;; require without braces
+(completions
+  {:prefix "c"
+   :ns "user"
+   :enclosing-sexp "(require )"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 10})
+
+(xr/check!
+  (spec/and
+    (prefixed-candidates ::specs/ns-completions "c")
+    (partial not-any? (comp #{:snippet} :completion-type))))
+
+;; import without parens
+(completions
+  {:prefix "j"
+   :ns "user"
+   :enclosing-sexp "(import )"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 10})
+
+(xr/check!
+  (spec/and
+    (prefixed-candidates ::specs/class-completions "j")
+    (partial not-any? (comp #{:snippet} :completion-type))))

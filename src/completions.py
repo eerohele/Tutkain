@@ -90,7 +90,15 @@ def enclosing_sexp_sans_prefix(view, expr, prefix):
     The prefix is unlikely to resolve, so we must remove it from the
     S-expression to be able to analyze it on the server.
     """
-    before = sublime.Region(expr.open.region.begin(), prefix.begin())
+
+    # If the character preceding the prefix is a quote, strip it, because e.g.
+    # (require ') is a syntax error.
+    if view.match_selector(prefix.begin() - 1, "meta.quote.clojure"):
+        begin = prefix.begin() - 1
+    else:
+        begin = prefix.begin()
+
+    before = sublime.Region(expr.open.region.begin(), begin)
     after = sublime.Region(prefix.end(), expr.close.region.end())
     return view.substr(before) + view.substr(after)
 
@@ -122,7 +130,7 @@ def get_completions(view, prefix, point):
         if (
             view.match_selector(
                 preceding_point,
-                "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | constant.other.keyword",
+                "source.clojure & (meta.symbol - meta.function.parameters - entity.name) | constant.other.keyword | keyword.operator.macro",
             )
             and (dialect := dialects.for_point(view, preceding_point))
             and (client := state.get_client(view.window(), dialect))

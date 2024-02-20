@@ -551,8 +551,15 @@
   [loc prefix]
   ;; When e.g. [clojure.set :refer []], suggest vars in clojure.set.
   (let [node (some-> loc zip/node)]
-    (if (= :refer (second node))
+    (cond
+      (and (sequential? node) (= :refer (second node)))
       (candidates-for-prefix prefix (ns-public-var-candidates (first node)))
+
+      ;; require without braces (e.g. (require 'foo.bar))
+      (= '(require) node)
+      (candidates-for-prefix prefix (ns-candidates))
+
+      :else
       (map (fn [{:keys [trigger] :as candidate}]
              (case trigger
                "clojure.test"
@@ -569,10 +576,17 @@
 (defn import-completions
   [loc prefix]
   (let [head (some-> loc zip/node first)]
-    (if (symbol? head)
+    (cond
+      ;; import without parens (e.g. (import 'foo.bar.Baz))
+      (= 'import head)
+      (class-candidates prefix)
+
+      (symbol? head)
       (map (fn [candidate]
              (update candidate :trigger (fn [trigger] (-> trigger (string/split #"\.") (last)))))
         (class-candidates (str (name head) "." prefix)))
+
+      :else
       (map
         (fn [{:keys [trigger] :as candidate}]
           (let [parts (string/split trigger #"\.")
