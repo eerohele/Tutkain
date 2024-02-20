@@ -634,10 +634,10 @@
       (into (local-completions forms message) (candidates prefix ns)))))
 
 (defmethod completions :default
-  [{:keys [max-completions] :or {max-completions ##Inf} :as message}]
+  [message]
   (try
     (let [completions (find-completions (assoc message :ns (rpc/namespace message)))]
-      (respond-to message {:completions (take max-completions completions)}))
+      (respond-to message {:completions completions}))
     (catch Exception ex
       (respond-to message {:tag :err :debug true :val (pr-str (Throwable->map ex))}))))
 
