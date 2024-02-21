@@ -147,6 +147,10 @@
 (candidates "java.util.Spliterator$" *ns*)
 (xr/check! (spec/coll-of ::specs/nested-class-completion :kind sequential? :min-count 1))
 
+(set (candidates "clojure.core$" *ns*))
+(xr/check!
+  #(not (contains? % {:trigger "clojure.core$bounded_count" :type :class})))
+
 (candidates "mapcat" 'clojure.core)
 (xr/check! ::specs/function-completions)
 
