@@ -274,6 +274,10 @@
             (remove #(.startsWith ^String % "META-INF/"))
             (remove #(.contains ^String % "__"))
             (remove #(re-find #".+\$\d.*" %))
+            ;; Remove classes such as clojure.core$_ and
+            ;; clojure.core$bounded_count no-one ever wants to
+            ;; import.
+            (remove #(re-find #".+\$\P{Lu}.*" %))
             (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
             (map annotate-class)
             (.split (System/getProperty "java.class.path") File/pathSeparator))))
