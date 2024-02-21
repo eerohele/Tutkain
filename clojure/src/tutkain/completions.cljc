@@ -288,8 +288,8 @@
               cat
               ;; Remove anonymous nested classes
               (remove #(re-find #".+\$\d.+\.class" %))
-              ;; Only retain java.* and javax.* to limit memory consumption
               (map #(.. ^String % (replace ".class" "") (replace "/" ".")))
+              ;; Only retain java.* and javax.* to limit memory consumption
               (filter #(or (.startsWith ^String % "java.") (.startsWith ^String % "javax.") (.startsWith ^String % "jdk.")))
               (remove #(re-find #".+\$\d.*" %))
               (map annotate-class)
