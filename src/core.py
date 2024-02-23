@@ -1191,7 +1191,7 @@ class TutkainEventListener(EventListener):
             connection.client.halt()
 
     def on_query_completions(self, view, prefix, locations):
-        if settings.load().get("auto_complete"):
+        if settings.load().get("auto_complete") and state.has_connections():
             point = locations[0]
             return completions.get_completions(view, prefix, point)
 
