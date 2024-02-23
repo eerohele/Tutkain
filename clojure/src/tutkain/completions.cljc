@@ -652,9 +652,9 @@
                     start-line
                     start-column)))]
     (let [context-completions (context-completions (peek forms) prefix line column)]
-      (if (not (identical? ::none context-completions))
-        context-completions
-        (into (local-completions forms message) (candidates prefix ns))))))
+      (if (identical? ::none context-completions)
+        (into (local-completions forms message) (candidates prefix ns))
+        context-completions))))
 
 (defmethod completions :default
   [message]
