@@ -149,7 +149,7 @@ def get_completions(view, prefix, point):
                 "dialect": dialect,
             }
 
-            if (outermost := sexp.outermost(view, point)) and (
+            if (outermost := sexp.crude_outermost(view, point)) and (
                 "analyzer.clj" in client.capabilities
             ):
                 code = enclosing_sexp_sans_prefix(view, outermost, scope)

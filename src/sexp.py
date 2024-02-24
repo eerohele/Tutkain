@@ -313,3 +313,78 @@ def cycle_collection_type(view, edit):
                     new_close_bracket = OPEN[new_open_bracket[-1:]]
                     view.replace(edit, sexp.close.region, new_close_bracket)
                     view.replace(edit, sexp.open.region, new_open_bracket)
+
+
+def crude_find_open(view, point):
+    while point >= 0:
+        line = view.line(point)
+        begin = line.begin()
+
+        if view.match_selector(begin, BEGIN_SELECTORS):
+            return begin
+        else:
+            point = begin - 1
+
+
+def next_non_whitespace_character_at_first_column(view, point):
+    max_point = view.size()
+
+    while point < max_point:
+        ch = view.substr(point)
+
+        if view.rowcol(point)[1] == 0 and not ch.isspace():
+            return ch
+
+        point += 1
+
+    return "\x00"
+
+
+end_point_candidates = set(OPEN.keys()).union({"\x00"})
+
+
+def seems_like_end_point(view, point):
+    return (
+        view.match_selector(point - 1, END_SELECTORS)
+        and next_non_whitespace_character_at_first_column(view, point)
+        in end_point_candidates
+    )
+
+
+def crude_find_close(view, point):
+    max_point = view.size()
+
+    while point < max_point:
+        line = view.line(point)
+        end = line.end()
+
+        if seems_like_end_point(view, end):
+            return end
+        else:
+            point = end + 1
+
+
+def crude_outermost(view, point):
+    """Given a View and a point, return the outermost S-expression at point.
+
+    Like sexp.outermost, but faster and more inaccurate. Relies on the
+    heuristic that ~99% of outermost S-expressions have their open parens
+    on the first column.
+
+    This function therefore returns the incorrect result e.g. when there are
+    two outermost S-expressions on the same line, or when the S-expression that
+    follows the outermost S-expression does not have its open parenthesis in
+    the first column.
+
+    Only finds S-expressions surrounded by parentheses, not brackets or braces."""
+    begin = crude_find_open(view, point)
+    end = crude_find_close(view, point)
+
+    if begin is not None and end is not None:
+        begin_delim = Delimiter(
+            "punctuation.section.parens.begin", Region(begin, begin + 1)
+        )
+
+        end_delim = Delimiter("punctuation.section.parens.end", Region(end - 1, end))
+
+        return make_sexp(view, begin_delim, end_delim)

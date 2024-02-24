@@ -291,3 +291,77 @@ class TestSexp(ViewTestCase):
         )
 
         self.assertEquals(sexp.outermost(self.view, 9).extent(), Region(8, 29))
+
+    def test_crude_outermost(self):
+        self.set_view_content("")
+        outermost = sexp.crude_outermost(self.view, 0)
+        self.assertEquals(outermost, None)
+
+        form = "(a (b))"
+        self.set_view_content(form)
+
+        for n in range(len(form)):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(0, 7))
+
+        form = "(a (b))\n\n(c (d))\n\n(e (f))"
+        self.set_view_content(form)
+
+        for n in range(0, 7):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(0, 7))
+
+        for n in range(9, 16):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(9, 16))
+
+        for n in range(18, 25):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(18, 25))
+
+        form = "(a (b))\n(c (d))"
+        self.set_view_content(form)
+
+        for n in range(0, 7):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(0, 7))
+
+        for n in range(8, 15):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(8, 15))
+
+        form = "(a (b))\n\n\n(c (d))"
+        self.set_view_content(form)
+
+        for n in range(0, 7):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(0, 7))
+
+        form = "(a (b))\n\n\n(c (d))"
+        self.set_view_content(form)
+
+        for n in range(10, 17):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(10, 17))
+
+        # Cases where the crude approach yields the wrong result
+        form = "(a (b))(c (d))"
+        self.set_view_content(form)
+
+        for n in range(0, 14):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(0, 14))
+
+        form = "(a (b)) (c (d))"
+        self.set_view_content(form)
+
+        for n in range(0, 15):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost.extent(), Region(0, 15))
+
+        form = " (a (b)) (c (d))"
+        self.set_view_content(form)
+
+        for n in range(0, 16):
+            outermost = sexp.crude_outermost(self.view, n)
+            self.assertEquals(outermost, None)
