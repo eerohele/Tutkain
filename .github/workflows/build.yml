@@ -17,7 +17,7 @@ jobs:
         os: ["ubuntu-latest", "macOS-latest"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.1
       - if: ${{ matrix.os == 'macOS-latest' }}
         run: brew unlink openssl
       - uses: SublimeText/UnitTesting/actions/setup@v1
@@ -32,8 +32,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        clojure-version: ['1.10.0', '1.11.1', '1.12.0-alpha4']
-        java-version: ['11', '17']
+        clojure-version: ['1.10.0', '1.11.1', '1.12.0-alpha8']
+        java-version: ['11', '21']
         java-distribution: ['temurin', 'zulu']
 
     runs-on: ${{ matrix.os }}
@@ -41,20 +41,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: ${{ matrix.java-distribution }}
           java-version: ${{ matrix.java-version }}
 
-      - uses: DeLaGuardo/setup-clojure@11.0
+      - uses: DeLaGuardo/setup-clojure@12.5
         with:
-          cli: '1.10.3.1075'
+          cli: '1.11.1.1435'
+          bb: '1.1.171'
 
-      - uses: turtlequeue/setup-babashka@v1.5.0
-        with:
-          babashka-version: 1.1.171
-
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4.0.2
         with:
           node-version: '17'
           cache: 'npm'
@@ -64,7 +61,7 @@ jobs:
         working-directory: ./clojure
 
       - name: Cache Maven dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
@@ -72,7 +69,7 @@ jobs:
             ${{ runner.os }}-maven
 
       - name: Cache Git dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.gitlibs
           key: ${{ runner.os }}-gitlibs-${{ hashFiles('**/deps.edn') }}
