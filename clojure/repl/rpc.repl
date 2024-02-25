@@ -146,7 +146,7 @@
 
 (def ret (recv))
 (:val ret)
-(xr/check! (partial re-matches #"(?s).*InterruptedException.*"))
+(xr/check! (partial = ":interrupted\n"))
 
 ;; exception printing
 (send {:op :eval :code ":::5"})

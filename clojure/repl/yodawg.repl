@@ -181,7 +181,7 @@
 (send :repl '(Thread/sleep Integer/MAX_VALUE))
 (send :backchannel {:op :interrupt})
 (recv :backchannel)
-(xr/check! ::ret) ;; InterruptedException
+(xr/check! #{{:tag :err :val ":interrupted\n"}})
 
 ;; *1 works
 (send :backchannel {:op :set-thread-bindings :line 1 :column 1 :id 1})

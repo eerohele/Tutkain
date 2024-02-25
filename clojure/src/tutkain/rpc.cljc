@@ -135,7 +135,7 @@
 
     (some-> repl-thread .interrupt)
     (catch InterruptedException _
-      (respond-to message {:tag :err :val "Interrupted."}))))
+      (respond-to message {:tag :err :val ":interrupted\n"}))))
 
 (defmulti evaluate :dialect)
 
@@ -176,6 +176,8 @@
                                                 (format/pp-str ret)
                                                 (catch Throwable ex
                                                   (format/Throwable->str (ex-info nil {:clojure.error/phase :print-eval-result} ex))))}))
+                                    (catch InterruptedException _
+                                      (respond-to message {:tag :err :val ":interrupted\n"}))
                                     (catch Throwable ex
                                       (.flush ^Writer *out*)
                                       (.flush ^Writer *err*)

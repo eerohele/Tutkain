@@ -130,6 +130,8 @@
                                          (format/Throwable->str (ex-info nil {:clojure.error/phase :print-eval-result} ex)))))
                                    (rpc/update-thread-bindings backchannel (get-thread-bindings))
                                    true))
+                               (catch InterruptedException _
+                                 (rpc/write-err backchannel ":interrupted\n"))
                                (catch Throwable ex
                                  (.flush ^Writer *out*)
                                  (.flush ^Writer *err*)
