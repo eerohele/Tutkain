@@ -49,7 +49,7 @@
                    (map val)
                    (map meta-with-type)
                    (map lookup/prep-meta)
-                   (ns-publics sym-ns))]
+                   (ns-interns sym-ns))]
         (respond-to message {:symbol sym
                              :results (sort-by :name vars)})))))
 
