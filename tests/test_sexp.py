@@ -365,3 +365,9 @@ class TestSexp(ViewTestCase):
         for n in range(0, 16):
             outermost = sexp.crude_outermost(self.view, n)
             self.assertEquals(outermost, None)
+
+        form = "(ns x (:require []\n  [c.d]))\n(defn f [y] y)"
+        self.set_view_content(form)
+
+        outermost = sexp.crude_outermost(self.view, 17)
+        self.assertEquals(outermost.extent(), Region(0, 28))

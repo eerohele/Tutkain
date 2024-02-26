@@ -326,28 +326,12 @@ def crude_find_open(view, point):
             point = begin - 1
 
 
-def next_non_whitespace_character_at_first_column(view, point):
-    max_point = view.size()
-
-    while point < max_point:
-        ch = view.substr(point)
-
-        if view.rowcol(point)[1] == 0 and not ch.isspace():
-            return ch
-
-        point += 1
-
-    return "\x00"
-
-
-end_point_candidates = set(OPEN.keys()).union({"\x00"})
-
-
 def seems_like_end_point(view, point):
-    return (
-        view.match_selector(point - 1, END_SELECTORS)
-        and next_non_whitespace_character_at_first_column(view, point)
-        in end_point_candidates
+    return view.match_selector(point - 1, "punctuation.section.parens.end") and (
+        view.substr(Region(point, point + 2)) == "\n("
+        or view.substr(Region(point, point + 3)) == "\n\n("
+        or view.substr(Region(point, point + 4)) == "\n\n\n("
+        or view.substr(point + 1) == "\x00"
     )
 
 
@@ -378,13 +362,17 @@ def crude_outermost(view, point):
 
     Only finds S-expressions surrounded by parentheses, not brackets or braces."""
     begin = crude_find_open(view, point)
-    end = crude_find_close(view, point)
 
-    if begin is not None and end is not None:
-        begin_delim = Delimiter(
-            "punctuation.section.parens.begin", Region(begin, begin + 1)
-        )
+    if begin is not None:
+        end = crude_find_close(view, point)
 
-        end_delim = Delimiter("punctuation.section.parens.end", Region(end - 1, end))
+        if end is not None:
+            begin_delim = Delimiter(
+                "punctuation.section.parens.begin", Region(begin, begin + 1)
+            )
 
-        return make_sexp(view, begin_delim, end_delim)
+            end_delim = Delimiter(
+                "punctuation.section.parens.end", Region(end - 1, end)
+            )
+
+            return make_sexp(view, begin_delim, end_delim)
