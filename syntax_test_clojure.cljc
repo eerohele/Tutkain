@@ -3545,3 +3545,9 @@
 ;                   ^ punctuation.section.parens.end.edn
 
 ; ^ -meta.sexp
+
+  (comment (inc 1) ,,,)
+; ^ meta.sexp.list.edn punctuation.section.parens.begin.edn
+;  ^^^^^^^ meta.sexp.list.edn meta.reader-form.clojure meta.symbol.clojure meta.function-call.clojure variable.function.clojure
+;         ^^^^^^^^^^^^ meta.sexp.list.edn meta.comment.clojure
+;                     ^ meta.sexp.list.edn punctuation.section.parens.end.edn - meta.comment

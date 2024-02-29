@@ -114,6 +114,13 @@ def handler(completion_list, response, flags):
         completion_list.set_completions(map(completion_item, completions), flags=flags)
 
 
+def intuit_outermost(view, point):
+    if view.match_selector(point, "meta.comment.clojure"):
+        return sexp.outermost(view, point, ignore={"comment"})
+    else:
+        return sexp.crude_outermost(view, point)
+
+
 def get_completions(view, prefix, point):
     preceding_point = point - 1
 
@@ -149,7 +156,7 @@ def get_completions(view, prefix, point):
                 "dialect": dialect,
             }
 
-            if (outermost := sexp.crude_outermost(view, point)) and (
+            if (outermost := intuit_outermost(view, point)) and (
                 "analyzer.clj" in client.capabilities
             ):
                 code = enclosing_sexp_sans_prefix(view, outermost, scope)
