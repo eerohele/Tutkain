@@ -57,25 +57,45 @@ class Client(edn_client.Client):
         self.buffer.write(line + "\n")
         self.buffer.flush()
 
-    def module_loaded(self, response):
+    def modules_loaded(self, response):
         if response.get(edn.Keyword("tag")) == edn.Keyword("ret"):
-            self.capabilities.add(response.get(edn.Keyword("val")))
+            for module in response.get(edn.Keyword("val")):
+                filename = module.get(edn.Keyword("filename"))
+
+                if module.get(edn.Keyword("outcome")) == edn.Keyword("ok"):
+                    self.capabilities.add(filename)
+                else:
+                    log.debug(
+                        {"event": "server/module-load-failure", "filename": filename}
+                    )
+
+            print(self.capabilities)
+        else:
+            error = response.get(edn.Keyword("err"))
+            log.error({"server/module-load-failure": "error", "error": error})
 
     def load_modules(self):
+        modules = []
+
         for filename, requires in self.modules.items():
             path = os.path.join(settings.source_root(), filename)
 
             with open(path, "rb") as file:
-                self.send_op(
-                    {
-                        "op": edn.Keyword("load-base64"),
-                        "path": path,
-                        "filename": filename,
-                        "blob": base64.encode(file.read()),
-                        "requires": requires,
-                    },
-                    self.module_loaded,
+                modules.append(
+                    edn.kwmap(
+                        {
+                            "path": path,
+                            "filename": filename,
+                            "blob": base64.encode(file.read()),
+                            "requires": requires,
+                        }
+                    )
                 )
+
+        self.send_op(
+            {"op": edn.Keyword("load-modules"), "modules": modules},
+            self.modules_loaded,
+        )
 
     @abstractmethod
     def handshake(self):

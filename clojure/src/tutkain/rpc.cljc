@@ -14,7 +14,7 @@
    (java.nio.file LinkOption Files Paths Path)
    (java.io FileNotFoundException IOException StringReader Writer)
    (java.net ServerSocket SocketException URL)
-   (java.util.concurrent Executors ExecutorService FutureTask ScheduledExecutorService TimeUnit ThreadFactory ThreadPoolExecutor ThreadPoolExecutor$CallerRunsPolicy)
+   (java.util.concurrent ArrayBlockingQueue Executors ExecutorService FutureTask ScheduledExecutorService TimeUnit ThreadFactory ThreadPoolExecutor ThreadPoolExecutor$CallerRunsPolicy)
    (java.util.concurrent.atomic AtomicInteger)))
 
 (comment (set! *warn-on-reflection* true) ,,,)
@@ -34,15 +34,21 @@
   [message]
   (respond-to message {:op :echo}))
 
-(defmethod handle :load-base64
-  [{:keys [blob path filename requires] :as message}]
+(defmethod handle :load-modules
+  [{:keys [eval-lock modules] :as message}]
   (try
-    (some->> requires (run! require))
-    (try
-      (base64/load-base64 blob path filename)
-      (respond-to message {:tag :ret :val filename})
-      (catch #?(:bb clojure.lang.ExceptionInfo :clj clojure.lang.Compiler$CompilerException) ex
-        (respond-to message {:tag :err :val (format/Throwable->str ex)})))
+    (let [outcomes (mapv
+                     (fn [{:keys [blob path filename requires]}]
+                       (some->> requires (run! require))
+                       (try
+                         (locking eval-lock (base64/load-base64 blob path filename))
+                         {:filename filename :outcome :ok}
+                         (catch #?(:bb clojure.lang.ExceptionInfo :clj clojure.lang.Compiler$CompilerException) ex
+                           {:filename filename :outcome :err})))
+                     modules)]
+      (respond-to message
+        {:tag :ret
+         :val outcomes}))
     (catch FileNotFoundException ex
       (respond-to message {:tag :err :val (format/Throwable->str ex)}))))
 
@@ -220,7 +226,10 @@
 (defn accept
   [{:keys [add-tap? eventual-out-writer eventual-err-writer thread-bindings xform-in xform-out]
     :or {add-tap? false xform-in identity xform-out identity}}]
-  (let [out *out*
+  (let [handler-service (Executors/newSingleThreadExecutor (make-thread-factory :name-suffix :handler-service))
+        msg-executor (Executors/newCachedThreadPool (make-thread-factory :name-suffix :msg-executor))
+        q (ArrayBlockingQueue. 1024)
+        out *out*
         lock (Object.)
         out-fn (fn [message]
                  (binding [*print-length* nil
@@ -238,7 +247,14 @@
         ;;  ; ClojureScript does not use this. Add option to disable?
         eval-service (Executors/newSingleThreadExecutor (make-thread-factory :name-suffix :eval))
         eval-future (atom nil)
-        debounce (make-debouncer debounce-service)]
+        debounce (make-debouncer debounce-service)
+        ^Callable f (bound-fn []
+                      (while (not (.isInterrupted (Thread/currentThread)))
+                        (let [msg (.take q)]
+                          (.execute msg-executor
+                            (bound-fn []
+                              (handle msg))))))
+        handler-task (.submit handler-service f)]
     (when add-tap? (add-tap tapfn))
     (let [out-writer (PrintWriter-on #(out-fn {:tag :out :val %1}) nil)
           err-writer (PrintWriter-on #(out-fn {:tag :err :val %1}) nil)
@@ -264,7 +280,7 @@
                                           :thread-bindings thread-bindings
                                           :out-fn out-fn)]
                             (try
-                              (handle message)
+                              (.put q message)
                               (.flush ^Writer *err*)
                               true
                               (catch Throwable ex
@@ -281,6 +297,9 @@
                 (when recur? (recur)))))
           (finally
             (some-> debounce-service .shutdownNow)
+            (.cancel handler-task true)
+            (.shutdown msg-executor)
+            (.shutdownNow handler-service)
             (.shutdownNow eval-service)
             (remove-tap tapfn)))))))
 
