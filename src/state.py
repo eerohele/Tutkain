@@ -5,7 +5,7 @@ from typing import TypedDict, Union
 from sublime import View, Window
 
 from ..api import edn
-from . import dialects, repl, status
+from . import dialects, repl, progress, status
 
 WindowId = int
 ViewId = int
@@ -72,6 +72,8 @@ def register_connection(view: View, window: Window, client: repl.Client) -> None
             __state["gutter_markers"][view.id()][tag] = deque([], 1000)
 
     def forget_connection():
+        progress.stop()
+
         del __state["connections"][connection.client.id]
         remaining_connections = list(__state["connections"].values())
 
