@@ -142,5 +142,5 @@
   // (in milliseconds).
   //
   // To disable the highlighting of forms upon evaluation, set to 0.
-  "highlight_evaluated_form": 3000,
+  "highlight_evaluated_form": 0,
 }
