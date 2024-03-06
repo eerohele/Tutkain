@@ -2,9 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.19.2 (alpha) - TBA
+## 0.20.0 (alpha) - TBA
 
+- Add support for auto-completing locals (requires clojure.tools.analyzer in the classpath)
+- Make auto-completion smarter in `ns` forms (requires clojure.tools.analyzer in the classpath)
+
+  For example, given:
+
+  ```clojure
+  (ns foo.bar
+    (:require []))
+  ```
+
+  When your caret is inside the square brackets, Tutkain now only suggests Clojure namespaces when auto-completing. Similarly for Java imports under.
+
+- New connection indicator symbol
+- New progress indicator
+- Only show certain Tutkain commands in the Command Palette when connected to a runtime
+- Improve **Tutkain: Goto Definition** history retention
+- Prevent **Tutkain: ParEdit Semicolon** when typing a character literal (`\;`)
+- Prevent user `*print-level*` and `*print-length*` from interfering with **Tutkain: Add Lib**
+- Use simpler syntax highlighting in syntax-quoted forms
+
+  Tutkain no longer highlights e.g. `def`, `let` etc. in syntax-quoted forms.
+
+- Highlight sole colon (`:`) as an illegal character
+- Improve interruption UX
+- Include private vars when using **Tutkain: Dir**
+- Hide progress indicator on connection close #141
 - Fix **Tutkain: Add Lib** compatibility with Clojure 1.12.0-alpha4 (and newer)
+- Fix printing from within lazy seq when evaluating in RPC mode
+- Fix syntax error exception data when evaluating in RPC mode
+- Fix REPL output syntax highlighting on syntax error in RPC mode
+- Fix expand selection for character literals
+- Exclude native frames when exploring the stack trace using **Tutkain: Explore Stack Trace**
+- Reload init code when connecting
+- Omit commas when pretty-printing evaluation results
+- Fix minor pretty-printing issues
+- Fix syntax definition issues with `extend-protocol`
+- Fix syntax support for `\P{}` in regexps
+- Fix dialect detection for Babashka `.clj` files
+- Omit uninteresting classes (such as `clojure.core$_`) from auto-completion candidates
+- Minor UI improvements
 
 ## 0.19.1 (alpha) - 2023-10-10
 
