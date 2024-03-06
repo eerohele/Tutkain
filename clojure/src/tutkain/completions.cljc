@@ -571,6 +571,11 @@
                  :completion "clojure.test ${5::refer [${1:deftest} ${2:is} ${3:use-fixtures}$4]}$0"
                  :completion-format :snippet)
 
+               "clojure.tools.logging"
+               (assoc candidate
+                 :completion "clojure.tools.logging :as ${1:log}$0"
+                 :completion-format :snippet)
+
                (let [parts (string/split trigger #"\.")
                      snippet (format "${1:%s}" (last parts))
                      completion (str trigger " ${2::as " snippet "}$0")]
