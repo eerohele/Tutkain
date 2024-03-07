@@ -39,7 +39,7 @@
   (try
     (some->> requires (run! require))
     (try
-      (base64/read-base64 blob path filename)
+      (base64/load-base64 blob path filename)
       (respond-to message {:tag :ret :val filename})
       (catch #?(:bb clojure.lang.ExceptionInfo :clj clojure.lang.Compiler$CompilerException) ex
         (respond-to message {:tag :err :val (format/Throwable->str ex)})))

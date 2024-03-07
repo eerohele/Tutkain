@@ -2,7 +2,7 @@
   (:require
    [clojure.java.io :as io]
    [tutkain.format :as format :refer [pp-str]]
-   [tutkain.base64 :refer [read-base64]]
+   [tutkain.base64 :refer [load-base64]]
    [tutkain.rpc :refer [handle relative-to-classpath-root respond-to]])
   (:import
    (java.io Writer)))
@@ -13,7 +13,7 @@
     (let [file-name (some-> file io/file .getName)
           val (locking eval-lock
                 (with-bindings (merge {#'*ns* (find-ns 'user)} @thread-bindings)
-                  (let [ret (read-base64 code (relative-to-classpath-root file) file-name)]
+                  (let [ret (load-base64 code (relative-to-classpath-root file) file-name)]
                     (reset! thread-bindings (get-thread-bindings))
                     (.flush ^Writer *err*)
                     ret)))]

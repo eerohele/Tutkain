@@ -16,8 +16,8 @@
     (InputStreamReader.)
     (LineNumberingPushbackReader.)))
 
-(defn read-base64
-  ([blob] (read-base64 blob "NO_SOURCE_FILE" "NO_SOURCE_PATH"))
+(defn load-base64
+  ([blob] (load-base64 blob "NO_SOURCE_FILE" "NO_SOURCE_PATH"))
   ([blob path filename]
    #?(:bb (binding [*file* path]
             (load-string (String. (.decode base64-decoder blob) "UTF-8")))

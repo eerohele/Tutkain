@@ -5,7 +5,7 @@
    [clojure.test :as test]
    [clojure.walk :as walk]
    [tutkain.format :refer [pp-str Throwable->str]]
-   [tutkain.base64 :refer [read-base64]]
+   [tutkain.base64 :refer [load-base64]]
    [tutkain.rpc :refer [handle respond-to]])
   (:import
    (java.io File)))
@@ -112,7 +112,7 @@
     (let [filename (some-> file File. .getName)
           ns-sym (or (some-> ns symbol) 'user)]
       (clean-ns! (find-ns ns-sym))
-      (locking eval-lock (read-base64 code file filename))
+      (locking eval-lock (load-base64 code file filename))
       (respond-to message (run-tests ns-sym file vars)))
     (catch Throwable ex
       (swap! thread-bindings assoc #'*e ex)
