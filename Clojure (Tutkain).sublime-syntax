@@ -198,8 +198,33 @@ contexts:
       scope: punctuation.section.parens.begin.edn
       push:
         - meta_scope: meta.sexp.list.edn
-        - include: end-paren
-        - include: simple-main
+        - match: '\)'
+          scope: punctuation.section.parens.end.edn
+          pop: true
+        - match: '{{constant}}'
+          scope: meta.reader-form.edn constant.language.edn
+          push:
+            - match: '\)'
+              scope: punctuation.section.parens.end.edn
+              pop: 2
+        - include: metadata
+        - match: '{{qualified_symbol}}'
+          captures:
+            1: meta.namespace.edn
+            2: punctuation.accessor.edn
+          scope: meta.reader-form.clojure meta.symbol.clojure meta.function-call.clojure variable.function.clojure
+          push:
+            - match: '\)'
+              scope: punctuation.section.parens.end.edn
+              pop: 2
+            - include: simple-main
+        - match: (?=\S)
+          push:
+            - match: '\)'
+              scope: punctuation.section.parens.end.edn
+              pop: 2
+            - include: simple-main
+              pop: true
 
   simple-vector:
     - match: '\['

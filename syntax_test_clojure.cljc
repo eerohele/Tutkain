@@ -1217,7 +1217,7 @@
   '(blah blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
+;   ^^^^ meta.symbol meta.function-call.clojure variable.function.clojure
 
   '(quote blah)
 ; ^ keyword.operator.macro.clojure
@@ -1243,14 +1243,14 @@
   `(blah ~blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
+;   ^^^^ meta.symbol meta.function-call.clojure variable.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^^- keyword.operator.macro.clojure
 
   `(blah ~100)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
+;   ^^^^ meta.symbol meta.function-call.clojure variable.function.clojure
 ;        ^ keyword.operator.macro.clojure
 ;         ^^^ constant.numeric
 
@@ -1268,14 +1268,14 @@
   `(blah ~@blah)
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
+;   ^^^^ meta.symbol meta.function-call.clojure variable.function.clojure
 ;        ^^ keyword.operator.macro.clojure
 ;          ^^^^- keyword.operator.macro.clojure
 
   `(blah ~@[10 20 30])
 ; ^ keyword.operator.macro.clojure
 ;  ^ punctuation.section.parens.begin.edn
-;   ^^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
+;   ^^^^ meta.symbol meta.function-call.clojure variable.function.clojure
 ;        ^^ keyword.operator.macro.clojure
 ;          ^ punctuation.section.brackets.begin.edn
 ;           ^^ constant.numeric
@@ -3091,7 +3091,7 @@
 
   `(foo ~bar)
 ; ^ keyword.operator.macro.clojure
-;   ^^^ meta.symbol - meta.function-call.clojure - variable.function.clojure
+;   ^^^ meta.symbol meta.function-call.clojure variable.function.clojure
 ;       ^ keyword.operator.macro.clojure
 ;        ^^^ meta.symbol.edn - keyword
 
