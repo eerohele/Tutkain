@@ -31,7 +31,7 @@ jobs:
   clojure:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         clojure-version: ['1.10.0', '1.11.1', '1.12.0-alpha8']
         java-version: ['11', '21']
         java-distribution: ['temurin', 'zulu']
