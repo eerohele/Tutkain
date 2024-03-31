@@ -42,6 +42,7 @@ All notable changes to this project will be documented in this file.
 - Fix syntax definition issues with `extend-protocol`
 - Fix syntax support for `\P{}` in regexps
 - Fix dialect detection for Babashka `.clj` files
+- Fix caret placement after **Tutkain: New Scratch View in Namespace**
 - Omit uninteresting classes (such as `clojure.core$_`) from auto-completion candidates
 - Minor UI improvements
 

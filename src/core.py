@@ -112,6 +112,12 @@ class TemporaryFileEventListener(ViewEventListener):
     def is_applicable(_, settings):
         return settings.has("tutkain_temp_file")
 
+    def set_selection(self, temp_file):
+        if temp_file.get("selection") == "end":
+            self.view.run_command(
+                "tutkain_goto_point_impl", {"point": self.view.size()}
+            )
+
     def on_load_async(self):
         try:
             if temp_file := self.view.settings().get("tutkain_temp_file"):
@@ -121,11 +127,7 @@ class TemporaryFileEventListener(ViewEventListener):
                 if name := temp_file.get("name"):
                     self.view.set_name(name)
 
-                if temp_file.get("selection") == "end":
-                    self.view.sel().clear()
-                    self.view.sel().add(
-                        sublime.Region(self.view.size(), self.view.size())
-                    )
+                sublime.set_timeout_async(lambda: self.set_selection(temp_file), 0)
 
                 if path and descriptor and os.path.exists(path):
                     os.close(descriptor)
