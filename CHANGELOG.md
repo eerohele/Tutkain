@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file.
 
 - New connection indicator symbol
 - New progress indicator
-- Only show certain Tutkain commands in the Command Palette when connected to a runtime
+- Only show Tutkain commands that require a runtime connection in the Command Palette when actually connected to a runtime
 - Improve **Tutkain: Goto Definition** history retention
 - Prevent **Tutkain: ParEdit Semicolon** when typing a character literal (`\;`)
 - Prevent user `*print-level*` and `*print-length*` from interfering with **Tutkain: Add Lib**
@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - Highlight sole colon (`:`) as an illegal character
 - Improve interruption UX
 - Include private vars when using **Tutkain: Dir**
+- Add progress indicator for RPC evaluations
 - Hide progress indicator on connection close #141
 - Fix **Tutkain: Add Lib** compatibility with Clojure 1.12.0-alpha4 (and newer)
 - Fix printing from within lazy seq when evaluating in RPC mode
@@ -36,13 +37,14 @@ All notable changes to this project will be documented in this file.
 - Fix REPL output syntax highlighting on syntax error in RPC mode
 - Fix expand selection for character literals
 - Exclude native frames when exploring the stack trace using **Tutkain: Explore Stack Trace**
-- Reload init code when connecting
+- Reload REPL init code every time a client connects
 - Omit commas when pretty-printing evaluation results
 - Fix minor pretty-printing issues
 - Fix syntax definition issues with `extend-protocol`
 - Fix syntax support for `\P{}` in regexps
 - Fix dialect detection for Babashka `.clj` files
 - Fix caret placement after **Tutkain: New Scratch View in Namespace**
+- Fix clojure.repl.deps compatibility issue
 - Omit uninteresting classes (such as `clojure.core$_`) from auto-completion candidates
 - Minor UI improvements
 
