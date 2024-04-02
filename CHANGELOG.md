@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.20.0 (alpha) - TBA
+## 0.20.0 (alpha) - 2024-04-02
 
 - Add support for auto-completing locals (requires clojure.tools.analyzer in the classpath)
 - Make auto-completion smarter in `ns` forms (requires clojure.tools.analyzer in the classpath)
@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
     (:require []))
   ```
 
-  When your caret is inside the square brackets, Tutkain now only suggests Clojure namespaces when auto-completing. Similarly for Java imports under.
+  When your caret is inside the square brackets, Tutkain now only suggests Clojure namespaces when auto-completing. Similarly for Java imports.
 
 - New connection indicator symbol
 - New progress indicator
