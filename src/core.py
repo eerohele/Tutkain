@@ -1929,7 +1929,7 @@ class TutkainNewScratchViewInNamespaceCommand(TextCommand):
         def writef(file):
             return file.write(f"(in-ns '{ns})\n\n")
 
-        temp.open_file(window, name, extension, writef)
+        temp.open_file(window, name, extension, writef, selection="end")
 
 
 class TutkainExploreStackTraceCommand(ConnectedTextCommand):

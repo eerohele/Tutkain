@@ -5,7 +5,7 @@ import tempfile
 import sublime
 
 
-def open_file(window, file_name, extension=".clj", writef=None):
+def open_file(window, file_name, extension=".clj", writef=None, selection=None):
     descriptor, temp_path = tempfile.mkstemp(extension)
 
     try:
@@ -25,7 +25,7 @@ def open_file(window, file_name, extension=".clj", writef=None):
                 "path": temp_path,
                 "descriptor": descriptor,
                 "name": file_name,
-                "selection": "end",
+                "selection": selection,
             },
         )
 

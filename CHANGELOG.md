@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.20.1 (alpha) - 2024-04-03
+
+- Fix caret position after **Tutkain: Show ClojureDocs Examples**
+
 ## 0.20.0 (alpha) - 2024-04-02
 
 - Add support for auto-completing locals (requires clojure.tools.analyzer in the classpath)
