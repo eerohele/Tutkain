@@ -3,6 +3,7 @@ on:
     branches:
       - master
       - develop
+  workflow_dispatch:
 
 env:
   SUBLIME_TEXT_VERSION: 4
