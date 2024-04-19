@@ -290,6 +290,15 @@
         "command": "tutkain_new_scratch_view"
     },
 
+    // If your current view defines a Clojure namespace (via ns or in-ns), open
+    // new scratch view in the context of the current namespace.
+    //
+    // You can use this command as an alternative to (comment) forms.
+    {
+        "keys": ["ctrl+c", "ctrl+o"],
+        "command": "tutkain_new_scratch_view_in_namespace"
+    },
+
     // Expand the current selection by one nesting level.
     //
     // For example, given:
