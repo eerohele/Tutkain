@@ -655,11 +655,11 @@
                     reader
                     {:features #{:clj :t.a.jvm} :read-cond :allow}
                     start-line
-                    start-column)))]
-    (let [context-completions (context-completions (peek forms) prefix line column)]
-      (if (identical? ::none context-completions)
-        (into (local-completions forms message) (candidates prefix ns))
-        context-completions))))
+                    start-column)))
+        context-completions (context-completions (peek forms) prefix line column)]
+    (if (identical? ::none context-completions)
+      (into (local-completions forms message) (candidates prefix ns))
+      context-completions)))
 
 (defmethod completions :default
   [message]
