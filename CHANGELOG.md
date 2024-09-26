@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.20.2 (alpha) - 2024-09-26
+
+- Update pprint impl
+- Improve auto-completion in certain non-analyzable forms
+
+  For example, given:
+
+  ```clojure
+  (-> [1] ())
+  ```
+
+  If the caret is inside the empty list, Tutkain would previously refuse to offer any auto-completions. Because the form expands to an invalid form (`(nil 1)`), clojure.tools.analyzer refuses to analyze it. After this change, in this scenario, Tutkain offers global completions (but not locals).
+
 ## 0.20.1 (alpha) - 2024-04-03
 
 - Fix caret position after **Tutkain: Show ClojureDocs Examples**
