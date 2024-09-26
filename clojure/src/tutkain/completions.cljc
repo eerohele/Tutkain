@@ -529,10 +529,15 @@
 
 (defn local-completions
   [forms {:keys [prefix] :as message}]
-  (vec
-    (candidates-for-prefix prefix
-      (map annotate-local
-        (local-symbols (assoc message :forms forms))))))
+  (try
+    (let [locals (local-symbols (assoc message :forms forms))]
+      (vec
+        (candidates-for-prefix prefix
+          (map annotate-local locals))))
+    ;; If we're in a context tools.analyzer can't analyze (for example, (-> )),
+    ;; give up on trying to figure out local completions. This way, we'll
+    ;; still at least get global completions.
+    (catch Exception _ [])))
 
 (defn find-loc
   [form target-line target-column]
