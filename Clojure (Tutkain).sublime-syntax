@@ -446,6 +446,11 @@ contexts:
       captures:
         1: meta.namespace.edn
         2: punctuation.accessor.edn
+    - match: '({{symbol}})(/)(\d{1})'
+      scope: meta.reader-form.edn meta.symbol.edn meta.array-class.clojure
+      captures:
+        2: punctuation.accessor.clojure
+        3: constant.numeric.integer.decimal.clojure
 
   require-list:
     - match: '\('

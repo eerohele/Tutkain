@@ -3551,3 +3551,23 @@
 ;  ^^^^^^^ meta.sexp.list.edn meta.reader-form.clojure meta.symbol.clojure meta.function-call.clojure variable.function.clojure
 ;         ^^^^^^^^^^^^ meta.sexp.list.edn meta.comment.clojure
 ;                     ^ meta.sexp.list.edn punctuation.section.parens.end.edn - meta.comment
+
+
+; # Array classes
+
+
+  String/1
+; ^^^^^^^^ meta.reader-form.edn meta.symbol.edn meta.array-class.clojure
+;       ^ punctuation.accessor.clojure
+;        ^ constant.numeric.integer.decimal.clojure
+
+  java.lang.String/1
+; ^^^^^^^^^^^^^^^^^^ meta.reader-form.edn meta.symbol.edn meta.array-class.clojure
+;                 ^ punctuation.accessor.clojure
+;                  ^ constant.numeric.integer.decimal.clojure
+
+  long/2
+; ^^^^^^ meta.reader-form.edn meta.symbol.edn meta.array-class.clojure
+;     ^ punctuation.accessor.clojure
+;      ^ constant.numeric.integer.decimal.clojure
+
