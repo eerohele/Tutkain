@@ -33,7 +33,7 @@ contexts:
   forms:
     - include: constant
     - include: literal
-    - include: macro_characters
+    - include: macro-characters
     - include: sexp
     - include: symbol
     - include: fallback
@@ -81,9 +81,9 @@ contexts:
 
   numbers:
     - include: deprecated
-    - include: integer_with_radix
-    - include: hex_integer
-    - include: decimal_integer
+    - include: integer-with-radix
+    - include: hex-integer
+    - include: decimal-integer
     - include: float
     - include: ratio
 
@@ -92,14 +92,14 @@ contexts:
       scope: meta.reader-form.edn invalid.deprecated.edn
       pop: true
 
-  integer_with_radix:
+  integer-with-radix:
     - match: '([-+]?)((?:[2-9]|[1-9]\d+)[Rr])[0-9A-Za-z]+{{number_end}}'
       scope: meta.reader-form.edn constant.numeric.integer.other.edn
       captures:
         1: punctuation.definition.numeric.sign.edn
         2: punctuation.definition.numeric.base.edn
 
-  hex_integer:
+  hex-integer:
     - match: '({{sign}})(0[Xx])\h+(N?){{number_end}}'
       scope: meta.reader-form.edn constant.numeric.integer.hexadecimal.edn
       captures:
@@ -107,7 +107,7 @@ contexts:
         2: punctuation.definition.numeric.base.edn
         3: storage.type.numeric.edn
 
-  decimal_integer:
+  decimal-integer:
     - match: '({{sign}})\d+(N?){{number_end}}'
       scope: meta.reader-form.edn constant.numeric.integer.decimal.edn
       captures:
@@ -145,15 +145,15 @@ contexts:
         7: constant.other.symbolic.edn
 
   keywords:
-    - include: qualified_keyword
-    - include: unqualified_keyword
+    - include: qualified-keyword
+    - include: unqualified-keyword
     - include: colon
 
   colon:
     - match: '(:){{end}}'
       scope: invalid.illegal.token
 
-  qualified_keyword:
+  qualified-keyword:
     - match: '(:)([^{{non_symbol_chars}}:]*)(/)({{keyword}})?{{end}}'
       scope: meta.reader-form.edn constant.other.keyword.qualified.edn
       captures:
@@ -161,7 +161,7 @@ contexts:
         2: meta.namespace.edn
         3: punctuation.accessor.edn punctuation.definition.constant.namespace.edn
 
-  unqualified_keyword:
+  unqualified-keyword:
     - match: '(:)(?:/|[^{{non_symbol_chars}}:][[^{{non_symbol_chars}}:]:]*)(?=$|[{{end_chars}}''`#])'
       scope: meta.reader-form.edn constant.other.keyword.unqualified.edn
       captures:
@@ -169,7 +169,7 @@ contexts:
 
   # Macro characters
 
-  macro_characters:
+  macro-characters:
     - include: character
     - include: dispatch
 

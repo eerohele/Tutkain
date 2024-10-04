@@ -13,7 +13,7 @@ contexts:
   simple-forms:
     - include: constant
     - include: literal
-    - include: macro_characters
+    - include: macro-characters
     - include: quoted-list
     - include: quoted-vector
     - include: quoted-map
@@ -28,12 +28,12 @@ contexts:
     - include: simple-forms
 
   keywords:
-    - include: auto_qualified_keyword
-    - include: qualified_keyword
-    - include: unqualified_keyword
+    - include: auto-qualified-keyword
+    - include: qualified-keyword
+    - include: unqualified-keyword
     - include: colon
 
-  auto_qualified_keyword:
+  auto-qualified-keyword:
     - match: '(::)(?=[^:])({{keyword_namespace}})((/)({{keyword}})?)?'
       scope: meta.reader-form.clojure constant.other.keyword.auto-qualified.clojure
       captures:
@@ -41,7 +41,7 @@ contexts:
         2: meta.namespace.clojure
         4: punctuation.accessor.clojure punctuation.definition.constant.namespace.clojure
 
-  macro_characters:
+  macro-characters:
     - include: quote
     - include: character
     - include: deref
@@ -483,7 +483,7 @@ contexts:
               - include: reader-conditional
               - include: symbol
               - include: discard
-              - include: unqualified_keyword
+              - include: unqualified-keyword
           - match: '(:)import{{end}}'
             captures:
               1: punctuation.definition.keyword.clojure
@@ -496,7 +496,7 @@ contexts:
               - include: reader-conditional
               - include: symbol
               - include: discard
-              - include: unqualified_keyword
+              - include: unqualified-keyword
           - include: list-tail
 
   fn-params-2:
@@ -570,7 +570,7 @@ contexts:
     - include: reader-conditional
     - include: map
     - include: symbol
-    - include: macro_characters
+    - include: macro-characters
     - include: numbers
     - include: keywords
     - include: symbolic
