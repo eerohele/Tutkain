@@ -91,7 +91,7 @@
 
 ;; Yields candidates from every imported Java class.
 (def imported-classes (set (map second (mapcat ns-imports (all-ns)))))
-(mapcat #(candidates (str (.getName %) "/") *ns*) imported-classes)
+(mapcat #(candidates (str (.getName ^Class %) "/") *ns*) imported-classes)
 (xr/check! (spec/coll-of ::specs/completion :min-count (count imported-classes)))
 
 ;; Yields instance method candidates of classes imported into the given
@@ -109,27 +109,27 @@
   (partial set/subset? #{{:class "java.time.LocalDate"
                           :trigger ".atTime"
                           :arglists ["int" "int"]
-                          :type :method
+                          :type :instance-method
                           :return-type "java.time.LocalDateTime"}
                          {:class "java.time.LocalDate"
                           :trigger ".atTime"
                           :arglists ["int" "int" "int"]
-                          :type :method
+                          :type :instance-method
                           :return-type "java.time.LocalDateTime"}
                          {:class "java.time.LocalDate"
                           :trigger ".atTime"
                           :arglists ["LocalTime"]
-                          :type :method
+                          :type :instance-method
                           :return-type "java.time.chrono.ChronoLocalDateTime"}
                          {:class "java.time.LocalDate"
                           :trigger ".atTime"
                           :arglists ["int" "int" "int" "int"]
-                          :type :method
+                          :type :instance-method
                           :return-type "java.time.LocalDateTime"}
                          {:class "java.time.LocalDate"
                           :trigger ".atTime"
                           :arglists ["OffsetTime"]
-                          :type :method
+                          :type :instance-method
                           :return-type "java.time.OffsetDateTime"}}))
 
 (candidates "java.util.Date/" *ns*)
@@ -158,6 +158,14 @@
 ;; class that starts with that class name.
 (candidates "clojure.lang" *ns*)
 (xr/check! (prefixed-candidates ::specs/completions "clojure.lang"))
+
+;; Clojure 1.12 instance method values
+(candidates "java.lang.String/." *ns*)
+(xr/check! (prefixed-candidates ::specs/completions "java.lang.String/."))
+
+;; Clojure 1.12 constructor method values
+(candidates "String/new" *ns*)
+(xr/check! (prefixed-candidates ::specs/completions "String/new"))
 
 ;; If a namespace has the same name as an alias in that namespace, Tutkain yields
 ;; candidates for the aliased namespace.
@@ -345,7 +353,7 @@
   (map :trigger)
   (set))
 
-(let [vs (set (filter #(.startsWith % "s") (map name (keys (ns-publics 'clojure.set)))))]
+(let [vs (set (filter #(.startsWith ^String % "s") (map name (keys (ns-publics 'clojure.set)))))]
   (xr/check! (partial = vs)))
 
 ;; require

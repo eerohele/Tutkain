@@ -11,7 +11,7 @@
    [tutkain.java :as java])
   (:import
    (java.io File Reader)
-   (java.lang.reflect Field Member Method Modifier)
+   (java.lang.reflect Constructor Field Member Method Modifier)
    (java.util.jar JarEntry JarFile)))
 
 (when (nil? (System/getProperty "apple.awt.UIElement"))
@@ -190,9 +190,9 @@
   [^Member member]
   (-> member .getModifiers Modifier/isStatic))
 
-(defn ns-java-method-candidates
-  "Given an ns symbol, return all Java methods that are available in the
-  context of that ns."
+(defn ns-instance-method-candidates
+  "Given an ns symbol, return all Java instance methods that are available in
+  the context of that ns."
   [ns]
   (eduction
     (map val)
@@ -202,11 +202,11 @@
             :trigger (str "." (.getName method))
             :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
             :return-type (-> method .getReturnType java/qualified-class-name)
-            :type :method}))
+            :type :instance-method}))
     (distinct)
     (ns-imports ns)))
 
-(comment (seq (ns-java-method-candidates 'clojure.main)))
+(comment (seq (ns-instance-method-candidates 'clojure.main)))
 
 (defn field-candidates
   "Given a java.lang.Class instance, return all field candidates of that class."
@@ -218,21 +218,39 @@
 
 (comment (field-candidates java.lang.String) ,)
 
-(defn static-member-candidates
-  "Given a java.lang.Class instance, return all static member candidates of
-  that class."
-  [^Class class]
+(defn ^:private method-candidates
+  "Given a java.lang.Class instance, return all method candidates of that
+  class."
+  [xform ^Class class]
   (eduction
-    (filter static?)
     (map (fn [^Method method]
            {:class (java/qualified-class-name class)
             :trigger (.getName method)
-            :type :static-method
+            :type (if (static? method) :static-method :instance-method)
             :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes method))
             :return-type (-> method .getReturnType java/qualified-class-name)}))
+    xform
     (.getMethods class)))
 
-(comment (static-member-candidates java.lang.String),)
+(defn constructor-candidates
+  [class]
+  (eduction
+    (map (fn [^Constructor constructor]
+           (let [class-name (java/qualified-class-name class)]
+             {:class class-name
+              :trigger "new"
+              :type :constructor
+              :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes constructor))
+              :return-type class-name})))
+    (.getConstructors class)))
+
+(comment (seq (constructor-candidates java.lang.String)) ,,,)
+
+(defn static-method-candidates
+  [class]
+  (method-candidates (filter (comp #{:static-method} :type)) class))
+
+(comment (seq (static-method-candidates java.lang.String)),)
 
 (defn annotate-class
   [class-name]
@@ -383,6 +401,18 @@
 
 (comment (ns-class-candidates 'clojure.main),)
 
+(defn instance-method-candidates
+  "Given a java.lang.Class instance, return all instance method candidates of that
+  class."
+  [^Class class]
+  (method-candidates
+    (comp
+      (filter (comp #{:instance-method} :type))
+      (map #(update % :trigger (fn [trigger] (str "." trigger)))))
+    class))
+
+(comment (seq (instance-method-candidates java.io.File)) ,,,)
+
 (defn scoped?
   "Given a string prefix, return true if it's scoped.
 
@@ -399,7 +429,11 @@
   (when-let [prefix-scope (first (.split prefix "/"))]
     (let [scope (symbol prefix-scope)
           candidates (if-let [class (java/resolve-class ns scope)]
-                       (concat (static-member-candidates class) (field-candidates class))
+                       (concat
+                         (constructor-candidates class)
+                         (static-method-candidates class)
+                         (field-candidates class)
+                         (instance-method-candidates class))
                        (concat
                          (some-> scope find-ns ns-public-var-candidates)
                          (some-> ns ns-aliases scope ns-public-var-candidates)))]
@@ -466,7 +500,7 @@
       (candidates-for-prefix prefix (keyword-candidates (all-keywords)))
 
       (.startsWith prefix ".")
-      (candidates-for-prefix prefix (ns-java-method-candidates ns))
+      (candidates-for-prefix prefix (ns-instance-method-candidates ns))
 
       (scoped? prefix)
       (candidates-for-prefix prefix (scoped-candidates prefix ns))

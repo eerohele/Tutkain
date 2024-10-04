@@ -14,7 +14,8 @@
     :special-form
     :namespace
     :class
-    :method
+    :constructor
+    :instance-method
     :multimethod
     :field
     :navigation})
