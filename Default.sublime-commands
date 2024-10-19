@@ -44,12 +44,8 @@
         "command": "tutkain_expand_selection"
     },
     {
-        "caption": "Tutkain: Run Tests in Current Namespace",
-        "command": "tutkain_run_tests_in_current_namespace"
-    },
-    {
-        "caption": "Tutkain: Run Test Under Cursor",
-        "command": "tutkain_run_test_under_cursor"
+        "caption": "Tutkain: Run Tests",
+        "command": "tutkain_run_tests"
     },
     {
         "caption": "Tutkain: New Scratch View",

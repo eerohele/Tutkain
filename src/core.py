@@ -227,6 +227,9 @@ class TutkainRunTests(ConnectedTextCommand):
 
 
 class TestScopeInputHandler(ListInputHandler):
+    def name(self):
+        return "scope"
+
     def placeholder(self):
         return "Choose test scope"
 
@@ -236,7 +239,7 @@ class TestScopeInputHandler(ListInputHandler):
                 "Var",
                 "var",
                 details="Run the test defined by the var under the caret.",
-                annotation="<code>deftest</code>",
+                annotation="deftest",
             ),
             sublime.ListInputItem(
                 "Namespace", "ns", details="Run all tests in the current namespace."

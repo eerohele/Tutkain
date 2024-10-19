@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.20.3 (alpha) - 2024-10-19
+
+- Fix using *Tutkain: Run Tests* via the Command Palette
+
 ## 0.20.2 (alpha) - 2024-09-26
 
 - Update pprint impl
