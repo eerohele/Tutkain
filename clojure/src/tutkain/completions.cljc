@@ -675,26 +675,32 @@
 
 (defn context-completions
   [form prefix line column]
-  (let [head (first form)
-        sym (some-> head resolve symbol)]
-    (case sym
-      clojure.core/ns (ns-form-completions form prefix line column)
-      clojure.core/require (let [loc (find-loc form line column)]
-                             (require-completions loc prefix))
-      clojure.core/import (let [loc (find-loc form line column)]
-                            (import-completions loc prefix))
-      ::none)))
+  (if-some [head (first form)]
+    (if (symbol? head)
+      (let [sym (some-> head resolve symbol)]
+        (case sym
+          clojure.core/ns (ns-form-completions form prefix line column)
+          clojure.core/require (let [loc (find-loc form line column)]
+                                 (require-completions loc prefix))
+          clojure.core/import (let [loc (find-loc form line column)]
+                                (import-completions loc prefix))
+          ::none))
+      ::none)
+    ::none))
 
 (defn ^:private find-completions
   [{:keys [file ns prefix enclosing-sexp start-line start-column line column] :as message}]
   (let [forms (when (seq enclosing-sexp)
                 (with-open [^Reader reader (binding [*file* file *ns* ns]
                                              (base64-reader enclosing-sexp))]
-                  (read-forms
-                    reader
-                    {:features #{:clj :t.a.jvm} :read-cond :allow}
-                    start-line
-                    start-column)))
+                  (try
+                    (read-forms
+                      reader
+                      {:features #{:clj :t.a.jvm} :read-cond :allow}
+                      start-line
+                      start-column)
+                    (catch clojure.lang.ExceptionInfo _
+                      []))))
         context-completions (context-completions (peek forms) prefix line column)]
     (if (identical? ::none context-completions)
       (into (local-completions forms message) (candidates prefix ns))

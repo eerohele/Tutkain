@@ -495,3 +495,14 @@
   (spec/and
     (prefixed-candidates ::specs/class-completions "j")
     (partial not-any? (comp #{:snippet} :completion-type))))
+
+(completions
+  {:prefix ":f"
+   :ns "user"
+   :enclosing-sexp "{:f }"
+   :start-line 1
+   :start-column 1
+   :line 1
+   :column 4})
+
+(xr/check! (prefixed-candidates ::specs/completions ":f"))
