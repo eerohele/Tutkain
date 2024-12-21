@@ -235,12 +235,14 @@
 (defn constructor-candidates
   [class]
   (eduction
-    (map (fn [^java.lang.reflect.Constructor constructor]
+    (map (fn [constructor]
            (let [class-name (java/qualified-class-name class)]
              {:class class-name
               :trigger "new"
               :type :constructor
-              :arglists (mapv (memfn ^Class getSimpleName) (.getParameterTypes constructor))
+              :arglists (mapv (memfn ^Class getSimpleName)
+                          #?(:bb (.getParameterTypes constructor)
+                             :clj (.getParameterTypes ^java.lang.reflect.Constructor constructor)))
               :return-type class-name})))
     (.getConstructors class)))
 
