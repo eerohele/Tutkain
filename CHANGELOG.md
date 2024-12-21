@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.21.0 (alpha) - 2024-12-21
+
+- Add auto-completion support for new Clojure 1.12 syntax (e.g. `String/.toUpperCase`)
+- Add syntax definition support for array classes (e.g. `String/1`)
+- Improve auto-completion in non-analyzable forms (e.g. `{:a }`)
+- Update pprint impl
+
 ## 0.20.3 (alpha) - 2024-10-19
 
 - Fix using *Tutkain: Run Tests* via the Command Palette
