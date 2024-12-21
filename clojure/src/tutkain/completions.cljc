@@ -11,7 +11,7 @@
    [tutkain.java :as java])
   (:import
    (java.io File Reader)
-   (java.lang.reflect Constructor Field Member Method Modifier)
+   (java.lang.reflect Field Member Method Modifier)
    (java.util.jar JarEntry JarFile)))
 
 (when (nil? (System/getProperty "apple.awt.UIElement"))
@@ -235,7 +235,7 @@
 (defn constructor-candidates
   [class]
   (eduction
-    (map (fn [^Constructor constructor]
+    (map (fn [^java.lang.reflect.Constructor constructor]
            (let [class-name (java/qualified-class-name class)]
              {:class class-name
               :trigger "new"
