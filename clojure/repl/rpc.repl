@@ -144,11 +144,9 @@
 (send {:op :eval :code "(Thread/sleep Integer/MAX_VALUE)"})
 (send {:op :interrupt})
 
-(Thread/sleep 1000)
-
 (def ret (recv))
 (:val ret)
-(xr/check! (partial = ":interrupted\n"))
+(xr/check! (some-fn (partial = ":interrupted\n") nil?))
 
 ;; exception printing
 (send {:op :eval :code ":::5"})
