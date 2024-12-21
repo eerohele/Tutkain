@@ -12,6 +12,9 @@
    [tutkain.completions :as completions :refer [candidates]]
    [tutkain.completions.specs :as specs :refer [prefixed-candidates]]))
 
+(set! *print-length* nil)
+(set! *print-level* nil)
+
 ;; # Auto-completion
 
 ;; An empty string yields an empty result set.
