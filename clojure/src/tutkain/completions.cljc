@@ -233,7 +233,7 @@
     (.getMethods class)))
 
 (defn constructor-candidates
-  [class]
+  [^Class class]
   (eduction
     (map (fn [constructor]
            (let [class-name (java/qualified-class-name class)]
