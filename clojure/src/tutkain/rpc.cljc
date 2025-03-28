@@ -381,7 +381,7 @@
   (try
     (let [eval-lock (Object.)]
       (resolve-and-apply init `default-init)
-      (prn {:tag :out :val (str "Clojure " (clojure-version) " (Java " (Runtime/version) ")" "\n")})
+      (prn {:tag :out :val (str "Clojure " (clojure-version) " (Java " (Runtime/version) ", PID " (.pid (java.lang.ProcessHandle/current)) ")\n")})
       (accept
         (assoc opts
           :xform-in #(assoc % :eval-lock eval-lock)
