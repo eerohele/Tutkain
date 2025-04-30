@@ -2,16 +2,16 @@
   (:import
    (clojure.lang LineNumberingPushbackReader)
    (java.io ByteArrayInputStream InputStreamReader FileNotFoundException)
-   (java.util Base64)))
+   (java.util Base64 Base64$Decoder)))
 
-(def base64-decoder
+(def ^Base64$Decoder base64-decoder
   (Base64/getDecoder))
 
 (defn base64-reader
   ^LineNumberingPushbackReader [blob]
   (->
     base64-decoder
-    (.decode blob)
+    (.decode ^String blob)
     (ByteArrayInputStream.)
     (InputStreamReader.)
     (LineNumberingPushbackReader.)))
@@ -21,5 +21,5 @@
   ([blob path filename]
    #?(:bb (binding [*file* path]
             (load-string (String. (.decode base64-decoder blob) "UTF-8")))
-      :clj (with-open [reader (base64-reader blob)]
+      :clj (with-open [reader (base64-reader ^bytes blob)]
              (clojure.lang.Compiler/load reader path filename)))))

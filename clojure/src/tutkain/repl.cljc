@@ -47,7 +47,7 @@
   instance of LineNumberingPushbackReader or duplicate its behavior of both
   supporting .unread and collapsing all of CR, LF, and CRLF to a single
   \\newline."
-  [s]
+  [^clojure.lang.LineNumberingPushbackReader s]
   (loop [c (.read s)]
     (cond
      (= c (int \newline)) :line-start
