@@ -1,4 +1,5 @@
-(ns tutkain.repl.loop)
+(ns tutkain.repl.loop
+  (:require [tutkain.repl :as repl]))
 
 (defn inspect
   "Given a (presumably nested) coll, start a loop for navigating the coll.
@@ -9,7 +10,7 @@
 
   For all other inputs, print value at (get-in coll (conj keypath key))."
   [coll & {:keys [print print-length]
-           :or {print prn print-length 16}}]
+           :or {print repl/*print* print-length 16}}]
   (binding [*print-length* print-length]
     (print coll)
     (loop [keypath []]
@@ -74,10 +75,7 @@
                       (recur keypath)))))))))
 
 (comment
-  (require '[tutkain.repl :refer [*print*]])
-
   (inspect {:a [{:b (interpose :| (range 32))}]
             :c [{:d 2}]
-            :e "foobar"}
-    :print *print*)
+            :e "foobar"})
   ,,,)
