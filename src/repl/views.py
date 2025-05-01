@@ -104,7 +104,11 @@ def tap_panel_name(view):
 
 
 def show_output_panel(window):
-    window.run_command("show_panel", {"panel": f"output.{output_panel_name()}"})
+    name = f"output.{output_panel_name()}"
+    active_panel = window.active_panel()
+
+    if name != active_panel:
+        window.run_command("show_panel", {"panel": name})
 
 
 def show_tap_panel(view):
