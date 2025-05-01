@@ -41,7 +41,9 @@
                       (recur keypath))
 
                     (= input '-)
-                    (let [keypath (pop keypath)]
+                    (let [keypath (if (empty? keypath)
+                                    keypath
+                                    (pop keypath))]
                       (print (get-in coll keypath))
                       (recur keypath))
 
