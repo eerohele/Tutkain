@@ -24,7 +24,9 @@ class TestJSClient(PackageTestCase):
         self.client = repl.JSClient(
             server.host, server.port, options={"build_id": edn.Keyword("app")}
         )
-        self.output_view = repl.views.get_or_create_view(self.window, "view")
+        self.output_view = repl.views.get_or_create_view(
+            self.window, "view", edn.Keyword("cljs")
+        )
         repl.start(self.output_view, self.client)
         self.server = server.connection.result(timeout=5)
         self.client.printq.get(timeout=5)

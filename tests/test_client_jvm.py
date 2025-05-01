@@ -36,7 +36,9 @@ class TestJVMClient(PackageTestCase):
         self.window = sublime.active_window()
         server = JvmBackchannelServer().start()
         self.client = repl.JVMClient(server.host, server.port, "repl")
-        self.output_view = repl.views.get_or_create_view(self.window, "view")
+        self.output_view = repl.views.get_or_create_view(
+            self.window, "view", edn.Keyword("clj")
+        )
         repl.start(self.output_view, self.client)
         self.server = server.connection.result(timeout=5)
         self.client.printq.get(timeout=5)
@@ -977,7 +979,9 @@ class TestJvmRpcClient(PackageTestCase):
         self.window = sublime.active_window()
         server = JvmRpcServer().start()
         self.client = repl.JVMClient(server.host, server.port, "rpc")
-        self.output_view = repl.views.get_or_create_view(self.window, "view")
+        self.output_view = repl.views.get_or_create_view(
+            self.window, "view", edn.Keyword("clj")
+        )
         repl.start(self.output_view, self.client)
         self.server = server.connection.result(timeout=5)
         self.client.printq.get(timeout=5)
@@ -1083,7 +1087,9 @@ class TestNoBackchannelJVMClient(PackageTestCase):
             "repl",
             options={"backchannel": {"enabled": False}},
         )
-        self.output_view = repl.views.get_or_create_view(self.window, "view")
+        self.output_view = repl.views.get_or_create_view(
+            self.window, "view", edn.Keyword("clj")
+        )
         repl.start(self.output_view, self.client)
         self.server = server.connection.result(timeout=5)
         self.client.printq.get(timeout=5)  # Swallow the initial prompt

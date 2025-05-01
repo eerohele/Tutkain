@@ -26,7 +26,9 @@ class TestBabashkaClient(PackageTestCase):
         self.window = sublime.active_window()
         server = BabashkaServer().start()
         self.client = repl.BabashkaClient(server.host, server.port, "repl")
-        self.output_view = repl.views.get_or_create_view(self.window, "view")
+        self.output_view = repl.views.get_or_create_view(
+            self.window, "view", edn.Keyword("bb")
+        )
         repl.start(self.output_view, self.client)
         self.server = server.connection.result(timeout=5)
         self.client.printq.get(timeout=5)
