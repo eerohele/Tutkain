@@ -35,16 +35,14 @@
 
           :else (let [v (get-in coll keypath)]
                   (cond
-                    (and (= input 'b) (empty? keypath))
+                    (and (= input '-) (empty? keypath))
                     (do
                       (print :top)
                       (print v)
                       (recur keypath))
 
                     (= input '-)
-                    (let [keypath (if (empty? keypath)
-                                    keypath
-                                    (pop keypath))]
+                    (let [keypath (pop keypath)]
                       (print (get-in coll keypath))
                       (recur keypath))
 
