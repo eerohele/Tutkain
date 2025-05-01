@@ -142,7 +142,7 @@ def find_by_id(window, id):
     return next(filter(lambda view: view.id() == id, window.views()), None)
 
 
-def get_or_create_view(window, output, view_id=None, on_input=lambda _: None):
+def get_or_create_view(window, output, dialect, view_id=None, on_input=lambda _: None):
     if view_id and (view := find_by_id(window, view_id)):
         return view
     elif output == "panel":
@@ -158,9 +158,8 @@ def get_or_create_view(window, output, view_id=None, on_input=lambda _: None):
                 io_panel = window.create_io_panel(name, on_input)
                 input_panel = io_panel[1]
 
-                if active_view := window.active_view():
-                    if syntax := active_view.syntax():
-                        input_panel.assign_syntax(syntax)
+                if syntax := dialects.syntax(dialect):
+                    input_panel.assign_syntax(syntax)
 
                 return io_panel[0]
         else:

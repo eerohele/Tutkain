@@ -930,16 +930,18 @@ class TutkainConnectCommand(WindowCommand):
     ):
         mode = mode or settings.load().get("default_connection_mode")
         active_view = self.window.active_view()
+
+        dialect = edn.Keyword(dialect)
+
         output_view = repl.views.get_or_create_view(
             self.window,
             output,
+            dialect,
             view_id=view_id,
             on_input=lambda input: self.window.active_view().run_command(
                 "tutkain_evaluate", {"scope": "code", "code": input}
             ),
         )
-
-        dialect = edn.Keyword(dialect)
 
         if port := ports.parse(self.window, port, dialect, ports.discover):
             try:

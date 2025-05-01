@@ -17,6 +17,8 @@ DIALECT_NAMES = edn.kwmap(
 SYNTAXES = {
     edn.Keyword("clj"): "Packages/Tutkain/Clojure (Tutkain).sublime-syntax",
     edn.Keyword("cljs"): "Packages/Tutkain/ClojureScript (Tutkain).sublime-syntax",
+    edn.Keyword("cljc"): "Packages/Tutkain/Clojure Common (Tutkain).sublime-syntax",
+    edn.Keyword("bb"): "Packages/Tutkain/Babashka (Tutkain).sublime-syntax",
 }
 
 
@@ -32,8 +34,8 @@ def extension(dialect):
     return DIALECTS.get(dialect, ".clj")
 
 
-def syntax(view):
-    return SYNTAXES.get(for_view(view))
+def syntax(dialect):
+    return SYNTAXES.get(dialect)
 
 
 def name(dialect: edn.Keyword) -> str:
