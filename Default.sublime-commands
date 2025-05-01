@@ -92,10 +92,6 @@
         "command": "tutkain_explore_stack_trace",
     },
     {
-        "caption": "Tutkain: Prompt",
-        "command": "tutkain_prompt"
-    },
-    {
         "caption": "Tutkain: Toggle Auto Switch Namespace",
         "command": "tutkain_toggle_auto_switch_namespace"
     },

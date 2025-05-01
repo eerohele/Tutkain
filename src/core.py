@@ -1987,35 +1987,6 @@ class TutkainExploreStackTraceCommand(ConnectedTextCommand):
             client.send_op({"op": edn.Keyword("resolve-stacktrace")}, self.handler)
 
 
-class TutkainPromptCommand(ConnectedWindowCommand):
-    def on_done(self, client, code):
-        if code:
-            client.evaluate_rpc(code, options={"file": "NO_SOURCE_FILE"})
-            history.update(self.window, code)
-
-        self.prompt(client)
-
-    def on_change(self, _):
-        None
-
-    def prompt(self, client):
-        view = self.window.show_input_panel(
-            "Input: ",
-            history.get(self.window),
-            lambda code: self.on_done(client, code),
-            self.on_change,
-            lambda: None,
-        )
-
-        view.settings().set("tutkain_repl_input_panel", True)
-
-    def run(self):
-        if client := state.get_client(self.window, edn.Keyword("clj")):
-            self.prompt(client)
-        else:
-            self.window.status_message("⚠ Not connected to a REPL.")
-
-
 class TutkainToggleAutoSwitchNamespaceCommand(TextCommand):
     def run(self, _):
         s = settings.load()
