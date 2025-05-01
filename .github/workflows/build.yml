@@ -15,11 +15,11 @@ jobs:
       fail-fast: false
       matrix:
         st-version: [4]
-        os: ["ubuntu-latest", "macOS-latest"]
+        os: ["ubuntu-22.04", "macos-14"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4.1.1
-      - if: ${{ matrix.os == 'macOS-latest' }}
+      - if: ${{ matrix.os == 'macos-14' }}
         run: brew unlink openssl
       - uses: SublimeText/UnitTesting/actions/setup@v1
         with:
@@ -32,7 +32,7 @@ jobs:
   clojure:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14]
+        os: [ubuntu-latest, macos-latest]
         clojure-version: ['1.10.0', '1.11.1', '1.12.0']
         java-version: ['11', '21']
         java-distribution: ['temurin', 'zulu']
