@@ -1,5 +1,6 @@
 from typing import Union
 
+import sublime
 from sublime import View, active_window
 
 from ...api import edn
@@ -141,11 +142,28 @@ def find_by_id(window, id):
     return next(filter(lambda view: view.id() == id, window.views()), None)
 
 
-def get_or_create_view(window, output, view_id=None):
+def get_or_create_view(window, output, view_id=None, on_input=lambda _: None):
     if view_id and (view := find_by_id(window, view_id)):
         return view
     elif output == "panel":
         name = output_panel_name()
-        return window.find_output_panel(name) or window.create_output_panel(name)
+
+        # Sublime Text supports IO panels from version 4198 onwards.
+        if int(sublime.version()) >= 4198:
+            io_panel = window.find_io_panel(name)
+
+            if io_panel != (None, None):
+                return io_panel
+            else:
+                io_panel = window.create_io_panel(name, on_input)
+                input_panel = io_panel[1]
+
+                if active_view := window.active_view():
+                    if syntax := active_view.syntax():
+                        input_panel.assign_syntax(syntax)
+
+                return io_panel[0]
+        else:
+            return window.find_output_panel(name) or window.create_output_panel(name)
     else:
         return window.new_file()
