@@ -153,7 +153,7 @@ def get_or_create_view(window, output, dialect, view_id=None, on_input=lambda _:
             io_panel = window.find_io_panel(name)
 
             if io_panel != (None, None):
-                return io_panel
+                return io_panel[0]
             else:
                 io_panel = window.create_io_panel(name, on_input)
                 input_panel = io_panel[1]
