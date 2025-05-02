@@ -109,7 +109,9 @@ def show_output_panel(window):
     active_panel = window.active_panel()
 
     if name != active_panel:
+        active_view = window.active_view()
         window.run_command("show_panel", {"panel": name})
+        window.focus_view(active_view)
 
 
 def show_tap_panel(view):
