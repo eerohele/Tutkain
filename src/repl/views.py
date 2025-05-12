@@ -162,6 +162,8 @@ def get_or_create_view(window, output, dialect, view_id=None, on_input=lambda _:
 
                 if syntax := dialects.syntax(dialect):
                     input_panel.assign_syntax(syntax)
+                    input_panel.settings().set("auto_complete", True)
+                    input_panel.settings().set("auto_complete_disabled", False)
 
                 return io_panel[0]
         else:
