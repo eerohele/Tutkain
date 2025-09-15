@@ -126,6 +126,7 @@
                                    (try
                                      (pretty-print ret)
                                      (catch Throwable ex
+                                       (set! *e ex)
                                        (rpc/write-err backchannel
                                          (format/Throwable->str (ex-info nil {:clojure.error/phase :print-eval-result} ex)))))
                                    (rpc/update-thread-bindings backchannel (get-thread-bindings))
