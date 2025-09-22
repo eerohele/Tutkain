@@ -19,4 +19,6 @@
                               lambdaisland/kaocha {:mvn/version "1.87.1366"}}
 
                  :extra-paths ["dev/src" "dev/test"]
-                 :jvm-opts ["-Xmx1G" "-Djdk.attach.allowAttachSelf"]}}}
+                 :jvm-opts ["-Xmx1G" "-Djdk.attach.allowAttachSelf"]}
+
+           :clj/v1.12 {:extra-deps {org.clojure/clojure {:mvn/version "1.12.2"}}}}}
