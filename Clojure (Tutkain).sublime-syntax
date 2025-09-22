@@ -1,5 +1,19 @@
 %YAML 1.2
 ---
+# Parts of this syntax definition are based on the original Clojure syntax
+# definition bundled with Sublime Text, distributed under this license:
+#
+#     Permission to copy, use, modify, sell and distribute this
+#     software is granted. This software is provided "as is" without
+#     express or implied warranty, and with no claim as to its
+#     suitability for any purpose.
+#
+# Parts of this syntax definition are based on the EDN and ClojureC syntax
+# definitions[1] in what is now known as the Clojure Sublimed package licensed
+# under the MIT license, copyright (c) 2018 Nikita Prokopov:
+#
+# [1]: https://github.com/tonsky/Clojure-Sublimed/tree/c781793d87e0ebfe30ff9d162779abfe3c8a8a91
+
 # https://www.sublimetext.com/docs/syntax.html
 name: Clojure (Tutkain)
 file_extensions: [clj]
