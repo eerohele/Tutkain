@@ -1,5 +1,6 @@
 {
   "reload_package_on_testing": false,
   "capture_console": true,
-  "verbosity": 2
+  "verbosity": 2,
+  "condition_timeout": 5000
 }
