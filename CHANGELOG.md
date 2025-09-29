@@ -2,12 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.21.0 (alpha) - TBA
+## 0.21.0 (alpha) - 2025-09-29
 
 - Use IO panel instead of output panel [when using an output panel for REPL output](https://tutkain.flowthing.me/#choosing-repl-output-user-interface) (Sublime Text 4198 and newer only)
 - Add auto-completion support for new Clojure 1.12 syntax (e.g. `String/.toUpperCase`)
 - Add syntax definition support for array classes (e.g. `String/1`)
 - Improve auto-completion in non-analyzable forms (e.g. `{:a }`)
+- Print JVM process PID upon connecting
 - Update pprint impl
 
 ## 0.20.3 (alpha) - 2024-10-19
