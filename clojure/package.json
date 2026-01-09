@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "shadow-cljs": "^2.18.0",
+    "shadow-cljs": "^3.3.4",
     "source-map-support": "^0.5.21",
     "ws": "^8.5.0"
   }
