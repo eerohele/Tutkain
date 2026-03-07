@@ -12,7 +12,8 @@
   (try
     (let [file-name (some-> file io/file .getName)
           val (locking eval-lock
-                (with-bindings (merge {#'*ns* (find-ns 'user)} @thread-bindings)
+                (with-bindings (merge {#'*repl* true
+                                       #'*ns* (find-ns 'user)} @thread-bindings)
                   (let [ret (load-base64 code (relative-to-classpath-root file) file-name)]
                     (reset! thread-bindings (get-thread-bindings))
                     (.flush ^Writer *err*)
