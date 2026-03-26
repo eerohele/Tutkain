@@ -274,6 +274,12 @@ class TestSexp(ViewTestCase):
         self.view.run_command("tutkain_cycle_collection_type")
         self.assertEquals('#{"a" "b"}', self.view_content())
 
+    def test_cycle_collection_type_string_in_coll(self):
+        self.set_view_content("""["a"]""")
+        self.set_selections((2, 2))
+        self.view.run_command("tutkain_cycle_collection_type")
+        self.assertEquals("""{"a"}""", self.view_content())
+
     @skip("not implemented")
     def test_cycle_collection_type_cursor_position(self):
         self.set_view_content("{a b} {c d}")

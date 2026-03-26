@@ -71,9 +71,10 @@ java.
 
 (defmacro break []
   `(clojure.main/repl
-     :init #(println "<<<DEBUG>>>")
      :need-prompt (constantly false)
-     :prompt (constantly "")
+     :prompt (constantly
+               (binding [*print-level* 2 *print-length* 4]
+                 (prn {:locals (local-context)})))
      :read readr
      :eval (partial contextual-eval (local-context))
      :print tutkain.repl/*print*))

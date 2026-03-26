@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import textwrap
 import uuid
 from functools import partial
@@ -1158,6 +1159,9 @@ def symbol_at_point(view, point):
 class TutkainEventListener(EventListener):
     def on_init(self, views):
         reconnect(views)
+
+    def on_load_async(self, view):
+        view.run_command("tutkain_fold_comment_forms")
 
     def on_selection_modified_async(self, view):
         if settings.load().get("highlight_locals", True) and (sel := view.sel()):
@@ -2398,3 +2402,70 @@ class TutkainAddLibCommand(ConnectedWindowCommand):
             self.window.status_message(
                 f"⚠ Not connected to a {dialects.name(dialect)} REPL."
             )
+
+
+class TutkainFoldCommentFormsCommand(TextCommand):
+    def run(self, _):
+        regions = self.view.find_by_selector("meta.comment")
+
+        for region in regions:
+            if self.view.is_folded(region):
+                self.view.unfold(region)
+            else:
+                self.view.fold(region)
+
+
+class TutkainRunExternalFormatterCommand(TextCommand):
+    def format(self, edit, input_str):
+        root_dir = self.view.window().folders()[0]
+
+        process_result = subprocess.run(
+            sublime.expand_variables(
+                [
+                    "/usr/local/bin/cljfmt",
+                    "--config",
+                    "${root_dir}/cljfmt.edn",
+                    "fix",
+                    "-",
+                ],
+                {"root_dir": root_dir},
+            ),
+            input=input_str,
+            text=True,
+            capture_output=True,
+        )
+
+        return process_result.stdout
+
+    def run(self, edit, scope="outermost"):
+        for region in self.view.sel():
+            if not region.empty():
+                input_str = self.view.substr(region)
+                output_str = self.format(edit, input_str)
+                self.view.replace(edit, region, output_str)
+            elif scope == "view":
+                region = sublime.Region(0, self.view.size())
+                input_str = self.view.substr(region)
+                output_str = self.format(edit, input_str)
+                self.view.replace(edit, region, output_str)
+            elif scope == "outermost":
+                if outermost := sexp.outermost(self.view, region.begin()):
+                    root_dir = self.view.window().folders()[0]
+
+                    process_result = subprocess.run(
+                        sublime.expand_variables(
+                            [
+                                "/usr/local/bin/cljfmt",
+                                "--config",
+                                "${root_dir}/cljfmt.edn",
+                                "fix",
+                                "-",
+                            ],
+                            {"root_dir": root_dir},
+                        ),
+                        input=outermost.__str__(),
+                        text=True,
+                        capture_output=True,
+                    )
+
+                    self.view.replace(edit, outermost.extent(), process_result.stdout)

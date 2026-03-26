@@ -139,4 +139,12 @@
         "caption": "Tutkain: Add Lib",
         "command": "tutkain_add_lib"
     },
+    {
+        "caption": "Tutkain: Fold Comment Forms",
+        "command": "tutkain_fold_comment_forms"
+    },
+    {
+        "caption": "Tutkain: Run External Formatter",
+        "command": "tutkain_run_external_formatter"
+    },
 ]
