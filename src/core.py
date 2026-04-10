@@ -958,7 +958,7 @@ class TutkainConnectCommand(WindowCommand):
                 )
             except ConnectionRefusedError:
                 output_view.close()
-                self.window.status_message(f"⚠ connection to {host}:{port} refused.")
+                self.window.status_message(f"⚠ Connection to {host}:{port} refused.")
             finally:
                 self.window.focus_view(active_view)
         else:
