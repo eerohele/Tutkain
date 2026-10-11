@@ -113,15 +113,15 @@ def find_previous(view, point):
             elif view.match_selector(point - 1, selectors.SEXP_END):
                 innermost = sexp.innermost(view, point, edge="backward").extent()
                 return absorb_macro_characters(view, innermost)
-            elif view.match_selector(point - 1, "meta.reader-form"):
-                form = selectors.expand_by_selector(view, point - 1, "meta.reader-form")
-                return absorb_macro_characters(view, form)
             elif not view.match_selector(
                 point, "meta.tagged-element.element"
             ) and view.match_selector(point - 1, "meta.tagged-element.element"):
                 return selectors.expand_by_selector(
                     view, point - 1, "meta.tagged-element"
                 )
+            elif view.match_selector(point - 1, "meta.reader-form"):
+                form = selectors.expand_by_selector(view, point - 1, "meta.reader-form")
+                return absorb_macro_characters(view, form)
             else:
                 point -= 1
 

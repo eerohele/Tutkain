@@ -46,6 +46,18 @@ class TestParedit(ViewTestCase):
         self.view.run_command("tutkain_paredit_backward")
         self.assertEqual([(0, 0)], self.selections())
 
+    def test_forward_backward_tagged_literal(self):
+        self.set_view_content("#foo 1 #bar 2 :a")
+        self.set_selections((0, 0))
+        self.view.run_command("tutkain_paredit_forward")
+        self.assertEqual([(6, 6)], self.selections())
+        self.view.run_command("tutkain_paredit_forward")
+        self.assertEqual([(13, 13)], self.selections())
+        self.view.run_command("tutkain_paredit_backward")
+        self.assertEqual([(7, 7)], self.selections())
+        self.view.run_command("tutkain_paredit_backward")
+        self.assertEqual([(0, 0)], self.selections())
+
     def test_forward_backward_extend(self):
         self.set_view_content('(foo (bar) baz "qux" 1/2 ::quux/quuz)')
         self.set_selections((1, 1))
