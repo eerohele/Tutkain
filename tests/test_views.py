@@ -36,7 +36,7 @@ class TestConfigure(TestCase):
             configured_view.settings().to_dict().items()
         ):
             if settings_name in views.REPL_VIEW_DEFAULT_SETTINGS:
-                self.assertEquals(
+                self.assertEqual(
                     views.REPL_VIEW_DEFAULT_SETTINGS[settings_name], settings_value
                 )
 
@@ -52,9 +52,9 @@ class TestConfigure(TestCase):
 
         # View settings must match the settings passed to configure:
 
-        self.assertEquals(11, configured_view.settings().get("font_size"))
-        self.assertEquals(False, configured_view.settings().get("word_wrap"))
-        self.assertEquals(1, configured_view.settings().get("scroll_past_end"))
+        self.assertEqual(11, configured_view.settings().get("font_size"))
+        self.assertEqual(False, configured_view.settings().get("word_wrap"))
+        self.assertEqual(1, configured_view.settings().get("scroll_past_end"))
 
         # Test internal settings overwrites:
 
@@ -69,10 +69,10 @@ class TestConfigure(TestCase):
         # Internal settings can't be overwritten by the user,
         # so the provided settings above doesn't matter:
 
-        self.assertEquals(
+        self.assertEqual(
             "clj", configured_view.settings().get("tutkain_repl_view_dialect")
         )
-        self.assertEquals(
+        self.assertEqual(
             "localhost", configured_view.settings().get("tutkain_repl_host")
         )
-        self.assertEquals(1234, configured_view.settings().get("tutkain_repl_port"))
+        self.assertEqual(1234, configured_view.settings().get("tutkain_repl_port"))

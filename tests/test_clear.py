@@ -39,8 +39,8 @@ class TestClear(TestCase):
 
         self.window.run_command("tutkain_clear_output_view")
 
-        self.assertEquals("", view_content(self.repl_view))
-        self.assertEquals("", view_content(self.tap_panel))
+        self.assertEqual("", view_content(self.repl_view))
+        self.assertEqual("", view_content(self.tap_panel))
 
         # Explicit pass "tap" and "repl":
 
@@ -52,8 +52,8 @@ class TestClear(TestCase):
 
         self.window.run_command("tutkain_clear_output_view", {"views": ["tap", "repl"]})
 
-        self.assertEquals("", view_content(self.repl_view))
-        self.assertEquals("", view_content(self.tap_panel))
+        self.assertEqual("", view_content(self.repl_view))
+        self.assertEqual("", view_content(self.tap_panel))
 
         # Clear "tap" only:
 
@@ -65,8 +65,8 @@ class TestClear(TestCase):
 
         self.window.run_command("tutkain_clear_output_view", {"views": ["tap"]})
 
-        self.assertEquals("foo", view_content(self.repl_view))
-        self.assertEquals("", view_content(self.tap_panel))
+        self.assertEqual("foo", view_content(self.repl_view))
+        self.assertEqual("", view_content(self.tap_panel))
 
         # Clear "repl" only:
 
@@ -78,8 +78,8 @@ class TestClear(TestCase):
 
         self.window.run_command("tutkain_clear_output_view", {"views": ["repl"]})
 
-        self.assertEquals("", view_content(self.repl_view))
-        self.assertEquals("bar", view_content(self.tap_panel))
+        self.assertEqual("", view_content(self.repl_view))
+        self.assertEqual("bar", view_content(self.tap_panel))
 
         # Clear none:
 
@@ -91,5 +91,5 @@ class TestClear(TestCase):
 
         self.window.run_command("tutkain_clear_output_view", {"views": []})
 
-        self.assertEquals("foo", view_content(self.repl_view))
-        self.assertEquals("bar", view_content(self.tap_panel))
+        self.assertEqual("foo", view_content(self.repl_view))
+        self.assertEqual("bar", view_content(self.tap_panel))

@@ -57,27 +57,27 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("(inc 1)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
         self.eval_context(file=file)
-        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.assertEqual("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_outermost(self):
         self.set_view_content("(comment (inc 1) (inc 2))")
         self.set_selections((9, 9), (17, 17))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
         self.eval_context(column=10)
-        self.assertEquals(input("(inc 2)\n"), self.get_print())
+        self.assertEqual(input("(inc 2)\n"), self.get_print())
         self.eval_context(column=18)
-        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.assertEqual("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals("(inc 2)\n", self.server.recv())
+        self.assertEqual("(inc 2)\n", self.server.recv())
         self.server.send("3")
-        self.assertEquals(ret("2\n"), self.get_print())
-        self.assertEquals(ret("3\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
+        self.assertEqual(ret("3\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_outermost_empty(self):
@@ -91,11 +91,11 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
-        self.assertEquals(input("(range 10)\n"), self.get_print())
+        self.assertEqual(input("(range 10)\n"), self.get_print())
         self.eval_context(column=10)
-        self.assertEquals("(range 10)\n", self.server.recv())
+        self.assertEqual("(range 10)\n", self.server.recv())
         self.server.send("(0 1 2 3 4 5 6 7 8 9)")
-        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
+        self.assertEqual(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_eval_outermost_ns_auto_switch_disabled(self):
@@ -104,72 +104,72 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command(
             "tutkain_evaluate", {"scope": "outermost", "auto_switch_namespace": False}
         )
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
         self.eval_context(column=14, ns=None)
-        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.assertEqual("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_up_to_point(self):
         self.set_view_content("()")
         self.set_selections((1, 1))
         self.view.run_command("tutkain_evaluate", {"scope": "up_to_point"})
-        self.assertEquals(input("()\n"), self.get_print())
+        self.assertEqual(input("()\n"), self.get_print())
         self.eval_context(column=2)
-        self.assertEquals("()\n", self.server.recv())
+        self.assertEqual("()\n", self.server.recv())
         self.server.send("()")
-        self.assertEquals(ret("()\n"), self.get_print())
+        self.assertEqual(ret("()\n"), self.get_print())
 
         self.set_view_content("(-> 1 inc dec)")
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "up_to_point"})
-        self.assertEquals(input("(-> 1 inc)\n"), self.get_print())
+        self.assertEqual(input("(-> 1 inc)\n"), self.get_print())
         self.eval_context(column=10)
-        self.assertEquals("(-> 1 inc)\n", self.server.recv())
+        self.assertEqual("(-> 1 inc)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
         self.set_view_content("(-> 1 inc dec) (-> 2 dec inc)")
         self.set_selections((9, 9), (24, 24))
         self.view.run_command("tutkain_evaluate", {"scope": "up_to_point"})
-        self.assertEquals(input("(-> 1 inc)\n"), self.get_print())
-        self.assertEquals(input("(-> 2 dec)\n"), self.get_print())
+        self.assertEqual(input("(-> 1 inc)\n"), self.get_print())
+        self.assertEqual(input("(-> 2 dec)\n"), self.get_print())
         self.eval_context(column=10)
         self.eval_context(column=25)
-        self.assertEquals("(-> 1 inc)\n", self.server.recv())
-        self.assertEquals("(-> 2 dec)\n", self.server.recv())
+        self.assertEqual("(-> 1 inc)\n", self.server.recv())
+        self.assertEqual("(-> 2 dec)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
         self.server.send("1")
-        self.assertEquals(ret("1\n"), self.get_print())
+        self.assertEqual(ret("1\n"), self.get_print())
 
         self.set_selections((0, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "up_to_point"})
-        self.assertEquals(input("(-> 1 inc)\n"), self.get_print())
+        self.assertEqual(input("(-> 1 inc)\n"), self.get_print())
         self.eval_context(column=10)
-        self.assertEquals("(-> 1 inc)\n", self.server.recv())
+        self.assertEqual("(-> 1 inc)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
         self.set_selections((1, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "up_to_point"})
-        self.assertEquals(input("(-> 1 inc)\n"), self.get_print())
+        self.assertEqual(input("(-> 1 inc)\n"), self.get_print())
         self.eval_context(column=10)
-        self.assertEquals("(-> 1 inc)\n", self.server.recv())
+        self.assertEqual("(-> 1 inc)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
         self.set_view_content("(a) (b) (c)")
         self.set_selections((7, 7))
         self.view.run_command("tutkain_evaluate", {"scope": "up_to_point"})
-        self.assertEquals(input("(a) (b)\n"), self.get_print())
+        self.assertEqual(input("(a) (b)\n"), self.get_print())
         self.eval_context(column=8)
-        self.assertEquals("(a) (b)\n", self.server.recv())
+        self.assertEqual("(a) (b)\n", self.server.recv())
         self.server.send("1")
-        self.assertEquals(ret("1\n"), self.get_print())
+        self.assertEqual(ret("1\n"), self.get_print())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
         self.view.assign_syntax("Markdown.sublime-syntax")
         self.set_view_content(
@@ -180,11 +180,11 @@ class TestJVMClient(PackageTestCase):
         )
         self.set_selections((12, 12))
         self.view.run_command("tutkain_evaluate", {"scope": "up_to_point"})
-        self.assertEquals(input("1\n"), self.get_print())
+        self.assertEqual(input("1\n"), self.get_print())
         self.eval_context(line=2, column=2)
-        self.assertEquals("1\n", self.server.recv())
+        self.assertEqual("1\n", self.server.recv())
         self.server.send("1")
-        self.assertEquals(ret("1\n"), self.get_print())
+        self.assertEqual(ret("1\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_empty_string(self):
@@ -202,27 +202,27 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("42 84")
         self.set_selections((0, 0), (3, 3))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
-        self.assertEquals(input("42\n"), self.get_print())
+        self.assertEqual(input("42\n"), self.get_print())
         self.eval_context()
-        self.assertEquals(input("84\n"), self.get_print())
+        self.assertEqual(input("84\n"), self.get_print())
         self.eval_context(column=4)
-        self.assertEquals("42\n", self.server.recv())
+        self.assertEqual("42\n", self.server.recv())
         self.server.send("42")
-        self.assertEquals(ret("42\n"), self.get_print())
-        self.assertEquals("84\n", self.server.recv())
+        self.assertEqual(ret("42\n"), self.get_print())
+        self.assertEqual("84\n", self.server.recv())
         self.server.send("84")
-        self.assertEquals(ret("84\n"), self.get_print())
+        self.assertEqual(ret("84\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_ns_variable(self):
         self.set_view_content("(ns foo.bar)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"code": "(in-ns '${ns})"})
-        self.assertEquals(input("(in-ns 'foo.bar)\n"), self.get_print())
+        self.assertEqual(input("(in-ns 'foo.bar)\n"), self.get_print())
         self.eval_context(ns=edn.Symbol("foo.bar"))
-        self.assertEquals("(in-ns 'foo.bar)\n", self.server.recv())
+        self.assertEqual("(in-ns 'foo.bar)\n", self.server.recv())
         self.server.send("""#object[clojure.lang.Namespace 0x4a1c0752 "foo.bar"]""")
-        self.assertEquals(
+        self.assertEqual(
             ret("""#object[clojure.lang.Namespace 0x4a1c0752 "foo.bar"]\n"""),
             self.get_print(),
         )
@@ -232,11 +232,11 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command(
             "tutkain_evaluate", {"code": "(+ 1 2 3)", "auto_switch_namespace": False}
         )
-        self.assertEquals(input("(+ 1 2 3)\n"), self.get_print())
+        self.assertEqual(input("(+ 1 2 3)\n"), self.get_print())
         self.eval_context(ns=None)
-        self.assertEquals("(+ 1 2 3)\n", self.server.recv())
+        self.assertEqual("(+ 1 2 3)\n", self.server.recv())
         self.server.send("""6""")
-        self.assertEquals(ret("""6\n"""), self.get_print())
+        self.assertEqual(ret("""6\n"""), self.get_print())
 
     # @unittest.SkipTest
     def test_file_variable(self):
@@ -248,17 +248,17 @@ class TestJVMClient(PackageTestCase):
             "tutkain_evaluate",
             {"code": """((requiring-resolve 'cognitect.transcriptor/run) "${file}")"""},
         )
-        self.assertEquals(
+        self.assertEqual(
             input(f"""((requiring-resolve 'cognitect.transcriptor/run) "{file}")\n"""),
             self.get_print(),
         )
         self.eval_context(file=file)
-        self.assertEquals(
+        self.assertEqual(
             f"""((requiring-resolve 'cognitect.transcriptor/run) "{file}")\n""",
             self.server.recv(),
         )
         self.server.send("nil")
-        self.assertEquals(ret("nil\n"), self.get_print())
+        self.assertEqual(ret("nil\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_parameterized(self):
@@ -268,43 +268,43 @@ class TestJVMClient(PackageTestCase):
             "tutkain_evaluate",
             {"code": "((requiring-resolve 'clojure.data/diff) $0 $1)"},
         )
-        self.assertEquals(
+        self.assertEqual(
             input("((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n"),
             self.get_print(),
         )
         self.eval_context()
-        self.assertEquals(
+        self.assertEqual(
             "((requiring-resolve 'clojure.data/diff) {:a 1} {:b 2})\n",
             self.server.recv(),
         )
         self.server.send("({:a 1} {:b 2} nil)")
-        self.assertEquals(ret("({:a 1} {:b 2} nil)\n"), self.get_print())
+        self.assertEqual(ret("({:a 1} {:b 2} nil)\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_eval_in_ns(self):
         self.view.run_command("tutkain_evaluate", {"code": "(reset)", "ns": "foo.bar"})
-        self.assertEquals(input("(reset)\n"), self.get_print())
+        self.assertEqual(input("(reset)\n"), self.get_print())
         self.eval_context(ns=edn.Symbol("foo.bar"))
-        self.assertEquals("(reset)\n", self.server.recv())
+        self.assertEqual("(reset)\n", self.server.recv())
         self.server.send("nil")
-        self.assertEquals(ret("nil\n"), self.get_print())
+        self.assertEqual(ret("nil\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_ns(self):
         self.set_view_content("(ns foo.bar) (ns baz.quux) (defn x [y] y)")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "ns"})
-        self.assertEquals(input("(ns foo.bar)\n"), self.get_print())
+        self.assertEqual(input("(ns foo.bar)\n"), self.get_print())
         self.eval_context(ns=edn.Symbol("foo.bar"))
-        self.assertEquals(input("(ns baz.quux)\n"), self.get_print())
+        self.assertEqual(input("(ns baz.quux)\n"), self.get_print())
         # TODO: ns here is unintuitive, should be baz.quux maybe?
         self.eval_context(column=14, ns=edn.Symbol("foo.bar"))
-        self.assertEquals("(ns foo.bar)\n", self.server.recv())
-        self.assertEquals("(ns baz.quux)\n", self.server.recv())
+        self.assertEqual("(ns foo.bar)\n", self.server.recv())
+        self.assertEqual("(ns baz.quux)\n", self.server.recv())
         self.server.send("nil")  # foo.bar
-        self.assertEquals(ret("nil\n"), self.get_print())
+        self.assertEqual(ret("nil\n"), self.get_print())
         self.server.send("nil")  # baz.quux
-        self.assertEquals(ret("nil\n"), self.get_print())
+        self.assertEqual(ret("nil\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_view(self):
@@ -315,7 +315,7 @@ class TestJVMClient(PackageTestCase):
         message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
-        self.assertEquals(
+        self.assertEqual(
             {
                 edn.Keyword("op"): edn.Keyword("load"),
                 edn.Keyword("code"): base64.encode(
@@ -339,7 +339,7 @@ class TestJVMClient(PackageTestCase):
         message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
-        self.assertEquals(
+        self.assertEqual(
             {
                 edn.Keyword("op"): edn.Keyword("load"),
                 edn.Keyword("code"): base64.encode(
@@ -360,7 +360,7 @@ class TestJVMClient(PackageTestCase):
         )
 
         self.server.backchannel.send(response)
-        self.assertEquals(response, self.get_print())
+        self.assertEqual(response, self.get_print())
 
     # @unittest.SkipTest
     def test_view_common(self):
@@ -374,7 +374,7 @@ class TestJVMClient(PackageTestCase):
         message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
-        self.assertEquals(
+        self.assertEqual(
             {
                 edn.Keyword("op"): edn.Keyword("load"),
                 edn.Keyword("code"): base64.encode(
@@ -396,42 +396,42 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
         self.eval_context(column=3)
 
-        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.assertEqual("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
         self.set_view_content("#_(inc 1)")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
         self.eval_context(column=3)
 
-        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.assertEqual("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
         self.set_view_content("(inc #_(dec 2) 4)")
         self.set_selections((14, 14))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
-        self.assertEquals(input("(dec 2)\n"), self.get_print())
+        self.assertEqual(input("(dec 2)\n"), self.get_print())
         self.eval_context(column=8)
 
-        self.assertEquals("(dec 2)\n", self.server.recv())
+        self.assertEqual("(dec 2)\n", self.server.recv())
         self.server.send("1")
-        self.assertEquals(ret("1\n"), self.get_print())
+        self.assertEqual(ret("1\n"), self.get_print())
 
         self.set_view_content("#_:a")
         self.set_selections((2, 2))
         self.view.run_command("tutkain_evaluate", {"scope": "form"})
-        self.assertEquals(input(":a\n"), self.get_print())
+        self.assertEqual(input(":a\n"), self.get_print())
         self.eval_context(column=3)
 
-        self.assertEquals(":a\n", self.server.recv())
+        self.assertEqual(":a\n", self.server.recv())
         self.server.send(":a")
-        self.assertEquals(ret(":a\n"), self.get_print())
+        self.assertEqual(ret(":a\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_lookup(self):
@@ -446,7 +446,7 @@ class TestJVMClient(PackageTestCase):
 
             response = edn.read(self.server.backchannel.recv())
 
-            self.assertEquals(
+            self.assertEqual(
                 {
                     edn.Keyword("op"): edn.Keyword("lookup"),
                     edn.Keyword("ident"): "rand",
@@ -468,7 +468,7 @@ class TestJVMClient(PackageTestCase):
 
             response = edn.read(self.server.backchannel.recv())
 
-            self.assertEquals(
+            self.assertEqual(
                 {
                     edn.Keyword("op"): edn.Keyword("lookup"),
                     edn.Keyword("ident"): "foo/bar",
@@ -491,7 +491,7 @@ class TestJVMClient(PackageTestCase):
 
         response = edn.read(self.server.backchannel.recv())
 
-        self.assertEquals(
+        self.assertEqual(
             {
                 edn.Keyword("op"): edn.Keyword("lookup"),
                 edn.Keyword("ident"): "map",
@@ -511,9 +511,9 @@ class TestJVMClient(PackageTestCase):
     #     self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
     #     self.eval_context()
 
-    #     self.assertEquals(f"user=> {code}\n", self.get_print())
+    #     self.assertEqual(f"user=> {code}\n", self.get_print())
 
-    #     self.assertEquals(code + "\n", self.server.recv())
+    #     self.assertEqual(code + "\n", self.server.recv())
     #     response = "x" * n
     #     self.server.send(response)
 
@@ -522,9 +522,9 @@ class TestJVMClient(PackageTestCase):
     #     ]
 
     #     for chunk in chunks[:-1]:
-    #         self.assertEquals(chunk, self.get_print())
+    #         self.assertEqual(chunk, self.get_print())
 
-    #     self.assertEquals(chunks[-1] + "\n", self.get_print())
+    #     self.assertEqual(chunks[-1] + "\n", self.get_print())
 
     # @unittest.SkipTest
     def test_evaluate_dialect(self):
@@ -539,11 +539,11 @@ class TestJVMClient(PackageTestCase):
             "tutkain_evaluate",
             {"code": """(Integer/parseInt "42")""", "dialect": "clj"},
         )
-        self.assertEquals(input("""(Integer/parseInt "42")\n"""), self.get_print())
+        self.assertEqual(input("""(Integer/parseInt "42")\n"""), self.get_print())
         self.eval_context()
-        self.assertEquals("""(Integer/parseInt "42")\n""", self.server.recv())
+        self.assertEqual("""(Integer/parseInt "42")\n""", self.server.recv())
         self.server.send("""42""")
-        self.assertEquals(ret("""42\n"""), self.get_print())
+        self.assertEqual(ret("""42\n"""), self.get_print())
 
     # @unittest.SkipTest
     def test_async_run_tests_ns(self):
@@ -560,7 +560,7 @@ class TestJVMClient(PackageTestCase):
         message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("test"),
@@ -604,7 +604,7 @@ class TestJVMClient(PackageTestCase):
         self.server.backchannel.send(response)
         yield unittesting.AWAIT_WORKER  # Why?
 
-        self.assertEquals([sublime.Region(78, 78)], test.regions(self.view, "passes"))
+        self.assertEqual([sublime.Region(78, 78)], test.regions(self.view, "passes"))
 
         self.assertFalse(test.regions(self.view, "fail"))
         self.assertFalse(test.regions(self.view, "error"))
@@ -624,7 +624,7 @@ class TestJVMClient(PackageTestCase):
         message = edn.read(self.server.backchannel.recv())
         id = message.get(edn.Keyword("id"))
 
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("test"),
@@ -653,7 +653,7 @@ class TestJVMClient(PackageTestCase):
         self.assertFalse(test.regions(self.view, "passes"))
         self.assertFalse(test.regions(self.view, "fail"))
         self.assertFalse(test.regions(self.view, "error"))
-        self.assertEquals(response, self.get_print())
+        self.assertEqual(response, self.get_print())
 
     # @unittest.SkipTest
     def test_async_unsuccessful_tests(self):
@@ -670,7 +670,7 @@ class TestJVMClient(PackageTestCase):
         response = edn.read(self.server.backchannel.recv())
         id = response.get(edn.Keyword("id"))
 
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("test"),
@@ -718,9 +718,9 @@ class TestJVMClient(PackageTestCase):
         self.server.backchannel.send(response)
         yield unittesting.AWAIT_WORKER  # Why?
 
-        self.assertEquals([sublime.Region(78, 78)], test.regions(self.view, "failures"))
+        self.assertEqual([sublime.Region(78, 78)], test.regions(self.view, "failures"))
 
-        self.assertEquals(
+        self.assertEqual(
             [{"name": "my-test", "region": [78, 78], "type": "fail"}],
             test.unsuccessful(self.view),
         )
@@ -735,7 +735,7 @@ class TestJVMClient(PackageTestCase):
         op = edn.read(self.server.backchannel.recv())
         id = op.get(edn.Keyword("id"))
 
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap({"op": edn.Keyword("apropos"), "id": id, "pattern": "cat"}), op
         )
 
@@ -774,13 +774,13 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command(
             "tutkain_evaluate", {"scope": "outermost", "output": "clipboard"}
         )
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
 
         eval_op = edn.read(self.server.backchannel.recv())
         id = eval_op[edn.Keyword("id")]
 
         # Client sends eval op over backchannel
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("eval"),
@@ -807,7 +807,7 @@ class TestJVMClient(PackageTestCase):
         # Backchannel sends eval op response
         self.server.backchannel.send(response)
 
-        self.assertEquals(response, self.get_print())
+        self.assertEqual(response, self.get_print())
 
     # @unittest.SkipTest
     def test_evaluate_to_inline(self):
@@ -816,13 +816,13 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command(
             "tutkain_evaluate", {"scope": "outermost", "output": "inline"}
         )
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
 
         eval_op = edn.read(self.server.backchannel.recv())
         id = eval_op[edn.Keyword("id")]
 
         # Client sends eval op over backchannel
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("eval"),
@@ -849,7 +849,7 @@ class TestJVMClient(PackageTestCase):
         # Backchannel sends eval op response
         self.server.backchannel.send(response)
 
-        self.assertEquals(response, self.get_print())
+        self.assertEqual(response, self.get_print())
 
     # @unittest.SkipTest
     def test_evaluate_code_to_inline(self):
@@ -858,13 +858,13 @@ class TestJVMClient(PackageTestCase):
         self.view.run_command(
             "tutkain_evaluate", {"code": "(inc 1)", "output": "inline"}
         )
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
 
         eval_op = edn.read(self.server.backchannel.recv())
         id = eval_op[edn.Keyword("id")]
 
         # Client sends eval op over backchannel
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("eval"),
@@ -891,7 +891,7 @@ class TestJVMClient(PackageTestCase):
         # Backchannel sends eval op response
         self.server.backchannel.send(response)
 
-        self.assertEquals(response, self.get_print())
+        self.assertEqual(response, self.get_print())
 
     # @unittest.SkipTest
     def test_mark_outermost(self):
@@ -899,11 +899,11 @@ class TestJVMClient(PackageTestCase):
         self.set_selections((9, 9))
         self.view.run_command("tutkain_mark_form")
         self.view.run_command("tutkain_evaluate", {"scope": "mark"})
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
         self.eval_context(ns=edn.Symbol("user"), column=10)
-        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.assertEqual("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_mark_innermost(self):
@@ -911,11 +911,11 @@ class TestJVMClient(PackageTestCase):
         self.set_selections((9, 9))
         self.view.run_command("tutkain_mark_form", {"scope": "innermost"})
         self.view.run_command("tutkain_evaluate", {"scope": "mark"})
-        self.assertEquals(input("(range 10)\n"), self.get_print())
+        self.assertEqual(input("(range 10)\n"), self.get_print())
         self.eval_context(ns=edn.Symbol("user"), column=10)
-        self.assertEquals("(range 10)\n", self.server.recv())
+        self.assertEqual("(range 10)\n", self.server.recv())
         self.server.send("(0 1 2 3 4 5 6 7 8 9)")
-        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
+        self.assertEqual(ret("(0 1 2 3 4 5 6 7 8 9)\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_mark_ns_file(self):
@@ -925,11 +925,11 @@ class TestJVMClient(PackageTestCase):
         self.set_selections((13, 13))
         self.view.run_command("tutkain_mark_form")
         self.view.run_command("tutkain_evaluate", {"scope": "mark"})
-        self.assertEquals(input("(inc 1)\n"), self.get_print())
+        self.assertEqual(input("(inc 1)\n"), self.get_print())
         self.eval_context(ns=edn.Symbol("foo.bar"), column=14, file=file)
-        self.assertEquals("(inc 1)\n", self.server.recv())
+        self.assertEqual("(inc 1)\n", self.server.recv())
         self.server.send("2")
-        self.assertEquals(ret("2\n"), self.get_print())
+        self.assertEqual(ret("2\n"), self.get_print())
 
     # @unittest.SkipTest
     def test_eval_innermost_rpc(self):
@@ -939,12 +939,12 @@ class TestJVMClient(PackageTestCase):
         self.set_view_content("(ns foo.bar) (map inc (range 10))")
         self.set_selections((22, 22))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost", "mode": "rpc"})
-        self.assertEquals(input("(range 10)\n"), self.get_print())
+        self.assertEqual(input("(range 10)\n"), self.get_print())
 
         eval_op = edn.read(self.server.backchannel.recv())
         id = eval_op[edn.Keyword("id")]
 
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("eval"),
@@ -969,7 +969,7 @@ class TestJVMClient(PackageTestCase):
         )
 
         self.server.backchannel.send(response)
-        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
+        self.assertEqual(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
 
 
 class TestJvmRpcClient(PackageTestCase):
@@ -1000,12 +1000,12 @@ class TestJvmRpcClient(PackageTestCase):
         self.set_view_content("(ns foo.bar) (map inc (range 10))")
         self.set_selections((22, 22))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
-        self.assertEquals(input("(range 10)\n"), self.get_print())
+        self.assertEqual(input("(range 10)\n"), self.get_print())
 
         eval_op = edn.read(self.server.recv())
         id = eval_op[edn.Keyword("id")]
 
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("eval"),
@@ -1030,7 +1030,7 @@ class TestJvmRpcClient(PackageTestCase):
         )
 
         self.server.send(response)
-        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
+        self.assertEqual(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
 
     # @unittest.SkipTest
     def test_eval_innermost_ns_auto_switch_disabled(self):
@@ -1042,12 +1042,12 @@ class TestJvmRpcClient(PackageTestCase):
         self.view.run_command(
             "tutkain_evaluate", {"scope": "innermost", "auto_switch_namespace": False}
         )
-        self.assertEquals(input("(range 10)\n"), self.get_print())
+        self.assertEqual(input("(range 10)\n"), self.get_print())
 
         eval_op = edn.read(self.server.recv())
         id = eval_op[edn.Keyword("id")]
 
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("eval"),
@@ -1071,7 +1071,7 @@ class TestJvmRpcClient(PackageTestCase):
         )
 
         self.server.send(response)
-        self.assertEquals(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
+        self.assertEqual(ret("(0 1 2 3 4 5 6 7 8 9)\n", id=id), self.get_print())
 
 
 class TestNoBackchannelJVMClient(PackageTestCase):
@@ -1105,7 +1105,7 @@ class TestNoBackchannelJVMClient(PackageTestCase):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((0, 0))
         self.view.run_command("tutkain_evaluate", {"scope": "outermost"})
-        self.assertEquals(input("(map inc (range 10))\n"), self.get_print())
-        self.assertEquals("(map inc (range 10))\n", self.server.recv())
+        self.assertEqual(input("(map inc (range 10))\n"), self.get_print())
+        self.assertEqual("(map inc (range 10))\n", self.server.recv())
         self.server.send("(1 2 3 4 5 6 7 8 9 10)")
-        self.assertEquals(ret("(1 2 3 4 5 6 7 8 9 10)\n"), self.get_print())
+        self.assertEqual(ret("(1 2 3 4 5 6 7 8 9 10)\n"), self.get_print())

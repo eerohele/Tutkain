@@ -157,7 +157,7 @@ class PackageTestCase(DeferrableTestCase):
         if ns:
             message[edn.Keyword("ns")] = ns
 
-        self.assertEquals(message, actual)
+        self.assertEqual(message, actual)
 
         response = edn.kwmap({"id": id, "result": edn.Keyword("ok")})
 

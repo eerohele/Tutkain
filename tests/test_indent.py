@@ -10,7 +10,7 @@ from .util import ViewTestCase
 class TestPruneRegion(ViewTestCase):
     def test_prune_region(self):
         self.set_view_content('( a "( b\n  ) "  )  ; (  )  c ')
-        self.assertEquals(
+        self.assertEqual(
             '(a "( b\n  ) ") ; (  )  c ',
             indent.prune_region(self.view, sublime.Region(0, self.view.size())),
         )
@@ -29,7 +29,7 @@ class TestIndentInsertNewLineCommand(ViewTestCase):
                 "tutkain_insert_newline", {"extend_comment": extend_comment}
             )
 
-        self.assertEquals(cleandoc(b) if clean else b, self.view_content())
+        self.assertEqual(cleandoc(b) if clean else b, self.view_content())
 
     def test_outside_before(self):
         self.becomes("""(foo)""", """\n\n(foo)""", newlines=2, clean=False)
@@ -398,7 +398,7 @@ class TestIndentRegionCommand(ViewTestCase):
         self.set_view_content(cleandoc(a))
         self.set_selections(*selections)
         self.view.run_command("tutkain_indent_sexp")
-        self.assertEquals(cleandoc(b), self.view_content())
+        self.assertEqual(cleandoc(b), self.view_content())
 
     def test_1(self):
         self.becomes(
@@ -553,8 +553,8 @@ class TestIndentRegionCommand(ViewTestCase):
         )
 
     def test_reindent(self):
-        self.assertEquals("(inc 1)", indent.reindent("(inc 1)", 0))
-        self.assertEquals(
+        self.assertEqual("(inc 1)", indent.reindent("(inc 1)", 0))
+        self.assertEqual(
             """(inc
      1)""",
             indent.reindent(
@@ -564,7 +564,7 @@ class TestIndentRegionCommand(ViewTestCase):
             ),
         )
 
-        self.assertEquals(
+        self.assertEqual(
             """(inc
  1)""",
             indent.reindent(
@@ -574,7 +574,7 @@ class TestIndentRegionCommand(ViewTestCase):
             ),
         )
 
-        self.assertEquals(
+        self.assertEqual(
             """(inc
      1)""",
             indent.reindent(
@@ -584,7 +584,7 @@ class TestIndentRegionCommand(ViewTestCase):
             ),
         )
 
-        self.assertEquals(
+        self.assertEqual(
             """(inc
   1)""",
             indent.reindent(
@@ -593,7 +593,7 @@ class TestIndentRegionCommand(ViewTestCase):
                 2,
             ),
         )
-        self.assertEquals(
+        self.assertEqual(
             """(identity
 {:a 1 :b 2})""",
             indent.reindent(
@@ -611,7 +611,7 @@ class TestHardWrapCommand(ViewTestCase):
         for n in range(start_at, len(input)):
             self.set_selections((n, n))
             self.view.run_command("tutkain_hard_wrap", {"width": width})
-            self.assertEquals(expected, self.view_content())
+            self.assertEqual(expected, self.view_content())
 
     # @unittest.SkipTest
     def test_hard_wrap(self):
@@ -651,9 +651,9 @@ class TestHardWrapCommand(ViewTestCase):
         self.set_view_content(""";; a b\n\n;; c d""")
         self.set_selections((0, 0), (8, 8))
         self.view.run_command("tutkain_hard_wrap", {"width": 5})
-        self.assertEquals(""";; a\n;; b\n\n;; c\n;; d""", self.view_content())
+        self.assertEqual(""";; a\n;; b\n\n;; c\n;; d""", self.view_content())
 
         self.set_view_content('''"a b c d"\n\n"e f g h"''')
         self.set_selections((0, 0), (11, 11))
         self.view.run_command("tutkain_hard_wrap", {"width": 4})
-        self.assertEquals('''"a b\nc d"\n\n"e f\ng h"''', self.view_content())
+        self.assertEqual('''"a b\nc d"\n\n"e f\ng h"''', self.view_content())

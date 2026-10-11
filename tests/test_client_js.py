@@ -41,8 +41,8 @@ class TestJSClient(PackageTestCase):
         self.set_view_content("(map inc (range 10))")
         self.set_selections((9, 9))
         self.view.run_command("tutkain_evaluate", {"scope": "innermost"})
-        self.assertEquals(input("(range 10)\n"), self.get_print())
-        self.assertEquals(
+        self.assertEqual(input("(range 10)\n"), self.get_print())
+        self.assertEqual(
             edn.kwmap(
                 {
                     "op": edn.Keyword("eval"),
@@ -63,7 +63,7 @@ class TestJSClient(PackageTestCase):
             )
         )
 
-        self.assertEquals(
+        self.assertEqual(
             edn.kwmap(
                 {"id": 9, "tag": edn.Keyword("ret"), "val": "(0 1 2 3 4 5 6 7 8 9)\n"}
             ),

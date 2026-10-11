@@ -103,7 +103,7 @@ class TestConnectDisconnect(TestCase):
             }
         )
 
-        self.assertEquals(response, actual)
+        self.assertEqual(response, actual)
 
         response = edn.kwmap({"id": id, "result": edn.Keyword("ok")})
 
@@ -131,7 +131,7 @@ class TestConnectDisconnect(TestCase):
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
         self.eval_context(server.backchannel)
-        self.assertEquals("(inc 1)\n", server.recv())
+        self.assertEqual("(inc 1)\n", server.recv())
         server.send("2")
         output_view = state.get_active_connection(window, edn.Keyword("clj")).view
 
@@ -144,7 +144,7 @@ class TestConnectDisconnect(TestCase):
         yield lambda: [sublime.Region(32, 32)] == self.gutter_marks(output_view, "ret")
 
         self.disconnect(window)
-        self.assertEquals("{:op :quit}\n", server.recv())
+        self.assertEqual("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -162,7 +162,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals("{:op :quit}\n", server.recv())
+        self.assertEqual("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -192,7 +192,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals("{:op :quit}\n", server.recv())
+        self.assertEqual("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -235,7 +235,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals("{:op :quit}\n", server.recv())
+        self.assertEqual("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -265,7 +265,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals("{:op :quit}\n", server.recv())
+        self.assertEqual("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -279,7 +279,7 @@ class TestConnectDisconnect(TestCase):
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
         self.eval_context(server.backchannel)
-        self.assertEquals("(inc 1)\n", server.recv())
+        self.assertEqual("(inc 1)\n", server.recv())
         server.send("2")
 
         yield lambda: self.equals(
@@ -295,7 +295,7 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals("{:op :quit}\n", server.recv())
+        self.assertEqual("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.backchannel.stop()
         server.stop()
@@ -312,7 +312,7 @@ class TestConnectDisconnect(TestCase):
 
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
-            self.assertEquals("(inc 1)\n", jvm_server.recv())
+            self.assertEqual("(inc 1)\n", jvm_server.recv())
             jvm_server.send("2")
 
             yield lambda: self.equals(
@@ -339,7 +339,7 @@ class TestConnectDisconnect(TestCase):
 
             js_view.run_command("tutkain_evaluate")
 
-            self.assertEquals(
+            self.assertEqual(
                 edn.kwmap(
                     {
                         "op": edn.Keyword("eval"),
@@ -377,12 +377,12 @@ class TestConnectDisconnect(TestCase):
             yield unittesting.AWAIT_WORKER
             jvm_view.window().run_command("select")
             yield
-            self.assertEquals("{:op :quit}\n", jvm_server.recv())
+            self.assertEqual("{:op :quit}\n", jvm_server.recv())
             self.disconnect(window)
             yield unittesting.AWAIT_WORKER
             jvm_view.window().run_command("select")
             yield
-            self.assertEquals("{:op :quit}\n", js_server.recv())
+            self.assertEqual("{:op :quit}\n", js_server.recv())
             self.close_window(window)
             jvm_server.backchannel.stop()
             jvm_server.stop()
@@ -400,7 +400,7 @@ class TestConnectDisconnect(TestCase):
 
             jvm_view_1.run_command("tutkain_evaluate")
             self.eval_context(jvm_1_server.backchannel)
-            self.assertEquals("(inc 1)\n", jvm_1_server.recv())
+            self.assertEqual("(inc 1)\n", jvm_1_server.recv())
             jvm_1_server.send("2")
 
             yield lambda: self.equals(
@@ -423,7 +423,7 @@ class TestConnectDisconnect(TestCase):
 
             jvm_view_2.run_command("tutkain_evaluate")
             self.eval_context(jvm_2_server.backchannel)
-            self.assertEquals("""(inc 2)\n""", jvm_2_server.recv())
+            self.assertEqual("""(inc 2)\n""", jvm_2_server.recv())
             jvm_2_server.send("3")
 
             yield lambda: self.equals(
@@ -447,14 +447,14 @@ class TestConnectDisconnect(TestCase):
             jvm_view_1.window().run_command("select")
             yield
 
-            self.assertEquals("{:op :quit}\n", jvm_1_server.recv())
+            self.assertEqual("{:op :quit}\n", jvm_1_server.recv())
 
             self.set_view_content(jvm_view_2, "(inc 3)")
             self.set_selections(jvm_view_2, (0, 0))
 
             jvm_view_2.run_command("tutkain_evaluate")
             self.eval_context(jvm_2_server.backchannel)
-            self.assertEquals("(inc 3)\n", jvm_2_server.recv())
+            self.assertEqual("(inc 3)\n", jvm_2_server.recv())
             jvm_2_server.send("4")
 
             yield lambda: self.equals(
@@ -483,7 +483,7 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             jvm_view_2.window().run_command("select")
-            self.assertEquals("{:op :quit}\n", jvm_2_server.recv())
+            self.assertEqual("{:op :quit}\n", jvm_2_server.recv())
             self.close_window(window)
             jvm_1_server.stop()
             jvm_1_server.backchannel.stop()
@@ -502,7 +502,7 @@ class TestConnectDisconnect(TestCase):
 
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
-            self.assertEquals("(inc 1)\n", jvm_server.recv())
+            self.assertEqual("(inc 1)\n", jvm_server.recv())
             jvm_server.send("2")
             output_view = state.get_active_connection(window, edn.Keyword("clj")).view
 
@@ -529,7 +529,7 @@ class TestConnectDisconnect(TestCase):
             self.set_selections(js_view, (0, 0))
 
             js_view.run_command("tutkain_evaluate")
-            self.assertEquals(
+            self.assertEqual(
                 edn.kwmap(
                     {
                         "op": edn.Keyword("eval"),
@@ -569,14 +569,14 @@ class TestConnectDisconnect(TestCase):
             js_view.window().run_command("select")
             yield
 
-            self.assertEquals("{:op :quit}\n", js_server.recv())
+            self.assertEqual("{:op :quit}\n", js_server.recv())
 
             self.set_view_content(jvm_view, "(inc 2)")
             self.set_selections(jvm_view, (0, 0))
 
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
-            self.assertEquals("(inc 2)\n", jvm_server.recv())
+            self.assertEqual("(inc 2)\n", jvm_server.recv())
             jvm_server.send("3")
             output_view = state.get_active_connection(window, edn.Keyword("clj")).view
 
@@ -597,7 +597,7 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             # Don't need to select because there's only one remaining runtime
-            self.assertEquals("{:op :quit}\n", jvm_server.recv())
+            self.assertEqual("{:op :quit}\n", jvm_server.recv())
             self.close_window(window)
             jvm_server.backchannel.stop()
             jvm_server.stop()
@@ -615,7 +615,7 @@ class TestConnectDisconnect(TestCase):
 
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
-            self.assertEquals("(inc 1)\n", jvm_server.recv())
+            self.assertEqual("(inc 1)\n", jvm_server.recv())
             jvm_server.send("2")
 
             yield lambda: self.equals(
@@ -635,7 +635,7 @@ class TestConnectDisconnect(TestCase):
 
             js_view.run_command("tutkain_evaluate")
 
-            self.assertEquals(
+            self.assertEqual(
                 edn.kwmap(
                     {
                         "op": edn.Keyword("eval"),
@@ -676,14 +676,14 @@ class TestConnectDisconnect(TestCase):
             js_view.window().run_command("select")
             yield
 
-            self.assertEquals("{:op :quit}\n", js_server.recv())
+            self.assertEqual("{:op :quit}\n", js_server.recv())
 
             self.set_view_content(jvm_view, "(inc 2)")
             self.set_selections(jvm_view, (0, 0))
 
             jvm_view.run_command("tutkain_evaluate")
             self.eval_context(jvm_server.backchannel)
-            self.assertEquals("(inc 2)\n", jvm_server.recv())
+            self.assertEqual("(inc 2)\n", jvm_server.recv())
             jvm_server.send("3")
 
             yield lambda: self.equals(
@@ -695,7 +695,7 @@ class TestConnectDisconnect(TestCase):
 
             self.disconnect(window)
             # Don't need to select because there's only one remaining runtime
-            self.assertEquals("{:op :quit}\n", jvm_server.recv())
+            self.assertEqual("{:op :quit}\n", jvm_server.recv())
             self.close_window(window)
             jvm_server.backchannel.stop()
             jvm_server.stop()
@@ -716,7 +716,7 @@ class TestConnectDisconnect(TestCase):
         self.set_view_content(view, "(inc 1)")
         self.set_selections(view, (0, 0))
         view.run_command("tutkain_evaluate")
-        self.assertEquals("(inc 1)\n", server.recv())
+        self.assertEqual("(inc 1)\n", server.recv())
 
         yield lambda: self.equals(
             """user=> (inc 1)\n""",
@@ -731,6 +731,6 @@ class TestConnectDisconnect(TestCase):
         )
 
         self.disconnect(window)
-        self.assertEquals("{:op :quit}\n", server.recv())
+        self.assertEqual("{:op :quit}\n", server.recv())
         self.close_window(window)
         server.stop()
