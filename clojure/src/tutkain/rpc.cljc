@@ -13,7 +13,7 @@
    (clojure.lang LineNumberingPushbackReader RT)
    (java.nio.file LinkOption Files Paths Path)
    (java.io FileNotFoundException IOException StringReader Writer)
-   (java.net ServerSocket SocketException URL)
+   (java.net NetworkInterface Inet4Address ServerSocket SocketException URL)
    (java.util.concurrent Executors ExecutorService FutureTask ScheduledExecutorService TimeUnit ThreadFactory ThreadPoolExecutor ThreadPoolExecutor$CallerRunsPolicy)
    (java.util.concurrent.atomic AtomicInteger)))
 
@@ -298,6 +298,14 @@
   [bindings]
   (atom (merge {#'*ns* (the-ns 'user)} (select-keys bindings [#'*e #'*1 #'*2 #'*3 #'*warn-on-reflection*]))))
 
+(defn ^:private discover-host-address []
+  (->>
+    (enumeration-seq (NetworkInterface/getNetworkInterfaces))
+    (mapcat #(enumeration-seq (.getInetAddresses %)))
+    (filter #(and (instance? Inet4Address %) (not (.isLoopbackAddress %))))
+    (first)
+    (.getHostAddress)))
+
 (defn open
   "Open an RPC server.
 
@@ -321,7 +329,7 @@
         err-writer (promise)
         server-name (format "tutkain/rpc-%s" (.incrementAndGet thread-counter))
         ^ServerSocket socket (server/start-server
-                               {:address bind-address
+                               {:address (if (= "discover" bind-address) (discover-host-address) bind-address)
                                 :port port
                                 :name server-name
                                 :accept `accept
