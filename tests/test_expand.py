@@ -334,6 +334,12 @@ class TestExpandSelectionCommand(unittesting.DeferrableTestCase):
         self.expand()
         yield lambda: "(foo #bar/baz [:quux 1])" == self.selection(0)
 
+        self.set_view_content("#foo 1")
+        for i in range(0, 5):
+            self.set_selections((i, i))
+            self.expand()
+            yield lambda: """#foo 1""" == self.selection(0)
+
     def test_nested_tagged_literal(self):
         self.set_view_content("""(#baz/quux [#foo/bar [1]])""")
 

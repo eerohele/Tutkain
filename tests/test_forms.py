@@ -116,6 +116,8 @@ class TestForms(ViewTestCase):
         self.assertEqual(forms.find_previous(self.view, 13), Region(5, 12))
         self.set_view_content("""(foo #?(:cljs bar) baz)""")
         self.assertEqual(forms.find_previous(self.view, 19), Region(5, 18))
+        self.set_view_content("""(foo #bar/baz [:quux 2])""")
+        self.assertEqual(forms.find_previous(self.view, 13), Region(5, 23))
         self.set_view_content(""";; bar\n(inc 1)""")
         self.assertEqual(forms.find_previous(self.view, 7), None)
         self.set_view_content('"a b"')

@@ -110,12 +110,14 @@ def find_previous(view, point):
                 "punctuation.section.parens.begin | punctuation.section.brackets.begin | punctuation.section.braces.begin",
             ):
                 return None
-            elif view.match_selector(point - 1, selectors.SEXP_END):
+            elif view.match_selector(
+                point - 1, selectors.SEXP_END
+            ) and not view.match_selector(point - 1, "meta.tagged-element.element"):
                 innermost = sexp.innermost(view, point, edge="backward").extent()
                 return absorb_macro_characters(view, innermost)
             elif not view.match_selector(
                 point, "meta.tagged-element.element"
-            ) and view.match_selector(point - 1, "meta.tagged-element.element"):
+            ) and view.match_selector(point - 1, "meta.tagged-element"):
                 return selectors.expand_by_selector(
                     view, point - 1, "meta.tagged-element"
                 )
