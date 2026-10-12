@@ -637,8 +637,6 @@ contexts:
               - match: '\)'
                 scope: punctuation.section.parens.end.edn
                 pop: 4
-              - include: metadata
-              - include: reader-conditional
               - match: '\['
                 scope: punctuation.section.brackets.begin.edn
                 push:
@@ -651,6 +649,7 @@ contexts:
                         pop: 5
                       - include: main
                   - include: main
+              - include: main
 
   proxy-tail:
     - include: metadata

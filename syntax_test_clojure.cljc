@@ -2259,6 +2259,11 @@
 ; ^^^^^^^^^^^ meta.sexp.list.edn
 ;            ^ -meta.sexp
 
+  (defmethod foo :bar (fn [x]))
+;                     ^ punctuation.section.parens.begin
+;                             ^ - invalid.illegal.stray-bracket-end.edn
+;                             ^ punctuation.section.parens.end
+
 ; # defprotocol
 
   (defprotocol)
