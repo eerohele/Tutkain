@@ -2904,7 +2904,7 @@
   (ns foo.bar
     (:require
 ;    ^ punctuation.definition.keyword.clojure
-;    ^^^^^^^^ meta.statement.require.clojure
+;    ^^^^^^^^ constant.other.keyword
      [baz.quux]
      qux.zot
 ;    ^^^^^^^ meta.symbol.edn - variable.function.clojure
@@ -2913,7 +2913,7 @@
   (ns foo.bar
     (:import
 ;    ^ punctuation.definition.keyword.clojure
-;    ^^^^^^^ meta.statement.import.clojure
+;    ^^^^^^^ constant.other.keyword.unqualified.clojure
      (java.time LocalDate)))
 ;    ^ punctuation.section.parens.begin.edn
 ;     ^^^^^^^^^ - meta.function-call.clojure
@@ -2931,8 +2931,9 @@
 ;                      ^ punctuation.section.parens.end.edn
 
   (ns foo.bar (:import :require))
-;              ^^^^^^^ meta.statement.import.clojure
-;                      ^^^^^^^^ - meta.statement.require.clojure
+;              ^^^^^^^ constant.other.keyword.unqualified.clojure
+;                     ^ - constant
+;                      ^^^^^^^^ - constant.other.keyword.unqualified.clojure
 
   (ns foo.bar (:requires [baz.quux]))
 ;              ^^^^^^^^^ - meta.statement.require.clojure

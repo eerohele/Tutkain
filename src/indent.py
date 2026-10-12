@@ -4,7 +4,7 @@ from itertools import groupby
 
 from sublime import Region
 
-from . import selectors, sexp
+from . import selectors, sexp, forms
 
 
 def determine_indentation(view, open_bracket):
@@ -19,16 +19,20 @@ def determine_indentation(view, open_bracket):
         "meta.special-form | variable | keyword.declaration | keyword.control | storage.type | entity.name",
     ):
         return indentation + " "
-    elif view.match_selector(point, "meta.statement.require | meta.statement.import"):
-        form = selectors.expand_by_selector(
-            view, point, "meta.statement.require | meta.statement.import"
-        )
-        first_require = selectors.find(
-            view, form.end(), "punctuation | meta.reader-form"
-        )
+    elif view.match_selector(point, "meta.ns-form.clojure"):
+        for expr in sexp.walk_outward(view, point, edge=True):
+            if (
+                (form := forms.find_next(view, expr.open.region.end()))
+                and (view.match_selector(form.begin(), "constant.other.keyword"))
+                and view.substr(form) in [":require", ":import"]
+            ):
+                if form and (end := form.end()):
+                    first_require = selectors.find(
+                        view, end, "punctuation | meta.reader-form"
+                    )
 
-        if line.contains(first_require):
-            return indentation + (" " * (form.size() + 1))
+                    if line.contains(first_require):
+                        return indentation + (" " * (form.size() + 1))
         else:
             return indentation
     else:

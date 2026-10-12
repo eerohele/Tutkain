@@ -476,6 +476,7 @@ contexts:
         - include: keywords
 
   ns-tail:
+    - meta_scope: meta.ns-form.clojure
     - include: end-paren
     - include: metadata
     - match: '{{symbol}}'
